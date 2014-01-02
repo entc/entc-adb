@@ -1,0 +1,30 @@
+#!/bin/bash
+
+BCONFIG=Debug
+VERSION=1.0.1
+
+INSTALLDIR="/usr/local/lib"
+
+INCLUDEDIR="/usr/local/include/entc-"$VERSION
+mkdir $INCLUDEDIR
+
+cp $PWD/$BCONFIG/libentc.dylib $INSTALLDIR/libentc.$VERSION.dylib
+install_name_tool -id $INSTALLDIR/libentc.$VERSION.dylib $INSTALLDIR/libentc.$VERSION.dylib
+
+ln -s $INSTALLDIR/libentc.$VERSION.dylib $INSTALLDIR/libentc.dylib
+
+mkdir $INCLUDEDIR/utils
+rm $INCLUDEDIR/utils/*
+cp $PWD/utils/*.h $INCLUDEDIR/utils/
+
+mkdir $INCLUDEDIR/system
+rm $INCLUDEDIR/system/*
+cp $PWD/system/*.h $INCLUDEDIR/system/
+
+mkdir $INCLUDEDIR/types
+rm $INCLUDEDIR/types/*
+cp $PWD/types/*.h $INCLUDEDIR/types/
+
+mkdir $INCLUDEDIR/tools
+rm $INCLUDEDIR/tools/*
+cp $PWD/tools/*.h $INCLUDEDIR/tools/

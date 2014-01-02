@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<adbl>
+	<modules scanpath="/usr/local/lib/libadbl-1.0.1"/>
+	<database name="default" type="SQLite3">
+		<file filextension=".db" />
+        <schema name="test" />
+	</database>
+</adbl>

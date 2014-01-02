@@ -1,0 +1,30 @@
+#!/bin/bash
+
+BCONFIG=Debug
+VERSION=1.0.1
+
+INSTALLDIR="/usr/local/lib"
+MODULESDIR=$INSTALLDIR/libadbl-$VERSION/
+mkdir $MODULESDIR
+
+INCLUDEDIR=/usr/local/include/libadbl-$VERSION
+mkdir $INCLUDEDIR
+
+cp $PWD/core/$BCONFIG/libadbl.dylib $INSTALLDIR/libadbl.$VERSION.dylib
+install_name_tool -id $INSTALLDIR/libadbl.$VERSION.dylib $INSTALLDIR/libadbl.$VERSION.dylib
+
+cp -R $PWD/core/$BCONFIG/libadbl.dylib.dSYM $INSTALLDIR/libadbl.$VERSION.dylib.dSYM
+rm $INSTALLDIR/libadbl.dylib
+ln -s $INSTALLDIR/libadbl.$VERSION.dylib $INSTALLDIR/libadbl.dylib
+
+cp $PWD/adbl_sqlite/$BCONFIG/libadbl_sqlite3.dylib $MODULESDIR
+install_name_tool -id $MODULESDIR/libadbl_sqlite3.dylib $MODULESDIR/libadbl_sqlite3.dylib
+install_name_tool -change $PWD/core/$BCONFIG/libadbl.dylib $INSTALLDIR/libadbl.$VERSION.dylib $MODULESDIR/libadbl_sqlite3.dylib
+
+cp $PWD/adbl_mysql/$BCONFIG/libadbl_mysql.dylib $MODULESDIR
+install_name_tool -id $MODULESDIR/libadbl_mysql.dylib $MODULESDIR/libadbl_mysql.dylib
+install_name_tool -change $PWD/core/$BCONFIG/libadbl.dylib $INSTALLDIR/libadbl.$VERSION.dylib $MODULESDIR/libadbl_mysql.dylib
+
+mkdir $INCLUDEDIR
+rm $INCLUDEDIR/*
+cp $PWD/core/*.h $INCLUDEDIR/
