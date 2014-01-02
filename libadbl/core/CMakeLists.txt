@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.4)
 
 SET (CORE_SOURCES  
   adbl.h
-  qiadbl.h
+  ocadbl.h
 
   adbl_module.inc
 

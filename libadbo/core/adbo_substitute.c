@@ -19,3 +19,92 @@
 
 #include "adbo_substitute.h"
 
+struct AdboSubstitute_s
+{
+  
+  
+};
+
+//----------------------------------------------------------------------------------------
+
+AdboSubstitute adbo_substitute_new (AdboObject obj, AdboContainer container, EcXMLStream xmlstream, EcLogger logger)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_substitute_del (AdboSubstitute* pself)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboSubstitute adbo_substitute_clone (const AdboSubstitute oself, AdboContainer parent)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_substitute_request (AdboSubstitute self, AdboContext context)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_substitute_update (AdboSubstitute self, AdboContext context, int withTransaction)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_substitute_delete (AdboSubstitute self, AdboContext context, int withTransaction)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_substitute_transaction (AdboSubstitute self, int state)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboObject adbo_substitute_at (AdboSubstitute self, const EcString link)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_substitute_strToStream (AdboSubstitute self, EcStream stream)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+EcString adbo_substitute_str (AdboSubstitute self)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_substitute_is (AdboSubstitute self, const EcString link)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_substitute_dump (AdboObject obj, AdboSubstitute self, int tab, int le, EcBuffer b2, EcLogger logger)
+{
+
+}

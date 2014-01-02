@@ -59,9 +59,9 @@ AdboObject adbo_object_new (AdboContainer parent, uint_t type, EcXMLStream xmlst
   // create specific extension
   switch (type)
   {
-    case ADBO_OBJECT_NODE: self->extension = adbo_node_new (self, parent, xmlstream, logger); break;
-    case ADBO_OBJECT_SUBSTITUTE: self->extension = adbo_substitute_new(self, parent, xmlstream, logger); break;
-    case ADBO_OBJECT_ITEM: self->extension = adbo_item_new (self, parent, xmlstream, tag, logger); break;
+    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new (self, parent, xmlstream, logger); break;
+    case ADBO_OBJECT_SUBSTITUTE:  self->extension = adbo_substitute_new(self, parent, xmlstream, logger); break;
+    case ADBO_OBJECT_ITEM:        self->extension = adbo_item_new (self, parent, xmlstream, tag, logger); break;
   }
   
   return self;
@@ -87,8 +87,9 @@ AdboObject adbo_object_clone (const AdboObject oself, AdboContainer parent)
   // create specific extension
   switch (oself->type)
   {
-    case ADBO_OBJECT_NODE: self->extension = adbo_node_clone (oself->extension, parent); break;
-    case ADBO_OBJECT_ITEM: self->extension = adbo_item_clone (oself->extension); break;
+    case ADBO_OBJECT_NODE:        self->extension = adbo_node_clone (oself->extension, parent); break;
+    case ADBO_OBJECT_SUBSTITUTE:  self->extension = adbo_substitute_clone (oself->extension, parent); break;
+    case ADBO_OBJECT_ITEM:        self->extension = adbo_item_clone (oself->extension); break;
       
   }
   
@@ -112,7 +113,8 @@ int adbo_object_request (AdboObject self, AdboContext context)
   // recursively continue with the type of this object
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: ret = adbo_node_request ((AdboNode)self->extension, context); break;
+    case ADBO_OBJECT_NODE:        ret = adbo_node_request ((AdboNode)self->extension, context); break;
+    case ADBO_OBJECT_SUBSTITUTE:  ret = adbo_substitute_request ((AdboSubstitute)self->extension, context); break;
   } 
   
   return ret;
@@ -135,7 +137,8 @@ int adbo_object_update (AdboObject self, AdboContext context, int withTransactio
   // recursively continue with the type of this object
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: ret = adbo_node_update ((AdboNode)self->extension, context, withTransaction); break;
+    case ADBO_OBJECT_NODE:        ret = adbo_node_update ((AdboNode)self->extension, context, withTransaction); break;
+    case ADBO_OBJECT_SUBSTITUTE:  ret = adbo_substitute_update ((AdboSubstitute)self->extension, context, withTransaction); break;
   } 
   
   return ret;
@@ -158,7 +161,8 @@ int adbo_object_delete (AdboObject self, AdboContext context, int withTransactio
   // recursively continue with the type of this object
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: ret = adbo_node_delete ((AdboNode)self->extension, context, withTransaction); break;
+    case ADBO_OBJECT_NODE:        ret = adbo_node_delete ((AdboNode)self->extension, context, withTransaction); break;
+    case ADBO_OBJECT_SUBSTITUTE:  ret = adbo_substitute_delete ((AdboSubstitute)self->extension, context, withTransaction); break;
   } 
   
   return ret;  
@@ -177,6 +181,12 @@ void adbo_objects_fromXml (AdboContainer container, EcXMLStream xmlstream, const
       eclogger_log(logger, LL_TRACE, "ADBO", "{parse} found node");
 
       adbo_container_add (container, adbo_object_new (container, ADBO_OBJECT_NODE, xmlstream, "node", logger));
+    }
+    else if (ecxmlstream_isBegin (xmlstream, "substitute"))
+    {
+      eclogger_log(logger, LL_TRACE, "ADBO", "{parse} found substitute");
+      
+      adbo_container_add (container, adbo_object_new (container, ADBO_OBJECT_SUBSTITUTE, xmlstream, "substitute", logger));
     }
     else if (ecxmlstream_isBegin (xmlstream, "item"))
     {
@@ -224,7 +234,8 @@ AdboObject adbo_at (AdboObject self, const EcString link)
 
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: obj = adbo_node_at ((AdboNode)self->extension, link); break;
+    case ADBO_OBJECT_NODE:        obj = adbo_node_at ((AdboNode)self->extension, link); break;
+    case ADBO_OBJECT_SUBSTITUTE:  obj = adbo_substitute_at ((AdboSubstitute)self->extension, link); break;
   }    
   
   return obj;
@@ -240,8 +251,9 @@ void adbo_strToStream (AdboObject self, EcStream stream)
   }
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: adbo_node_strToStream ((AdboNode)self->extension, stream); break;
-    case ADBO_OBJECT_ITEM: adbo_item_strToStream (self, (AdboItem)self->extension, stream); break;
+    case ADBO_OBJECT_NODE:        adbo_node_strToStream ((AdboNode)self->extension, stream); break;
+    case ADBO_OBJECT_SUBSTITUTE:  adbo_substitute_strToStream ((AdboSubstitute)self->extension, stream); break;
+    case ADBO_OBJECT_ITEM:        adbo_item_strToStream (self, (AdboItem)self->extension, stream); break;
   } 
 }
 
@@ -255,8 +267,9 @@ EcString adbo_str (AdboObject self)
   }
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: return adbo_node_str ((AdboNode)self->extension);
-    case ADBO_OBJECT_ITEM: return adbo_item_str (self);
+    case ADBO_OBJECT_NODE:        return adbo_node_str ((AdboNode)self->extension);
+    case ADBO_OBJECT_SUBSTITUTE:  return adbo_substitute_str ((AdboSubstitute)self->extension);
+    case ADBO_OBJECT_ITEM:        return adbo_item_str (self);
   } 
   return NULL;
 }
@@ -297,8 +310,9 @@ int adbo_is (AdboObject self, const EcString link)
   }
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: return adbo_node_is ((AdboNode)self->extension, link);
-    case ADBO_OBJECT_ITEM: return adbo_item_is (self, link);
+    case ADBO_OBJECT_NODE:        return adbo_node_is ((AdboNode)self->extension, link);
+    case ADBO_OBJECT_SUBSTITUTE:  return adbo_substitute_is ((AdboSubstitute)self->extension, link);
+    case ADBO_OBJECT_ITEM:        return adbo_item_is (self, link);
   }
   return FALSE;
 }
@@ -321,7 +335,8 @@ void adbo_object_transaction (AdboObject self, int state)
   
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: return adbo_node_transaction ((AdboNode)self->extension, state);
+    case ADBO_OBJECT_NODE:        return adbo_node_transaction ((AdboNode)self->extension, state);
+    case ADBO_OBJECT_SUBSTITUTE:  return adbo_substitute_transaction ((AdboSubstitute)self->extension, state);
     //case ADBO_OBJECT_ITEM: return adbo_item_transaction (self, link);
   }
 }
@@ -332,8 +347,9 @@ void adbo_dump_next (AdboObject self, int depth, int le, EcBuffer buffer, EcLogg
 {
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE: return adbo_node_dump (self, (AdboNode)self->extension, depth, le, buffer, logger);
-    case ADBO_OBJECT_ITEM: return adbo_item_dump (self, depth, le, buffer, logger);
+    case ADBO_OBJECT_NODE:        adbo_node_dump (self, (AdboNode)self->extension, depth, le, buffer, logger); break;
+    case ADBO_OBJECT_SUBSTITUTE:  adbo_substitute_dump (self, (AdboSubstitute)self->extension, depth, le, buffer, logger); break;
+    case ADBO_OBJECT_ITEM:        adbo_item_dump (self, depth, le, buffer, logger); break;
   }  
 }
 
