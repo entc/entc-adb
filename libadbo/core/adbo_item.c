@@ -120,6 +120,8 @@ int adbo_item_is (AdboObject obj, const EcString link)
 
 void adbo_item_dump (AdboObject obj, int depth, int le, EcBuffer b2, EcLogger logger)
 {
+  AdboValue value;
+
   unsigned char* buffer = b2->buffer;
   
   uint_t pos = depth * 2;
@@ -134,7 +136,7 @@ void adbo_item_dump (AdboObject obj, int depth, int le, EcBuffer b2, EcLogger lo
   buffer [pos + 2] = '_';
   buffer [pos + 3] = 0;
   
-  AdboValue value = (AdboValue)adbo_getValue (obj);
+  value = (AdboValue)adbo_getValue (obj);
   if (isAssigned (value))
   {
     dbcolumn = adbo_value_getDBColumn (value);

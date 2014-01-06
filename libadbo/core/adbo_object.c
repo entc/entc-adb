@@ -335,8 +335,8 @@ void adbo_object_transaction (AdboObject self, int state)
   
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE:        return adbo_node_transaction ((AdboNode)self->extension, state);
-    case ADBO_OBJECT_SUBSTITUTE:  return adbo_substitute_transaction ((AdboSubstitute)self->extension, state);
+    case ADBO_OBJECT_NODE:        adbo_node_transaction ((AdboNode)self->extension, state); break;
+    case ADBO_OBJECT_SUBSTITUTE:  adbo_substitute_transaction ((AdboSubstitute)self->extension, state); break;
     //case ADBO_OBJECT_ITEM: return adbo_item_transaction (self, link);
   }
 }
