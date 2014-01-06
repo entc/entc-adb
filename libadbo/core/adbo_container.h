@@ -20,8 +20,9 @@
 #ifndef ADBO_CONTAINER_H
 #define ADBO_CONTAINER_H 1
 
-#define ADBO_CONTAINER_NODE 1
-#define ADBO_CONTAINER_ITEM 2
+#define ADBO_CONTAINER_NODE         1
+#define ADBO_CONTAINER_ITEM         2
+#define ADBO_CONTAINER_SUBSTITUTE   3
 
 #include <system/macros.h>
 

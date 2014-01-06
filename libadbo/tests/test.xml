@@ -1,0 +1,69 @@
+<test>
+	<node id="test01" dbtable="test01">
+		<primary_keys>
+			<value dbcolumn="id" data="1"/>
+		</primary_keys>
+		<objects>
+			<node id="test02" dbtable="test02">
+				<primary_keys>
+					<value dbcolumn="id"/>
+				</primary_keys>
+				<foreign_keys>
+					<value dbcolumn="fid" link="../id"/>
+				</foreign_keys>
+				<objects min="3">
+					<node id="addresses_test2" dbtable="addresses_test2">
+						<primary_keys>
+							<value dbcolumn="id"/>
+						</primary_keys>
+						<foreign_keys>
+							<value dbcolumn="test2_id" link="../id"/>
+							<value link="addresses"/>
+						</foreign_keys>
+						<objects min="1">
+							<node id="addresses" dbtable="addresses">
+								<value dbcolumn="address_id"/>
+								<primary_keys>
+									<value dbcolumn="id" link="../addresses"/>
+								</primary_keys>
+								<objects>
+									<item>
+										<value dbcolumn="field1"/>
+									</item>				
+								</objects>
+							</node>							
+						</objects>
+					</node>
+					<item>
+						<value dbcolumn="name"/>
+					</item>
+					<item>
+						<value dbcolumn="user"/>
+					</item>				
+				</objects>
+			</node>
+			<node id="address" dbtable="addresses">
+				<value dbcolumn="address_id"/>
+				<primary_keys>
+					<value dbcolumn="id" link="../addresses"/>
+				</primary_keys>
+				<objects>
+					<item>
+						<value dbcolumn="field1"/>
+					</item>	
+					<node id="phones" dbtable="phones">
+						<value dbcolumn="phone_id"/>
+						<primary_keys>
+							<value dbcolumn="id" link="../phones"/>
+						</primary_keys>
+						<objects>
+							<item>
+								<value dbcolumn="number"/>
+							</item>				
+						</objects>
+					</node>							
+				</objects>
+			</node>
+		</objects>
+	</node>
+</test>

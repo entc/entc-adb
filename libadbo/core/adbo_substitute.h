@@ -28,6 +28,12 @@ struct AdboSubstitute_s; typedef struct AdboSubstitute_s* AdboSubstitute;
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor
+__LIB_EXPORT AdboSubManager adbo_subsmgr_new (const EcString scanpath, EcLogger);
+
+// destructor
+__LIB_EXPORT void adbo_subsmgr_del (AdboSubManager*);
+
+// constructor
 __LIB_EXPORT AdboSubstitute adbo_substitute_new (AdboObject, AdboContainer, EcXMLStream, EcLogger);
 
 // destructor

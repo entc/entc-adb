@@ -19,17 +19,120 @@
 
 #include "adbo_substitute.h"
 
-struct AdboSubstitute_s
+#include "adbo_container.h"
+
+#include "types/ecmap.h"
+
+struct AdboSubManager_s
 {
   
+  EcMap subs;
   
 };
 
 //----------------------------------------------------------------------------------------
 
-AdboSubstitute adbo_substitute_new (AdboObject obj, AdboContainer container, EcXMLStream xmlstream, EcLogger logger)
+void adbo_subsmgr_parse_substitutes (AdboSubManager self, EcXMLStream xmlstream, EcLogger logger)
+{
+  ENTC_XMLSTREAM_BEGIN
+  
+  if (ecxmlstream_isBegin (xmlstream, "substitute"))
+  {
+    // obviously we found a substitute
+    eclogger_logformat(logger, LL_TRACE, "ADBO", "{scan} found substitute" );    
+  }
+  
+  ENTC_XMLSTREAM_END( "adbo_substitutes" )  
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_subsmgr_parse (AdboSubManager self, const EcString filename, EcLogger logger, const EcString confdir)
+{
+  EcXMLStream xmlstream = ecxmlstream_openfile(filename, logger, confdir);
+  
+  while( ecxmlstream_nextNode( xmlstream ) )
+  {
+    if( ecxmlstream_isBegin( xmlstream, "adbo_substitutes" ) )
+    {
+      adbo_subsmgr_parse_substitutes (self, xmlstream, logger);
+    }
+  }  
+  
+  ecxmlstream_close (xmlstream);
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_subsmgr_scan (AdboSubManager self, const EcString scanpath, EcLogger logger)
+{
+  EcListNode node;
+  EcList files = eclist_new ();  
+  
+  eclogger_logformat(logger, LL_TRACE, "ADBO", "{scan} scan path '%s' for adbo substitutes", scanpath);        
+  // fill a list with all files in that directory
+  if (!ecdh_scan(scanpath, files, ENTC_FILETYPE_ISFILE))
+  {
+    eclogger_logformat(logger, LL_ERROR, "ADBO", "{scan} can't find path '%s'", ecstr_cstring(scanpath) );    
+  }  
+  for (node = eclist_first(files); node != eclist_end(files); node = eclist_next(node))
+  {
+    EcString filename = eclist_data(node);
+    // check xml content
+    const EcString extension = ecfs_extractFileExtension(filename);
+    if (ecstr_equal(extension, "xml"))
+    {
+      adbo_subsmgr_parse (self, filename, logger, scanpath);
+    }
+    // clean up
+    ecstr_delete(&filename);
+  }
+  // clean up
+  eclist_delete(&files);  
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboSubManager adbo_subsmgr_new (const EcString scanpath, EcLogger logger)
+{
+  AdboSubManager self = ENTC_NEW (struct AdboSubManager_s);
+  
+  self->subs = ecmap_new ();
+    
+  adbo_subsmgr_scan (self, scanpath, logger);
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_subsmgr_del (AdboSubManager* pself)
+{
+  AdboSubManager self = *pself;
+  
+  ecmap_delete (&(self->subs));
+  
+  ENTC_DEL (pself, struct AdboSubManager_s);
+}
+
+//----------------------------------------------------------------------------------------
+
+struct AdboSubstitute_s
 {
   
+  AdboContainer container;
+  
+};
+
+//----------------------------------------------------------------------------------------
+
+AdboSubstitute adbo_substitute_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstream, EcLogger logger)
+{
+  AdboSubstitute self = ENTC_NEW (struct AdboSubstitute_s);
+
+  self->container = adbo_container_new (ADBO_CONTAINER_SUBSTITUTE, parent);
+  
+  return self;
 }
 
 //----------------------------------------------------------------------------------------

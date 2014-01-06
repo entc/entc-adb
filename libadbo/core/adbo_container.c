@@ -48,6 +48,11 @@ AdboContainer adbo_container_new (uint_t type, AdboContainer parent)
       self->ext = eclist_new ();
     }
     break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      self->ext = NULL;
+    }
+    break;
   }
         
   return self;
@@ -124,6 +129,16 @@ void adbo_container_add (AdboContainer self, AdboObject obj)
       eclist_append ((EcList)self->ext, obj);
     }
     break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+        adbo_object_del ((AdboObject*)&(self->ext));
+      }
+      
+      self->ext = obj;
+    }
+    break;
   }
 }
 
@@ -155,6 +170,14 @@ void adbo_container_query (AdboContainer self, AdblQuery* query)
           }
         }
       }      
+    }
+    break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+
+      }
     }
     break;
   }
@@ -249,6 +272,14 @@ int adbo_container_request (AdboContainer self, AdboContext context)
       }      
     }
     break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+        adbo_object_request ((AdboObject)self->ext, context);        
+      }
+    }
+    break;
   }
   
   return ret;
@@ -271,6 +302,14 @@ int adbo_container_update (AdboContainer self, AdboContext context)
       {
         ret = ret && adbo_object_update ((AdboObject)eclist_data (node), context, FALSE);
       }      
+    }
+    break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+        ret = adbo_object_update ((AdboObject)self->ext, context, FALSE);       
+      }
     }
     break;
   }
@@ -297,6 +336,14 @@ int adbo_container_delete (AdboContainer self, AdboContext context)
       }      
     }
     break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+        ret = adbo_object_delete ((AdboObject)self->ext, context, FALSE);       
+      }
+    }
+    break;
   }
   
   return ret;
@@ -317,6 +364,14 @@ void adbo_container_transaction (AdboContainer self, int state)
       {
         adbo_object_transaction ((AdboObject)eclist_data (node), state);
       }      
+    }
+    break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+        adbo_object_transaction ((AdboObject)self->ext, state);       
+      }
     }
     break;
   }  
@@ -346,6 +401,14 @@ void adbo_container_str (AdboContainer self, EcStream stream)
       }
       
       ecstream_appendc (stream, '}');
+    }
+    break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+        adbo_strToStream ((AdboObject)self->ext, stream);       
+      }
     }
     break;
   }
@@ -464,7 +527,14 @@ void adbo_container_dump (AdboContainer self, int tab, EcBuffer buffer, EcLogger
         adbo_dump_next (eclist_data (node), tab, eclist_next (node) == eclist_end (objects), buffer, logger);
       }
     }
-      break;
+    break;
+    case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      if (isAssigned (self->ext))
+      {
+
+      }
+    }
   }  
 }
 

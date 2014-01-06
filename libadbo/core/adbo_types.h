@@ -56,12 +56,16 @@ struct AdboContainer_s; typedef struct AdboContainer_s* AdboContainer;
 // type definition
 struct AdboObject_s; typedef struct AdboObject_s* AdboObject;
 
+struct AdboSubManager_s; typedef struct AdboSubManager_s* AdboSubManager;
+
 struct AdboContext_s
 {
 
   EcLogger logger;
 
   AdblManager adblm;
+  
+  AdboSubManager substitutes;
 
 };
 

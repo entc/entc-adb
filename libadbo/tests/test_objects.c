@@ -4,6 +4,7 @@
 #include "../core/adbo_types.h"
 #include "../core/adbo_object.h"
 #include "../core/adbo_container.h"
+#include "../core/adbo_substitute.h"
  
 void test1 (void* ptr, void* obj)
 {
@@ -88,6 +89,7 @@ int main (int argc, char *argv[])
   
   context.logger = eclogger_new (0);
   context.adblm = adbl_new (context.logger);
+  context.substitutes = adbo_subsmgr_new (currentDir, context.logger);
   
   events = ece_files_new (context.logger);
 
@@ -112,6 +114,8 @@ int main (int argc, char *argv[])
   adbo_container_iterate (objects, test3, &context);
 
   adbo_container_iterate (objects, test4, &context);
+  
+  adbo_subsmgr_del (&(context.substitutes));
     
   return 0;
 }
