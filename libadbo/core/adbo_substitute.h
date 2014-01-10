@@ -28,13 +28,16 @@ struct AdboSubstitute_s; typedef struct AdboSubstitute_s* AdboSubstitute;
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor
-__LIB_EXPORT AdboSubManager adbo_subsmgr_new (const EcString scanpath, EcLogger);
+__LIB_EXPORT AdboSubManager adbo_subsmgr_new (const EcString scanpath, AdboContext);
 
 // destructor
 __LIB_EXPORT void adbo_subsmgr_del (AdboSubManager*);
 
+// getter
+__LIB_EXPORT AdboObject adbo_subsmgr_get (AdboSubManager, const EcString name);
+
 // constructor
-__LIB_EXPORT AdboSubstitute adbo_substitute_new (AdboObject, AdboContainer, EcXMLStream, EcLogger);
+__LIB_EXPORT AdboSubstitute adbo_substitute_new (AdboObject, AdboContext, AdboContainer, EcXMLStream);
 
 // destructor
 __LIB_EXPORT void adbo_substitute_del (AdboSubstitute*);
@@ -60,9 +63,15 @@ __LIB_EXPORT void adbo_substitute_strToStream (AdboSubstitute, EcStream);
 
 __LIB_EXPORT EcString adbo_substitute_str (AdboSubstitute);
 
-__LIB_EXPORT int adbo_substitute_is (AdboSubstitute, const EcString link);
+__LIB_EXPORT AdboObject adbo_substitute_get (AdboSubstitute, const EcString link);
 
 __LIB_EXPORT void adbo_substitute_dump (AdboObject, AdboSubstitute, int tab, int le, EcBuffer, EcLogger);
+
+__LIB_EXPORT void adbo_substitute_addToQuery (AdboSubstitute, AdblQuery*);
+
+__LIB_EXPORT void adbo_substitute_setFromQuery (AdboSubstitute, AdblCursor*, EcLogger);
+
+__LIB_EXPORT void adbo_substitute_addToAttr (AdboSubstitute, AdblAttributes*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

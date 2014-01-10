@@ -60,7 +60,10 @@ void test3 (void* ptr, void* obj)
   
   adbo_object_update (obj, context, TRUE);
   
-  eclogger_logformat(context->logger, LL_INFO, "TEST", "data : %s", ecstr_cstring(data));    
+  eclogger_logformat(context->logger, LL_INFO, "TEST", "data : %s", ecstr_cstring(data)); 
+  
+  adbo_dump(obj, context->logger);
+
 }
 
 void test4 (void* ptr, void* obj)
@@ -89,7 +92,7 @@ int main (int argc, char *argv[])
   
   context.logger = eclogger_new (0);
   context.adblm = adbl_new (context.logger);
-  context.substitutes = adbo_subsmgr_new (currentDir, context.logger);
+  context.substitutes = adbo_subsmgr_new (currentDir, &context);
   
   events = ece_files_new (context.logger);
 
@@ -101,7 +104,7 @@ int main (int argc, char *argv[])
   {
     if( ecxmlstream_isBegin( xmlstream, "test" ) )
     {
-      adbo_objects_fromXml (objects, xmlstream, "test", context.logger);
+      adbo_objects_fromXml (objects, &context, xmlstream, "test");
     }
   }
   /* close the file */

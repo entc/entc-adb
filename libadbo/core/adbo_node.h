@@ -29,7 +29,7 @@ struct AdboNode_s; typedef struct AdboNode_s* AdboNode;
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor
-__LIB_EXPORT AdboNode adbo_node_new (AdboObject, AdboContainer, EcXMLStream, EcLogger);
+__LIB_EXPORT AdboNode adbo_node_new (AdboObject, AdboContext, AdboContainer, EcXMLStream);
 
 // destructor
 __LIB_EXPORT void adbo_node_del (AdboNode*);
@@ -55,7 +55,7 @@ __LIB_EXPORT void adbo_node_strToStream (AdboNode, EcStream);
 
 __LIB_EXPORT EcString adbo_node_str (AdboNode);
 
-__LIB_EXPORT int adbo_node_is (AdboNode, const EcString link);
+__LIB_EXPORT AdboObject adbo_node_get (AdboObject, AdboNode, const EcString link);
 
 __LIB_EXPORT void adbo_node_dump (AdboObject, AdboNode, int tab, int le, EcBuffer, EcLogger);
 

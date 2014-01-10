@@ -1,4 +1,29 @@
 <adbo_substitutes>
 	<substitute name="address">
+		<node dbtable="addresses">
+				<value dbcolumn="address_id"/>
+				<primary_keys>
+					<value dbcolumn="id" link="../addresses"/>
+				</primary_keys>
+				<foreign_keys>
+					<value link="phones"/>
+				</foreign_keys>
+				<objects>
+					<item>
+						<value dbcolumn="field1"/>
+					</item>	
+					<node id="phones" dbtable="phones">
+						<value dbcolumn="phone_id"/>
+						<primary_keys>
+							<value dbcolumn="id" link="../phones"/>
+						</primary_keys>
+						<objects>
+							<item>
+								<value dbcolumn="number"/>
+							</item>				
+						</objects>
+					</node>							
+				</objects>
+		</node>
 	</substitute>
 </adbo_substitutes>

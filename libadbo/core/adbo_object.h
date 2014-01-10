@@ -30,7 +30,7 @@
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor (creates a new empty object from xml config)
-__LIB_EXPORT AdboObject adbo_object_new (AdboContainer parent, uint_t type, EcXMLStream, const EcString, EcLogger);
+__LIB_EXPORT AdboObject adbo_object_new (AdboContainer parent, AdboContext, uint_t type, EcXMLStream, const EcString);
 
 // destructor (deletes recursively object and data)
 __LIB_EXPORT void adbo_object_del (AdboObject*);
@@ -49,7 +49,7 @@ __LIB_EXPORT int adbo_object_delete (AdboObject, AdboContext, int withTransactio
 
 // misc
 
-__LIB_EXPORT void adbo_objects_fromXml (AdboContainer, EcXMLStream, const EcString tag, EcLogger logger);
+__LIB_EXPORT void adbo_objects_fromXml (AdboContainer, AdboContext, EcXMLStream, const EcString tag);
 
 __LIB_EXPORT AdboValue adbo_getValue (AdboObject);
 
@@ -59,23 +59,29 @@ __LIB_EXPORT void adbo_strToStream (AdboObject, EcStream);
 
 __LIB_EXPORT void adbo_object_transaction (AdboObject, int state);
 
+__LIB_EXPORT void adbo_object_addToQuery (AdboObject, AdblQuery*);
+
+__LIB_EXPORT void adbo_object_setFromQuery (AdboObject, AdblCursor*, EcLogger);
+
+__LIB_EXPORT void adbo_object_addToAttr (AdboObject, AdboContainer, AdblAttributes*);
+
 // accessors
 
 __LIB_EXPORT AdboObject adbo_at (AdboObject, const EcString link);
 
 __LIB_EXPORT EcString adbo_str (AdboObject);
 
-__LIB_EXPORT int adbo_is (AdboObject, const EcString);
-
 __LIB_EXPORT int adbo_set (AdboObject, const EcString);
 
 __LIB_EXPORT int adbo_add (AdboObject);
+
+__LIB_EXPORT AdboObject adbo_get (AdboObject, const EcString);
 
 // debug
 
 __LIB_EXPORT void adbo_dump (AdboObject, EcLogger logger);
 
-__LIB_EXPORT void adbo_dump_next (AdboObject, int depth, int le, EcBuffer b2, EcLogger logger);
+__LIB_EXPORT void adbo_dump_next (AdboObject, AdboContainer, int depth, int le, EcBuffer b2, EcLogger logger);
 
 __LIB_EXPORT const EcString adbo_dump_state (uint_t state);
 

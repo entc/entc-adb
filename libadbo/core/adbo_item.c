@@ -106,19 +106,22 @@ EcString adbo_item_str (AdboObject obj)
 
 //----------------------------------------------------------------------------------------
 
-int adbo_item_is (AdboObject obj, const EcString link)
+AdboObject adbo_item_get (AdboObject obj, const EcString link)
 {
   AdboValue value = (AdboValue)adbo_getValue (obj);
   if (isAssigned (value))
   {
-    return ecstr_equal (adbo_value_getDBColumn (value), link);
+    if (ecstr_equal (adbo_value_getDBColumn (value), link))
+    {
+      return obj;
+    }
   }
-  return FALSE;
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------
 
-void adbo_item_dump (AdboObject obj, int depth, int le, EcBuffer b2, EcLogger logger)
+void adbo_item_dump (AdboObject obj, AdboContainer container, int depth, int le, EcBuffer b2, EcLogger logger)
 {
   AdboValue value;
 
@@ -140,7 +143,7 @@ void adbo_item_dump (AdboObject obj, int depth, int le, EcBuffer b2, EcLogger lo
   if (isAssigned (value))
   {
     dbcolumn = adbo_value_getDBColumn (value);
-    dbvalue = adbo_value_get (value, obj);
+    dbvalue = adbo_value_cget (value, container);
     state = adbo_value_getState (value);
   }
     

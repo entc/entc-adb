@@ -20,6 +20,7 @@
 #include "adbo_substitute.h"
 
 #include "adbo_container.h"
+#include "adbo_object.h"
 
 #include "types/ecmap.h"
 
@@ -32,14 +33,25 @@ struct AdboSubManager_s
 
 //----------------------------------------------------------------------------------------
 
-void adbo_subsmgr_parse_substitutes (AdboSubManager self, EcXMLStream xmlstream, EcLogger logger)
+void adbo_subsmgr_parse_substitutes (AdboSubManager self, AdboContext context, EcXMLStream xmlstream)
 {
   ENTC_XMLSTREAM_BEGIN
   
   if (ecxmlstream_isBegin (xmlstream, "substitute"))
   {
-    // obviously we found a substitute
-    eclogger_logformat(logger, LL_TRACE, "ADBO", "{scan} found substitute" );    
+    // need to copy because xmlstream will be used further
+    EcString name = ecstr_copy (ecxmlstream_nodeAttribute (xmlstream, "name"));
+    if (ecstr_valid (name))
+    {
+      AdboObject obj;
+      // obviously we found a substitute
+      eclogger_logformat(context->logger, LL_TRACE, "ADBO", "{scan} found substitute '%s'", name );
+      
+      obj = adbo_object_new (NULL, context, ADBO_OBJECT_SUBSTITUTE, xmlstream, "substitute");
+      
+      ecmap_append (self->subs, name, obj);
+    }
+    ecstr_delete(&name);
   }
   
   ENTC_XMLSTREAM_END( "adbo_substitutes" )  
@@ -47,15 +59,15 @@ void adbo_subsmgr_parse_substitutes (AdboSubManager self, EcXMLStream xmlstream,
 
 //----------------------------------------------------------------------------------------
 
-void adbo_subsmgr_parse (AdboSubManager self, const EcString filename, EcLogger logger, const EcString confdir)
+void adbo_subsmgr_parse (AdboSubManager self, AdboContext context, const EcString filename, const EcString confdir)
 {
-  EcXMLStream xmlstream = ecxmlstream_openfile(filename, logger, confdir);
+  EcXMLStream xmlstream = ecxmlstream_openfile(filename, context->logger, confdir);
   
   while( ecxmlstream_nextNode( xmlstream ) )
   {
     if( ecxmlstream_isBegin( xmlstream, "adbo_substitutes" ) )
     {
-      adbo_subsmgr_parse_substitutes (self, xmlstream, logger);
+      adbo_subsmgr_parse_substitutes (self, context, xmlstream);
     }
   }  
   
@@ -64,16 +76,16 @@ void adbo_subsmgr_parse (AdboSubManager self, const EcString filename, EcLogger 
 
 //----------------------------------------------------------------------------------------
 
-void adbo_subsmgr_scan (AdboSubManager self, const EcString scanpath, EcLogger logger)
+void adbo_subsmgr_scan (AdboSubManager self, AdboContext context, const EcString scanpath)
 {
   EcListNode node;
   EcList files = eclist_new ();  
   
-  eclogger_logformat(logger, LL_TRACE, "ADBO", "{scan} scan path '%s' for adbo substitutes", scanpath);        
+  eclogger_logformat(context->logger, LL_TRACE, "ADBO", "{scan} scan path '%s' for adbo substitutes", scanpath);        
   // fill a list with all files in that directory
   if (!ecdh_scan(scanpath, files, ENTC_FILETYPE_ISFILE))
   {
-    eclogger_logformat(logger, LL_ERROR, "ADBO", "{scan} can't find path '%s'", ecstr_cstring(scanpath) );    
+    eclogger_logformat(context->logger, LL_ERROR, "ADBO", "{scan} can't find path '%s'", ecstr_cstring(scanpath) );    
   }  
   for (node = eclist_first(files); node != eclist_end(files); node = eclist_next(node))
   {
@@ -82,7 +94,7 @@ void adbo_subsmgr_scan (AdboSubManager self, const EcString scanpath, EcLogger l
     const EcString extension = ecfs_extractFileExtension(filename);
     if (ecstr_equal(extension, "xml"))
     {
-      adbo_subsmgr_parse (self, filename, logger, scanpath);
+      adbo_subsmgr_parse (self, context, filename, scanpath);
     }
     // clean up
     ecstr_delete(&filename);
@@ -93,13 +105,15 @@ void adbo_subsmgr_scan (AdboSubManager self, const EcString scanpath, EcLogger l
 
 //----------------------------------------------------------------------------------------
 
-AdboSubManager adbo_subsmgr_new (const EcString scanpath, EcLogger logger)
+AdboSubManager adbo_subsmgr_new (const EcString scanpath, AdboContext context)
 {
   AdboSubManager self = ENTC_NEW (struct AdboSubManager_s);
   
+  context->substitutes = self;
+  
   self->subs = ecmap_new ();
     
-  adbo_subsmgr_scan (self, scanpath, logger);
+  adbo_subsmgr_scan (self, context, scanpath);
   
   return self;
 }
@@ -117,6 +131,27 @@ void adbo_subsmgr_del (AdboSubManager* pself)
 
 //----------------------------------------------------------------------------------------
 
+AdboObject adbo_subsmgr_get (AdboSubManager self, const EcString name)
+{
+  AdboObject obj;
+  
+  printf("find '%s'\n", name);
+  
+  EcMapNode node = ecmap_find(self->subs, name);
+  if (node == ecmap_end(self->subs))
+  {
+    return NULL;
+  }
+  
+  obj = ecmap_data(node);
+  
+  printf("found obj %p\n", obj);
+  
+  return obj;
+}
+
+//----------------------------------------------------------------------------------------
+
 struct AdboSubstitute_s
 {
   
@@ -126,11 +161,15 @@ struct AdboSubstitute_s
 
 //----------------------------------------------------------------------------------------
 
-AdboSubstitute adbo_substitute_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstream, EcLogger logger)
+AdboSubstitute adbo_substitute_new (AdboObject obj, AdboContext context, AdboContainer parent, EcXMLStream xmlstream)
 {
   AdboSubstitute self = ENTC_NEW (struct AdboSubstitute_s);
 
   self->container = adbo_container_new (ADBO_CONTAINER_SUBSTITUTE, parent);
+
+  printf("sub new %p\n", self);
+  
+  adbo_objects_fromXml (self->container, context, xmlstream, "substitute");
   
   return self;
 }
@@ -139,75 +178,117 @@ AdboSubstitute adbo_substitute_new (AdboObject obj, AdboContainer parent, EcXMLS
 
 void adbo_substitute_del (AdboSubstitute* pself)
 {
+  AdboSubstitute self = *pself;
   
+  adbo_container_del (&(self->container));
+  
+  ENTC_DEL (pself, struct AdboSubstitute_s);
 }
 
 //----------------------------------------------------------------------------------------
 
 AdboSubstitute adbo_substitute_clone (const AdboSubstitute oself, AdboContainer parent)
 {
+  AdboSubstitute self = ENTC_NEW (struct AdboSubstitute_s);
   
+  printf("clone substitute %p\n", oself);
+  
+  self->container = adbo_container_clone (oself->container, parent, NULL, NULL, NULL);
+  
+  return self;
 }
 
 //----------------------------------------------------------------------------------------
 
 int adbo_substitute_request (AdboSubstitute self, AdboContext context)
 {
-  
+  return adbo_container_request (self->container, context);
 }
 
 //----------------------------------------------------------------------------------------
 
 int adbo_substitute_update (AdboSubstitute self, AdboContext context, int withTransaction)
 {
-  
+  return adbo_container_update (self->container, context);
 }
 
 //----------------------------------------------------------------------------------------
 
 int adbo_substitute_delete (AdboSubstitute self, AdboContext context, int withTransaction)
 {
-  
+  return adbo_container_delete (self->container, context);
 }
 
 //----------------------------------------------------------------------------------------
 
 void adbo_substitute_transaction (AdboSubstitute self, int state)
 {
-  
+  adbo_container_transaction (self->container, state);
 }
 
 //----------------------------------------------------------------------------------------
 
 AdboObject adbo_substitute_at (AdboSubstitute self, const EcString link)
 {
-  
+  return adbo_container_at (self->container, link);
 }
 
 //----------------------------------------------------------------------------------------
 
 void adbo_substitute_strToStream (AdboSubstitute self, EcStream stream)
 {
-  
+  adbo_container_str (self->container, stream);
 }
 
 //----------------------------------------------------------------------------------------
 
 EcString adbo_substitute_str (AdboSubstitute self)
 {
+  EcStream stream;
+  EcBuffer buffer;
+  // recursively continue with the type of this object
+  stream = ecstream_new ();
   
+  adbo_container_str (self->container, stream);
+  // extract the buffer from the stream
+  buffer = ecstream_trans (&stream);
+  // extract string from buffer
+  return ecstr_trans (&buffer);  
 }
 
 //----------------------------------------------------------------------------------------
 
-int adbo_substitute_is (AdboSubstitute self, const EcString link)
+AdboObject adbo_substitute_get (AdboSubstitute self, const EcString link)
 {
-  
+  return adbo_container_get (self->container, link);
 }
 
 //----------------------------------------------------------------------------------------
 
 void adbo_substitute_dump (AdboObject obj, AdboSubstitute self, int tab, int le, EcBuffer b2, EcLogger logger)
 {
-
+  adbo_container_dump (self->container, tab, b2, logger);
 }
+
+//----------------------------------------------------------------------------------------
+
+void adbo_substitute_addToQuery (AdboSubstitute self, AdblQuery* query)
+{
+  adbo_container_query (self->container, query);
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_substitute_setFromQuery (AdboSubstitute self, AdblCursor* cursor, EcLogger logger)
+{
+  adbo_container_set (self->container, cursor, logger);
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_substitute_addToAttr (AdboSubstitute self, AdblAttributes* attrs)
+{
+  adbo_container_attrs (self->container, attrs);
+}
+
+//----------------------------------------------------------------------------------------

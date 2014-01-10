@@ -38,9 +38,9 @@ __LIB_EXPORT void adbo_item_strToStream (AdboObject, AdboItem, EcStream);
 
 __LIB_EXPORT EcString adbo_item_str (AdboObject);
 
-__LIB_EXPORT int adbo_item_is (AdboObject, const EcString link);
+__LIB_EXPORT AdboObject adbo_item_get (AdboObject, const EcString link);
 
-__LIB_EXPORT void adbo_item_dump (AdboObject, int tab, int le, EcBuffer, EcLogger);
+__LIB_EXPORT void adbo_item_dump (AdboObject, AdboContainer, int tab, int le, EcBuffer, EcLogger);
 
 __CPP_EXTERN______________________________________________________________________________END
 

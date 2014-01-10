@@ -89,7 +89,7 @@ EcList adbo_node_dbkeys_clone (const EcList oself)
 
 //----------------------------------------------------------------------------------------
 
-void adbo_node_dbkeys_parse (EcList self, const EcString tag, EcXMLStream xmlstream, EcLogger logger)
+void adbo_node_dbkeys_parse (AdboNode self, EcList list, const EcString tag, EcXMLStream xmlstream, EcLogger logger)
 {
   ENTC_XMLSTREAM_BEGIN
   
@@ -97,9 +97,15 @@ void adbo_node_dbkeys_parse (EcList self, const EcString tag, EcXMLStream xmlstr
   {
     AdboValue value = adbo_value_new (xmlstream);
     
-    eclist_append(self, value);
+    eclist_append(list, value);
     
     eclogger_logformat (logger, LL_TRACE, "ADBO", "{parse} add to %s: '%s'", tag, adbo_value_getDBColumn(value));
+    
+    if (isNotAssigned (self->parts) && !adbo_value_hasLocalLink (value))
+    {
+      // create the list for parts
+      self->parts = eclist_new();      
+    }
   }
   
   ENTC_XMLSTREAM_END (tag)
@@ -351,7 +357,7 @@ void adbo_nodepart_dump (AdboNodePart self, int depth, int le, int partno, EcBuf
 
 //########################################################################################
 
-AdboNode adbo_node_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstream, EcLogger logger)
+AdboNode adbo_node_new (AdboObject obj, AdboContext context, AdboContainer parent, EcXMLStream xmlstream)
 {
   AdboNode self = ENTC_NEW (struct AdboNode_s);
 
@@ -365,10 +371,14 @@ AdboNode adbo_node_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstr
   self->max = 0;
   self->min = 0;
 
+  self->parts = NULL;
+
   if (isAssigned (xmlstream))
   {
     ecstr_replace (&(self->dbtable), ecxmlstream_nodeAttribute (xmlstream, "dbtable"));
 
+    eclogger_logformat (context->logger, LL_DEBUG, "ADBO", "{parse} node '%s'", self->dbtable); 
+    
     ENTC_XMLSTREAM_BEGIN
     
     if (ecxmlstream_isBegin (xmlstream, "objects"))
@@ -384,11 +394,11 @@ AdboNode adbo_node_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstr
         self->min = atoi(min);
       }
 
-      adbo_objects_fromXml (self->spart->container, xmlstream, "objects", logger);
+      adbo_objects_fromXml (self->spart->container, context, xmlstream, "objects");
     }
     else if (ecxmlstream_isBegin (xmlstream, "primary_keys"))
     {
-      AdboObject item = adbo_object_new (self->spart->container, ADBO_OBJECT_ITEM, xmlstream, "primary_keys", logger);
+      AdboObject item = adbo_object_new (self->spart->container, context, ADBO_OBJECT_ITEM, xmlstream, "primary_keys");
       
       adbo_container_add (self->spart->container, item);
       
@@ -396,7 +406,7 @@ AdboNode adbo_node_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstr
     }
     else if (ecxmlstream_isBegin (xmlstream, "foreign_keys"))
     {
-      adbo_node_dbkeys_parse (self->foreign_keys, "foreign_keys", xmlstream, logger);
+      adbo_node_dbkeys_parse (self, self->foreign_keys, "foreign_keys", xmlstream, context->logger);
     }
     else if (ecxmlstream_isBegin (xmlstream, "value"))
     {
@@ -408,17 +418,6 @@ AdboNode adbo_node_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstr
     }
     
     ENTC_XMLSTREAM_END ("node")
-  }
-  
-  // check if we have 1:n situation
-  if (eclist_first(self->foreign_keys) != eclist_end(self->foreign_keys))
-  {
-    // create the list for parts
-    self->parts = eclist_new();
-  }
-  else
-  {
-    self->parts = NULL;
   }
   
   return self;
@@ -503,13 +502,10 @@ AdblAttributes* adbo_node_request_attrs (AdboNode self, AdboNodePart part, AdboC
   
   if (!adbl_attrs_empty (attrs))
   {
-    if (isAssigned (self->parts))
+    if (!adbo_node_dbkeys_attrs (self->foreign_keys, part->container, attrs, context))
     {
-      if (!adbo_node_dbkeys_attrs (self->foreign_keys, part->container, attrs, context))
-      {
-        adbl_attrs_delete (&attrs);
-        return attrs;          
-      }
+      adbl_attrs_delete (&attrs);
+      return attrs;          
     }
   }
     
@@ -1095,9 +1091,16 @@ EcString adbo_node_str (AdboNode self)
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_is (AdboNode self, const EcString link)
+AdboObject adbo_node_get (AdboObject obj, AdboNode self, const EcString link)
 {
-  return ecstr_equal (self->dbtable, link);
+  if (ecstr_equal (self->dbtable, link))
+  {
+    return obj;
+  }
+  else
+  {
+    return NULL;
+  }
 }
 
 //----------------------------------------------------------------------------------------

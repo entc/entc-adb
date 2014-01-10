@@ -42,7 +42,7 @@ struct AdboObject_s
 
 //----------------------------------------------------------------------------------------
 
-AdboObject adbo_object_new (AdboContainer parent, uint_t type, EcXMLStream xmlstream, const EcString tag, EcLogger logger)
+AdboObject adbo_object_new (AdboContainer parent, AdboContext context, uint_t type, EcXMLStream xmlstream, const EcString tag)
 {
   AdboObject self = ENTC_NEW (struct AdboObject_s);
 
@@ -56,12 +56,14 @@ AdboObject adbo_object_new (AdboContainer parent, uint_t type, EcXMLStream xmlst
     ecstr_replace (&(self->id), ecxmlstream_nodeAttribute (xmlstream, "id"));    
   }
   
+  printf("new object %u %p\n", type, self);
+  
   // create specific extension
   switch (type)
   {
-    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new (self, parent, xmlstream, logger); break;
-    case ADBO_OBJECT_SUBSTITUTE:  self->extension = adbo_substitute_new(self, parent, xmlstream, logger); break;
-    case ADBO_OBJECT_ITEM:        self->extension = adbo_item_new (self, parent, xmlstream, tag, logger); break;
+    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new (self, context, parent, xmlstream); break;
+    case ADBO_OBJECT_SUBSTITUTE:  self->extension = adbo_substitute_new (self, context, parent, xmlstream); break;
+    case ADBO_OBJECT_ITEM:        self->extension = adbo_item_new (self, parent, xmlstream, tag, context->logger); break;
   }
   
   return self;
@@ -79,6 +81,8 @@ void adbo_object_del (AdboObject* pself)
 AdboObject adbo_object_clone (const AdboObject oself, AdboContainer parent)
 {
   AdboObject self = ENTC_NEW (struct AdboObject_s);
+  
+  printf("clone %u %p\n", oself->type, oself);
   
   self->type = oself->type;
   self->id = ecstr_copy (oself->id);
@@ -170,7 +174,7 @@ int adbo_object_delete (AdboObject self, AdboContext context, int withTransactio
 
 //----------------------------------------------------------------------------------------
 
-void adbo_objects_fromXml (AdboContainer container, EcXMLStream xmlstream, const EcString tag, EcLogger logger)
+void adbo_objects_fromXml (AdboContainer container, AdboContext context, EcXMLStream xmlstream, const EcString tag)
 {
   if (isAssigned (xmlstream))
   {
@@ -178,21 +182,29 @@ void adbo_objects_fromXml (AdboContainer container, EcXMLStream xmlstream, const
     
     if (ecxmlstream_isBegin (xmlstream, "node"))
     {
-      eclogger_log(logger, LL_TRACE, "ADBO", "{parse} found node");
+      eclogger_log(context->logger, LL_TRACE, "ADBO", "{parse} found node");
 
-      adbo_container_add (container, adbo_object_new (container, ADBO_OBJECT_NODE, xmlstream, "node", logger));
+      adbo_container_add (container, adbo_object_new (container, context, ADBO_OBJECT_NODE, xmlstream, "node"));
     }
     else if (ecxmlstream_isBegin (xmlstream, "substitute"))
     {
-      eclogger_log(logger, LL_TRACE, "ADBO", "{parse} found substitute");
-      
-      adbo_container_add (container, adbo_object_new (container, ADBO_OBJECT_SUBSTITUTE, xmlstream, "substitute", logger));
+      const EcString name = ecxmlstream_nodeAttribute (xmlstream, "name");
+      if (ecstr_valid (name))
+      {
+        AdboObject obj = adbo_subsmgr_get (context->substitutes, name);
+        if (isAssigned (obj))
+        {
+          eclogger_log(context->logger, LL_TRACE, "ADBO", "{parse} found substitute");
+          
+          adbo_container_add (container, adbo_object_clone (obj, container));          
+        }
+      }
     }
     else if (ecxmlstream_isBegin (xmlstream, "item"))
     {
-      eclogger_log(logger, LL_TRACE, "ADBO", "{parse} found item");
+      eclogger_log(context->logger, LL_TRACE, "ADBO", "{parse} found item");
       
-      adbo_container_add (container, adbo_object_new (container, ADBO_OBJECT_ITEM, xmlstream, "item", logger));
+      adbo_container_add (container, adbo_object_new (container, context, ADBO_OBJECT_ITEM, xmlstream, "item"));
     }
     
     ENTC_XMLSTREAM_END (tag)
@@ -302,19 +314,21 @@ int adbo_add (AdboObject self)
 
 //----------------------------------------------------------------------------------------
 
-int adbo_is (AdboObject self, const EcString link)
+AdboObject adbo_get (AdboObject self, const EcString link)
 {
   if (isNotAssigned (self))
   {
     return FALSE;
   }
+
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE:        return adbo_node_is ((AdboNode)self->extension, link);
-    case ADBO_OBJECT_SUBSTITUTE:  return adbo_substitute_is ((AdboSubstitute)self->extension, link);
-    case ADBO_OBJECT_ITEM:        return adbo_item_is (self, link);
-  }
-  return FALSE;
+    case ADBO_OBJECT_NODE:        return adbo_node_get (self, (AdboNode)self->extension, link);
+    case ADBO_OBJECT_SUBSTITUTE:  return adbo_substitute_get ((AdboSubstitute)self->extension, link);
+    case ADBO_OBJECT_ITEM:        return adbo_item_get (self, link);
+  }  
+  
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------
@@ -343,13 +357,109 @@ void adbo_object_transaction (AdboObject self, int state)
 
 //----------------------------------------------------------------------------------------
 
-void adbo_dump_next (AdboObject self, int depth, int le, EcBuffer buffer, EcLogger logger)
+void adbo_object_addToQuery (AdboObject self, AdblQuery* query)
+{
+  printf("add to query #1 %u\n", self->type);
+
+  switch (self->type)
+  {
+    case ADBO_OBJECT_NODE: case ADBO_OBJECT_ITEM:
+    {
+      if (isAssigned (self->value))
+      {
+        if (adbo_value_getState (self->value) != ADBO_STATE_FIXED)
+        {
+          // add the dbcolumn
+          const EcString dbcolumn = adbo_value_getDBColumn (self->value);
+          if (ecstr_valid (dbcolumn))
+          {
+            adbl_query_addColumn (query, dbcolumn, 0);
+          }        
+        }
+      }      
+    }
+    break;
+    case ADBO_OBJECT_SUBSTITUTE:
+    {
+      adbo_substitute_addToQuery (self->extension, query);
+    }
+    break;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_object_setFromQuery (AdboObject self, AdblCursor* cursor, EcLogger logger)
+{
+  switch (self->type)
+  {
+    case ADBO_OBJECT_NODE: case ADBO_OBJECT_ITEM:
+    {
+      if (isAssigned (self->value))
+      {
+        if (adbo_value_getState (self->value) != ADBO_STATE_FIXED)
+        {
+          // if we have added this colum now set the value
+          const EcString dbcolumn = adbo_value_getDBColumn (self->value);
+          if (ecstr_valid (dbcolumn))
+          {
+            const EcString data = adbl_dbcursor_nextdata (cursor);
+            
+            eclogger_logformat (logger, LL_TRACE, "ADBO", "{request} set values '%s' -> '%s'", dbcolumn, data);
+            // override value
+            adbo_value_set (self->value, data, ADBO_STATE_ORIGINAL);
+          }      
+        }
+      }      
+    }
+    break;
+    case ADBO_OBJECT_SUBSTITUTE:
+    {
+      adbo_substitute_setFromQuery (self->extension, cursor, logger);
+    }
+    break;
+  }  
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_object_addToAttr (AdboObject self, AdboContainer container, AdblAttributes* attrs)
+{
+  switch (self->type)
+  {
+    case ADBO_OBJECT_NODE: case ADBO_OBJECT_ITEM:
+    {
+      if (isAssigned (self->value))
+      {
+        if (adbo_value_getState (self->value) == ADBO_STATE_CHANGED)
+        {
+          // add the dbcolumn
+          const EcString dbcolumn = adbo_value_getDBColumn (self->value);
+          if (ecstr_valid (dbcolumn))
+          {
+            adbl_attrs_addChar (attrs, dbcolumn, adbo_value_cget (self->value, container));
+          }
+        }      
+      }      
+    }
+    break;
+    case ADBO_OBJECT_SUBSTITUTE:
+    {
+      adbo_substitute_addToAttr (self->extension, attrs);
+    }
+    break;
+  }    
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_dump_next (AdboObject self, AdboContainer container, int depth, int le, EcBuffer buffer, EcLogger logger)
 {
   switch (self->type)
   {
     case ADBO_OBJECT_NODE:        adbo_node_dump (self, (AdboNode)self->extension, depth, le, buffer, logger); break;
     case ADBO_OBJECT_SUBSTITUTE:  adbo_substitute_dump (self, (AdboSubstitute)self->extension, depth, le, buffer, logger); break;
-    case ADBO_OBJECT_ITEM:        adbo_item_dump (self, depth, le, buffer, logger); break;
+    case ADBO_OBJECT_ITEM:        adbo_item_dump (self, container, depth, le, buffer, logger); break;
   }  
 }
 
@@ -361,7 +471,7 @@ void adbo_dump (AdboObject self, EcLogger logger)
   
   eclogger_log(logger, LL_TRACE, "Q4EL", "============ adbo structure ============");  
   
-  adbo_dump_next (self, 0, TRUE, buffer, logger);
+  adbo_dump_next (self, NULL, 0, TRUE, buffer, logger);
     
   eclogger_log(logger, LL_TRACE, "Q4EL", "========================================");  
   

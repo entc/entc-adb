@@ -43,14 +43,9 @@ AdboContainer adbo_container_new (uint_t type, AdboContainer parent)
 
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       self->ext = eclist_new ();
-    }
-    break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      self->ext = NULL;
     }
     break;
   }
@@ -66,7 +61,7 @@ void adbo_container_del (AdboContainer* pself)
   
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
@@ -96,7 +91,7 @@ AdboContainer adbo_container_clone (const AdboContainer oself, AdboContainer par
   
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList oobjects = (EcList)oself->ext;
@@ -105,11 +100,14 @@ AdboContainer adbo_container_clone (const AdboContainer oself, AdboContainer par
       for (node = eclist_first (oobjects); node != eclist_end (oobjects); node = eclist_next (node))
       {
         AdboObject oobj = (AdboObject)eclist_data (node);
-        AdboObject nobj = adbo_object_clone (oobj, self);
+        AdboObject nobj = adbo_object_clone (oobj, self->type == ADBO_CONTAINER_NODE ? self : parent);
         
         eclist_append (self->ext, nobj);
         
-        fct (ptr1, ptr2, adbo_getValue (oobj), adbo_getValue (nobj));
+        if (isAssigned (fct))
+        {
+          fct (ptr1, ptr2, adbo_getValue (oobj), adbo_getValue (nobj));          
+        }
       }  
     }
     break;   
@@ -124,19 +122,9 @@ void adbo_container_add (AdboContainer self, AdboObject obj)
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       eclist_append ((EcList)self->ext, obj);
-    }
-    break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-        adbo_object_del ((AdboObject*)&(self->ext));
-      }
-      
-      self->ext = obj;
     }
     break;
   }
@@ -148,36 +136,15 @@ void adbo_container_query (AdboContainer self, AdblQuery* query)
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
       
       for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
       {
-        // get the value from each object
-        AdboValue value = adbo_getValue ((AdboObject)eclist_data (node));
-        if (isAssigned (value))
-        {
-          if (adbo_value_getState (value) != ADBO_STATE_FIXED)
-          {
-            // add the dbcolumn
-            const EcString dbcolumn = adbo_value_getDBColumn (value);
-            if (ecstr_valid (dbcolumn))
-            {
-              adbl_query_addColumn (query, dbcolumn, 0);
-            }        
-          }
-        }
+        adbo_object_addToQuery ((AdboObject)eclist_data (node), query);
       }      
-    }
-    break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-
-      }
     }
     break;
   }
@@ -189,27 +156,14 @@ void adbo_container_attrs (AdboContainer self, AdblAttributes* attrs)
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
 
       for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
       {
-        // get the value from each object
-        AdboValue value = adbo_getValue ((AdboObject)eclist_data (node));
-        if (isAssigned (value))
-        {
-          if (adbo_value_getState (value) == ADBO_STATE_CHANGED)
-          {
-            // add the dbcolumn
-            const EcString dbcolumn = adbo_value_getDBColumn (value);
-            if (ecstr_valid (dbcolumn))
-            {
-              adbl_attrs_addChar (attrs, dbcolumn, adbo_value_cget (value, self));
-            }
-          }
-        }
+        adbo_object_addToAttr ((AdboObject)eclist_data (node), self, attrs);
       }  
     }
     break;
@@ -222,31 +176,14 @@ void adbo_container_set (AdboContainer self, AdblCursor* cursor, EcLogger logger
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
       
       for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
       {
-        // get the value from each object
-        AdboValue value = adbo_getValue ((AdboObject)eclist_data (node));
-        if (isAssigned (value))
-        {
-          if (adbo_value_getState (value) != ADBO_STATE_FIXED)
-          {
-            // if we have added this colum now set the value
-            const EcString dbcolumn = adbo_value_getDBColumn (value);
-            if (ecstr_valid (dbcolumn))
-            {
-              const EcString data = adbl_dbcursor_nextdata (cursor);
-              
-              eclogger_logformat (logger, LL_TRACE, "ADBO", "{request} set values '%s' -> '%s'", dbcolumn, data);
-              // override value
-              adbo_value_set (value, data, ADBO_STATE_ORIGINAL);
-            }      
-          }
-        }
+        adbo_object_setFromQuery ((AdboObject)eclist_data (node), cursor, logger);
       }      
     }
     break;
@@ -261,7 +198,7 @@ int adbo_container_request (AdboContainer self, AdboContext context)
 
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
@@ -270,14 +207,6 @@ int adbo_container_request (AdboContainer self, AdboContext context)
       {
         adbo_object_request ((AdboObject)eclist_data (node), context);
       }      
-    }
-    break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-        adbo_object_request ((AdboObject)self->ext, context);        
-      }
     }
     break;
   }
@@ -293,7 +222,7 @@ int adbo_container_update (AdboContainer self, AdboContext context)
   
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
@@ -302,14 +231,6 @@ int adbo_container_update (AdboContainer self, AdboContext context)
       {
         ret = ret && adbo_object_update ((AdboObject)eclist_data (node), context, FALSE);
       }      
-    }
-    break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-        ret = adbo_object_update ((AdboObject)self->ext, context, FALSE);       
-      }
     }
     break;
   }
@@ -325,7 +246,7 @@ int adbo_container_delete (AdboContainer self, AdboContext context)
   
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
@@ -334,14 +255,6 @@ int adbo_container_delete (AdboContainer self, AdboContext context)
       {
         ret = ret && adbo_object_delete ((AdboObject)eclist_data (node), context, FALSE);
       }      
-    }
-    break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-        ret = adbo_object_delete ((AdboObject)self->ext, context, FALSE);       
-      }
     }
     break;
   }
@@ -355,7 +268,7 @@ void adbo_container_transaction (AdboContainer self, int state)
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
@@ -364,14 +277,6 @@ void adbo_container_transaction (AdboContainer self, int state)
       {
         adbo_object_transaction ((AdboObject)eclist_data (node), state);
       }      
-    }
-    break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-        adbo_object_transaction ((AdboObject)self->ext, state);       
-      }
     }
     break;
   }  
@@ -383,7 +288,7 @@ void adbo_container_str (AdboContainer self, EcStream stream)
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
@@ -403,14 +308,6 @@ void adbo_container_str (AdboContainer self, EcStream stream)
       ecstream_appendc (stream, '}');
     }
     break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-        adbo_strToStream ((AdboObject)self->ext, stream);       
-      }
-    }
-    break;
   }
 }
 
@@ -420,16 +317,15 @@ AdboObject adbo_container_get (AdboContainer self, const EcString item)
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
       
       for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
       {
-        AdboObject obj = (AdboObject)eclist_data (node);
-        
-        if (adbo_is (obj, item))
+        AdboObject obj = adbo_get ((AdboObject)eclist_data (node), item);
+        if (isAssigned (obj))
         {
           return obj;
         }
@@ -517,24 +413,17 @@ void adbo_container_dump (AdboContainer self, int tab, EcBuffer buffer, EcLogger
 {
   switch (self->type)
   {
-    case ADBO_CONTAINER_NODE:
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
     {
       EcListNode node;
       EcList objects = (EcList)self->ext;
       
       for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
       {
-        adbo_dump_next (eclist_data (node), tab, eclist_next (node) == eclist_end (objects), buffer, logger);
+        adbo_dump_next (eclist_data (node), self, tab, eclist_next (node) == eclist_end (objects), buffer, logger);
       }
     }
     break;
-    case ADBO_CONTAINER_SUBSTITUTE:
-    {
-      if (isAssigned (self->ext))
-      {
-
-      }
-    }
   }  
 }
 

@@ -67,6 +67,9 @@ __LIB_EXPORT void adbo_container_transaction (AdboContainer, int state);
 // convert content into string stream
 __LIB_EXPORT void adbo_container_str (AdboContainer, EcStream stream);
 
+// get the object only from forward links
+__LIB_EXPORT AdboObject adbo_container_get (AdboContainer, const EcString link);
+
 // get the object related to the link
 __LIB_EXPORT AdboObject adbo_container_at (AdboContainer, const EcString link);
 
