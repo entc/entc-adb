@@ -3,6 +3,9 @@
 		<primary_keys>
 			<value dbcolumn="id" data="1"/>
 		</primary_keys>
+		<foreign_keys>
+			<value link="addresses"/>
+		</foreign_keys>
 		<objects>
 			<node id="test02" dbtable="test02">
 				<primary_keys>

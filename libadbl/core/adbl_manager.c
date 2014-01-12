@@ -72,6 +72,10 @@ typedef struct
   
   adbl_dbsequence_next_t dbsequence_next;
   
+  adbl_dbschema_t dbschema;
+  
+  adbl_dbtable_t dbtable;
+  
 } ADBLModuleProperties;
 
 typedef struct
@@ -459,6 +463,8 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   properties->dbsequence_get     = (adbl_dbsequence_get_t)     ecdl_method (handle, "dbsequence_get");
   properties->dbsequence_release = (adbl_dbsequence_release_t) ecdl_method (handle, "dbsequence_release");
   properties->dbsequence_next    = (adbl_dbsequence_next_t)    ecdl_method (handle, "dbsequence_next");
+  properties->dbschema           = (adbl_dbschema_t)           ecdl_method (handle, "dbschema");
+  properties->dbtable            = (adbl_dbtable_t)            ecdl_method (handle, "dbtable");
   
   //add to map
   ecmap_append(self->modules, name, properties);  
@@ -993,4 +999,63 @@ void adbl_dbrollback (AdblSession session)
 
 /*------------------------------------------------------------------------*/
 
+EcList adbl_dbschema (AdblSession session)
+{
+  AdblCredentials* pc = session->credentials;
+  
+  if (isNotAssigned (pc->pp))
+  {
+    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    return NULL;
+  }
+  
+  if (isAssigned (pc->connection))
+  {
+    if (isAssigned (pc->pp->dbrollback))
+    {
+      return pc->pp->dbschema (pc->connection, session->logger);
+    }
+    else
+    {
+      eclogger_log(session->logger, LL_WARN, MODULE, "schema method in matrix is not defined" );
+    }
+  }
+  else
+  {
+    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+  }
+  return NULL;
+}
+
+/*------------------------------------------------------------------------*/
+
+AdblTable* adbl_dbtable (AdblSession session, const EcString tablename)
+{
+  AdblCredentials* pc = session->credentials;
+  
+  if (isNotAssigned (pc->pp))
+  {
+    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    return NULL;
+  }
+  
+  if (isAssigned (pc->connection))
+  {
+    if (isAssigned (pc->pp->dbrollback))
+    {
+      return pc->pp->dbtable (pc->connection, tablename, session->logger);
+    }
+    else
+    {
+      eclogger_log(session->logger, LL_WARN, MODULE, "table method in matrix is not defined" );
+    }
+  }
+  else
+  {
+    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+  }
+  return NULL;  
+}
+
+/*------------------------------------------------------------------------*/
 

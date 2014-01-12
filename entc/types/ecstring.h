@@ -90,6 +90,8 @@ __LIB_EXPORT const EcString ecstr_locate( const EcString source, char c, uint_t 
 
 __LIB_EXPORT EcString ecstr_extractf( const EcString source, char c );
 
+__LIB_EXPORT EcString ecstr_shrink (const EcString source, char from, char to);
+
 __LIB_EXPORT int ecstr_split(const EcString source, EcString*, EcString*, char c);
 
   /* **** transform methods **** */

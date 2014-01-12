@@ -918,3 +918,301 @@ uint_t adblmodule_dbsequence_next( void* ptr, EcLogger logger )
   
   return 0;
 }
+
+//----------------------------------------------------------------------------------------
+
+EcList adblmodule_dbschema (void* ptr, EcLogger logger)
+{
+  // variables
+  EcStream statement; 
+  int res;
+  const char* p;
+  sqlite3_stmt* stmt;
+  EcList ret;
+  // cast
+  struct AdblSqlite3Connection* conn = ptr;
+  
+  if( !conn->handle )
+  {
+    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    
+    return 0;
+  }
+  
+  statement = ecstream_new ();
+  
+  ecstream_append (statement, "SELECT name FROM sqlite_master WHERE type='table'");  
+
+  eclogger_log (logger, LL_TRACE, "SQLT", ecstream_buffer (statement));
+  
+  res = sqlite3_prepare_v2 (conn->handle,
+                            ecstream_buffer( statement ),
+                            ecstream_size( statement ),
+                            &stmt,
+                            &p);
+  
+  // clean up
+  ecstream_delete (&statement);
+  
+  if( res != SQLITE_OK )
+  {
+    eclogger_log (logger, LL_ERROR, "SQLT", "Error in last statement");
+    
+    return 0;  
+  } 
+  
+  ecmutex_lock(conn->mutex);
+  res = sqlite3_step(stmt);
+  ecmutex_unlock(conn->mutex);
+  
+  // so far so good
+  ret = eclist_new ();
+  
+  while( res == SQLITE_ROW )
+  {
+    eclist_append(ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
+    // get next row
+    ecmutex_lock(conn->mutex);
+    res = sqlite3_step(stmt);
+    ecmutex_unlock(conn->mutex);
+  }
+  
+  res = sqlite3_finalize(stmt);
+  
+  if( res != SQLITE_OK )
+  {
+    eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
+    
+    return 0;  
+  }  
+  
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
+void adblmodule_parseColumn (AdblTable* table, const EcString statement, EcLogger logger)
+{
+  EcListNode node;
+  EcList list = eclist_new ();
+  
+  EcString column;
+
+  ecstr_tokenizer(list, statement, ' ');
+  
+  node = eclist_first(list);
+  
+  if (node == eclist_end(list))
+  {
+    ecstr_tokenizer_clear (list);
+    eclist_delete(&list);
+    
+    return;
+  }
+  
+  column = ecstr_trim (eclist_data (node));
+
+  node = eclist_next(node);
+  if (node == eclist_end(list))
+  {
+    ecstr_tokenizer_clear (list);
+    eclist_delete(&list);
+    ecstr_delete(&column);
+    
+    return;
+  }
+  
+  node = eclist_next(node);
+  if (node == eclist_end(list))
+  {
+    eclogger_logformat (logger, LL_TRACE, "SQLT", "added column: %s", column);          
+
+    eclist_append(table->columns, column);
+  }
+  else
+  {
+    if (ecstr_equal(eclist_data (node), "PRIMARY"))
+    {
+      eclogger_logformat (logger, LL_TRACE, "SQLT", "added primary key: %s", column);          
+      
+      eclist_append(table->primary_keys, column);      
+    }
+    else
+    {
+      ecstr_delete(&column);
+    }
+  }
+
+  ecstr_tokenizer_clear (list);
+  eclist_delete(&list);
+}
+
+//----------------------------------------------------------------------------------------
+
+void adblmodule_parseForeignKey (AdblTable* table, const EcString statement, EcLogger logger)
+{
+  
+  EcListNode node;
+  EcList list = eclist_new ();
+  
+  EcString column;
+  EcString tablename;
+  EcString reference;
+  
+  ecstr_tokenizer(list, statement, ' ');
+
+  node = eclist_first(list);
+  
+  if (node == eclist_end(list))
+  {
+    ecstr_tokenizer_clear (list);
+    eclist_delete(&list);
+    
+    return;
+  }
+  
+  column = ecstr_shrink (eclist_data (node), '(', ')');
+
+  node = eclist_next(node);
+  if (node == eclist_end(list))
+  {
+    ecstr_tokenizer_clear (list);
+    eclist_delete(&list);
+    ecstr_delete(&column);
+    
+    return;
+  }
+  
+  node = eclist_next(node);
+  if (node == eclist_end(list))
+  {
+    ecstr_tokenizer_clear (list);
+    eclist_delete(&list);
+    ecstr_delete(&column);
+    
+    return;
+  }
+
+  tablename = ecstr_extractf (eclist_data (node), '(');
+  reference = ecstr_shrink (eclist_data (node), '(', ')');
+  
+  eclogger_logformat (logger, LL_TRACE, "SQLT", "add foreign key: %s with reference %s.%s", column, tablename, reference);          
+  
+  {
+    AdblForeignKeyConstraint* fkconstraint = ENTC_NEW (AdblForeignKeyConstraint);
+    
+    fkconstraint->name = table->name;
+    fkconstraint->column_name = column;
+    fkconstraint->table = tablename;
+    fkconstraint->reference = reference;
+    
+    eclist_append(table->foreign_keys, fkconstraint);
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcString statement, EcLogger logger)
+{
+  EcListNode node;
+  EcList list = eclist_new ();
+  
+  AdblTable* table = ENTC_NEW (AdblTable);
+  
+  table->name = ecstr_copy(tablename);
+  table->columns = eclist_new ();
+  table->primary_keys = eclist_new ();
+  table->foreign_keys = eclist_new ();
+  
+  EcString s1 = ecstr_shrink (statement, '(', ')');
+  
+  ecstr_tokenizer(list, s1, ',');
+  
+  for (node = eclist_first(list); node != eclist_end(list); node = eclist_next(node))
+  {
+    EcString part = eclist_data(node);
+    EcString token = ecstr_trim (part);
+    // check for foreign keys
+    if (ecstr_leading(token, "FOREIGN KEY "))
+    {
+      adblmodule_parseForeignKey (table, token + 12, logger);
+    }
+    else
+    {
+      adblmodule_parseColumn (table, token, logger);
+    }
+    ecstr_delete(&token);
+    ecstr_delete(&part);
+  }
+  
+  eclist_delete(&list);
+  
+  return table;
+}
+
+//----------------------------------------------------------------------------------------
+
+AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger logger)
+{
+  // variables
+  EcStream statement; 
+  int res;
+  const char* p;
+  sqlite3_stmt* stmt;
+  AdblTable* ret = NULL;
+  // cast
+  struct AdblSqlite3Connection* conn = ptr;
+  
+  if( !conn->handle )
+  {
+    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    
+    return ret;
+  }
+  
+  statement = ecstream_new ();
+  
+  ecstream_append (statement, "SELECT sql FROM sqlite_master WHERE type = 'table' and name='");
+  ecstream_append (statement, tablename);
+  ecstream_append (statement, "'");  
+  
+  eclogger_log (logger, LL_TRACE, "SQLT", ecstream_buffer (statement));
+  
+  res = sqlite3_prepare_v2 (conn->handle,
+                            ecstream_buffer( statement ),
+                            ecstream_size( statement ),
+                            &stmt,
+                            &p);
+  
+  // clean up
+  ecstream_delete (&statement);
+  
+  if( res != SQLITE_OK )
+  {
+    eclogger_log (logger, LL_ERROR, "SQLT", "Error in last statement");
+    
+    return 0;  
+  } 
+  
+  ecmutex_lock(conn->mutex);
+  res = sqlite3_step(stmt);
+  ecmutex_unlock(conn->mutex);
+  
+  if( res == SQLITE_ROW )
+  {
+    ret = adblmodule_parseCreateStatement (tablename, (const char*)sqlite3_column_text(stmt, 0), logger);
+  }
+  
+  res = sqlite3_finalize(stmt);
+  
+  if( res != SQLITE_OK )
+  {
+    eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
+    
+    return 0;  
+  }  
+  
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------

@@ -1031,4 +1031,18 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
   return unique_id;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
+
+EcList adblmodule_dbschema (void* ptr, EcLogger logger)
+{
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger logger)
+{
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------

@@ -42,7 +42,7 @@ struct AdboObject_s
 
 //----------------------------------------------------------------------------------------
 
-AdboObject adbo_object_new (AdboContainer parent, AdboContext context, uint_t type, EcXMLStream xmlstream, const EcString tag)
+AdboObject adbo_object_new1 (AdboContainer parent, AdboContext context, uint_t type, EcXMLStream xmlstream, const EcString tag)
 {
   AdboObject self = ENTC_NEW (struct AdboObject_s);
 
@@ -61,12 +61,34 @@ AdboObject adbo_object_new (AdboContainer parent, AdboContext context, uint_t ty
   // create specific extension
   switch (type)
   {
-    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new (self, context, parent, xmlstream); break;
+    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new1 (self, context, parent, xmlstream); break;
     case ADBO_OBJECT_SUBSTITUTE:  self->extension = adbo_substitute_new (self, context, parent, xmlstream); break;
     case ADBO_OBJECT_ITEM:        self->extension = adbo_item_new (self, parent, xmlstream, tag, context->logger); break;
   }
   
   return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboObject adbo_object_new2 (AdboContainer parent, AdboContext context, uint_t type, AdblTable* table_info)
+{
+  AdboObject self = ENTC_NEW (struct AdboObject_s);
+  
+  self->value = NULL;
+  
+  self->type = type;
+  self->id = ecstr_init ();
+  
+  printf("new object %u %p\n", type, self);
+
+  // create specific extension
+  switch (type)
+  {
+    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new2 (self, context, parent, table_info); break;
+  }
+  
+  return self;  
 }
 
 //----------------------------------------------------------------------------------------
@@ -184,7 +206,7 @@ void adbo_objects_fromXml (AdboContainer container, AdboContext context, EcXMLSt
     {
       eclogger_log(context->logger, LL_TRACE, "ADBO", "{parse} found node");
 
-      adbo_container_add (container, adbo_object_new (container, context, ADBO_OBJECT_NODE, xmlstream, "node"));
+      adbo_container_add (container, adbo_object_new1 (container, context, ADBO_OBJECT_NODE, xmlstream, "node"));
     }
     else if (ecxmlstream_isBegin (xmlstream, "substitute"))
     {
@@ -204,7 +226,7 @@ void adbo_objects_fromXml (AdboContainer container, AdboContext context, EcXMLSt
     {
       eclogger_log(context->logger, LL_TRACE, "ADBO", "{parse} found item");
       
-      adbo_container_add (container, adbo_object_new (container, context, ADBO_OBJECT_ITEM, xmlstream, "item"));
+      adbo_container_add (container, adbo_object_new1 (container, context, ADBO_OBJECT_ITEM, xmlstream, "item"));
     }
     
     ENTC_XMLSTREAM_END (tag)
@@ -471,7 +493,10 @@ void adbo_dump (AdboObject self, EcLogger logger)
   
   eclogger_log(logger, LL_TRACE, "Q4EL", "============ adbo structure ============");  
   
-  adbo_dump_next (self, NULL, 0, TRUE, buffer, logger);
+  if (isAssigned (self))
+  {
+    adbo_dump_next (self, NULL, 0, TRUE, buffer, logger);    
+  }
     
   eclogger_log(logger, LL_TRACE, "Q4EL", "========================================");  
   

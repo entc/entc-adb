@@ -40,7 +40,7 @@ AdboItem adbo_item_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstr
     
     if (ecxmlstream_isBegin (xmlstream, "value"))
     {
-      adbo_setValue (obj, adbo_value_new (xmlstream));
+      adbo_setValue (obj, adbo_value_newFromXml (xmlstream));
     }
     else if (ecxmlstream_isBegin (xmlstream, "data"))
     {

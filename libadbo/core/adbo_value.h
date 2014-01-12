@@ -29,7 +29,9 @@ struct AdboValue_s; typedef struct AdboValue_s* AdboValue;
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor
-__LIB_EXPORT AdboValue adbo_value_new (EcXMLStream);
+__LIB_EXPORT AdboValue adbo_value_new (const EcString dbcolumn, const EcString data, const EcString link);
+
+__LIB_EXPORT AdboValue adbo_value_newFromXml (EcXMLStream);
 
 __LIB_EXPORT void adbo_value_del (AdboValue*);
 

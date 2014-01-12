@@ -96,6 +96,12 @@ typedef void          (_STDCALL *adbl_dbsequence_release_t) ( void*, EcLogger );
 
 typedef uint_t        (_STDCALL *adbl_dbsequence_next_t)    ( void*, EcLogger );
 
+// addition
+
+typedef EcList        (_STDCALL *adbl_dbschema_t)           ( void*, EcLogger ); 
+
+typedef AdblTable*    (_STDCALL *adbl_dbtable_t)            ( void*, const EcString, EcLogger );
+                                                             
 
 #ifdef __cplusplus
 extern "C" {
@@ -136,6 +142,10 @@ __LIB_EXPORT void adbl_dbbegin( AdblSession );
 __LIB_EXPORT void adbl_dbcommit( AdblSession );
   
 __LIB_EXPORT void adbl_dbrollback( AdblSession );
+  
+__LIB_EXPORT EcList adbl_dbschema (AdblSession); 
+  
+__LIB_EXPORT AdblTable* adbl_dbtable (AdblSession, const EcString);  
   
 #ifdef __cplusplus
 }

@@ -58,6 +58,8 @@ struct AdboObject_s; typedef struct AdboObject_s* AdboObject;
 
 struct AdboSubManager_s; typedef struct AdboSubManager_s* AdboSubManager;
 
+struct AdboSchema_s; typedef struct AdboSchema_s* AdboSchema;
+
 struct AdboContext_s
 {
 
@@ -66,6 +68,8 @@ struct AdboContext_s
   AdblManager adblm;
   
   AdboSubManager substitutes;
+  
+  AdboSchema schema;
 
 };
 

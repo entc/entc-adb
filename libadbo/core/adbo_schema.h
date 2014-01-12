@@ -26,7 +26,13 @@
 
 __CPP_EXTERN______________________________________________________________________________START
 
+__LIB_EXPORT AdboSchema adbo_schema_new (AdboContext, const EcString dbsource);
 
+__LIB_EXPORT void adbo_schema_del (AdboSchema*);
+
+__LIB_EXPORT AdboObject adbo_schema_get (AdboSchema, AdboContext, AdboContainer parent, const EcString tablename);
+
+__LIB_EXPORT void adbo_schema_ref (AdboSchema, AdboContext, AdboContainer parent, const EcString tablename, EcList objects);
 
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -5,6 +5,7 @@
 #include "../core/adbo_object.h"
 #include "../core/adbo_container.h"
 #include "../core/adbo_substitute.h"
+#include "../core/adbo_schema.h"
  
 void test1 (void* ptr, void* obj)
 {
@@ -88,6 +89,8 @@ int main (int argc, char *argv[])
   EcXMLStream xmlstream;
   EcEventFiles events;
   
+  AdboObject obj2;
+  
   EcString currentDir = ecfs_getCurrentDirectory();
   
   context.logger = eclogger_new (0);
@@ -117,6 +120,14 @@ int main (int argc, char *argv[])
   adbo_container_iterate (objects, test3, &context);
 
   adbo_container_iterate (objects, test4, &context);
+  
+  
+  context.schema = adbo_schema_new (&context, "default");
+  
+  // get direct a object from a database table
+  obj2 = adbo_schema_get (context.schema, &context, NULL, "test01");
+  
+  adbo_dump(obj2, context.logger);
   
   adbo_subsmgr_del (&(context.substitutes));
     

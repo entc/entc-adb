@@ -43,16 +43,18 @@ struct AdboValue_s
 
 //----------------------------------------------------------------------------------------
 
-AdboValue adbo_value_new (EcXMLStream xmlstream)
+AdboValue adbo_value_new (const EcString dbcolumn, const EcString data, const EcString link)
 {
   AdboValue self = ENTC_NEW (struct AdboValue_s);
 
-  const EcString data = ecxmlstream_nodeAttribute (xmlstream, "data");
+  self->column = ecstr_copy (dbcolumn);
+  self->link = ecstr_copy (link);
+
   if ( ecstr_valid (data))
   {
     self->data = ecstr_copy (data);
     self->state = ADBO_STATE_FIXED;
-
+    
     self->data_orig = ecstr_copy (data);
     self->state_orig = ADBO_STATE_FIXED;
   }
@@ -60,16 +62,23 @@ AdboValue adbo_value_new (EcXMLStream xmlstream)
   {
     self->data = ecstr_init ();
     self->state = ADBO_STATE_NONE;
-
+    
     self->data_orig = ecstr_init();
     self->state_orig = ADBO_STATE_NONE;
   }
-
-  self->column = ecstr_copy (ecxmlstream_nodeAttribute (xmlstream, "dbcolumn"));
-  self->link = ecstr_copy (ecxmlstream_nodeAttribute (xmlstream, "link"));
   
-
   return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboValue adbo_value_newFromXml (EcXMLStream xmlstream)
+{
+  return adbo_value_new (
+    ecxmlstream_nodeAttribute (xmlstream, "dbcolumn"),
+    ecxmlstream_nodeAttribute (xmlstream, "data"),
+    ecxmlstream_nodeAttribute (xmlstream, "link")
+                         );
 }
 
 //----------------------------------------------------------------------------------------

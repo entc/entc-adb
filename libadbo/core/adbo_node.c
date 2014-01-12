@@ -20,6 +20,7 @@
 #include "adbo_node.h"
 
 #include "adbo_object.h"
+#include "adbo_schema.h"
 #include "adbo_container.h"
 
 #include <types/eclist.h>
@@ -95,7 +96,7 @@ void adbo_node_dbkeys_parse (AdboNode self, EcList list, const EcString tag, EcX
   
   if (ecxmlstream_isBegin (xmlstream, "value"))
   {
-    AdboValue value = adbo_value_new (xmlstream);
+    AdboValue value = adbo_value_newFromXml (xmlstream);
     
     eclist_append(list, value);
     
@@ -357,7 +358,7 @@ void adbo_nodepart_dump (AdboNodePart self, int depth, int le, int partno, EcBuf
 
 //########################################################################################
 
-AdboNode adbo_node_new (AdboObject obj, AdboContext context, AdboContainer parent, EcXMLStream xmlstream)
+AdboNode adbo_node_new1 (AdboObject obj, AdboContext context, AdboContainer parent, EcXMLStream xmlstream)
 {
   AdboNode self = ENTC_NEW (struct AdboNode_s);
 
@@ -398,7 +399,7 @@ AdboNode adbo_node_new (AdboObject obj, AdboContext context, AdboContainer paren
     }
     else if (ecxmlstream_isBegin (xmlstream, "primary_keys"))
     {
-      AdboObject item = adbo_object_new (self->spart->container, context, ADBO_OBJECT_ITEM, xmlstream, "primary_keys");
+      AdboObject item = adbo_object_new1 (self->spart->container, context, ADBO_OBJECT_ITEM, xmlstream, "primary_keys");
       
       adbo_container_add (self->spart->container, item);
       
@@ -410,7 +411,7 @@ AdboNode adbo_node_new (AdboObject obj, AdboContext context, AdboContainer paren
     }
     else if (ecxmlstream_isBegin (xmlstream, "value"))
     {
-      adbo_setValue (obj, adbo_value_new (xmlstream));
+      adbo_setValue (obj, adbo_value_newFromXml (xmlstream));
     }
     else if (ecxmlstream_isBegin (xmlstream, "data"))
     {
@@ -420,6 +421,66 @@ AdboNode adbo_node_new (AdboObject obj, AdboContext context, AdboContainer paren
     ENTC_XMLSTREAM_END ("node")
   }
   
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer parent, AdblTable* table_info)
+{
+  EcListNode node;
+  AdboNode self = ENTC_NEW (struct AdboNode_s);
+
+  self->spart = adbo_nodepart_new (parent);
+  
+  self->dbsource = ecstr_copy ("default");
+  self->dbtable = ecstr_copy (table_info->name);
+  
+  self->foreign_keys = eclist_new ();
+  
+  self->max = 0;
+  self->min = 0;
+  
+  self->parts = NULL;
+  
+  // primary keys
+  for (node = eclist_first (table_info->primary_keys); node != eclist_end (table_info->primary_keys); node = eclist_next (node))
+  {
+    AdboObject item = adbo_object_new2 (self->spart->container, context, ADBO_OBJECT_ITEM, NULL);
+    
+    adbo_container_add (self->spart->container, item);
+    
+    eclist_append (self->spart->primary_keys, adbo_getValue (item));    
+  }
+  
+  // foreign keys
+  for (node = eclist_first (table_info->foreign_keys); node != eclist_end (table_info->foreign_keys); node = eclist_next (node))
+  {
+    
+    AdblForeignKeyConstraint* fk = eclist_data(node);
+    
+    AdboValue value = adbo_value_new (fk->column_name, NULL, fk->table);
+    
+    eclist_append(self->foreign_keys, value);
+    
+    eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} add to %s: '%s'", table_info->name, adbo_value_getDBColumn(value));
+    
+    
+  }
+
+  {
+    EcList objects = eclist_new ();
+    // fill a list with all objects which have foreign key contraints to this table
+    adbo_schema_ref (context->schema, context, self->spart->container, table_info->name, objects);
+  
+    for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
+    {
+      
+      adbo_container_add (self->spart->container, eclist_data(node));
+    }
+    
+    eclist_delete (&objects);
+  }
   return self;
 }
 

@@ -152,6 +152,33 @@ struct AdblSequence_p;
 
 typedef struct AdblSequence_p AdblSequence;
 
+typedef struct
+{
+  
+  // refrence to AdblTable.name
+  EcString name;
+
+  EcString column_name;
+  
+  EcString table;
+  
+  EcString reference;
+  
+} AdblForeignKeyConstraint;
+
+typedef struct
+{
+  
+  EcString name;
+  
+  EcList columns;
+  
+  EcList primary_keys;
+  
+  EcList foreign_keys;
+  
+} AdblTable;
+
 //------------------------------------------
 
 #endif

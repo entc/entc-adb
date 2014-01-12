@@ -704,7 +704,29 @@ EcString ecstr_extractf( const EcString source, char c )
   }
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
+
+EcString ecstr_shrink (const EcString source, char from, char to)
+{
+  const char* pos1 = strchr(source, from);
+  if (isNotAssigned (pos1))
+  {
+    pos1 = source;
+  }
+  else
+  {
+    pos1++;
+  }
+  const char* pos2 = strrchr(source, to);
+  if (isNotAssigned (pos1))
+  {
+    pos2 = source + strlen(source);
+  }
+  
+  return ecstr_part(pos1, pos2 - pos1);
+}
+
+//----------------------------------------------------------------------------------------
 
 int ecstr_split (const EcString source, EcString* s1, EcString* s2, char c)
 {

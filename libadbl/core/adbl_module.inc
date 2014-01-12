@@ -19,6 +19,9 @@ void         adblmodule_dbcursor_release (void* ptr);
 void*        adblmodule_dbsequence_get (void* ptr, const EcString name, EcLogger logger);
 void         adblmodule_dbsequence_release (void* ptr, EcLogger logger);
 uint_t       adblmodule_dbsequence_next (void* ptr, EcLogger logger);
+EcList       adblmodule_dbschema ( void* ptr, EcLogger logger ); 
+AdblTable*   adblmodule_dbtable ( void* ptr, const EcString, EcLogger logger );
+
 
 __CPP_EXTERN______________________________________________________________________________START
 
@@ -198,6 +201,26 @@ void _STDCALL dbsequence_release (void* ptr, EcLogger logger)
 uint_t _STDCALL dbsequence_next (void* ptr, EcLogger logger)
 {
   return adblmodule_dbsequence_next (ptr, logger);
+}
+
+//________________________________________________________________________________________
+
+#if defined _WIN64 || defined _WIN32
+#pragma comment(linker, "/EXPORT:dbdbschema=_dbschema@8")
+#endif
+EcList _STDCALL dbschema ( void* ptr, EcLogger logger )
+{
+  return adblmodule_dbschema (ptr, logger);
+}
+
+//________________________________________________________________________________________
+
+#if defined _WIN64 || defined _WIN32
+#pragma comment(linker, "/EXPORT:dbtable=_dbtable@12")
+#endif
+AdblTable* _STDCALL dbtable ( void* ptr, const EcString tablename, EcLogger logger )
+{
+  return adblmodule_dbtable (ptr, tablename, logger);
 }
 
 __CPP_EXTERN______________________________________________________________________________END

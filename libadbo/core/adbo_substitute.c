@@ -47,7 +47,7 @@ void adbo_subsmgr_parse_substitutes (AdboSubManager self, AdboContext context, E
       // obviously we found a substitute
       eclogger_logformat(context->logger, LL_TRACE, "ADBO", "{scan} found substitute '%s'", name );
       
-      obj = adbo_object_new (NULL, context, ADBO_OBJECT_SUBSTITUTE, xmlstream, "substitute");
+      obj = adbo_object_new1 (NULL, context, ADBO_OBJECT_SUBSTITUTE, xmlstream, "substitute");
       
       ecmap_append (self->subs, name, obj);
     }
