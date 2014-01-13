@@ -51,6 +51,8 @@
 
 //##########################################
 
+struct AdboValue_s; typedef struct AdboValue_s* AdboValue;
+
 struct AdboContainer_s; typedef struct AdboContainer_s* AdboContainer;
 
 // type definition

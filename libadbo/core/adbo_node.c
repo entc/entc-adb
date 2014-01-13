@@ -426,7 +426,7 @@ AdboNode adbo_node_new1 (AdboObject obj, AdboContext context, AdboContainer pare
 
 //----------------------------------------------------------------------------------------
 
-AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer parent, AdblTable* table_info)
+AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer parent, AdblTable* table_info, const EcString origin)
 {
   EcListNode node;
   AdboNode self = ENTC_NEW (struct AdboNode_s);
@@ -446,7 +446,9 @@ AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer pare
   // primary keys
   for (node = eclist_first (table_info->primary_keys); node != eclist_end (table_info->primary_keys); node = eclist_next (node))
   {
-    AdboObject item = adbo_object_new2 (self->spart->container, context, ADBO_OBJECT_ITEM, NULL);
+    AdboValue value = adbo_value_new (eclist_data(node), NULL, NULL);
+    
+    AdboObject item = adbo_object_new2 (self->spart->container, context, ADBO_OBJECT_ITEM, NULL, origin, value);
     
     adbo_container_add (self->spart->container, item);
     
@@ -459,11 +461,31 @@ AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer pare
     
     AdblForeignKeyConstraint* fk = eclist_data(node);
     
-    AdboValue value = adbo_value_new (fk->column_name, NULL, fk->table);
+    if (ecstr_equal(origin, fk->table))
+    {
+      EcString link = ecstr_cat2("../", fk->reference);
+      
+      AdboValue value = adbo_value_new (fk->column_name, NULL, link);
+
+      eclist_append(self->foreign_keys, value);
+      
+      ecstr_delete(&link);
+    }
+    else
+    {
+      AdboValue value = adbo_value_new (fk->column_name, NULL, fk->table);
+      
+      eclist_append(self->foreign_keys, value);
+      
+      eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} add to %s: '%s'", table_info->name, adbo_value_getDBColumn(value));
+      
+      //AdboObject obj = adbo_schema_get (context->schema, context, self->spart->container, fk->table, table_info->name);
+      //if (isAssigned (obj))
+      //{
+      //  adbo_container_add (self->spart->container, obj);
+      //}
+    }
     
-    eclist_append(self->foreign_keys, value);
-    
-    eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} add to %s: '%s'", table_info->name, adbo_value_getDBColumn(value));
     
     
   }
@@ -1168,6 +1190,8 @@ AdboObject adbo_node_get (AdboObject obj, AdboNode self, const EcString link)
 
 void adbo_node_dump (AdboObject obj, AdboNode self, int depth, int le, EcBuffer b2, EcLogger logger)
 {
+  EcListNode node;
+  
   unsigned char* buffer = b2->buffer;
   
   uint_t pos = depth * 2;
@@ -1177,12 +1201,42 @@ void adbo_node_dump (AdboObject obj, AdboNode self, int depth, int le, EcBuffer 
   const EcString dbcolumn = "none";
   const EcString dbvalue = "none";
   
+  buffer [pos] = '|';        
+  buffer [pos + 1] = '+';
+  buffer [pos + 2] = '+';
+  buffer [pos + 3] = 0;
+
   AdboValue value = (AdboValue)adbo_getValue (obj);
   if (isAssigned (value))
   {
     dbcolumn = adbo_value_getDBColumn (value);
     dbvalue = adbo_value_get (value, obj);
     state = adbo_value_getState (value);
+
+    eclogger_logformat(logger, LL_TRACE, "ADBO", "%s value ['%s' = '%s'] state: %s"
+                       , ecstr_get (b2)
+                       , dbcolumn
+                       , dbvalue
+                       , adbo_dump_state (state)
+                       );    
+  }
+  
+  for (node = eclist_first (self->foreign_keys); node != eclist_end (self->foreign_keys); node = eclist_next (node))
+  {
+    AdboValue value = (AdboValue)eclist_data(node);
+    if (isAssigned (value))
+    {
+      dbcolumn = adbo_value_getDBColumn (value);
+      dbvalue = adbo_value_get (value, obj);
+      state = adbo_value_getState (value);
+    }
+        
+    eclogger_logformat(logger, LL_TRACE, "ADBO", "%s foreign key ['%s' = '%s'] state: %s"
+                       , ecstr_get (b2)
+                       , dbcolumn
+                       , dbvalue
+                       , adbo_dump_state (state)
+                       );        
   }
   
   buffer [pos] = le ? '\\' : '[';        
@@ -1190,17 +1244,6 @@ void adbo_node_dump (AdboObject obj, AdboNode self, int depth, int le, EcBuffer 
   buffer [pos + 2] = '_';
   buffer [pos + 3] = 0;
   
-  eclogger_logformat(logger, LL_TRACE, "ADBO", "%s ['%s' = '%s'] state: %s"
-                     , ecstr_get (b2)
-                     , dbcolumn
-                     , dbvalue
-                     , adbo_dump_state (state)
-                     );    
-  
-  buffer [pos] = le ? ' ' : '|';
-  buffer [pos + 1] = ' ';
-  buffer [pos + 2] = 0;      
-
   if (isAssigned (self->parts))
   {
     EcListNode node;

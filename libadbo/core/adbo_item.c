@@ -30,7 +30,7 @@ struct AdboItem_s
 
 //----------------------------------------------------------------------------------------
 
-AdboItem adbo_item_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstream, const EcString tag, EcLogger logger)
+AdboItem adbo_item_new1 (AdboObject obj, AdboContainer parent, EcXMLStream xmlstream, const EcString tag, EcLogger logger)
 {
   AdboItem self = ENTC_NEW (struct AdboItem_s);
     
@@ -51,6 +51,17 @@ AdboItem adbo_item_new (AdboObject obj, AdboContainer parent, EcXMLStream xmlstr
   }
   
   return self;  
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboItem adbo_item_new2 (AdboObject obj, AdboValue value)
+{
+  AdboItem self = ENTC_NEW (struct AdboItem_s);
+
+  adbo_setValue (obj, adbo_value_clone (value));
+  
+  return self;
 }
 
 //----------------------------------------------------------------------------------------

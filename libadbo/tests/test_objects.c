@@ -125,7 +125,7 @@ int main (int argc, char *argv[])
   context.schema = adbo_schema_new (&context, "default");
   
   // get direct a object from a database table
-  obj2 = adbo_schema_get (context.schema, &context, NULL, "test01");
+  obj2 = adbo_schema_get (context.schema, &context, NULL, "test01", NULL, NULL);
   
   adbo_dump(obj2, context.logger);
   

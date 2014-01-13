@@ -33,7 +33,7 @@ __CPP_EXTERN____________________________________________________________________
 __LIB_EXPORT AdboObject adbo_object_new1 (AdboContainer parent, AdboContext, uint_t type, EcXMLStream, const EcString);
 
 // constructor (creates a new empty object from xml config)
-__LIB_EXPORT AdboObject adbo_object_new2 (AdboContainer parent, AdboContext, uint_t type, AdblTable* table_info);
+__LIB_EXPORT AdboObject adbo_object_new2 (AdboContainer parent, AdboContext, uint_t type, AdblTable* table_info, const EcString origin, AdboValue value);
 
 // destructor (deletes recursively object and data)
 __LIB_EXPORT void adbo_object_del (AdboObject*);

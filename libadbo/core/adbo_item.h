@@ -29,7 +29,10 @@ struct AdboItem_s; typedef struct AdboItem_s* AdboItem;
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor
-__LIB_EXPORT AdboItem adbo_item_new (AdboObject, AdboContainer, EcXMLStream, const EcString, EcLogger);
+__LIB_EXPORT AdboItem adbo_item_new1 (AdboObject, AdboContainer, EcXMLStream, const EcString, EcLogger);
+
+// constructor
+__LIB_EXPORT AdboItem adbo_item_new2 (AdboObject, AdboValue value);
 
 // constructor
 __LIB_EXPORT AdboItem adbo_item_clone (AdboItem);

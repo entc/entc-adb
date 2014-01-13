@@ -63,7 +63,7 @@ AdboObject adbo_object_new1 (AdboContainer parent, AdboContext context, uint_t t
   {
     case ADBO_OBJECT_NODE:        self->extension = adbo_node_new1 (self, context, parent, xmlstream); break;
     case ADBO_OBJECT_SUBSTITUTE:  self->extension = adbo_substitute_new (self, context, parent, xmlstream); break;
-    case ADBO_OBJECT_ITEM:        self->extension = adbo_item_new (self, parent, xmlstream, tag, context->logger); break;
+    case ADBO_OBJECT_ITEM:        self->extension = adbo_item_new1 (self, parent, xmlstream, tag, context->logger); break;
   }
   
   return self;
@@ -71,7 +71,7 @@ AdboObject adbo_object_new1 (AdboContainer parent, AdboContext context, uint_t t
 
 //----------------------------------------------------------------------------------------
 
-AdboObject adbo_object_new2 (AdboContainer parent, AdboContext context, uint_t type, AdblTable* table_info)
+AdboObject adbo_object_new2 (AdboContainer parent, AdboContext context, uint_t type, AdblTable* table_info, const EcString origin, AdboValue value)
 {
   AdboObject self = ENTC_NEW (struct AdboObject_s);
   
@@ -80,12 +80,11 @@ AdboObject adbo_object_new2 (AdboContainer parent, AdboContext context, uint_t t
   self->type = type;
   self->id = ecstr_init ();
   
-  printf("new object %u %p\n", type, self);
-
   // create specific extension
   switch (type)
   {
-    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new2 (self, context, parent, table_info); break;
+    case ADBO_OBJECT_NODE:        self->extension = adbo_node_new2 (self, context, parent, table_info, origin); break;
+    case ADBO_OBJECT_ITEM:        self->extension = adbo_item_new2 (self, value); break;
   }
   
   return self;  

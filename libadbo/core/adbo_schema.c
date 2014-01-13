@@ -112,7 +112,7 @@ void adbo_schema_del (AdboSchema* pself)
 
 //----------------------------------------------------------------------------------------
 
-AdboObject adbo_schema_getFromTables (AdboSchema self, AdboContext context, AdboContainer parent, const EcString tablename)
+AdboObject adbo_schema_getFromTables (AdboSchema self, AdboContext context, AdboContainer parent, const EcString tablename, const EcString origin, AdboValue value)
 {
   EcMapNode node;
   
@@ -122,21 +122,21 @@ AdboObject adbo_schema_getFromTables (AdboSchema self, AdboContext context, Adbo
     return NULL;
   }
   
-  eclogger_logformat (context->logger, LL_DEBUG, "ADBO", "{getdb} create '%s'", tablename); 
+  eclogger_logformat (context->logger, LL_DEBUG, "ADBO", "{getdb} create '%s'", tablename, origin); 
 
-  return adbo_object_new2 (parent, context, ADBO_OBJECT_NODE, ecmap_data(node));
+  return adbo_object_new2 (parent, context, ADBO_OBJECT_NODE, ecmap_data(node), origin, value);
 }
 
 //----------------------------------------------------------------------------------------
 
-AdboObject adbo_schema_get (AdboSchema self, AdboContext context, AdboContainer parent, const EcString tablename)
+AdboObject adbo_schema_get (AdboSchema self, AdboContext context, AdboContainer parent, const EcString tablename, const EcString origin, AdboValue value)
 {
   EcMapNode node;
   
   node = ecmap_find(self->schemas, tablename);
   if (node == ecmap_end (self->schemas))
   {
-    AdboObject obj = adbo_schema_getFromTables (self, context, parent, tablename);
+    AdboObject obj = adbo_schema_getFromTables (self, context, parent, tablename, origin, value);
     if (isAssigned (obj))
     {
       ecmap_append(self->schemas, tablename, obj);
@@ -172,7 +172,7 @@ void adbo_schema_ref (AdboSchema self, AdboContext context, AdboContainer parent
     
     eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} got constraint '%s' to '%s'", fk->name, tablename); 
 
-    AdboObject obj = adbo_schema_get (self, context, parent, fk->name);
+    AdboObject obj = adbo_schema_get (self, context, parent, fk->name, tablename, NULL);
     
     eclist_append(objects, obj);
   }

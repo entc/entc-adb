@@ -24,8 +24,6 @@
 
 #include "adbo_types.h"
 
-struct AdboValue_s; typedef struct AdboValue_s* AdboValue;
-
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor
