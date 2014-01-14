@@ -133,11 +133,12 @@ void adbo_subsmgr_del (AdboSubManager* pself)
 
 AdboObject adbo_subsmgr_get (AdboSubManager self, const EcString name)
 {
+  EcMapNode node;
   AdboObject obj;
   
   printf("find '%s'\n", name);
   
-  EcMapNode node = ecmap_find(self->subs, name);
+  node = ecmap_find(self->subs, name);
   if (node == ecmap_end(self->subs))
   {
     return NULL;

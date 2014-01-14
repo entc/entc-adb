@@ -708,7 +708,10 @@ EcString ecstr_extractf( const EcString source, char c )
 
 EcString ecstr_shrink (const EcString source, char from, char to)
 {
-  const char* pos1 = strchr(source, from);
+  const char* pos1;
+  const char* pos2;
+
+  pos1 = strchr(source, from);
   if (isNotAssigned (pos1))
   {
     pos1 = source;
@@ -717,7 +720,8 @@ EcString ecstr_shrink (const EcString source, char from, char to)
   {
     pos1++;
   }
-  const char* pos2 = strrchr(source, to);
+
+  pos2 = strrchr(source, to);
   if (isNotAssigned (pos1))
   {
     pos2 = source + strlen(source);

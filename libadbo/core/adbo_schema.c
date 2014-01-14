@@ -154,6 +154,7 @@ AdboObject adbo_schema_get (AdboSchema self, AdboContext context, AdboContainer 
 
 void adbo_schema_ref (AdboSchema self, AdboContext context, AdboContainer parent, const EcString tablename, EcList objects)
 {
+  EcList fks;
   EcListNode node1;
   EcMapNode node2 = ecmap_find(self->foreign_keys, tablename);
   
@@ -162,17 +163,17 @@ void adbo_schema_ref (AdboSchema self, AdboContext context, AdboContainer parent
     return; 
   }
 
-
-  EcList fks = ecmap_data(node2);
-
+  fks = ecmap_data(node2);
   for (node1 = eclist_first (fks); node1 != eclist_end (fks); node1 = eclist_next (node1))
   {
+    AdboObject obj;
+
     AdblForeignKeyConstraint* fk = eclist_data(node1);
     
     
     eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} got constraint '%s' to '%s'", fk->name, tablename); 
 
-    AdboObject obj = adbo_schema_get (self, context, parent, fk->name, tablename, NULL);
+    obj = adbo_schema_get (self, context, parent, fk->name, tablename, NULL);
     
     eclist_append(objects, obj);
   }

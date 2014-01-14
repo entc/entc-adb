@@ -1191,6 +1191,7 @@ AdboObject adbo_node_get (AdboObject obj, AdboNode self, const EcString link)
 void adbo_node_dump (AdboObject obj, AdboNode self, int depth, int le, EcBuffer b2, EcLogger logger)
 {
   EcListNode node;
+  AdboValue value;
   
   unsigned char* buffer = b2->buffer;
   
@@ -1206,7 +1207,7 @@ void adbo_node_dump (AdboObject obj, AdboNode self, int depth, int le, EcBuffer 
   buffer [pos + 2] = '+';
   buffer [pos + 3] = 0;
 
-  AdboValue value = (AdboValue)adbo_getValue (obj);
+  value = (AdboValue)adbo_getValue (obj);
   if (isAssigned (value))
   {
     dbcolumn = adbo_value_getDBColumn (value);
