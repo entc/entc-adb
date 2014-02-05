@@ -32,7 +32,7 @@ __CPP_EXTERN____________________________________________________________________
 // constructor (creates a new empty object from xml config)
 __LIB_EXPORT AdboObject adbo_object_new1 (AdboContainer parent, AdboContext, uint_t type, EcXMLStream, const EcString);
 
-// constructor (creates a new empty object from xml config)
+// constructor (creates a new empty object from database structure)
 __LIB_EXPORT AdboObject adbo_object_new2 (AdboContainer parent, AdboContext, uint_t type, AdblTable* table_info, const EcString origin, AdboValue value);
 
 // destructor (deletes recursively object and data)
@@ -42,7 +42,9 @@ __LIB_EXPORT void adbo_object_del (AdboObject*);
 __LIB_EXPORT AdboObject adbo_object_clone (const AdboObject, AdboContainer parent);
 
 // request (fill structure recursively with new data from database backend, overrides existing data)
-__LIB_EXPORT int adbo_object_request (AdboObject, AdboContext);
+// depth defines the recursive depth, default should be 1, -1 is infinite
+// dpos is always 0 rom beginning
+__LIB_EXPORT int adbo_object_request (AdboObject, AdboContext, int depth, int dpos);
 
 // update (write data back recursively to database backend, only works with filled object)
 __LIB_EXPORT int adbo_object_update (AdboObject, AdboContext, int withTransaction);

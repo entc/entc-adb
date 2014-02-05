@@ -467,6 +467,8 @@ AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer pare
       
       AdboValue value = adbo_value_new (fk->column_name, NULL, link);
 
+      eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} foreign key: '%s' -> '%s'", fk->column_name, link);
+
       eclist_append(self->foreign_keys, value);
       
       ecstr_delete(&link);
@@ -477,12 +479,12 @@ AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer pare
       
       eclist_append(self->foreign_keys, value);
       
-      eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} add to %s: '%s'", table_info->name, adbo_value_getDBColumn(value));
+      eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} local foreign key: '%s' -> '%s'", adbo_value_getDBColumn(value), fk->table);
       
-      //AdboObject obj = adbo_schema_get (context->schema, context, self->spart->container, fk->table, table_info->name);
+      AdboObject obj = adbo_schema_get (context->schema, context, self->spart->container, fk->table, table_info->name, value);
       //if (isAssigned (obj))
       //{
-      //  adbo_container_add (self->spart->container, obj);
+      adbo_container_add (self->spart->container, obj);
       //}
     }
     
@@ -493,7 +495,7 @@ AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer pare
   {
     EcList objects = eclist_new ();
     // fill a list with all objects which have foreign key contraints to this table
-    adbo_schema_ref (context->schema, context, self->spart->container, table_info->name, objects);
+    adbo_schema_ref (context->schema, context, self->spart->container, table_info->name, objects, origin);
   
     for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
     {
@@ -602,7 +604,7 @@ AdblAttributes* adbo_node_request_attrs (AdboNode self, AdboNodePart part, AdboC
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession session, AdblQuery* query)
+int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession session, AdblQuery* query, int depth, int dpos)
 {
   AdblSecurity adblsec;
   AdblCursor* cursor;
@@ -653,7 +655,7 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
       for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
       {
         AdboNodePart part = eclist_data (node);
-        ret = ret && adbo_container_request (part->container, context);
+        ret = ret && adbo_container_request (part->container, context, depth, dpos);
       }
     }    
     return ret;
@@ -670,7 +672,7 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
         eclogger_log(context->logger, LL_ERROR, "ADBO", "{request} query returned multiple dataset");
         ret = FALSE;
       }
-      return ret && adbo_container_request (self->spart->container, context);
+      return ret && adbo_container_request (self->spart->container, context, depth, dpos);
     }
     else
     {
@@ -683,7 +685,7 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_request (AdboNode self, AdboContext context)
+int adbo_node_request (AdboNode self, AdboContext context, int depth, int dpos)
 {
   int ret = FALSE;
   
@@ -704,7 +706,7 @@ int adbo_node_request (AdboNode self, AdboContext context)
       
       adbl_query_setTable (query, self->dbtable);
       // execute in extra method to avoid memory leaks in query and dbsession
-      ret = adbo_node_request_query (self, context, dbsession, query);
+      ret = adbo_node_request_query (self, context, dbsession, query, depth, dpos);
       
       adbl_constraint_delete (&constraints);
     }
@@ -729,7 +731,7 @@ int adbo_node_request (AdboNode self, AdboContext context)
           for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
           {
             AdboNodePart part = eclist_data (node);
-            ret = ret && adbo_container_request (part->container, context);
+            ret = ret && adbo_container_request (part->container, context, depth, dpos);
           }
         }        
       }

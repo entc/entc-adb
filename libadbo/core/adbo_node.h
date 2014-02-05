@@ -40,7 +40,7 @@ __LIB_EXPORT void adbo_node_del (AdboNode*);
 __LIB_EXPORT AdboNode adbo_node_clone (const AdboNode, AdboContainer parent);
 
 // fill data from database backend
-__LIB_EXPORT int adbo_node_request (AdboNode, AdboContext);
+__LIB_EXPORT int adbo_node_request (AdboNode, AdboContext, int depth, int dpos);
 
 // save data to database backend
 __LIB_EXPORT int adbo_node_update (AdboNode, AdboContext, int withTransaction);

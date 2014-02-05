@@ -201,9 +201,9 @@ AdboSubstitute adbo_substitute_clone (const AdboSubstitute oself, AdboContainer 
 
 //----------------------------------------------------------------------------------------
 
-int adbo_substitute_request (AdboSubstitute self, AdboContext context)
+int adbo_substitute_request (AdboSubstitute self, AdboContext context, int depth, int dpos)
 {
-  return adbo_container_request (self->container, context);
+  return adbo_container_request (self->container, context, depth, dpos);
 }
 
 //----------------------------------------------------------------------------------------

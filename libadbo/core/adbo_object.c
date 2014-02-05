@@ -123,7 +123,7 @@ AdboObject adbo_object_clone (const AdboObject oself, AdboContainer parent)
 
 //----------------------------------------------------------------------------------------
 
-int adbo_object_request (AdboObject self, AdboContext context)
+int adbo_object_request (AdboObject self, AdboContext context, int depth, int dpos)
 {
   int ret = TRUE;
   // check
@@ -138,8 +138,8 @@ int adbo_object_request (AdboObject self, AdboContext context)
   // recursively continue with the type of this object
   switch (self->type)
   {
-    case ADBO_OBJECT_NODE:        ret = adbo_node_request ((AdboNode)self->extension, context); break;
-    case ADBO_OBJECT_SUBSTITUTE:  ret = adbo_substitute_request ((AdboSubstitute)self->extension, context); break;
+    case ADBO_OBJECT_NODE:        ret = adbo_node_request ((AdboNode)self->extension, context, depth, dpos); break;
+    case ADBO_OBJECT_SUBSTITUTE:  ret = adbo_substitute_request ((AdboSubstitute)self->extension, context, depth, dpos); break;
   } 
   
   return ret;

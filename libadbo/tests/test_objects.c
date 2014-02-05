@@ -15,7 +15,7 @@ void test1 (void* ptr, void* obj)
 
   AdboObject clone;
   
-  adbo_object_request (obj, context);
+  adbo_object_request (obj, context, -1, 0);
   
   adbo_dump(obj, context->logger);
   
@@ -120,7 +120,6 @@ int main (int argc, char *argv[])
   adbo_container_iterate (objects, test3, &context);
 
   adbo_container_iterate (objects, test4, &context);
-  
   
   context.schema = adbo_schema_new (&context, "default");
   
