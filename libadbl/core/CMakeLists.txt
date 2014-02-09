@@ -16,6 +16,8 @@ SET (CORE_SOURCES
   adbl_structs.h
   adbl_security.c
   adbl_security.h
+  adbl_table.h
+  adbl_table.c
 )
 
 ADD_LIBRARY( adbl SHARED ${CORE_SOURCES} )

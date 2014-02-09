@@ -16,6 +16,8 @@ static const AdblModuleInfo ModuleInfo = { 10000, MODULE, "SQLite3" };
 
 #include "adbl_module.inc"
 
+#include "adbl_table.h"
+
 //================================================================================================
 
 struct AdblSqlite3Connection
@@ -272,7 +274,7 @@ void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* variables */
-  EcIntMap orders = ecintmap_new();
+  EcIntMap orders;
   EcStream statement;
   const char* p;
   sqlite3_stmt* stmt = 0;
@@ -285,6 +287,8 @@ void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
     
     return 0;
   }
+  
+  orders = ecintmap_new();
   
   ecmutex_lock(conn->mutex);
   
@@ -835,10 +839,12 @@ void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
   {
     eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
 
+    ecstr_delete(&column);
+    
     return 0;  
   }
   
-  if( !column )
+  if (!ecstr_valid(column))
   {
     /* create a new instance */
     self = ENTC_NEW(struct AdblSqliteSequence);
@@ -983,6 +989,8 @@ EcList adblmodule_dbschema (void* ptr, EcLogger logger)
   {
     eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
     
+    adbl_schema_del (&ret);
+    
     return 0;  
   }  
   
@@ -1108,6 +1116,9 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement, EcL
     
     eclist_append(table->foreign_keys, fkconstraint);
   }
+  
+  ecstr_tokenizer_clear (list);
+  eclist_delete(&list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -1117,13 +1128,8 @@ AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcSt
   EcListNode node;
   EcList list = eclist_new ();
   
-  AdblTable* table = ENTC_NEW (AdblTable);
-  
-  table->name = ecstr_copy(tablename);
-  table->columns = eclist_new ();
-  table->primary_keys = eclist_new ();
-  table->foreign_keys = eclist_new ();
-  
+  AdblTable* table = adbl_table_new (tablename);
+    
   EcString s1 = ecstr_shrink (statement, '(', ')');
   
   ecstr_tokenizer(list, s1, ',');
@@ -1146,6 +1152,8 @@ AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcSt
   }
   
   eclist_delete(&list);
+  
+  ecstr_delete(&s1);
   
   return table;
 }
@@ -1208,6 +1216,8 @@ AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger log
   if( res != SQLITE_OK )
   {
     eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
+    
+    adbl_table_del (&ret);
     
     return 0;  
   }  

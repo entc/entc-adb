@@ -738,6 +738,8 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del, EcLogger logger)
     
   mysql_real_query( &(conn->handle), ecstream_buffer( statement ), ecstream_size( statement ) );
   
+  ecstream_delete (&statement);
+  
   if(mysql_errno( &(conn->handle) ))
   {
     if(mysql_errno( &(conn->handle) ))
@@ -910,16 +912,18 @@ void adblmodule_dbsequence_release (void* ptr, EcLogger logger)
 
 uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
 {
-  /* casts */
+  // casts
   AdblMyslSequence* sequence = (AdblMyslSequence*)ptr;
-  struct AdblMysqlConnection* conn = sequence->conn;
-  /* variables */
+  // variables
+  struct AdblMysqlConnection* conn;  
   my_ulonglong unique_id = 0;
-  /* apply consitency check */
+  // checks
   if( !sequence ) return 0;
+  // further settings
+  conn = sequence->conn;
   /* add a fake row to the table to increase the autoincrement */
   {
-    EcStream statement = ecstream_new();
+    EcStream statement;
     /* first disable foreign key checks */
     mysql_real_query( &(conn->handle), "SET FOREIGN_KEY_CHECKS = 0", 26 );
     
@@ -929,9 +933,11 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
         eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
       else
         eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
-      
+            
       return 0;
     }
+    
+    statement = ecstream_new();
     
     if(conn->ansi == TRUE)
     {

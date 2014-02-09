@@ -59,7 +59,7 @@ EcBuffer ecstr_bufferFilled (uint_t size, char fillupwith)
 
 void ecstr_bufferSetTerm (EcBuffer self, uint_t size)
 {
-  if ((size >= 0)&&(size <= self->size))
+  if (size <= self->size)
   {
     // set c-string termination
     self->buffer[size] = 0;

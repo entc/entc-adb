@@ -36,6 +36,8 @@
 
 typedef struct 
 {
+  EcLibraryHandle handle;
+  
   const AdblModuleInfo* dbinfo;
 
   adbl_dbconnect_t dbconnect;
@@ -438,12 +440,15 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   node = ecmap_find (self->modules, name);      
   if (node != ecmap_end(self->modules))
   {
+    ecdl_delete(&handle);
     // already exists
     return;
   }
   
   //create new credential
   properties = ENTC_NEW(ADBLModuleProperties);  
+  
+  properties->handle = handle;
   
   // check the methods
   properties->dbconnect          = (adbl_dbconnect_t)          ecdl_method (handle, "dbconnect");
@@ -490,6 +495,7 @@ void adbl_scanPlugin (AdblManager self, const EcString filename)
   info = (adbl_info_t)ecdl_method (handle, "dbinfo");
   if (isNotAssigned (info))
   {
+    ecdl_delete(&handle);
     // not an adbl plugin
     return;
   }

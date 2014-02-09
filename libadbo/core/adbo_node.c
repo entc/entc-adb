@@ -452,7 +452,9 @@ AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer pare
     
     adbo_container_add (self->spart->container, item);
     
-    eclist_append (self->spart->primary_keys, adbo_getValue (item));    
+    eclist_append (self->spart->primary_keys, adbo_getValue (item)); 
+    
+    adbo_value_del(&value);
   }
   
   // foreign keys
@@ -604,16 +606,9 @@ AdblAttributes* adbo_node_request_attrs (AdboNode self, AdboNodePart part, AdboC
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession session, AdblQuery* query, int depth, int dpos)
+int adbo_node_reuqest_cursor (AdboNode self, AdboContext context, AdblCursor* cursor, int depth, int dpos)
 {
-  AdblSecurity adblsec;
-  AdblCursor* cursor;
   int ret = TRUE;
-  
-  // ***** retrieve all columns, construct the sql query *****
-  adbo_container_query (self->spart->container, query);  
-  // execute sql query
-  cursor = adbl_dbquery (session, query, &adblsec);
   
   if (isAssigned (self->parts))
   {
@@ -630,7 +625,7 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
       adbo_nodepart_setValues (part, cursor, ADBO_STATE_ORIGINAL, context->logger);  
       
       count++;
-
+      
       eclogger_logformat (context->logger, LL_DEBUG, "ADBO", "{request} added original part %u", count); 
     }
     
@@ -645,7 +640,7 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
       AdboNodePart part = adbo_nodepart_clone (self->spart, adbo_container_parent (self->spart->container));
       
       eclist_append (self->parts, part);
-
+      
       eclogger_logformat (context->logger, LL_DEBUG, "ADBO", "{request} added empty part %u", i + 1); 
     }   
     
@@ -681,6 +676,26 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
       return ret;
     }    
   }
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession session, AdblQuery* query, int depth, int dpos)
+{
+  AdblSecurity adblsec;
+  AdblCursor* cursor;
+  int ret;
+  
+  // ***** retrieve all columns, construct the sql query *****
+  adbo_container_query (self->spart->container, query);  
+  // execute sql query
+  cursor = adbl_dbquery (session, query, &adblsec);
+  
+  ret = adbo_node_reuqest_cursor(self, context, cursor, depth, dpos);
+
+  adbl_dbcursor_release (&cursor);
+  
+  return ret;
 }
 
 //----------------------------------------------------------------------------------------

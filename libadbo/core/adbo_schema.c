@@ -97,6 +97,7 @@ AdboSchema adbo_schema_new (AdboContext context, const EcString dbsource)
           adbo_schema_addFKs (self, table_info);
         }        
       }
+      adbl_closeSession (&dbsession);
     }
   }
   
