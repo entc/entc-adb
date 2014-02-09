@@ -843,7 +843,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
   
   MYSQL_FIELD* field;
   
-  char* column = 0;
+  EcString column = 0;
   
   if(res == 0)
   {
@@ -873,7 +873,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
         return 0;
       }
       /* primary key and auto_increment */
-      column = ecstr_copy (field->org_name);
+      ecstr_replace(&column, field->org_name);
     }
   }
   /* clean up */
