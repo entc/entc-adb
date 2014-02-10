@@ -702,7 +702,7 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
 
 int adbo_node_request (AdboNode self, AdboContext context, int depth, int dpos)
 {
-  int ret = FALSE;
+  int ret = TRUE;
   
   AdblSession dbsession = adbl_openSession (context->adblm, self->dbsource);
   if (isAssigned (dbsession))

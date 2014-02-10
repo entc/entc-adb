@@ -30,6 +30,8 @@ void test1 (void* ptr, void* obj)
   eclogger_logformat(context->logger, LL_INFO, "TEST", "clone : %s", ecstr_cstring(data));
   
   //eclist_append (objects, clone);  
+  
+  adbo_object_del (&clone);
 }
 
 void test2 (void* ptr, void* obj)

@@ -865,11 +865,14 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
     
     if( (flags & PRI_KEY_FLAG) && (flags & AUTO_INCREMENT_FLAG) )
     {
-      if( column )
+      if (ecstr_valid (column))
       {
         eclogger_logformat(logger, LL_ERROR, "MYSQ", "Only one auto_increment primary key is allowed for table '%s'", table );
         /* clean up */
         mysql_free_result(res);
+        
+        ecstr_delete(&column);
+        
         return 0;
       }
       /* primary key and auto_increment */
@@ -879,7 +882,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
   /* clean up */
   mysql_free_result(res);
   
-  if( !column )
+  if (!ecstr_valid (column))
   {
     eclogger_logformat(logger, LL_ERROR, "MYSQ", "Please add primary key with auto_increment flag for table '%s'", table );
 
@@ -890,6 +893,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
 
   sequence->table = ecstr_copy (table);
   sequence->conn = conn;
+  // ownership transfered to sequence
   sequence->column = column;
   
   return sequence;

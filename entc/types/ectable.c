@@ -96,11 +96,10 @@ void ectable_clear( EcTable self )
   
   for(i = 0; i < self->m_inds; i++, segptr++ )
   {
-    if( *segptr != 0 )
+    if (isAssigned (*segptr))
     {
-      memset(*segptr, 0, self->m_cols * self->m_rows * sizeof(char*));
+      memset(*segptr, 0, self->m_cols * self->m_rows);
       free(*segptr);
-      
     }
      
     *segptr = 0;
