@@ -48,7 +48,7 @@ int main (int argc, char *argv[])
     eclogger_log(logger, LL_ERROR, "TEST", "TEST FAILED");        
   }
   
-  eclogger_delete( &logger );
+  eclogger_del ( &logger );
   
   return res;
 }

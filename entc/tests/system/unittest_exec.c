@@ -17,7 +17,7 @@ int main (int argc, char *argv[])
   
   ecexec_delete(&exec);
   
-  eclogger_delete(&logger);
+  eclogger_del (&logger);
 
   return 0;
 }

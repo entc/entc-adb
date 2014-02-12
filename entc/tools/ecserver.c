@@ -204,7 +204,7 @@ void ecserver_delete(EcServer* ptr)
       
       eclogger_log(self->logger, LL_TRACE, "QSRV", "{server} thread removed");
 
-      eclogger_delete(&(st->logger));
+      eclogger_del (&(st->logger));
     }
     free(self->threads);
     self->threads = NULL;    
@@ -238,7 +238,7 @@ int ecserver_start(EcServer self)
     st->logger = eclogger_new(1);
     st->server = self;
     
-    eclogger_setLogFile(st->logger, eclogger_getLogFile(self->logger), self->confdir);
+    eclogger_sync(st->logger, self->logger);
     
     ecthread_start(st->thread, ecserver_accept_run, (void*)st);
   }
@@ -251,8 +251,8 @@ int ecserver_start(EcServer self)
     st->logger = eclogger_new(i + 1);
     st->server = self;
     
-    eclogger_setLogFile(st->logger, eclogger_getLogFile(self->logger), self->confdir);
-    
+    eclogger_sync(st->logger, self->logger);
+
     ecthread_start(st->thread, ecserver_worker_run, (void*)st);
   }  
   

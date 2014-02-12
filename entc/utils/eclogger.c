@@ -53,16 +53,17 @@
 #include <sys/time.h>
 #endif
 
-static EcMutex global_mutex = NULL;
+//----------------------------------------------------------------------------------------
 
-static void globalMutex(int role) {  
+static EcEchoLogger toggleEchoLogger (int role) {  
   static int counter = 0;
+  static EcEchoLogger logger = NULL;
   
   if (role)
   {
     if (counter == 0)
     {
-      global_mutex = ecmutex_new();  
+      logger = ecechologger_new ();
     }
     counter++;
   }
@@ -71,30 +72,28 @@ static void globalMutex(int role) {
     counter--;
     if (counter == 0)
     {
-      ecmutex_delete(&global_mutex);     
-      
+      ecechologger_del(&logger);
     }
   }
+  return logger;
 }
 
 #endif
 
+//----------------------------------------------------------------------------------------
+
 struct EcLogger_s
 {
+  
+  eclogger_logmessage_fct fct;
+  
+  void* ptr;
   
   ubyte_t threadid;
   /* the temp buffer maximal 300 characters */
   /* only needed for formatted logs */
   EcBuffer buffer01;
   EcBuffer buffer02;
-  EcBuffer buffer03;
-  
-#ifndef __DOS__
-
-  EcString logfile;
-  
-  
-  EcFileHandle fhandle;
   
   EcList errmsgs;
 
@@ -102,11 +101,9 @@ struct EcLogger_s
   
   ubyte_t sec;
 
-#endif
-  
 };
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
 EcLogger eclogger_new (ubyte_t threadid)
 {
@@ -114,178 +111,81 @@ EcLogger eclogger_new (ubyte_t threadid)
   
   self->threadid = threadid;
   
-#ifndef __DOS__
-  
-  self->logfile = 0;
-  self->fhandle = NULL;
   self->sec = 0;
   
   self->errmsgs = eclist_new();
   self->sccmsgs = eclist_new();
 
-  globalMutex(TRUE);
-
-#endif
+  EcEchoLogger echo = toggleEchoLogger (TRUE);
+  
+  self->fct = ecechologger_getCallback ();
+  self->ptr = echo;
   
   self->buffer01 = ecstr_buffer(1024);
   self->buffer02 = ecstr_buffer(1024);
-  self->buffer03 = ecstr_buffer(14);
 
   return self;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclogger_delete(EcLogger* ptr_self)
+void eclogger_del (EcLogger* pself)
 {  
-  EcLogger self = *ptr_self;
+  EcLogger self = *pself;
   
-#ifndef __DOS__
-  
-  if (self->fhandle)
-  {
-    ecfh_close(&(self->fhandle));
-  }
-    
   eclogger_clear(self);
 
   eclist_delete(&(self->errmsgs));
   eclist_delete(&(self->sccmsgs));
 
-  ecstr_delete(&(self->logfile));
-
-  globalMutex(FALSE);
-
-#endif
-  
   ecstr_release(&(self->buffer01));
   ecstr_release(&(self->buffer02));
-  ecstr_release(&(self->buffer03));
 
-  ENTC_DEL(ptr_self, struct EcLogger_s);
+  toggleEchoLogger (FALSE);
+  
+  ENTC_DEL(pself, struct EcLogger_s);
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-#ifndef __DOS__
-
-void eclogger_paramLogFile(EcLogger self, const EcString confdir, int argc, char *argv[])
+void eclogger_sync (EcLogger self, EcLogger other)
 {
-  EcString value = ecstr_extractParameter('l', argc, argv);
-  if( ecstr_valid(value) )
-  {
-    EcString logfile = ecfs_mergeToPath(confdir, value);
-    
-    eclogger_setLogFile(self, logfile, confdir);
-    
-    ecstr_delete(&logfile);
-  }
-  ecstr_delete(&value);
+  self->fct = other->fct;
+  self->ptr = other->ptr;
 }
 
-#endif
+//----------------------------------------------------------------------------------------
 
-/*------------------------------------------------------------------------*/
+void eclogger_setCallback (EcLogger self, eclogger_logmessage_fct fct, void* ptr)
+{
+  self->fct = fct;
+  self->ptr = ptr;
+}
 
-static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
-static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;30", "1;34" };
+//----------------------------------------------------------------------------------------
 
-/*------------------------------------------------------------------------*/
-
-void eclogger_prepare_message(unsigned char mode, const EcString module, const EcString msg)
+void eclogger_setLogLevel (EcLogger self, EcLogLevel level)
 {
   
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclogger_sec (EcLogger self, EcSecLevel level)
+void eclogger_log (EcLogger self, EcLogLevel level, const char* module, const char* msg)
 {
-  
-}
-
-//------------------------------------------------------------------------------------------------------
-
-void eclogger_logmt (EcLogger self, EcLogLevel level, const EcString module, const EcString msg)
-{
-  static const char* month_matrix[12] = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
-
-  EcString timestamp;
-  EcDate date;  
-  EcBuffer buffer = ecstr_buffer(201);
-  
-  ectime_getDate (&date);
-  
-  ecstr_format(buffer, 200, "%02u-%s-%04u %02u:%02u:%02u.%03u", date.day, month_matrix[date.month], date.year, date.hour, date.minute, date.sec, date.msec);
-  
-  timestamp = ecstr_trans(&buffer);
-  
-  /* prepare the message */
-  /* transform timestamp to the buffer */
-  /* this buffer has always a static length */
-#ifdef __DOS__
-  ecstr_format(self->buffer03, 11, "%s %4s ", msg_matrix[mode], module );
-    
-  printf("%s %i %s%s\n", timestamp, self->threadid, self->buffer03->buffer, msg);
-    
-#else
-  
-  if ((level < 1) || (level > 6)) 
-  {
-    return;
-  }
-
-  ecstr_format (self->buffer03, 11, "%s %4s ", msg_matrix[level], module );
-  
-  if(self->fhandle == 0)
-  {
-    
-#if defined _WIN64 || defined _WIN32 
-    printf("%s %02i %s%s\n", timestamp, self->threadid, self->buffer03->buffer, msg);
-#else
-    // use color theme for different levels
-    printf("%s \033[%sm%02i %s%s\033[0m\n", timestamp, clr_matrix[level], self->threadid, self->buffer03->buffer, msg);
-#endif
-  }
-  else
-  {
-    ecfh_writeString(self->fhandle, timestamp);
-    ecfh_writeBuffer(self->fhandle, self->buffer03, 11);
-    ecfh_writeString(self->fhandle, msg);
-    ecfh_writeString(self->fhandle, "\n");    
-  }
-  ecstr_delete(&timestamp);
-
-  if(level == LL_ERROR)
-  {
-    eclist_append(self->errmsgs, ecstr_copy(msg));
-  }
-
-#endif
-}
-
-/*------------------------------------------------------------------------*/
-
-void eclogger_log(EcLogger self, EcLogLevel level, const char* module, const char* msg)
-{
-  /* do we have a valid logger object */
-  if( !self )
+  // check if valid (this is the specification)
+  if (isNotAssigned(self))
   {
     return;  
   }
 
-#ifndef __DOS__
-  ecmutex_lock(global_mutex);
-#endif
-  
-  eclogger_logmt(self, level, (const EcString)module, (const EcString)msg);
-
-#ifndef __DOS__
-  ecmutex_unlock(global_mutex);
-#endif
+  if ((level >= LL_FATAL) && (level <= LL_TRACE))
+  {
+    self->fct (self->ptr, level, self->threadid, module, msg);
+  }
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
 void eclogger_logformat (EcLogger self, EcLogLevel level, const char* module, const char* format, ...)
 {
@@ -294,10 +194,6 @@ void eclogger_logformat (EcLogger self, EcLogLevel level, const char* module, co
   /* do we have a valid logger object */
   if(self)
   {
-#ifndef __DOS__
-    ecmutex_lock(global_mutex);
-#endif
-
     va_start(ptr, format);
     
 #ifdef _WIN32
@@ -307,19 +203,15 @@ void eclogger_logformat (EcLogger self, EcLogLevel level, const char* module, co
 #else
     vsnprintf((char*)self->buffer01->buffer, self->buffer01->size, format, ptr );
 #endif
-    eclogger_logmt(self, level, (const EcString)module, ecstr_get(self->buffer01));
+    eclogger_log(self, level, (const EcString)module, ecstr_get(self->buffer01));
     
     va_end(ptr);
-    
-#ifndef __DOS__
-    ecmutex_unlock(global_mutex);  
-#endif
   }
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclogger_logerr(EcLogger self, EcLogLevel level, const char* module, int error, const char* format, ...)
+void eclogger_logerr (EcLogger self, EcLogLevel level, const char* module, int error, const char* format, ...)
 {
   va_list ptr;
   /* do we have a valid logger object */
@@ -327,10 +219,7 @@ void eclogger_logerr(EcLogger self, EcLogLevel level, const char* module, int er
   {
     return;  
   }
-#ifndef __DOS__  
-  ecmutex_lock(global_mutex);
-#endif
-  
+
   va_start(ptr, format);
   
 #ifdef _WIN32
@@ -358,18 +247,14 @@ void eclogger_logerr(EcLogger self, EcLogLevel level, const char* module, int er
   ecstr_format(self->buffer01, 300, "%s : '%s'", ecstr_get(self->buffer02), strerror(error));
 #endif
   
-  eclogger_logmt(self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_log (self, level, (const EcString)module, ecstr_get(self->buffer01));
   
-  va_end(ptr);
-  
-#ifndef __DOS__  
-  ecmutex_unlock(global_mutex);
-#endif
+  va_end(ptr);  
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclogger_logerrno(EcLogger self, EcLogLevel level, const char* module, const char* format, ...)
+void eclogger_logerrno (EcLogger self, EcLogLevel level, const char* module, const char* format, ...)
 {
   va_list ptr;
   /* do we have a valid logger object */
@@ -378,10 +263,6 @@ void eclogger_logerrno(EcLogger self, EcLogLevel level, const char* module, cons
     return;  
   }
   
-#ifndef __DOS__ 
-  ecmutex_lock(global_mutex);
-#endif
-
   va_start(ptr, format);
 
 #ifdef _WIN32
@@ -408,18 +289,15 @@ void eclogger_logerrno(EcLogger self, EcLogLevel level, const char* module, cons
   ecstr_format(self->buffer01, 300, "%s : '%s'", ecstr_get(self->buffer02), strerror(errno));
 #endif
 
-  eclogger_logmt (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_log (self, level, (const EcString)module, ecstr_get(self->buffer01));
 
   va_end(ptr);
 
-#ifndef __DOS__ 
-  ecmutex_unlock(global_mutex);
-#endif
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclogger_logbinary(EcLogger self, EcLogLevel level, const char* module, const char* data, uint_t size)
+void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, const char* data, uint_t size)
 {
   const char* pos01 = data;
   unsigned char* pos02 = self->buffer01->buffer;
@@ -469,66 +347,26 @@ void eclogger_logbinary(EcLogger self, EcLogLevel level, const char* module, con
   /* terminate */
   *pos02 = 0;
   
-  eclogger_logmt (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_log (self, level, (const EcString)module, ecstr_get(self->buffer01));
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-#ifndef __DOS__ 
-
-void eclogger_setLogFile (EcLogger self, const EcString logfile, const EcString confdir)
-{
-  /* variables */
-  struct EcSecFopen secopen;
-  if( !ecstr_valid(logfile) )
-  {
-    return;
-  }
-  /* try to open the file */
-  if( !ecsec_fopen(&secopen, logfile, O_WRONLY | O_APPEND | O_CREAT, self, confdir) )
-  {
-    eclogger_logformat(self, LL_ERROR, "LOGS", "Logger can't open file '%s'", secopen.filename );
-
-    return;
-  }
-  
-  eclogger_logformat(self, LL_INFO, "LOGS", "Logger uses file '%s'", secopen.filename );
-  
-  self->logfile = secopen.filename;
-  self->fhandle = secopen.fhandle;
-}
-
-/*------------------------------------------------------------------------*/
-
-void eclogger_openPipe(EcLogger self)
-{
-  
-}
-
-/*------------------------------------------------------------------------*/
-
-const char* eclogger_getLogFile(EcLogger self)
-{
-  return self->logfile;
-}
-
-/*------------------------------------------------------------------------*/
-
-EcList eclogger_errmsgs(EcLogger self)
+EcList eclogger_errmsgs (EcLogger self)
 {
   return self->errmsgs;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-EcList eclogger_sccmsgs(EcLogger self)
+EcList eclogger_sccmsgs (EcLogger self)
 {
   return self->sccmsgs;  
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclogger_clear(EcLogger self)
+void eclogger_clear (EcLogger self)
 {
   EcListNode node;
   for(node = eclist_first(self->errmsgs); node != eclist_end(self->errmsgs); node = eclist_next(node))
@@ -544,13 +382,203 @@ void eclogger_clear(EcLogger self)
   self->sec = 0;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
+
+void eclogger_sec (EcLogger self, EcSecLevel sec)
+{
+  self->sec = sec;
+}
+
+//----------------------------------------------------------------------------------------
 
 uint_t eclogger_securityIncidents(EcLogger self)
 {
   return self->sec;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
+static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
+static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;30", "1;34" };
+
+static const char* month_matrix[12] = {"01","02","03","04","05","06","07","08","09","10","11","12"};
+
+//----------------------------------------------------------------------------------------
+
+struct EcEchoLogger_s 
+{
+
+  EcMutex mutex;
+  
+  EcBuffer buffer01;
+
+  EcBuffer buffer02;
+
+};
+
+//----------------------------------------------------------------------------------------
+
+EcEchoLogger ecechologger_new ()
+{
+  EcEchoLogger self = ENTC_NEW (struct EcEchoLogger_s);
+  
+  self->mutex = ecmutex_new ();
+  self->buffer01 = ecstr_buffer(14);
+  self->buffer02 = ecstr_buffer(201);
+
+  return self;  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecechologger_del (EcEchoLogger* pself)
+{
+  EcEchoLogger self = *pself;
+  
+  ecmutex_delete(&(self->mutex));
+  
+  ENTC_DEL (pself, struct EcEchoLogger_s);    
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecechologger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString module, const EcString msg)
+{
+  // cast
+  EcEchoLogger self = ptr;
+  // variables
+  EcDate date;
+  
+  ectime_getDate (&date);
+  
+  // ***** monitor start *****************************************************
+  ecmutex_lock (self->mutex);
+
+  ecstr_format (self->buffer02, 200, "%04u-%s-%-2u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
+  
+  // prepare the message
+  ecstr_format (self->buffer01, 11, "%s %4s ", msg_matrix[level], module );
+  
+#if defined _WIN64 || defined _WIN32 
+    printf("%s %02i %s%s\n", timestamp, self->threadid, self->buffer03->buffer, msg);
+#else
+    // use color theme for different levels
+    printf("%s \033[%sm%02i %s%s\033[0m\n", self->buffer02->buffer, clr_matrix[level], id, self->buffer01->buffer, msg);
 #endif
+
+  ecmutex_unlock (self->mutex);
+  // ***** monitor end *******************************************************
+}
+
+//----------------------------------------------------------------------------------------
+
+eclogger_logmessage_fct ecechologger_getCallback ()
+{
+  return ecechologger_log;
+}
+
+//----------------------------------------------------------------------------------------
+
+struct EcFileLogger_s 
+{
+
+  EcString filename;
+  
+  EcFileHandle fhandle;
+  
+};
+
+//----------------------------------------------------------------------------------------
+
+EcFileLogger ecfilelogger_new (const EcString filename)
+{
+  EcFileLogger self = ENTC_NEW (struct EcFileLogger_s);
+  
+  
+  return self;  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecfilelogger_del (EcFileLogger* pself)
+{
+  EcFileLogger self = *pself;
+  
+  if (isAssigned (self->fhandle))
+  {
+    ecfh_close(&(self->fhandle));
+  }
+  
+  ENTC_DEL (pself, struct EcFileLogger_s);  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString module, const EcString msg)
+{
+  EcListLogger self = ptr;
+  
+  /*
+  ecfh_writeString(self->fhandle, timestamp);
+  ecfh_writeBuffer(self->fhandle, self->buffer03, 11);
+  ecfh_writeString(self->fhandle, msg);
+  ecfh_writeString(self->fhandle, "\n");    
+  */
+}
+
+//----------------------------------------------------------------------------------------
+
+eclogger_logmessage_fct ecfilelogger_getCallback ()
+{
+  return ecfilelogger_log;
+}
+
+//----------------------------------------------------------------------------------------
+
+struct EcListLogger_s
+{
+  
+  EcList list;
+  
+};
+
+//----------------------------------------------------------------------------------------
+
+EcListLogger eclistlogger_new ()
+{
+  EcListLogger self = ENTC_NEW (struct EcListLogger_s);
+  
+  self->list = eclist_new ();
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclistlogger_del (EcListLogger* pself)
+{
+  EcListLogger self = *pself;
+  
+  eclist_delete(&(self->list));
+  
+  ENTC_DEL (pself, struct EcListLogger_s);
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString module, const EcString msg)
+{
+  EcListLogger self = ptr;
+  
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+eclogger_logmessage_fct eclistlogger_getCallback ()
+{
+  return eclistlogger_log;
+}
+
+//----------------------------------------------------------------------------------------
+

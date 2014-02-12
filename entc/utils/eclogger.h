@@ -20,11 +20,6 @@
 #ifndef ENTC_UTILS_LOGGER_H
 #define ENTC_UTILS_LOGGER_H 1
 
-#define LOGFILE_TYPE_NONE 0
-#define LOGFILE_TYPE_PIPE 1
-#define LOGFILE_TYPE_REG 2
-#define LOGFILE_TYPE_ERROR 3
-
 #include <system/macros.h>
 #include <system/types.h>
 
@@ -49,93 +44,89 @@ typedef enum
   
 } EcSecLevel;
 
+typedef void (*eclogger_logmessage_fct)(void* ptr, EcLogLevel, ubyte_t, const EcString module, const EcString msg);
+
 struct EcLogger_s; typedef struct EcLogger_s* EcLogger;
+
+struct EcEchoLogger_s; typedef struct EcEchoLogger_s* EcEchoLogger;
+struct EcFileLogger_s; typedef struct EcFileLogger_s* EcFileLogger;
+struct EcListLogger_s; typedef struct EcListLogger_s* EcListLogger;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-/**
- * \brief constructor for the logger object
- *
- * \return a logger object
- */
+// constructor for the logger object (creates a console logger per default)
 __LIB_EXPORT EcLogger eclogger_new (ubyte_t threadid);
 
-/**
- * \brief destructor for the logger object
- */
-__LIB_EXPORT void eclogger_delete(EcLogger*);
+// destructor for the logger object
+__LIB_EXPORT void eclogger_del (EcLogger*);
+
+// set the callback (callback + object)
+__LIB_EXPORT void eclogger_setCallback (EcLogger, eclogger_logmessage_fct, void*);
+
+// set the callback from existing logger
+__LIB_EXPORT void eclogger_sync (EcLogger, EcLogger);
+
+// set log level
+__LIB_EXPORT void eclogger_setLogLevel (EcLogger, EcLogLevel);
+
+// ----- logger methods -----------------------------------------------------------------------
+
+__LIB_EXPORT void eclogger_log (EcLogger, EcLogLevel, const char* module, const char* msg);
+
+__LIB_EXPORT void eclogger_logformat (EcLogger, EcLogLevel, const char* module, const char* format, ...);
+
+__LIB_EXPORT void eclogger_logerrno (EcLogger, EcLogLevel, const char* module, const char* format, ...);
+
+__LIB_EXPORT void eclogger_logerr (EcLogger, EcLogLevel, const char* module, int error, const char* format, ...);
+
+__LIB_EXPORT void eclogger_logbinary (EcLogger, EcLogLevel, const char* module, const char* data, uint_t size);
+
+// ----- security methods ---------------------------------------------------------------------
 
 __LIB_EXPORT void eclogger_sec (EcLogger, EcSecLevel);
 
-/**
- * \brief logs a message
- *
- * \param ptr the object
- * \param mode the level of the: see \a LOGMSG_...
- * \param module the module description in 4 characters
- * \param msg the message
- */
-__LIB_EXPORT void eclogger_log (EcLogger, EcLogLevel, const char* module, const char* msg);
+__LIB_EXPORT uint_t eclogger_securityIncidents (EcLogger);
 
-/*
- * \brief logs a formated message
- *
- * \param ptr the object
- * \param mode the level of the: see \a LOGMSG_...
- * \param module the module description in 4 characters
- * \param format the format for the message: see \a printf
- */
-__LIB_EXPORT void eclogger_logformat (EcLogger, EcLogLevel, const char* module, const char* format, ...);
+// ----- data methods -------------------------------------------------------------------------
 
-/**
- * \brief logs the last error with a formated message
- *
- * \param ptr the object
- * \param mode the level of the: see \a LOGMSG_...
- * \param module the module description in 4 characters
- * \param format the format for the message: see \a printf
- */
-__LIB_EXPORT void eclogger_logerrno (EcLogger, EcLogLevel, const char* module, const char* format, ...);
+__LIB_EXPORT EcList eclogger_errmsgs (EcLogger);
 
-/**
- * \brief logs the last error with a formated message
- *
- * \param ptr the object
- * \param mode the level of the: see \a LOGMSG_...
- * \param module the module description in 4 characters
- * \param error the error number 
- * \param format the format for the message: see \a printf
- */
-__LIB_EXPORT void eclogger_logerr (EcLogger, EcLogLevel, const char* module, int error, const char* format, ...);
+__LIB_EXPORT EcList eclogger_sccmsgs (EcLogger);
 
-/**
- * \brief logs data with an hexdecimal output
- *
- * \param ptr the object
- * \param mode the level of the: see \a LOGMSG_...
- * \param module the module description in 4 characters
- * \param data buffer containing the data
- * \param data size of the buffer 
- */
-__LIB_EXPORT void eclogger_logbinary (EcLogger, EcLogLevel, const char* module, const char* data, uint_t size);
-  
-#ifndef __DOS__
+__LIB_EXPORT void eclogger_clear (EcLogger);
 
-__LIB_EXPORT void eclogger_paramLogFile(EcLogger, const EcString confdir, int argc, char *argv[]);
-  
-__LIB_EXPORT void eclogger_setLogFile(EcLogger, const EcString logfile, const EcString confdir);
-  
-__LIB_EXPORT const char* eclogger_getLogFile(EcLogger);
-  
-__LIB_EXPORT EcList eclogger_errmsgs(EcLogger);
+// ***** console logger ***********************************************************************
 
-__LIB_EXPORT EcList eclogger_sccmsgs(EcLogger);
-  
-__LIB_EXPORT uint_t eclogger_securityIncidents(EcLogger);
-  
-__LIB_EXPORT void eclogger_clear(EcLogger);
+// constructor for the logger object (creates a console logger per default)
+__LIB_EXPORT EcEchoLogger ecechologger_new ();
 
-#endif
+// destructor for the logger object
+__LIB_EXPORT void ecechologger_del (EcEchoLogger*);
+
+// get the callback
+__LIB_EXPORT eclogger_logmessage_fct ecechologger_getCallback ();
+
+// ***** file logger **************************************************************************
+
+// constructor for the logger object (creates a console logger per default)
+__LIB_EXPORT EcFileLogger ecfilelogger_new (const EcString filename);
+
+// destructor for the logger object
+__LIB_EXPORT void ecfilelogger_del (EcFileLogger*);
+
+// get the callback
+__LIB_EXPORT eclogger_logmessage_fct ecfilelogger_getCallback ();
+
+// ***** list logger **************************************************************************
+
+// constructor for the logger object (creates a console logger per default)
+__LIB_EXPORT EcListLogger eclistlogger_new ();
+
+// destructor for the logger object
+__LIB_EXPORT void eclistlogger_del (EcListLogger*);
+
+// get the callback
+__LIB_EXPORT eclogger_logmessage_fct eclistlogger_getCallback ();
 
 __CPP_EXTERN______________________________________________________________________________END
 
