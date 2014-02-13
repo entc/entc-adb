@@ -44,7 +44,16 @@ typedef enum
   
 } EcSecLevel;
 
-typedef void (*eclogger_logmessage_fct)(void* ptr, EcLogLevel, ubyte_t, const EcString module, const EcString msg);
+typedef void (*eclogger_log_fct)      (void* ptr, EcLogLevel, ubyte_t, const EcString module, const EcString msg);
+typedef EcString (*eclogger_message_fct)  (void* ptr, uint_t logid, uint_t messageid, const EcString message);
+
+typedef struct {
+  
+  eclogger_log_fct logfct;
+  eclogger_message_fct msgfct;
+  void* ptr;
+  
+} EcLoggerCallbacks;
 
 struct EcLogger_s; typedef struct EcLogger_s* EcLogger;
 
@@ -61,7 +70,9 @@ __LIB_EXPORT EcLogger eclogger_new (ubyte_t threadid);
 __LIB_EXPORT void eclogger_del (EcLogger*);
 
 // set the callback (callback + object)
-__LIB_EXPORT void eclogger_setCallback (EcLogger, eclogger_logmessage_fct, void*);
+__LIB_EXPORT void eclogger_setCallback (EcLogger, EcLoggerCallbacks*);
+
+__LIB_EXPORT void eclogger_getCallback (EcLogger, EcLoggerCallbacks*); 
 
 // set the callback from existing logger
 __LIB_EXPORT void eclogger_sync (EcLogger, EcLogger);
@@ -80,6 +91,10 @@ __LIB_EXPORT void eclogger_logerrno (EcLogger, EcLogLevel, const char* module, c
 __LIB_EXPORT void eclogger_logerr (EcLogger, EcLogLevel, const char* module, int error, const char* format, ...);
 
 __LIB_EXPORT void eclogger_logbinary (EcLogger, EcLogLevel, const char* module, const char* data, uint_t size);
+
+// ----- message methods ----------------------------------------------------------------------
+
+__LIB_EXPORT EcString eclogger_message (EcLogger, uint_t logid, uint_t messageid, const EcString message);
 
 // ----- security methods ---------------------------------------------------------------------
 
@@ -104,7 +119,7 @@ __LIB_EXPORT EcEchoLogger ecechologger_new ();
 __LIB_EXPORT void ecechologger_del (EcEchoLogger*);
 
 // get the callback
-__LIB_EXPORT eclogger_logmessage_fct ecechologger_getCallback ();
+__LIB_EXPORT void ecechologger_getCallback (EcEchoLogger, EcLoggerCallbacks*);
 
 // ***** file logger **************************************************************************
 
@@ -115,7 +130,7 @@ __LIB_EXPORT EcFileLogger ecfilelogger_new (const EcString filename);
 __LIB_EXPORT void ecfilelogger_del (EcFileLogger*);
 
 // get the callback
-__LIB_EXPORT eclogger_logmessage_fct ecfilelogger_getCallback ();
+__LIB_EXPORT void ecfilelogger_getCallback (EcFileLogger, EcLoggerCallbacks*);
 
 // ***** list logger **************************************************************************
 
@@ -126,7 +141,13 @@ __LIB_EXPORT EcListLogger eclistlogger_new ();
 __LIB_EXPORT void eclistlogger_del (EcListLogger*);
 
 // get the callback
-__LIB_EXPORT eclogger_logmessage_fct eclistlogger_getCallback ();
+__LIB_EXPORT void eclistlogger_getCallback (EcListLogger, EcLoggerCallbacks*);
+
+__LIB_EXPORT void eclistlogger_register (EcListLogger, EcLogger);
+
+__LIB_EXPORT void eclistlogger_add (EcListLogger, const EcLoggerCallbacks*);
+
+__LIB_EXPORT void eclistlogger_remove (EcListLogger, const EcLoggerCallbacks*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

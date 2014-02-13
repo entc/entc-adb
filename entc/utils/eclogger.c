@@ -84,10 +84,8 @@ static EcEchoLogger toggleEchoLogger (int role) {
 
 struct EcLogger_s
 {
-  
-  eclogger_logmessage_fct fct;
-  
-  void* ptr;
+
+  EcLoggerCallbacks callbacks;
   
   ubyte_t threadid;
   /* the temp buffer maximal 300 characters */
@@ -117,10 +115,9 @@ EcLogger eclogger_new (ubyte_t threadid)
   self->sccmsgs = eclist_new();
 
   EcEchoLogger echo = toggleEchoLogger (TRUE);
-  
-  self->fct = ecechologger_getCallback ();
-  self->ptr = echo;
-  
+
+  ecechologger_getCallback(echo, &(self->callbacks));  
+    
   self->buffer01 = ecstr_buffer(1024);
   self->buffer02 = ecstr_buffer(1024);
 
@@ -150,16 +147,21 @@ void eclogger_del (EcLogger* pself)
 
 void eclogger_sync (EcLogger self, EcLogger other)
 {
-  self->fct = other->fct;
-  self->ptr = other->ptr;
+  memcpy (&(self->callbacks), &other, sizeof(EcLoggerCallbacks));
 }
 
 //----------------------------------------------------------------------------------------
 
-void eclogger_setCallback (EcLogger self, eclogger_logmessage_fct fct, void* ptr)
+void eclogger_setCallback (EcLogger self, EcLoggerCallbacks* callbacks)
 {
-  self->fct = fct;
-  self->ptr = ptr;
+  memcpy (&(self->callbacks), callbacks, sizeof(EcLoggerCallbacks));
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclogger_getCallback (EcLogger self, EcLoggerCallbacks* callbacks)
+{
+  memcpy (callbacks, &(self->callbacks), sizeof(EcLoggerCallbacks));
 }
 
 //----------------------------------------------------------------------------------------
@@ -179,9 +181,9 @@ void eclogger_log (EcLogger self, EcLogLevel level, const char* module, const ch
     return;  
   }
 
-  if ((level >= LL_FATAL) && (level <= LL_TRACE))
+  if (isAssigned (self->callbacks.logfct) && (level >= LL_FATAL) && (level <= LL_TRACE))
   {
-    self->fct (self->ptr, level, self->threadid, module, msg);
+    self->callbacks.logfct (self->callbacks.ptr, level, self->threadid, module, msg);
   }
 }
 
@@ -352,6 +354,24 @@ void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, co
 
 //----------------------------------------------------------------------------------------
 
+EcString eclogger_message (EcLogger self, uint_t logid, uint_t messageid, const EcString message)
+{
+  // check if valid (this is the specification)
+  if (isNotAssigned(self))
+  {
+    return ecstr_init ();  
+  }
+  
+  if (isAssigned (self->callbacks.msgfct))
+  {
+    return self->callbacks.msgfct (self->callbacks.ptr, logid, messageid, message);
+  }  
+
+  return ecstr_init ();  
+}
+
+//----------------------------------------------------------------------------------------
+
 EcList eclogger_errmsgs (EcLogger self)
 {
   return self->errmsgs;
@@ -472,9 +492,11 @@ void ecechologger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
 
 //----------------------------------------------------------------------------------------
 
-eclogger_logmessage_fct ecechologger_getCallback ()
+void ecechologger_getCallback (EcEchoLogger self, EcLoggerCallbacks* callbacks)
 {
-  return ecechologger_log;
+  callbacks->logfct = ecechologger_log;
+  callbacks->msgfct = NULL;
+  callbacks->ptr = self;
 }
 
 //----------------------------------------------------------------------------------------
@@ -516,7 +538,7 @@ void ecfilelogger_del (EcFileLogger* pself)
 
 void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString module, const EcString msg)
 {
-  EcListLogger self = ptr;
+  EcFileLogger self = ptr;
   
   /*
   ecfh_writeString(self->fhandle, timestamp);
@@ -528,9 +550,11 @@ void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
 
 //----------------------------------------------------------------------------------------
 
-eclogger_logmessage_fct ecfilelogger_getCallback ()
+void ecfilelogger_getCallback (EcFileLogger self, EcLoggerCallbacks* callbacks)
 {
-  return ecfilelogger_log;
+  callbacks->logfct = ecfilelogger_log;
+  callbacks->msgfct = NULL;
+  callbacks->ptr = self;
 }
 
 //----------------------------------------------------------------------------------------
@@ -570,15 +594,83 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
 {
   EcListLogger self = ptr;
   
+  EcListNode node;
+  
+  for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
+  {
+    const EcLoggerCallbacks* callbacks = eclist_data(node);
+    
+    if (isAssigned (callbacks->logfct))
+    {
+      callbacks->logfct (callbacks->ptr, level, id, module, msg);
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+EcString eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, const EcString message)
+{
+  EcListLogger self = ptr;
+  
+  EcListNode node;
+  
+  for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
+  {
+    const EcLoggerCallbacks* callbacks = eclist_data(node);
+    
+    if (isAssigned (callbacks->msgfct))
+    {
+      return callbacks->msgfct (callbacks->ptr, logid, messageid, message);
+    }
+  }
+  
+  return ecstr_init ();
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclistlogger_getCallback (EcListLogger self, EcLoggerCallbacks* callbacks)
+{
+  callbacks->logfct = eclistlogger_log;
+  callbacks->msgfct = eclistlogger_message;
+  callbacks->ptr = self;
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclistlogger_register (EcListLogger self, EcLogger logger)
+{
+  EcLoggerCallbacks* tmp1 = ENTC_NEW (EcLoggerCallbacks);
+  EcLoggerCallbacks tmp2;
+
+  eclogger_getCallback(logger, tmp1);
+  
+  eclistlogger_getCallback(self, &tmp2);
+  
+  eclogger_setCallback(logger, &tmp2);
+  
+  eclist_append(self->list, tmp1);
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclistlogger_add (EcListLogger self, const EcLoggerCallbacks* callbacks)
+{
+  EcLoggerCallbacks* tmp1 = ENTC_NEW (EcLoggerCallbacks);
+
+  memcpy (tmp1, callbacks, sizeof(EcLoggerCallbacks));
+  
+  eclist_append(self->list, tmp1);  
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclistlogger_remove (EcListLogger self, const EcLoggerCallbacks* callbacks)
+{
   
 }
 
 //----------------------------------------------------------------------------------------
 
-eclogger_logmessage_fct eclistlogger_getCallback ()
-{
-  return eclistlogger_log;
-}
-
-//----------------------------------------------------------------------------------------
 

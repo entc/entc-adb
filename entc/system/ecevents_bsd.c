@@ -189,8 +189,21 @@ int ece_queue_wait (EcEventQueue self, uint_t timeout, EcLogger logger)
   while (TRUE)
   {
     struct kevent kev_ret;
+    int res;
     // blocks until we got something
-    int res = kevent(self->kq, NULL, 0, &kev_ret, 1, NULL);
+    if (timeout == ENTC_INFINTE)
+    {
+      res = kevent(self->kq, NULL, 0, &kev_ret, 1, NULL);
+    }
+    else
+    {
+      struct timespec tmout;
+      
+      tmout.tv_sec = timeout / 1000;
+      tmout.tv_nsec = (timeout % 1000) * 1000;
+            
+      res = kevent(self->kq, NULL, 0, &kev_ret, 1, &tmout);      
+    }
     if( res == -1 )
     {
       if( errno == EINTR )
