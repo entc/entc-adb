@@ -75,7 +75,7 @@ __LIB_EXPORT void eclogger_setCallback (EcLogger, EcLoggerCallbacks*);
 __LIB_EXPORT void eclogger_getCallback (EcLogger, EcLoggerCallbacks*); 
 
 // set the callback from existing logger
-__LIB_EXPORT void eclogger_sync (EcLogger, EcLogger);
+__LIB_EXPORT void eclogger_sync (EcLogger, const EcLogger);
 
 // set log level
 __LIB_EXPORT void eclogger_setLogLevel (EcLogger, EcLogLevel);

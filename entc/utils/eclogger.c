@@ -85,6 +85,8 @@ static EcEchoLogger toggleEchoLogger (int role) {
 struct EcLogger_s
 {
 
+  EcMutex mutex;
+
   EcLoggerCallbacks callbacks;
   
   ubyte_t threadid;
@@ -106,6 +108,8 @@ struct EcLogger_s
 EcLogger eclogger_new (ubyte_t threadid)
 {
   EcLogger self = ENTC_NEW(struct EcLogger_s);
+  
+  self->mutex = ecmutex_new ();
   
   self->threadid = threadid;
   
@@ -140,28 +144,36 @@ void eclogger_del (EcLogger* pself)
 
   toggleEchoLogger (FALSE);
   
+  ecmutex_delete(&(self->mutex));
+  
   ENTC_DEL(pself, struct EcLogger_s);
 }
 
 //----------------------------------------------------------------------------------------
 
-void eclogger_sync (EcLogger self, EcLogger other)
+void eclogger_sync (EcLogger self, const EcLogger other)
 {
-  memcpy (&(self->callbacks), &other, sizeof(EcLoggerCallbacks));
+  ecmutex_lock (self->mutex);  
+  memcpy (&(self->callbacks), &(other->callbacks), sizeof(EcLoggerCallbacks));
+  ecmutex_unlock (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
 
 void eclogger_setCallback (EcLogger self, EcLoggerCallbacks* callbacks)
 {
+  ecmutex_lock (self->mutex);  
   memcpy (&(self->callbacks), callbacks, sizeof(EcLoggerCallbacks));
+  ecmutex_unlock (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
 
 void eclogger_getCallback (EcLogger self, EcLoggerCallbacks* callbacks)
 {
+  ecmutex_lock (self->mutex);  
   memcpy (callbacks, &(self->callbacks), sizeof(EcLoggerCallbacks));
+  ecmutex_unlock (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
@@ -173,14 +185,9 @@ void eclogger_setLogLevel (EcLogger self, EcLogLevel level)
 
 //----------------------------------------------------------------------------------------
 
-void eclogger_log (EcLogger self, EcLogLevel level, const char* module, const char* msg)
+void eclogger_logthsafe (EcLogger self, EcLogLevel level, const EcString module, const EcString msg)
 {
-  // check if valid (this is the specification)
-  if (isNotAssigned(self))
-  {
-    return;  
-  }
-
+  // here everything is already thread safe
   if (isAssigned (self->callbacks.logfct) && (level >= LL_FATAL) && (level <= LL_TRACE))
   {
     self->callbacks.logfct (self->callbacks.ptr, level, self->threadid, module, msg);
@@ -189,38 +196,65 @@ void eclogger_log (EcLogger self, EcLogLevel level, const char* module, const ch
 
 //----------------------------------------------------------------------------------------
 
+void eclogger_log (EcLogger self, EcLogLevel level, const char* module, const char* msg)
+{
+  // check if valid (this is the specification)
+  if (isNotAssigned(self))
+  {
+    return;  
+  }
+  // wrap method in monitor
+  
+  ecmutex_lock (self->mutex);  
+  
+  eclogger_logthsafe (self, level, module, msg);
+  
+  ecmutex_unlock (self->mutex);
+}
+
+//----------------------------------------------------------------------------------------
+
 void eclogger_logformat (EcLogger self, EcLogLevel level, const char* module, const char* format, ...)
 {
-  /* variables */
+  // variables
   va_list ptr;
-  /* do we have a valid logger object */
-  if(self)
+  // check if valid (this is the specification)
+  if (isNotAssigned(self))
   {
-    va_start(ptr, format);
-    
-#ifdef _WIN32
-    vsnprintf_s((char*)self->buffer01->buffer, self->buffer01->size, self->buffer01->size - 1, format, ptr );    
-#elif __DOS__
-    vsprintf((char*)self->buffer01->buffer, format, ptr);        
-#else
-    vsnprintf((char*)self->buffer01->buffer, self->buffer01->size, format, ptr );
-#endif
-    eclogger_log(self, level, (const EcString)module, ecstr_get(self->buffer01));
-    
-    va_end(ptr);
+    return;  
   }
+  
+  ecmutex_lock (self->mutex);  
+  
+  va_start(ptr, format);
+  
+#ifdef _WIN32
+  vsnprintf_s((char*)self->buffer01->buffer, self->buffer01->size, self->buffer01->size - 1, format, ptr );    
+#elif __DOS__
+  vsprintf((char*)self->buffer01->buffer, format, ptr);        
+#else
+  vsnprintf((char*)self->buffer01->buffer, self->buffer01->size, format, ptr );
+#endif
+  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  
+  va_end(ptr);
+  
+  ecmutex_unlock (self->mutex);  
 }
 
 //----------------------------------------------------------------------------------------
 
 void eclogger_logerr (EcLogger self, EcLogLevel level, const char* module, int error, const char* format, ...)
 {
+  // variables
   va_list ptr;
-  /* do we have a valid logger object */
-  if( !self )
+  // check if valid (this is the specification)
+  if (isNotAssigned(self))
   {
     return;  
   }
+
+  ecmutex_lock (self->mutex);  
 
   va_start(ptr, format);
   
@@ -249,22 +283,27 @@ void eclogger_logerr (EcLogger self, EcLogLevel level, const char* module, int e
   ecstr_format(self->buffer01, 300, "%s : '%s'", ecstr_get(self->buffer02), strerror(error));
 #endif
   
-  eclogger_log (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
   
-  va_end(ptr);  
+  va_end(ptr); 
+  
+  ecmutex_unlock (self->mutex);  
 }
 
 //----------------------------------------------------------------------------------------
 
 void eclogger_logerrno (EcLogger self, EcLogLevel level, const char* module, const char* format, ...)
 {
+  // variables
   va_list ptr;
-  /* do we have a valid logger object */
-  if( !self )
+  // check if valid (this is the specification)
+  if (isNotAssigned(self))
   {
     return;  
   }
-  
+
+  ecmutex_lock (self->mutex);  
+
   va_start(ptr, format);
 
 #ifdef _WIN32
@@ -291,19 +330,29 @@ void eclogger_logerrno (EcLogger self, EcLogLevel level, const char* module, con
   ecstr_format(self->buffer01, 300, "%s : '%s'", ecstr_get(self->buffer02), strerror(errno));
 #endif
 
-  eclogger_log (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
 
   va_end(ptr);
 
+  ecmutex_unlock (self->mutex);  
 }
 
 //----------------------------------------------------------------------------------------
 
 void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, const char* data, uint_t size)
 {
+  // variables
   const char* pos01 = data;
   unsigned char* pos02 = self->buffer01->buffer;
   uint_t i;
+  // check if valid (this is the specification)
+  if (isNotAssigned(self))
+  {
+    return;  
+  }
+
+  ecmutex_lock (self->mutex);  
+
   /* convert to readable format */
   for(i = 0; (i < size) && (pos02 < (self->buffer01->buffer + self->buffer01->size - 3)); i++ )
   {
@@ -349,25 +398,36 @@ void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, co
   /* terminate */
   *pos02 = 0;
   
-  eclogger_log (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
+
+  ecmutex_unlock (self->mutex);  
 }
 
 //----------------------------------------------------------------------------------------
 
 EcString eclogger_message (EcLogger self, uint_t logid, uint_t messageid, const EcString message)
 {
+  EcString ret = ecstr_init();
+  //variables
+  EcLoggerCallbacks copy;
   // check if valid (this is the specification)
   if (isNotAssigned(self))
   {
-    return ecstr_init ();  
+    return ret;  
   }
   
-  if (isAssigned (self->callbacks.msgfct))
-  {
-    return self->callbacks.msgfct (self->callbacks.ptr, logid, messageid, message);
-  }  
+  ecmutex_lock (self->mutex);  
 
-  return ecstr_init ();  
+  memcpy(&copy, &(self->callbacks), sizeof(EcLoggerCallbacks));
+  
+  ecmutex_unlock (self->mutex);  
+
+  if (isAssigned (copy.msgfct))
+  {
+    ecstr_replace(&ret, copy.msgfct (copy.ptr, logid, messageid, message));
+  }
+
+  return ret;  
 }
 
 //----------------------------------------------------------------------------------------
@@ -389,6 +449,9 @@ EcList eclogger_sccmsgs (EcLogger self)
 void eclogger_clear (EcLogger self)
 {
   EcListNode node;
+  
+  ecmutex_lock (self->mutex);  
+  
   for(node = eclist_first(self->errmsgs); node != eclist_end(self->errmsgs); node = eclist_next(node))
     free(eclist_data(node));
   
@@ -400,6 +463,8 @@ void eclogger_clear (EcLogger self)
   eclist_clear(self->sccmsgs);
   
   self->sec = 0;
+  
+  ecmutex_unlock (self->mutex); 
 }
 
 //----------------------------------------------------------------------------------------
@@ -561,7 +626,9 @@ void ecfilelogger_getCallback (EcFileLogger self, EcLoggerCallbacks* callbacks)
 
 struct EcListLogger_s
 {
-  
+
+  EcMutex mutex;
+
   EcList list;
   
 };
@@ -572,6 +639,7 @@ EcListLogger eclistlogger_new ()
 {
   EcListLogger self = ENTC_NEW (struct EcListLogger_s);
   
+  self->mutex = ecmutex_new ();
   self->list = eclist_new ();
   
   return self;
@@ -584,6 +652,7 @@ void eclistlogger_del (EcListLogger* pself)
   EcListLogger self = *pself;
   
   eclist_delete(&(self->list));
+  ecmutex_delete(&(self->mutex));
   
   ENTC_DEL (pself, struct EcListLogger_s);
 }
@@ -596,6 +665,8 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   
   EcListNode node;
   
+  ecmutex_lock (self->mutex);
+  
   for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
   {
     const EcLoggerCallbacks* callbacks = eclist_data(node);
@@ -605,27 +676,36 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
       callbacks->logfct (callbacks->ptr, level, id, module, msg);
     }
   }
+
+  ecmutex_unlock (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
 
 EcString eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, const EcString message)
 {
+  // cast
   EcListLogger self = ptr;
-  
+  // variables
   EcListNode node;
+  EcString ret = ecstr_init();
   
+  //ecmutex_lock (self->mutex);
+
   for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
   {
     const EcLoggerCallbacks* callbacks = eclist_data(node);
     
     if (isAssigned (callbacks->msgfct))
     {
-      return callbacks->msgfct (callbacks->ptr, logid, messageid, message);
+      ecstr_replace(&ret, callbacks->msgfct (callbacks->ptr, logid, messageid, message));
+      break;
     }
   }
   
-  return ecstr_init ();
+  //ecmutex_unlock (self->mutex);
+
+  return ret;
 }
 
 //----------------------------------------------------------------------------------------
@@ -650,7 +730,11 @@ void eclistlogger_register (EcListLogger self, EcLogger logger)
   
   eclogger_setCallback(logger, &tmp2);
   
+  ecmutex_lock (self->mutex);
+  
   eclist_append(self->list, tmp1);
+  
+  ecmutex_unlock (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
@@ -661,7 +745,11 @@ void eclistlogger_add (EcListLogger self, const EcLoggerCallbacks* callbacks)
 
   memcpy (tmp1, callbacks, sizeof(EcLoggerCallbacks));
   
+  ecmutex_lock (self->mutex);
+
   eclist_append(self->list, tmp1);  
+
+  ecmutex_unlock (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
