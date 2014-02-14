@@ -134,6 +134,8 @@ SET (CORE_SOURCES_TYPES
   types/ocstring.h
   types/ecstream.h
   types/ecstream.c
+  types/ecudc.h
+  types/ecudc.c
 )
 
 SET (CORE_SOURCES_UTILS

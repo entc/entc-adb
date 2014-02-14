@@ -405,15 +405,14 @@ void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, co
 
 //----------------------------------------------------------------------------------------
 
-EcString eclogger_message (EcLogger self, uint_t logid, uint_t messageid, const EcString message)
+EcUdc eclogger_message (EcLogger self, uint_t logid, uint_t messageid, EcUdc* data)
 {
-  EcString ret = ecstr_init();
   //variables
   EcLoggerCallbacks copy;
   // check if valid (this is the specification)
   if (isNotAssigned(self))
   {
-    return ret;  
+    return NULL;  
   }
   
   ecmutex_lock (self->mutex);  
@@ -424,10 +423,10 @@ EcString eclogger_message (EcLogger self, uint_t logid, uint_t messageid, const 
 
   if (isAssigned (copy.msgfct))
   {
-    ecstr_replace(&ret, copy.msgfct (copy.ptr, logid, messageid, message));
+    return copy.msgfct (copy.ptr, logid, messageid, data);
   }
 
-  return ret;  
+  return NULL;  
 }
 
 //----------------------------------------------------------------------------------------
@@ -682,13 +681,13 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
 
 //----------------------------------------------------------------------------------------
 
-EcString eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, const EcString message)
+EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* data)
 {
   // cast
   EcListLogger self = ptr;
   // variables
   EcListNode node;
-  EcString ret = ecstr_init();
+  EcUdc ret = NULL;
   
   //ecmutex_lock (self->mutex);
 
@@ -698,7 +697,7 @@ EcString eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, const 
     
     if (isAssigned (callbacks->msgfct))
     {
-      ecstr_replace(&ret, callbacks->msgfct (callbacks->ptr, logid, messageid, message));
+      ret = callbacks->msgfct (callbacks->ptr, logid, messageid, data);
       break;
     }
   }

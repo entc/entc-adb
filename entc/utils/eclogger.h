@@ -25,6 +25,7 @@
 
 #include <types/eclist.h>
 #include <types/ecstring.h>
+#include <types/ecudc.h>
 
 typedef enum
 {
@@ -45,7 +46,7 @@ typedef enum
 } EcSecLevel;
 
 typedef void (*eclogger_log_fct)      (void* ptr, EcLogLevel, ubyte_t, const EcString module, const EcString msg);
-typedef EcString (*eclogger_message_fct)  (void* ptr, uint_t logid, uint_t messageid, const EcString message);
+typedef EcUdc (*eclogger_message_fct)  (void* ptr, uint_t logid, uint_t messageid, EcUdc* data);
 
 typedef struct {
   
@@ -94,7 +95,7 @@ __LIB_EXPORT void eclogger_logbinary (EcLogger, EcLogLevel, const char* module, 
 
 // ----- message methods ----------------------------------------------------------------------
 
-__LIB_EXPORT EcString eclogger_message (EcLogger, uint_t logid, uint_t messageid, const EcString message);
+__LIB_EXPORT EcUdc eclogger_message (EcLogger, uint_t logid, uint_t messageid, EcUdc* data);
 
 // ----- security methods ---------------------------------------------------------------------
 
