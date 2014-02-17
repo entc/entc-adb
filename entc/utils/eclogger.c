@@ -538,7 +538,7 @@ void ecechologger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   // ***** monitor start *****************************************************
   ecmutex_lock (self->mutex);
 
-  ecstr_format (self->buffer02, 200, "%04u-%s-%-2u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
+  ecstr_format (self->buffer02, 200, "%04u-%s-%2u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
   
   // prepare the message
   ecstr_format (self->buffer01, 11, "%s %4s ", msg_matrix[level], module );
@@ -568,6 +568,12 @@ void ecechologger_getCallback (EcEchoLogger self, EcLoggerCallbacks* callbacks)
 struct EcFileLogger_s 
 {
 
+  EcMutex mutex;
+  
+  EcBuffer buffer01;
+  
+  EcBuffer buffer02;
+
   EcString filename;
   
   EcFileHandle fhandle;
@@ -580,6 +586,12 @@ EcFileLogger ecfilelogger_new (const EcString filename)
 {
   EcFileLogger self = ENTC_NEW (struct EcFileLogger_s);
   
+  self->mutex = ecmutex_new ();
+  self->buffer01 = ecstr_buffer(201);
+  self->buffer02 = ecstr_buffer(16);  
+  
+  self->filename = ecstr_copy(filename);
+  self->fhandle = NULL;
   
   return self;  
 }
@@ -595,6 +607,12 @@ void ecfilelogger_del (EcFileLogger* pself)
     ecfh_close(&(self->fhandle));
   }
   
+  ecstr_delete(&(self->filename));
+  
+  ecmutex_delete(&(self->mutex));
+  ecstr_release(&(self->buffer01));
+  ecstr_release(&(self->buffer02));
+  
   ENTC_DEL (pself, struct EcFileLogger_s);  
 }
 
@@ -602,14 +620,33 @@ void ecfilelogger_del (EcFileLogger* pself)
 
 void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString module, const EcString msg)
 {
+  // cast
   EcFileLogger self = ptr;
+  // variables
+  EcDate date;
   
-  /*
-  ecfh_writeString(self->fhandle, timestamp);
-  ecfh_writeBuffer(self->fhandle, self->buffer03, 11);
-  ecfh_writeString(self->fhandle, msg);
-  ecfh_writeString(self->fhandle, "\n");    
-  */
+  if (isNotAssigned(self->fhandle))
+  {
+    self->fhandle = ecfh_open(self->filename, O_WRONLY | O_APPEND);
+  }
+  
+  ectime_getDate (&date);
+  
+  // ***** monitor start *****************************************************
+  ecmutex_lock (self->mutex);
+  
+  ecstr_format (self->buffer02, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
+  
+  // prepare the message
+  ecstr_format (self->buffer01, 15, "%02i %s %4s ", id, msg_matrix[level], module );
+
+  ecfh_writeBuffer (self->fhandle, self->buffer01, 200);
+  ecfh_writeBuffer (self->fhandle, self->buffer02, 15);
+  ecfh_writeString (self->fhandle, msg);
+  ecfh_writeString (self->fhandle, "\n");
+  
+  ecmutex_unlock (self->mutex);
+  // ***** monitor end *******************************************************
 }
 
 //----------------------------------------------------------------------------------------
