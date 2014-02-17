@@ -588,7 +588,7 @@ EcFileLogger ecfilelogger_new (const EcString filename)
   
   self->mutex = ecmutex_new ();
   self->buffer01 = ecstr_buffer(201);
-  self->buffer02 = ecstr_buffer(16);  
+  self->buffer02 = ecstr_buffer(17);  
   
   self->filename = ecstr_copy(filename);
   self->fhandle = NULL;
@@ -627,7 +627,13 @@ void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   
   if (isNotAssigned(self->fhandle))
   {
-    self->fhandle = ecfh_open(self->filename, O_WRONLY | O_APPEND);
+    printf("try to open '%s'\n", self->filename);
+    
+    self->fhandle = ecfh_open(self->filename, O_WRONLY | O_APPEND | O_CREAT);
+  }
+  if (isNotAssigned(self->fhandle))
+  {
+    return;
   }
   
   ectime_getDate (&date);
@@ -635,13 +641,13 @@ void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   // ***** monitor start *****************************************************
   ecmutex_lock (self->mutex);
   
-  ecstr_format (self->buffer02, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
+  ecstr_format (self->buffer01, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
   
   // prepare the message
-  ecstr_format (self->buffer01, 15, "%02i %s %4s ", id, msg_matrix[level], module );
+  ecstr_format (self->buffer02, 16, " %02i %s %4s ", id, msg_matrix[level], module );
 
   ecfh_writeBuffer (self->fhandle, self->buffer01, 200);
-  ecfh_writeBuffer (self->fhandle, self->buffer02, 15);
+  ecfh_writeBuffer (self->fhandle, self->buffer02, 16);
   ecfh_writeString (self->fhandle, msg);
   ecfh_writeString (self->fhandle, "\n");
   
