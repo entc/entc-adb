@@ -84,15 +84,53 @@ void echtmlreq_escapeUrl(EcStream stream, const EcString source)
 
 /*------------------------------------------------------------------------*/
 
+int echtmlreq_process_post (EcHtmlRequest self, EcSocket socket, const EcString url, const EcString message, EcStream stream, EcStreamBuffer sbuffer)
+{
+  /* variables */
+  const char* line;
+  int error;
+
+  ecstream_append(stream, "POST ");
+  
+  echtmlreq_escapeUrl(stream, url);
+
+  ecstream_append(stream, " HTTP/1.0\r\n");
+  ecstream_append(stream, "User-Agent: entc\r\n");
+  ecstream_append(stream, "Content-Length: ");
+  ecstream_appendu(stream, ecstr_len(message));
+  ecstream_append(stream, "\r\n\r\n");
+  
+  ecstream_append(stream, message);
+
+  ecstream_append(stream, "\r\n\r\n");
+
+  ecsocket_writeStream(socket, stream);
+  
+  if( !ecstreambuffer_readln(sbuffer, stream, &error) )
+  {
+    eclogger_log(self->logger, LL_TRACE, "HTML", "can't get new line");    
+    return FALSE;
+  }  
+  /* get the first line */
+  line = ecstream_buffer(stream);  
+  /* is the first line 'HTTP/1.0 200 OK' ?? */
+  if( !(line[0] == 'H' && line[9] == '2' && line[10] == '0' && line[11] == '0') )
+  {
+    eclogger_logformat(self->logger, LL_TRACE, "HTML", "line : '%s'", line);    
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+/*------------------------------------------------------------------------*/
+
 int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, const EcString url, EcStream stream, EcStreamBuffer sbuffer)
 {
   /* variables */
   const char* line;
   int error;
   
-  char buffer[301];
-  
-  memset(buffer, 0, 300);
   /* set to none blocking socket */
 //  ecsocket_setNoneBlocking( socket );
   
@@ -173,6 +211,44 @@ int echtmlreq_get(EcHtmlRequest self, const EcString host, uint_t port, const Ec
   ecsocket_delete(&socket);
   
   return res;
+}
+
+/*------------------------------------------------------------------------*/
+
+int echtmlreq_post (EcHtmlRequest self, const EcString host, uint_t port, const EcString url, const EcString message, EcEventContext ec)
+{
+  int res = FALSE;
+  
+  EcSocket socket;
+  
+  socket = ecsocket_new(ec, self->logger);
+  
+  if( ecsocket_connect( socket, host, port ) )
+  {
+    EcString cport = ecstr_long(port);
+    EcString chost = ecstr_cat4("http://", host, ":", cport);
+    EcString curl = ecstr_cat2(chost, url);
+
+    EcStream stream = ecstream_new();    
+    EcStreamBuffer sbuffer = ecstreambuffer_new(self->logger, socket);
+
+    echtmlreq_process_post (self, socket, curl, message, stream, sbuffer);
+
+    ecstreambuffer_delete(&sbuffer);
+    ecstream_delete(&stream);
+
+    ecstr_delete(&chost);
+    ecstr_delete(&cport);
+    ecstr_delete(&curl);
+  }
+  else
+  {
+    eclogger_logformat(self->logger, LL_DEBUG, "HTML", "can't connect '%s'", host );    
+  }
+  
+  ecsocket_delete(&socket);
+  
+  return res;  
 }
 
 /*------------------------------------------------------------------------*/

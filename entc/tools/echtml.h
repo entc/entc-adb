@@ -39,6 +39,8 @@ __LIB_EXPORT void echtmlreq_delete(EcHtmlRequest*);
   
 __LIB_EXPORT int echtmlreq_get (EcHtmlRequest, const EcString host, uint_t port, const EcString url, EcEventContext);
   
+__LIB_EXPORT int echtmlreq_post (EcHtmlRequest, const EcString host, uint_t port, const EcString url, const EcString message, EcEventContext);
+
 __LIB_EXPORT void echtmlreq_escapeUrl(EcStream stream, const EcString source);
 
 __LIB_EXPORT const EcString echtmlreq_data(EcHtmlRequest);
