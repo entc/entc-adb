@@ -740,8 +740,19 @@ EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* da
     
     if (isAssigned (callbacks->msgfct))
     {
-      ret = callbacks->msgfct (callbacks->ptr, logid, messageid, data);
-      break;
+      if ( isNotAssigned(ret))
+      {
+        // create a new udc node
+        ret = ecudc_new(0, "ServiceResults");        
+      }
+      {
+        EcUdc res = callbacks->msgfct (callbacks->ptr, logid, messageid, data);
+        if (isAssigned (res))
+        {
+          // transfer the object to the udc node
+          ecudc_add(ret, &res);
+        }
+      }
     }
   }
   
