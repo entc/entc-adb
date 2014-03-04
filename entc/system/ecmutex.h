@@ -22,9 +22,8 @@
 
 #include "../system/macros.h"
 
-
 struct EcMutex_s; typedef struct EcMutex_s* EcMutex;
-
+struct EcReadWriteLock_s; typedef struct EcReadWriteLock_s* EcReadWriteLock;
 
 __CPP_EXTERN______________________________________________________________________________START
 
@@ -35,6 +34,18 @@ __LIB_EXPORT void ecmutex_delete(EcMutex*);
 __LIB_EXPORT void ecmutex_lock(EcMutex);
 
 __LIB_EXPORT void ecmutex_unlock(EcMutex);
+
+__LIB_EXPORT EcReadWriteLock ecreadwritelock_new();
+
+__LIB_EXPORT void ecreadwritelock_delete(EcReadWriteLock*);
+
+__LIB_EXPORT void ecreadwritelock_lockRead(EcReadWriteLock);
+
+__LIB_EXPORT void ecreadwritelock_unlockRead(EcReadWriteLock);
+
+__LIB_EXPORT void ecreadwritelock_lockWrite(EcReadWriteLock);
+
+__LIB_EXPORT void ecreadwritelock_unlockWrite(EcReadWriteLock);
 
 __CPP_EXTERN______________________________________________________________________________END
 

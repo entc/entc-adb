@@ -25,6 +25,10 @@
 
 #include "ecstring.h"
 
+#define ENTC_UDC_NODE 0
+#define ENTC_UDC_STRING 1
+#define ENTC_UDC_REF 2
+
 struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 
 __CPP_EXTERN______________________________________________________________________________START
@@ -39,7 +43,13 @@ __LIB_EXPORT EcUdc ecudc_get (EcUdc, const EcString name);
 
 __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
 
+__LIB_EXPORT void ecudc_setP (EcUdc, void*);
+
 __LIB_EXPORT const EcString ecudc_asString (EcUdc);
+
+__LIB_EXPORT void* ecudc_asP (EcUdc);
+
+__LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -119,6 +119,35 @@ EcUdc ecudc_node_get (EcUdcNode* self, const EcString name)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
+{
+  EcMapNode node;
+  
+  if (isNotAssigned (cursor))
+  {
+    return NULL;
+  }
+  
+  if (isAssigned (*cursor))
+  {
+    node = ecmap_next(*cursor);
+  }
+  else
+  {
+    node = ecmap_first(self->map);
+  }
+  
+  if (node == ecmap_end(self->map))
+  {
+    return NULL;
+  }
+  
+  *cursor = node;
+  return ecmap_data(node);
+}
+
+//----------------------------------------------------------------------------------------
+
 void* ecudc_sitem_new ()
 {
   EcUdcSItem* self = ENTC_NEW (EcUdcSItem);
@@ -164,9 +193,9 @@ EcUdc ecudc_new (uint_t type, const EcString name)
   
   switch (type) 
   {
-    case 0: self->extension = ecudc_node_new (); 
+    case ENTC_UDC_NODE: self->extension = ecudc_node_new (); 
       break;
-    case 1: self->extension = ecudc_sitem_new (); 
+    case ENTC_UDC_STRING: self->extension = ecudc_sitem_new (); 
       break;
   }
   
@@ -181,9 +210,9 @@ void ecudc_del (EcUdc* pself)
   
   switch (self->type) 
   {
-    case 0: ecudc_node_del (&(self->extension)); 
+    case ENTC_UDC_NODE: ecudc_node_del (&(self->extension)); 
       break;
-    case 1: ecudc_sitem_del (&(self->extension)); 
+    case ENTC_UDC_STRING: ecudc_sitem_del (&(self->extension)); 
       break;
   }
   
@@ -198,7 +227,7 @@ void ecudc_add (EcUdc self, EcUdc* pnode)
 {
   switch (self->type) 
   {
-    case 0: ecudc_node_add (self->extension, pnode); 
+    case ENTC_UDC_NODE: ecudc_node_add (self->extension, pnode); 
       break;
   }  
 }
@@ -209,7 +238,7 @@ EcUdc ecudc_get (EcUdc self, const EcString name)
 {
   switch (self->type) 
   {
-    case 0: return ecudc_node_get (self->extension, name); 
+    case ENTC_UDC_NODE: return ecudc_node_get (self->extension, name); 
   }    
   return NULL;
 }
@@ -220,9 +249,20 @@ void ecudc_setS (EcUdc self, const EcString value)
 {
   switch (self->type) 
   {
-    case 1: ecudc_sitem_setS (self->extension, value); 
+    case ENTC_UDC_STRING: ecudc_sitem_setS (self->extension, value); 
       break;
   }    
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_setP (EcUdc self, void* ptr)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_REF: self->extension = ptr; 
+      break;
+  }      
 }
 
 //----------------------------------------------------------------------------------------
@@ -231,9 +271,31 @@ const EcString ecudc_asString (EcUdc self)
 {
   switch (self->type) 
   {
-    case 1: return ecudc_sitem_asString (self->extension); 
+    case ENTC_UDC_STRING: return ecudc_sitem_asString (self->extension); 
     default: return ecstr_init ();
   } 
+}
+
+//----------------------------------------------------------------------------------------
+
+void* ecudc_asP (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_REF: return self->extension; 
+  }        
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc ecudc_next (EcUdc self, void** cursor)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_NODE: return ecudc_node_next (self->extension, cursor); 
+  }        
+  return NULL;  
 }
 
 //----------------------------------------------------------------------------------------

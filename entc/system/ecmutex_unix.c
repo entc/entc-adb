@@ -69,4 +69,89 @@ void ecmutex_unlock(EcMutex self)
 
 //-----------------------------------------------------------------------------------
 
+struct EcReadWriteLock_s
+{
+  
+  pthread_mutex_t mutex_r;
+  
+  pthread_mutex_t mutex_w;
+  
+  int counter;
+  
+};
+
+//-----------------------------------------------------------------------------------
+
+EcReadWriteLock ecreadwritelock_new()
+{
+  EcReadWriteLock self = ENTC_NEW(struct EcReadWriteLock_s);
+  
+  pthread_mutex_init(&(self->mutex_r), 0);
+  pthread_mutex_init(&(self->mutex_w), 0);
+  
+  self->counter = 0;
+  
+  return self;  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_delete(EcReadWriteLock* pself)
+{
+  EcReadWriteLock self = *pself;
+  
+  pthread_mutex_destroy(&(self->mutex_r));
+  pthread_mutex_destroy(&(self->mutex_w));
+  
+  ENTC_DEL(pself, struct EcReadWriteLock_s);  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_lockRead(EcReadWriteLock self)
+{
+  pthread_mutex_lock(&(self->mutex_r));
+  
+  if (self->counter == 0)
+  {
+    pthread_mutex_lock(&(self->mutex_w));
+  }
+  
+  self->counter++;
+  
+  pthread_mutex_unlock(&(self->mutex_r));
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_unlockRead(EcReadWriteLock self)
+{
+  pthread_mutex_lock(&(self->mutex_r));
+  
+  self->counter--;
+
+  if (self->counter == 0)
+  {
+    pthread_mutex_unlock(&(self->mutex_w));
+  }
+  
+  pthread_mutex_unlock(&(self->mutex_r));  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_lockWrite(EcReadWriteLock self)
+{
+  pthread_mutex_lock(&(self->mutex_w));
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_unlockWrite(EcReadWriteLock self)
+{
+  pthread_mutex_unlock(&(self->mutex_w));  
+}
+
+//-----------------------------------------------------------------------------------
+
 #endif

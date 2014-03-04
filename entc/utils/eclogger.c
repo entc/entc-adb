@@ -669,7 +669,7 @@ void ecfilelogger_getCallback (EcFileLogger self, EcLoggerCallbacks* callbacks)
 struct EcListLogger_s
 {
 
-  EcMutex mutex;
+  EcReadWriteLock rwlock;
 
   EcList list;
   
@@ -681,7 +681,7 @@ EcListLogger eclistlogger_new ()
 {
   EcListLogger self = ENTC_NEW (struct EcListLogger_s);
   
-  self->mutex = ecmutex_new ();
+  self->rwlock = ecreadwritelock_new ();
   self->list = eclist_new ();
   
   return self;
@@ -694,7 +694,7 @@ void eclistlogger_del (EcListLogger* pself)
   EcListLogger self = *pself;
   
   eclist_delete(&(self->list));
-  ecmutex_delete(&(self->mutex));
+  ecreadwritelock_delete(&(self->rwlock));
   
   ENTC_DEL (pself, struct EcListLogger_s);
 }
@@ -707,7 +707,7 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   
   EcListNode node;
   
-  ecmutex_lock (self->mutex);
+  ecreadwritelock_lockRead (self->rwlock);
   
   for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
   {
@@ -719,7 +719,7 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
     }
   }
 
-  ecmutex_unlock (self->mutex);
+  ecreadwritelock_unlockRead (self->rwlock);
 }
 
 //----------------------------------------------------------------------------------------
@@ -732,7 +732,7 @@ EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* da
   EcListNode node;
   EcUdc ret = NULL;
   
-  //ecmutex_lock (self->mutex);
+  ecreadwritelock_lockRead (self->rwlock);
 
   for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
   {
@@ -743,7 +743,7 @@ EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* da
       if ( isNotAssigned(ret))
       {
         // create a new udc node
-        ret = ecudc_new(0, "ServiceResults");        
+        ret = ecudc_new(ENTC_UDC_NODE, "ServiceResults");        
       }
       {
         EcUdc res = callbacks->msgfct (callbacks->ptr, logid, messageid, data);
@@ -756,7 +756,7 @@ EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* da
     }
   }
   
-  //ecmutex_unlock (self->mutex);
+  ecreadwritelock_unlockRead (self->rwlock);
 
   return ret;
 }
@@ -783,11 +783,11 @@ void eclistlogger_register (EcListLogger self, EcLogger logger)
   
   eclogger_setCallback(logger, &tmp2);
   
-  ecmutex_lock (self->mutex);
+  ecreadwritelock_lockWrite (self->rwlock);
   
   eclist_append(self->list, tmp1);
   
-  ecmutex_unlock (self->mutex);
+  ecreadwritelock_unlockWrite (self->rwlock);
 }
 
 //----------------------------------------------------------------------------------------
@@ -798,11 +798,11 @@ void eclistlogger_add (EcListLogger self, const EcLoggerCallbacks* callbacks)
 
   memcpy (tmp1, callbacks, sizeof(EcLoggerCallbacks));
   
-  ecmutex_lock (self->mutex);
+  ecreadwritelock_lockWrite (self->rwlock);
 
   eclist_append(self->list, tmp1);  
 
-  ecmutex_unlock (self->mutex);
+  ecreadwritelock_unlockWrite (self->rwlock);
 }
 
 //----------------------------------------------------------------------------------------

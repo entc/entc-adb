@@ -51,8 +51,6 @@ struct EcServer_s
   
   struct EcServerCallbacks callbacks;
 
-  EcString confdir;
-
   // queuing
 
   EcEventQueue equeue;
@@ -163,7 +161,7 @@ int ecserver_worker_run (void* params)
 
 /*------------------------------------------------------------------------*/
 
-EcServer ecserver_new(EcLogger logger, const EcString confdir, uint_t poolSize, struct EcServerCallbacks* callbacks, EcEventContext ec)
+EcServer ecserver_new(EcLogger logger, uint_t poolSize, struct EcServerCallbacks* callbacks, EcEventContext ec)
 {
   EcServer self = ENTC_NEW(struct EcServer_s);
   // init
@@ -178,7 +176,6 @@ EcServer ecserver_new(EcLogger logger, const EcString confdir, uint_t poolSize, 
   memcpy(&(self->callbacks), callbacks, sizeof(struct EcServerCallbacks));
 
   self->threads = NULL;
-  self->confdir = ecstr_copy(confdir);
   
   return self;
 }
@@ -212,7 +209,6 @@ void ecserver_delete(EcServer* ptr)
   
   eclist_delete(&(self->queue));
   ecmutex_delete(&(self->mutex));
-  ecstr_delete(&(self->confdir));
   
   ece_queue_delete (&(self->equeue));
       

@@ -156,6 +156,8 @@ SET (CORE_SOURCES_UTILS
 SET (CORE_SOURCES_TOOLS
   tools/ecserver.h
   tools/ecserver.c
+  tools/echttp.h
+  tools/echttp.c
   tools/echtml.h
   tools/echtml.c
   tools/eclocale.h

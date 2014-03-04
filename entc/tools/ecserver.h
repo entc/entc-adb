@@ -46,7 +46,7 @@ struct EcServerCallbacks {
 
 __CPP_EXTERN______________________________________________________________________________START  
   
-__LIB_EXPORT EcServer ecserver_new(EcLogger logger, const EcString confdir, uint_t poolSize, struct EcServerCallbacks*, EcEventContext);
+__LIB_EXPORT EcServer ecserver_new(EcLogger logger, uint_t poolSize, struct EcServerCallbacks*, EcEventContext);
   
 __LIB_EXPORT void ecserver_delete(EcServer*);
   
