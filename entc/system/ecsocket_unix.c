@@ -205,7 +205,7 @@ int ecsocket_listen(EcSocket self, const EcString host, uint_t port)
 
 //-----------------------------------------------------------------------------------
 
-EcSocket ecsocket_accept(EcSocket self)
+EcSocket ecsocket_accept (EcSocket self)
 {
   // variables
   EcEventQueue queue;
@@ -222,7 +222,7 @@ EcSocket ecsocket_accept(EcSocket self)
     return NULL;
   }
   // critical section start
-  ecmutex_lock(self->mutex);
+  ecmutex_lock (self->mutex);
   
   queue = ece_queue_new (self->ec);  
   ece_queue_add (queue, self->socket, ENTC_EVENTTYPE_READ);

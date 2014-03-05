@@ -42,6 +42,8 @@ struct EcEventContext_s
   
   EcList queues;
   
+  EcMutex mutex;
+  
 };
 
 
@@ -58,6 +60,9 @@ struct EcEventQueue_s
   
   EcListNode node;
   
+  // reference
+  EcEventContext context;
+  
 };
 
 //------------------------------------------------------------------------------------------------------------
@@ -67,6 +72,7 @@ EcEventContext ece_context_new()
   EcEventContext self = ENTC_NEW(struct EcEventContext_s);
 
   self->queues = eclist_new ();
+  self->mutex = ecmutex_new ();
   
   return self;
 }
@@ -78,6 +84,7 @@ void ece_context_delete(EcEventContext* ptr)
   EcEventContext self = *ptr;
   
   eclist_delete (&(self->queues));
+  ecmutex_delete (&(self->mutex));
     
   ENTC_DEL(ptr, struct EcEventContext_s);
 }
@@ -93,6 +100,8 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
   // cleanup
   ece_queue_delete (&queue);
   
+  ece_context_triggerTermination (self);
+  
   return rt;
 }
 
@@ -101,11 +110,16 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 void ece_context_triggerTermination (EcEventContext self)
 {
   EcListNode node;
+  
+  ecmutex_lock (self->mutex);
+  
   for (node = eclist_first(self->queues); node != eclist_end(self->queues); node = eclist_next(node))
   {
     // trigger for all queue the abort event
     ece_queue_set (eclist_data(node), 0);
   }
+
+  ecmutex_unlock (self->mutex);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -123,8 +137,14 @@ EcEventQueue ece_queue_new (EcEventContext ec)
     self->pos++;
   }  
   
+  self->context = ec;
+
+  ecmutex_lock (ec->mutex);
+
   self->node = eclist_append(ec->queues, self);
     
+  ecmutex_unlock (ec->mutex);
+  
   return self;
 }
 
@@ -134,8 +154,12 @@ void ece_queue_delete (EcEventQueue* sptr)
 {
   EcEventQueue self = *sptr;
   
+  ecmutex_lock (self->context->mutex);
+
   eclist_erase(self->node);
   
+  ecmutex_unlock (self->context->mutex);
+
   close(self->kq);
   
   ENTC_DEL(sptr, struct EcEventQueue_s);
@@ -226,6 +250,8 @@ int ece_queue_wait (EcEventQueue self, uint_t timeout, EcLogger logger)
       eclogger_log (logger, LL_TRACE, "CORE", "abort in eventcontext");
       // abort !!!!
       rt = ENTC_EVENT_ABORT;
+      
+      ece_context_triggerTermination (self->context);
     } 
     else
     {

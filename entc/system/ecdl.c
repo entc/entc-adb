@@ -93,7 +93,7 @@ EcLibraryHandle ecdl_new(const EcString filename, EcLogger logger)
     HMODULE handle = LoadLibrary(filename);
 #else
     // clear any existing errors
-    dlerror();
+//    dlerror();
     
     void* handle = dlopen(filename, RTLD_NOW);
 #endif

@@ -519,6 +519,8 @@ void ecechologger_del (EcEchoLogger* pself)
 {
   EcEchoLogger self = *pself;
   
+  ecstr_release(&(self->buffer01));
+  ecstr_release(&(self->buffer02));
   ecmutex_delete(&(self->mutex));
   
   ENTC_DEL (pself, struct EcEchoLogger_s);    
@@ -689,9 +691,27 @@ EcListLogger eclistlogger_new ()
 
 //----------------------------------------------------------------------------------------
 
+void eclistlogger_clear (EcListLogger self)
+{
+  EcListNode node;
+
+  for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
+  {
+    EcLoggerCallbacks* callbacks = eclist_data(node);
+
+    ENTC_DEL (&callbacks, EcLoggerCallbacks);
+  }
+  
+  eclist_clear(self->list);
+}
+
+//----------------------------------------------------------------------------------------
+
 void eclistlogger_del (EcListLogger* pself)
 {
   EcListLogger self = *pself;
+  
+  eclistlogger_clear (self);
   
   eclist_delete(&(self->list));
   ecreadwritelock_delete(&(self->rwlock));
@@ -792,24 +812,36 @@ void eclistlogger_register (EcListLogger self, EcLogger logger)
 
 //----------------------------------------------------------------------------------------
 
-void eclistlogger_add (EcListLogger self, const EcLoggerCallbacks* callbacks)
+EcListNode eclistlogger_add (EcListLogger self, const EcLoggerCallbacks* callbacks)
 {
+  EcListNode ret;
+  
   EcLoggerCallbacks* tmp1 = ENTC_NEW (EcLoggerCallbacks);
 
   memcpy (tmp1, callbacks, sizeof(EcLoggerCallbacks));
   
   ecreadwritelock_lockWrite (self->rwlock);
 
-  eclist_append(self->list, tmp1);  
+  ret = eclist_append(self->list, tmp1);  
 
   ecreadwritelock_unlockWrite (self->rwlock);
+  
+  return ret;
 }
 
 //----------------------------------------------------------------------------------------
 
-void eclistlogger_remove (EcListLogger self, const EcLoggerCallbacks* callbacks)
+void eclistlogger_remove (EcListLogger self, EcListNode node)
 {
+  ecreadwritelock_lockWrite (self->rwlock);
+    
+  EcLoggerCallbacks* tmp1 = eclist_data(node);
+
+  ENTC_DEL (&tmp1, EcLoggerCallbacks);
   
+  eclist_erase(node);
+
+  ecreadwritelock_unlockWrite (self->rwlock);
 }
 
 //----------------------------------------------------------------------------------------

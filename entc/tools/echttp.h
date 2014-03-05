@@ -64,6 +64,21 @@ typedef struct {
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 
+typedef int (*http_process_fct)(void* ptr, EcHttpHeader*, void** object);
+typedef int (*http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
+
+typedef struct {
+  
+  http_process_fct process;
+  
+  void* process_ptr;
+  
+  http_render_fct render;
+  
+  void* render_ptr;  
+  
+} EcHttpCallbacks;
+
 /*
 typedef int (*http_callback_init)(void* ptr, void** pobj, EcHttpRequest*);
 typedef int (*http_callback_done)(void* ptr, void** pobj, EcHttpRequest*);
@@ -82,6 +97,8 @@ __LIB_EXPORT EcHttpRequest echttp_request_create (const EcString rootdoc, int he
 __LIB_EXPORT void echttp_request_destroy (EcHttpRequest*);
 
 __LIB_EXPORT void echttp_request_process (EcHttpRequest, EcSocket socket, EcLogger logger);
+
+__LIB_EXPORT void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

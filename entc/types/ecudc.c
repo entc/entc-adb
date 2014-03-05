@@ -40,6 +40,8 @@ typedef struct {
   
   EcMap map;
   
+  ubyte_t protect;
+  
 } EcUdcNode;
 
 typedef struct {
@@ -55,6 +57,7 @@ void* ecudc_node_new ()
   EcUdcNode* self = ENTC_NEW (EcUdcNode);
 
   self->map = ecmap_new ();
+  self->protect = FALSE;
   
   return self;
 }
@@ -79,12 +82,15 @@ void ecudc_node_clear (EcUdcNode* self)
 void ecudc_node_del (void** pself)
 {
   EcUdcNode* self = *pself;
-  
-  ecudc_node_clear (self);
-  
-  ecmap_delete(&(self->map));
-  
-  ENTC_DEL (pself, EcUdcNode);
+  // if protected dont delete
+  if (self->protect == FALSE)
+  {
+    ecudc_node_clear (self);
+    
+    ecmap_delete(&(self->map));
+    
+    ENTC_DEL (pself, EcUdcNode);    
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -144,6 +150,13 @@ EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
   
   *cursor = node;
   return ecmap_data(node);
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_node_protect (EcUdcNode* self, ubyte_t mode)
+{
+  self->protect = mode;
 }
 
 //----------------------------------------------------------------------------------------
@@ -215,10 +228,13 @@ void ecudc_del (EcUdc* pself)
     case ENTC_UDC_STRING: ecudc_sitem_del (&(self->extension)); 
       break;
   }
-  
-  ecstr_delete(&(self->name));
-  
-  ENTC_DEL (pself, struct EcUdc_s);
+  // delete only if the content was deleted
+  if (isNotAssigned (self->extension))
+  {
+    ecstr_delete(&(self->name));
+    
+    ENTC_DEL (pself, struct EcUdc_s);
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -299,3 +315,14 @@ EcUdc ecudc_next (EcUdc self, void** cursor)
 }
 
 //----------------------------------------------------------------------------------------
+
+void ecudc_protect (EcUdc self, ubyte_t mode)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_NODE: return ecudc_node_protect (self->extension, mode); 
+  }        
+}
+
+//----------------------------------------------------------------------------------------
+

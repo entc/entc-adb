@@ -42,6 +42,11 @@ struct EcServerCallbacks {
 
   void* worker_ptr;
 
+  // defition of the worker thread, which takes an object an destroys it
+  ecserver_callback_fct clear_fct;
+  
+  void* clear_ptr;
+
 };
 
 __CPP_EXTERN______________________________________________________________________________START  

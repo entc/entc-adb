@@ -432,17 +432,24 @@ void echttp_header_title (EcHttpHeader* header)
 
 void echttp_header_validate (EcHttpHeader* header)
 {
-  // search for '?' in url
-  const EcString pos01 = strchr(header->url, '?');  
-  if( pos01 )
+  if (ecstr_empty (header->url))
   {
-    ecstr_replaceTO(&(header->request_url), ecstr_part(header->url, pos01 - header->url));
-    ecstr_replace(&(header->request_params), pos01 + 1);
+    ecstr_replace(&(header->request_url), "index.html"); 
   }
   else
   {
-    ecstr_replace(&(header->request_url), header->url); 
-  }  
+    // search for '?' in url
+    const EcString pos01 = strchr(header->url, '?');  
+    if( pos01 )
+    {
+      ecstr_replaceTO(&(header->request_url), ecstr_part(header->url, pos01 - header->url));
+      ecstr_replace(&(header->request_params), pos01 + 1);
+    }
+    else
+    {
+      ecstr_replace(&(header->request_url), header->url); 
+    }    
+  }
   // set correct language
   if (ecstr_empty(header->session_lang)) 
   {
@@ -541,6 +548,8 @@ struct EcHttpRequest_s
   
   int header_on;
   
+  EcHttpCallbacks callbacks;
+  
 };
 
 //---------------------------------------------------------------------------------------
@@ -553,6 +562,8 @@ EcHttpRequest echttp_request_create (const EcString docroot, int header, EcLogge
   self->docroot = ecstr_copy (docroot);
   self->header_on = header;
   
+  memset (&(self->callbacks), 0x0, sizeof(EcHttpCallbacks));
+  
   return self;
 }
 
@@ -560,6 +571,10 @@ EcHttpRequest echttp_request_create (const EcString docroot, int header, EcLogge
 
 void echttp_request_destroy (EcHttpRequest* pself)
 {
+  EcHttpRequest self = *pself;
+
+  ecstr_delete(&(self->docroot));
+  
   ENTC_DEL (pself, struct EcHttpRequest_s);
 }
 
@@ -667,14 +682,13 @@ int echttp_parse_meta (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger log
 
 //---------------------------------------------------------------------------------------
 
-int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer)
+int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer)
 {
   int error;
-  EcStream stream = ecstream_new ();
   // parse the first line received
-  if ( ecstreambuffer_readln (buffer, stream, &error) )
+  if ( ecstreambuffer_readln (buffer, streambuffer, &error) )
   {
-    const char* line = ecstream_buffer(stream);
+    const char* line = ecstream_buffer(streambuffer);
     if(!ecstr_empty(line))
     {
       int lenline = strlen(line);
@@ -683,10 +697,17 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer)
       if ((lenline > 3)&&(line[0] == 'G')&&(line[3] == ' '))
       {
         // GET
-        pos = strrchr(line + 4, ' ');
-        *pos = 0;
-        
-        header->url = line + 4;
+        if (lenline > 4)
+        {
+          pos = strrchr(line + 4, ' ');
+          *pos = 0;
+          
+          header->url = line + 4;          
+        }
+        else
+        {
+          header->url = NULL;
+        }
         header->method = C_REQUEST_METHOD_GET;
       } 
       else if ((lenline > 3)&&(line[0] == 'P')&&(line[3] == ' '))
@@ -726,20 +747,17 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer)
       return FALSE;
     }
   }
-  
-  ecstream_delete (&stream);
-  
   // if not method found, we cannot handle the request
   return header->method != C_REQUEST_METHOD_INVALID;
 }
 
 //---------------------------------------------------------------------------------------
 
-int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger logger)
+int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcLogger logger)
 {
   int ret = TRUE;
   // parse incoming stream of 'GET/POST/...'
-  ret = ret && echttp_parse_method (header, buffer);
+  ret = ret && echttp_parse_method (header, buffer, streambuffer);
   
   // parse meta informations
   ret = ret && echttp_parse_meta (header, buffer, logger);
@@ -749,20 +767,55 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
 
 //---------------------------------------------------------------------------------------
 
+void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSocket socket, EcLogger logger)
+{
+  // check first if we handle this in a custom way
+  if (isAssigned (self->callbacks.process))
+  {
+    void* object = NULL;
+    
+    echttp_header_title (header);
+    
+    if (self->callbacks.process (self->callbacks.process_ptr, header, &object))
+    {
+      EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
+      
+      echttp_send_DefaultHeader (header, stream);
+      
+      if (isAssigned (self->callbacks.render))
+      {
+        self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
+      }
+      else
+      {
+        ecdevstream_appends(stream, "no render");
+      }
+      
+      ecdevstream_delete(&stream);
+      
+      return;
+    }
+  }
+  echttp_send_file (header, socket, self->docroot, logger);  
+}
+
+//---------------------------------------------------------------------------------------
+
 void echttp_request_process (EcHttpRequest self, EcSocket socket, EcLogger logger)
 {
   EcHttpHeader header;
   
   EcStreamBuffer buffer = ecstreambuffer_new(logger, socket);
+  EcStream streambuffer = ecstream_new ();
 
   // initialize the header struct
   echttp_header_init (&header, self->header_on);
 
-  if (echttp_request_next (&header, buffer, logger))
+  if (echttp_request_next (&header, buffer, streambuffer, logger))
   {
     echttp_header_validate (&header);
     
-    echttp_send_file (&header, socket, self->docroot, logger);
+    echttp_request_process_next (self, &header, socket, logger);
   }
   else
   {
@@ -772,6 +825,14 @@ void echttp_request_process (EcHttpRequest self, EcSocket socket, EcLogger logge
   echttp_header_clear (&header);
   
   ecstreambuffer_delete (&buffer);
+  ecstream_delete (&streambuffer);
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_request_callbacks (EcHttpRequest self, EcHttpCallbacks* callbacks)
+{
+  memcpy (&(self->callbacks), callbacks, sizeof(EcHttpCallbacks));
 }
 
 //---------------------------------------------------------------------------------------

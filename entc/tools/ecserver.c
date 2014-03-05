@@ -65,7 +65,7 @@ struct EcServer_s
 
 /*------------------------------------------------------------------------*/
 
-int ecserver_accept_run(void* params)
+int ecserver_accept_run (void* params)
 {
   void* object = NULL;
   EcServerThread* self = params;
@@ -78,8 +78,6 @@ int ecserver_accept_run(void* params)
   // accept thread callback
   if( !self->server->callbacks.accept_thread(self->server->callbacks.accept_ptr, &object, self->logger) )
   {  
-    // due we have no unlimited evet handle -> trigger it again
-    ece_context_triggerTermination (self->server->mainabort);
     // signaled to stop the thread
     eclogger_log(self->logger, LL_DEBUG, "QSRV", "{accept} aborted");
     return FALSE;     
@@ -104,7 +102,7 @@ int ecserver_accept_run(void* params)
 }
 
 /*------------------------------------------------------------------------*/
-
+                            
 int ecserver_worker_run (void* params)
 {
   EcServerThread* self = params;
@@ -121,8 +119,6 @@ int ecserver_worker_run (void* params)
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {
-      // due we have no unlimited evet handle -> trigger it again
-      ece_context_triggerTermination (self->server->mainabort);
       // termination of the process
       eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} aborted");
       return FALSE;
@@ -152,6 +148,7 @@ int ecserver_worker_run (void* params)
 
     if( !self->server->callbacks.worker_thread(self->server->callbacks.worker_ptr, &object, self->logger) )
     {
+      eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} aborted");
       // signaled to stop the thread
       return FALSE;
     }    
@@ -186,6 +183,7 @@ void ecserver_delete(EcServer* ptr)
 {
   EcServer self = *ptr;
   uint_t i;
+  EcListNode node;
   
   if( self->threads != NULL )
   {
@@ -198,7 +196,7 @@ void ecserver_delete(EcServer* ptr)
       ecthread_join(st->thread);
       
       ecthread_delete(&(st->thread));
-      
+            
       eclogger_log(self->logger, LL_TRACE, "QSRV", "{server} thread removed");
 
       eclogger_del (&(st->logger));
@@ -207,6 +205,16 @@ void ecserver_delete(EcServer* ptr)
     self->threads = NULL;    
   }
   
+  for (node = eclist_first(self->queue); node != eclist_end(self->queue); node = eclist_next(node))
+  {
+    void* object = eclist_data(node);
+
+    if (isAssigned (self->callbacks.clear_fct))
+    {
+      self->callbacks.clear_fct (NULL, &object, self->logger);
+    }
+  }
+    
   eclist_delete(&(self->queue));
   ecmutex_delete(&(self->mutex));
   

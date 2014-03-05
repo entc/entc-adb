@@ -51,6 +51,8 @@ __LIB_EXPORT void* ecudc_asP (EcUdc);
 
 __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
+__LIB_EXPORT void ecudc_protect (EcUdc, ubyte_t mode);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

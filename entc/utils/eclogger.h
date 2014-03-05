@@ -146,9 +146,9 @@ __LIB_EXPORT void eclistlogger_getCallback (EcListLogger, EcLoggerCallbacks*);
 
 __LIB_EXPORT void eclistlogger_register (EcListLogger, EcLogger);
 
-__LIB_EXPORT void eclistlogger_add (EcListLogger, const EcLoggerCallbacks*);
+__LIB_EXPORT EcListNode eclistlogger_add (EcListLogger, const EcLoggerCallbacks*);
 
-__LIB_EXPORT void eclistlogger_remove (EcListLogger, const EcLoggerCallbacks*);
+__LIB_EXPORT void eclistlogger_remove (EcListLogger, EcListNode);
 
 __CPP_EXTERN______________________________________________________________________________END
 
