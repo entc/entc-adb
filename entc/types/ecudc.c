@@ -227,6 +227,8 @@ void ecudc_del (EcUdc* pself)
       break;
     case ENTC_UDC_STRING: ecudc_sitem_del (&(self->extension)); 
       break;
+    case ENTC_UDC_REF: self->extension = NULL;
+      break;
   }
   // delete only if the content was deleted
   if (isNotAssigned (self->extension))

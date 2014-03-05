@@ -395,6 +395,52 @@ void echttp_unescape (EcString url)
 
 //---------------------------------------------------------------------------------------
 
+void echttp_escape (EcDevStream stream, const EcString url)
+{
+  /* variables */
+  const char* pos01 = url;
+  
+  while(*pos01)
+  {
+    switch (*pos01)
+    {
+      case ' ' : ecdevstream_appends(stream, "%20"); break;
+      case '!' : ecdevstream_appends(stream, "%21"); break;
+      case '"' : ecdevstream_appends(stream, "%22"); break;
+      case '#' : ecdevstream_appends(stream, "%23"); break;
+      case '$' : ecdevstream_appends(stream, "%24"); break;
+      case '%' : ecdevstream_appends(stream, "%25"); break;
+      case '&' : ecdevstream_appends(stream, "%26"); break;
+      case '\'': ecdevstream_appends(stream, "%27"); break;
+      default: ecdevstream_appendc(stream, *pos01);
+    }
+    pos01++;
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url)
+{
+  if( strlen(url) > 7 )
+  {
+    if( (url[0] == 'h') && (url[1] == 't') && (url[2] == 't') && (url[3] == 'p') && (url[4] == ':') )
+    {
+      echttp_escape (stream, url);
+      return;
+    }
+  }
+  if (ecstr_valid (header->host))
+  {
+    ecdevstream_appends( stream, "http://" ); 
+    ecdevstream_appends( stream, header->host); 
+    ecdevstream_appends( stream, "/" ); 
+    echttp_escape (stream, url); 
+  }
+}
+
+//---------------------------------------------------------------------------------------
+
 void echttp_header_title (EcHttpHeader* header)
 {
   // variables
