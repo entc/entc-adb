@@ -154,4 +154,44 @@ void ecreadwritelock_unlockWrite(EcReadWriteLock self)
 
 //-----------------------------------------------------------------------------------
 
+int ecreadwritelock_unlockReadAndTransformIfLast(EcReadWriteLock self)
+{
+  int ret;
+  
+  pthread_mutex_lock(&(self->mutex_r));
+  
+  self->counter--;
+  
+  ret = self->counter == 0;
+  
+  pthread_mutex_unlock(&(self->mutex_r));    
+  
+  return ret;
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecreadwritelock_lockReadAndTransformIfFirst(EcReadWriteLock self)
+{
+  int ret = FALSE;
+  
+  pthread_mutex_lock(&(self->mutex_r));
+
+  if (self->counter == 0)
+  {
+    pthread_mutex_lock(&(self->mutex_w));
+    ret = TRUE;
+  }
+  else
+  {
+    self->counter++;    
+  }
+  
+  pthread_mutex_unlock(&(self->mutex_r));    
+  
+  return ret;  
+}
+
+//-----------------------------------------------------------------------------------
+
 #endif

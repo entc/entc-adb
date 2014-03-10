@@ -675,6 +675,10 @@ struct EcListLogger_s
 
   EcList list;
   
+  EcList shadow_list;
+  
+  int list_changed;
+
 };
 
 //----------------------------------------------------------------------------------------
@@ -685,24 +689,27 @@ EcListLogger eclistlogger_new ()
   
   self->rwlock = ecreadwritelock_new ();
   self->list = eclist_new ();
+  self->shadow_list = eclist_new ();
+  
+  self->list_changed = FALSE;
   
   return self;
 }
 
 //----------------------------------------------------------------------------------------
 
-void eclistlogger_clear (EcListLogger self)
+void eclistlogger_clear (EcList self)
 {
   EcListNode node;
 
-  for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
+  for (node = eclist_first (self); node != eclist_end (self); node = eclist_next (node))
   {
     EcLoggerCallbacks* callbacks = eclist_data(node);
 
     ENTC_DEL (&callbacks, EcLoggerCallbacks);
   }
   
-  eclist_clear(self->list);
+  eclist_clear(self);
 }
 
 //----------------------------------------------------------------------------------------
@@ -711,12 +718,41 @@ void eclistlogger_del (EcListLogger* pself)
 {
   EcListLogger self = *pself;
   
-  eclistlogger_clear (self);
+  eclistlogger_clear (self->list);
+  eclistlogger_clear (self->shadow_list);
   
   eclist_delete(&(self->list));
+  eclist_delete(&(self->shadow_list));
+
   ecreadwritelock_delete(&(self->rwlock));
   
   ENTC_DEL (pself, struct EcListLogger_s);
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclistlogger_sync (EcListLogger self)
+{
+  EcListNode node;
+
+  if (self->list_changed)
+  {
+    eclistlogger_clear (self->list);
+    
+    // copy back the whole list
+    for (node = eclist_first (self->shadow_list); node != eclist_end (self->shadow_list); node = eclist_next (node))
+    {
+      const EcLoggerCallbacks* callbacks = eclist_data(node);
+      
+      EcLoggerCallbacks* tmp1 = ENTC_NEW (EcLoggerCallbacks);
+      
+      memcpy (tmp1, callbacks, sizeof(EcLoggerCallbacks));
+      
+      eclist_append(self->list, tmp1);
+    }
+    
+    self->list_changed = FALSE;
+  }  
 }
 
 //----------------------------------------------------------------------------------------
@@ -727,7 +763,12 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   
   EcListNode node;
   
-  ecreadwritelock_lockRead (self->rwlock);
+  if (ecreadwritelock_lockReadAndTransformIfFirst (self->rwlock))
+  {
+    eclistlogger_sync (self);    
+    ecreadwritelock_unlockWrite (self->rwlock);
+    ecreadwritelock_lockRead (self->rwlock);
+  }
   
   for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
   {
@@ -739,7 +780,11 @@ void eclistlogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
     }
   }
 
-  ecreadwritelock_unlockRead (self->rwlock);
+  if (ecreadwritelock_unlockReadAndTransformIfLast (self->rwlock))
+  {
+    eclistlogger_sync (self);
+    ecreadwritelock_unlockWrite (self->rwlock);          
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -752,7 +797,12 @@ EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* da
   EcListNode node;
   EcUdc ret = NULL;
   
-  ecreadwritelock_lockRead (self->rwlock);
+  if (ecreadwritelock_lockReadAndTransformIfFirst (self->rwlock))
+  {
+    eclistlogger_sync (self);    
+    ecreadwritelock_unlockWrite (self->rwlock);
+    ecreadwritelock_lockRead (self->rwlock);
+  }
 
   for (node = eclist_first (self->list); node != eclist_end (self->list); node = eclist_next (node))
   {
@@ -776,7 +826,11 @@ EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* da
     }
   }
   
-  ecreadwritelock_unlockRead (self->rwlock);
+  if (ecreadwritelock_unlockReadAndTransformIfLast (self->rwlock))
+  {
+    eclistlogger_sync (self);
+    ecreadwritelock_unlockWrite (self->rwlock);          
+  }
 
   return ret;
 }
@@ -805,7 +859,9 @@ void eclistlogger_register (EcListLogger self, EcLogger logger)
   
   ecreadwritelock_lockWrite (self->rwlock);
   
-  eclist_append(self->list, tmp1);
+  eclist_append(self->shadow_list, tmp1);
+  
+  self->list_changed = TRUE;
   
   ecreadwritelock_unlockWrite (self->rwlock);
 }
@@ -820,11 +876,9 @@ EcListNode eclistlogger_add (EcListLogger self, const EcLoggerCallbacks* callbac
 
   memcpy (tmp1, callbacks, sizeof(EcLoggerCallbacks));
   
-  ecreadwritelock_lockWrite (self->rwlock);
+  ret = eclist_append(self->shadow_list, tmp1);  
 
-  ret = eclist_append(self->list, tmp1);  
-
-  ecreadwritelock_unlockWrite (self->rwlock);
+  self->list_changed = TRUE;
   
   return ret;
 }
@@ -833,15 +887,13 @@ EcListNode eclistlogger_add (EcListLogger self, const EcLoggerCallbacks* callbac
 
 void eclistlogger_remove (EcListLogger self, EcListNode node)
 {
-  ecreadwritelock_lockWrite (self->rwlock);
-    
-  EcLoggerCallbacks* tmp1 = eclist_data(node);
-
-  ENTC_DEL (&tmp1, EcLoggerCallbacks);
+  EcLoggerCallbacks* callbacks = eclist_data(node);
+  
+  ENTC_DEL (&callbacks, EcLoggerCallbacks);
   
   eclist_erase(node);
-
-  ecreadwritelock_unlockWrite (self->rwlock);
+  
+  self->list_changed = TRUE;
 }
 
 //----------------------------------------------------------------------------------------

@@ -690,7 +690,7 @@ int echttp_parse_meta (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger log
     const char* line = ecstream_buffer(stream);
     if( *line )
     {
-      eclogger_logformat(logger, LL_TRACE, "SERV", "{recv line} '%s'", line);
+      //eclogger_logformat(logger, LL_TRACE, "SERV", "{recv line} '%s'", line);
       
       /* Host: 127.0.0.1:8080 */
       if( line[0] == 'H' && line[1] == 'o' && line[5] == ' ' )        

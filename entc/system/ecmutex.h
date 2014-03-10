@@ -47,6 +47,10 @@ __LIB_EXPORT void ecreadwritelock_lockWrite(EcReadWriteLock);
 
 __LIB_EXPORT void ecreadwritelock_unlockWrite(EcReadWriteLock);
 
+__LIB_EXPORT int ecreadwritelock_unlockReadAndTransformIfLast(EcReadWriteLock);
+
+__LIB_EXPORT int ecreadwritelock_lockReadAndTransformIfFirst(EcReadWriteLock);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 
