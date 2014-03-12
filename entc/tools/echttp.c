@@ -340,6 +340,8 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->mime = ecstr_init();
   header->title = ecstr_init();
   header->tokens = NULL;
+  header->token = NULL;
+  header->urlpath = ecstr_init();
 }
 
 //---------------------------------------------------------------------------------------
@@ -360,6 +362,7 @@ void echttp_header_clear (EcHttpHeader* header)
     ecstr_tokenizer_clear(header->tokens);
     eclist_delete(&(header->tokens));
   }  
+  ecstr_delete(&(header->urlpath));
 }
 
 //---------------------------------------------------------------------------------------
@@ -420,6 +423,19 @@ void echttp_escape (EcDevStream stream, const EcString url)
 
 //-----------------------------------------------------------------------------------------------------------
 
+void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url)
+{
+  if (ecstr_valid (header->host))
+  {
+    ecdevstream_appends( stream, "http://" ); 
+    ecdevstream_appends( stream, header->host); 
+    ecdevstream_appends( stream, "/" ); 
+    echttp_escape (stream, url); 
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url)
 {
   if( strlen(url) > 7 )
@@ -430,13 +446,7 @@ void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString ur
       return;
     }
   }
-  if (ecstr_valid (header->host))
-  {
-    ecdevstream_appends( stream, "http://" ); 
-    ecdevstream_appends( stream, header->host); 
-    ecdevstream_appends( stream, "/" ); 
-    echttp_escape (stream, url); 
-  }
+  echttp_url (header, stream, url);
 }
 
 //---------------------------------------------------------------------------------------

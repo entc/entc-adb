@@ -60,6 +60,10 @@ typedef struct {
   
   EcList tokens;
   
+  EcListNode token;
+  
+  EcString urlpath;
+  
 } EcHttpHeader;
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
@@ -105,6 +109,8 @@ __LIB_EXPORT void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
 __LIB_EXPORT void echttp_unescape (EcString url);
 
 __LIB_EXPORT void echttp_escape (EcDevStream stream, const EcString url);
+
+__LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
