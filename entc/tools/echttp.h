@@ -70,6 +70,7 @@ struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 
 typedef int (*http_process_fct)(void* ptr, EcHttpHeader*, void** object);
 typedef int (*http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
+typedef int (*http_header_fct)(void* ptr, EcHttpHeader*);
 
 typedef struct {
   
@@ -102,7 +103,11 @@ __LIB_EXPORT void echttp_request_destroy (EcHttpRequest*);
 
 __LIB_EXPORT void echttp_request_process (EcHttpRequest, EcSocket socket, EcLogger logger);
 
+__LIB_EXPORT void echttp_request_process_dev (EcHttpRequest, EcDevStream, http_header_fct, void*, EcLogger logger);
+
 __LIB_EXPORT void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
+
+__LIB_EXPORT void echttp_parse_cookies (EcHttpHeader*, const EcString s);
 
 // misc
 

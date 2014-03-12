@@ -823,6 +823,47 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
 
 //---------------------------------------------------------------------------------------
 
+void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, http_header_fct fct, void* ptr, EcLogger logger)
+{
+  EcHttpHeader header;
+
+  // initialize the header struct
+  echttp_header_init (&header, self->header_on);
+
+  // check first if we handle this in a custom way
+  if (isAssigned (self->callbacks.process))
+  {
+    void* object = NULL;
+    
+    if (fct)
+    {
+      fct (ptr, &header);
+    }
+
+    echttp_header_validate (&header);
+    
+    echttp_header_title (&header);
+
+    if (self->callbacks.process (self->callbacks.process_ptr, &header, &object))
+    {
+      echttp_send_DefaultHeader (&header, stream);
+      
+      if (isAssigned (self->callbacks.render))
+      {
+        self->callbacks.render (self->callbacks.render_ptr, &header, stream, &object);
+      }
+      else
+      {
+        ecdevstream_appends(stream, "no render");
+      }      
+    }
+  }
+  
+  echttp_header_clear (&header);
+}
+
+//---------------------------------------------------------------------------------------
+
 void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSocket socket, EcLogger logger)
 {
   // check first if we handle this in a custom way
