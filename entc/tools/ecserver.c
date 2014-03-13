@@ -49,7 +49,7 @@ struct EcServer_s
   
   EcServerThread* threads;
   
-  struct EcServerCallbacks callbacks;
+  EcServerCallbacks callbacks;
 
   // queuing
 
@@ -158,7 +158,7 @@ int ecserver_worker_run (void* params)
 
 /*------------------------------------------------------------------------*/
 
-EcServer ecserver_new(EcLogger logger, uint_t poolSize, struct EcServerCallbacks* callbacks, EcEventContext ec)
+EcServer ecserver_new(EcLogger logger, uint_t poolSize, EcServerCallbacks* callbacks, EcEventContext ec)
 {
   EcServer self = ENTC_NEW(struct EcServer_s);
   // init
@@ -170,7 +170,7 @@ EcServer ecserver_new(EcLogger logger, uint_t poolSize, struct EcServerCallbacks
   self->mutex = ecmutex_new();
   self->worker_lock = ece_queue_gen (self->equeue);
 
-  memcpy(&(self->callbacks), callbacks, sizeof(struct EcServerCallbacks));
+  memcpy(&(self->callbacks), callbacks, sizeof(EcServerCallbacks));
 
   self->threads = NULL;
   

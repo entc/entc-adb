@@ -30,7 +30,7 @@ typedef int  (_STDCALL *ecserver_callback_fct)(void* ptr, void** object, EcLogge
 
 struct EcServer_s; typedef struct EcServer_s* EcServer;
 
-struct EcServerCallbacks {
+typedef struct {
 
   // definition of the accept thread callback, returns an object
   ecserver_callback_fct accept_thread;
@@ -47,11 +47,11 @@ struct EcServerCallbacks {
   
   void* clear_ptr;
 
-};
+} EcServerCallbacks;
 
 __CPP_EXTERN______________________________________________________________________________START  
   
-__LIB_EXPORT EcServer ecserver_new(EcLogger logger, uint_t poolSize, struct EcServerCallbacks*, EcEventContext);
+__LIB_EXPORT EcServer ecserver_new(EcLogger logger, uint_t poolSize, EcServerCallbacks*, EcEventContext);
   
 __LIB_EXPORT void ecserver_delete(EcServer*);
   
