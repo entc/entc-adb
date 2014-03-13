@@ -317,8 +317,7 @@ int ece_queue_wait_nts (EcEventQueue self, uint_t timeout, EcLogger logger, int*
     {
       eclogger_logerrno(logger, LL_WARN, "CORE", "{queue::pipe} error on select"); 
       
-      *rt = -1;
-      
+      *rt = ENTC_EVENT_ERROR;      
       return FALSE;
     }
   }  
