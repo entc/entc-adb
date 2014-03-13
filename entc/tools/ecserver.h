@@ -26,7 +26,7 @@
 #include "../system/ecsocket.h"
 #include "../system/ecevents.h"
 
-typedef int  (*ecserver_callback_fct)(void* ptr, void** object, EcLogger logger);
+typedef int  (_STDCALL *ecserver_callback_fct)(void* ptr, void** object, EcLogger logger);
 
 struct EcServer_s; typedef struct EcServer_s* EcServer;
 

@@ -68,9 +68,9 @@ typedef struct {
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 
-typedef int (*http_process_fct)(void* ptr, EcHttpHeader*, void** object);
-typedef int (*http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
-typedef int (*http_header_fct)(void* ptr, EcHttpHeader*);
+typedef int (_STDCALL *http_process_fct)(void* ptr, EcHttpHeader*, void** object);
+typedef int (_STDCALL *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
+typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*);
 
 typedef struct {
   
