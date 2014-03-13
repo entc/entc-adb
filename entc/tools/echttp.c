@@ -31,60 +31,69 @@ EcBuffer session_name;
 
 #define _ENTC_SESSION_NAMELENGTH 23
 
+static int echhtp_counter = 0;
+
 //---------------------------------------------------------------------------------------
 
 void echttp_init (void)
 {
-  session_name = ecstr_buffer(_ENTC_SESSION_NAMELENGTH);  
-  ecstr_random(session_name, _ENTC_SESSION_NAMELENGTH);
-  
-  mime_types = ecmapchar_new(); 
-  
-  ecmapchar_append( mime_types, "pdf",      "application/pdf" );
-  ecmapchar_append( mime_types, "sig",      "application/pgp-signature" );
-  ecmapchar_append( mime_types, "class",    "application/octet-stream" );
-  ecmapchar_append( mime_types, "ps",       "application/postscript" );
-  ecmapchar_append( mime_types, "torrent",  "application/x-bittorrent" );
-  ecmapchar_append( mime_types, "dvi",      "application/x-dvi" );
-  ecmapchar_append( mime_types, "gz",       "application/x-gzip" );
-  ecmapchar_append( mime_types, "pac",      "application/x-ns-proxy-autoconfig" );
-  ecmapchar_append( mime_types, "swf",      "application/x-shockwave-flash" );
-  
-  ecmapchar_append( mime_types, "tgz",      "application/x-tgz" );
-  ecmapchar_append( mime_types, "tar",      "application/x-tar" );
-  ecmapchar_append( mime_types, "zip",      "application/zip" );
-  ecmapchar_append( mime_types, "mp3",      "audio/mpeg" );
-  ecmapchar_append( mime_types, "m3u",      "audio/x-mpegurl" );
-  ecmapchar_append( mime_types, "wma",      "audio/x-ms-wma" );
-  ecmapchar_append( mime_types, "wax",      "audio/x-ms-wax" );
-  ecmapchar_append( mime_types, "ogg",      "application/ogg" );
-  ecmapchar_append( mime_types, "wav",      "audio/x-wav" );
-  
-  ecmapchar_append( mime_types, "gif",      "image/gif" );
-  ecmapchar_append( mime_types, "jpg",      "image/jpeg" );
-  ecmapchar_append( mime_types, "jpeg",     "image/jpeg" );
-  ecmapchar_append( mime_types, "png",      "image/png" );
-  ecmapchar_append( mime_types, "xbm",      "image/x-xbitmap" );
-  ecmapchar_append( mime_types, "xpm",      "image/x-xpixmap" );
-  ecmapchar_append( mime_types, "xwd",      "image/x-xwindowdump" );
-  ecmapchar_append( mime_types, "css",      "text/css" );
-  ecmapchar_append( mime_types, "html",     "text/html" );
-  ecmapchar_append( mime_types, "htm",      "text/html" );
-  ecmapchar_append( mime_types, "js",       "text/javascript" );
-  ecmapchar_append( mime_types, "asc",      "text/plain" );
-  ecmapchar_append( mime_types, "c",        "text/plain" ); 
-  ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
-
-  ecmapchar_append( mime_types, "exe",      "application/octet-stream" );
+  if (echhtp_counter == 0)
+  {
+    session_name = ecstr_buffer(_ENTC_SESSION_NAMELENGTH);  
+    ecstr_random(session_name, _ENTC_SESSION_NAMELENGTH);
+    
+    mime_types = ecmapchar_new(); 
+    
+    ecmapchar_append( mime_types, "pdf",      "application/pdf" );
+    ecmapchar_append( mime_types, "sig",      "application/pgp-signature" );
+    ecmapchar_append( mime_types, "class",    "application/octet-stream" );
+    ecmapchar_append( mime_types, "ps",       "application/postscript" );
+    ecmapchar_append( mime_types, "torrent",  "application/x-bittorrent" );
+    ecmapchar_append( mime_types, "dvi",      "application/x-dvi" );
+    ecmapchar_append( mime_types, "gz",       "application/x-gzip" );
+    ecmapchar_append( mime_types, "pac",      "application/x-ns-proxy-autoconfig" );
+    ecmapchar_append( mime_types, "swf",      "application/x-shockwave-flash" );
+    
+    ecmapchar_append( mime_types, "tgz",      "application/x-tgz" );
+    ecmapchar_append( mime_types, "tar",      "application/x-tar" );
+    ecmapchar_append( mime_types, "zip",      "application/zip" );
+    ecmapchar_append( mime_types, "mp3",      "audio/mpeg" );
+    ecmapchar_append( mime_types, "m3u",      "audio/x-mpegurl" );
+    ecmapchar_append( mime_types, "wma",      "audio/x-ms-wma" );
+    ecmapchar_append( mime_types, "wax",      "audio/x-ms-wax" );
+    ecmapchar_append( mime_types, "ogg",      "application/ogg" );
+    ecmapchar_append( mime_types, "wav",      "audio/x-wav" );
+    
+    ecmapchar_append( mime_types, "gif",      "image/gif" );
+    ecmapchar_append( mime_types, "jpg",      "image/jpeg" );
+    ecmapchar_append( mime_types, "jpeg",     "image/jpeg" );
+    ecmapchar_append( mime_types, "png",      "image/png" );
+    ecmapchar_append( mime_types, "xbm",      "image/x-xbitmap" );
+    ecmapchar_append( mime_types, "xpm",      "image/x-xpixmap" );
+    ecmapchar_append( mime_types, "xwd",      "image/x-xwindowdump" );
+    ecmapchar_append( mime_types, "css",      "text/css" );
+    ecmapchar_append( mime_types, "html",     "text/html" );
+    ecmapchar_append( mime_types, "htm",      "text/html" );
+    ecmapchar_append( mime_types, "js",       "text/javascript" );
+    ecmapchar_append( mime_types, "asc",      "text/plain" );
+    ecmapchar_append( mime_types, "c",        "text/plain" ); 
+    ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
+    
+    ecmapchar_append( mime_types, "exe",      "application/octet-stream" );     
+  }
+  echhtp_counter++;
 }
 
 //---------------------------------------------------------------------------------------
 
 void echttp_done (void)
 {
-  ecmapchar_delete(&mime_types);
-  
-  ecstr_release(&session_name);
+  echhtp_counter--;
+  if (echhtp_counter == 0) 
+  {
+    ecmapchar_delete(&mime_types);
+    ecstr_release(&session_name);
+  }
 }
 
 //---------------------------------------------------------------------------------------

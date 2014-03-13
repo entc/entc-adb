@@ -10,6 +10,7 @@ mkdir $INCLUDEDIR
 
 cp $PWD/$BCONFIG/libentc.dylib $INSTALLDIR/libentc.$VERSION.dylib
 install_name_tool -id $INSTALLDIR/libentc.$VERSION.dylib $INSTALLDIR/libentc.$VERSION.dylib
+cp -R $PWD/$BCONFIG/libentc.dylib.dSYM $INSTALLDIR/libentc.$VERSION.dylib.dSYM
 
 ln -s $INSTALLDIR/libentc.$VERSION.dylib $INSTALLDIR/libentc.dylib
 

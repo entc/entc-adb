@@ -56,9 +56,18 @@ EcChain ecchain_new()
 
 void ecchain_clear(EcChain self)
 {
+  EcListNode node;
+  
   memset(self->buffer, 0x00, sizeof(void*) * self->length);  
   self->nextempty = 0;
 
+  for (node = eclist_first(self->stack); node != eclist_end(self->stack); node = eclist_next(node))
+  {
+    uint_t* pindex = eclist_data(node);
+
+    ENTC_DEL (&pindex, uint_t);
+  }
+  
   eclist_clear(self->stack);
   self->stacklen = 0;
 }
@@ -68,6 +77,8 @@ void ecchain_clear(EcChain self)
 void ecchain_delete(EcChain* pself)
 {
   EcChain self = *pself;
+  
+  ecchain_clear (self);
   
   eclist_delete(&(self->stack));
   

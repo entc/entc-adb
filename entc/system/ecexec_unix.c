@@ -73,9 +73,12 @@ void ecexec_delete (EcExec* pself)
   int i;
   EcExec self = *pself;
 
-  for (i = 1; i < 10; i++) {
+  for (i = 0; i < 10; i++) {
     ecstr_delete(&(self->arguments[i]));
   }
+  
+  ecstream_delete(&(self->stdout));
+  ecstream_delete(&(self->stderr));
   
   ENTC_DEL (pself, struct EcExec_s);
 }
