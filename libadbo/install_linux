@@ -1,0 +1,19 @@
+#!/bin/bash
+
+BCONFIG=Debug
+VERSION=1.0.1
+
+INSTALLDIR="/usr/lib"
+MODULESDIR=$INSTALLDIR/libadbo-$VERSION/
+mkdir $MODULESDIR
+
+INCLUDEDIR="/usr/include/libadbo-"$VERSION
+mkdir $INCLUDEDIR
+
+cp $PWD/core/libadbo.so $INSTALLDIR/libadbo.so.$VERSION
+
+rm $INSTALLDIR/libadbo.so
+ln -s $INSTALLDIR/libadbo.so.$VERSION $INSTALLDIR/libadbo.so
+
+rm $INCLUDEDIR/*
+cp $PWD/core/*.h $INCLUDEDIR/
