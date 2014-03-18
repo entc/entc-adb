@@ -53,6 +53,12 @@ __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
 __LIB_EXPORT void ecudc_protect (EcUdc, ubyte_t mode);
 
+// helper
+
+__LIB_EXPORT void* ecudc_get_asP (const EcUdc, const EcString name, void* alt);
+
+__LIB_EXPORT const EcString ecudc_get_asString (const EcUdc, const EcString name, const EcString alt);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

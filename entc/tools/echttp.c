@@ -527,6 +527,15 @@ void echttp_header_validate (EcHttpHeader* header)
       ecstr_replace(&(header->session_lang), header->user_lang);
     }
   }
+  // automatic create a sessionid
+  if (ecstr_empty (header->sessionid))
+  {
+    EcBuffer buffer = ecstr_buffer (_ENTC_SESSION_NAMELENGTH);
+    // create a new sessionid
+    ecstr_random(buffer, _ENTC_SESSION_NAMELENGTH);
+    // transfer ownership to string
+    header->sessionid = ecstr_trans(&buffer);
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -885,9 +894,7 @@ void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSo
     if (self->callbacks.process (self->callbacks.process_ptr, header, &object))
     {
       EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
-      
-      echttp_send_DefaultHeader (header, stream);
-      
+            
       if (isAssigned (self->callbacks.render))
       {
         self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);

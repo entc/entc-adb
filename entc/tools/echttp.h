@@ -119,6 +119,8 @@ __LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const Ec
 
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
+__LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif
