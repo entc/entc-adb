@@ -146,42 +146,40 @@ void echttp_send_startHeaderOK (EcHttpHeader* header, EcDevStream stream)
     ecdevstream_appends( stream, "Server: " );
     ecdevstream_appends( stream, "entc" );
     ecdevstream_appends( stream, "\r\n" );
-    ecdevstream_appends( stream, "Content-type: ");
-    ecdevstream_appends( stream, header->mime);
-    ecdevstream_appends( stream, "\r\n" );    
-    
-    // write cookies
-    if(ecstr_valid(header->sessionid))
-    {
-      EcString strtime = ecstr_localtime(time(0) + 86400);
-      
-      ecdevstream_appends( stream, "Set-cookie:" );
-      ecdevstream_appends( stream, ecstr_get(session_name) );
-      ecdevstream_appendc( stream, '=' );
-      ecdevstream_appends( stream, header->sessionid );
-      ecdevstream_appendc( stream, '-' );
-      ecdevstream_appends( stream, header->session_lang );
-      ecdevstream_appends( stream, "; expires=" );
-      ecdevstream_appends( stream, strtime );
-      ecdevstream_appends( stream, "; path=/\r\n" );
-      
-      ecstr_delete(&strtime);
-    }
-    
-    ecdevstream_appends( stream, "Content-Language: ");
-    ecdevstream_appends( stream, header->session_lang );
-    ecdevstream_appends( stream, "\r\n" );
   }
+
+  ecdevstream_appends( stream, "Content-type: ");
+  ecdevstream_appends( stream, header->mime);
+  ecdevstream_appends( stream, "\r\n" );    
+  
+  // write cookies
+  if(ecstr_valid(header->sessionid))
+  {
+    EcString strtime = ecstr_localtime(time(0) + 86400);
+    
+    ecdevstream_appends( stream, "Set-cookie:" );
+    ecdevstream_appends( stream, ecstr_get(session_name) );
+    ecdevstream_appendc( stream, '=' );
+    ecdevstream_appends( stream, header->sessionid );
+    ecdevstream_appendc( stream, '-' );
+    ecdevstream_appends( stream, header->session_lang );
+    ecdevstream_appends( stream, "; expires=" );
+    ecdevstream_appends( stream, strtime );
+    ecdevstream_appends( stream, "; path=/\r\n" );
+    
+    ecstr_delete(&strtime);
+  }
+  
+  ecdevstream_appends( stream, "Content-Language: ");
+  ecdevstream_appends( stream, header->session_lang );
+  ecdevstream_appends( stream, "\r\n" );
 }
 
 //---------------------------------------------------------------------------------------
 
 void echttp_send_finishHeader(EcHttpHeader* header, EcDevStream stream)
 {
-  if (header->header_on)
-  {
-    ecdevstream_append( stream, "\r\n", 2 );
-  }
+  ecdevstream_append( stream, "\r\n", 2 );
 }
 
 //---------------------------------------------------------------------------------------
@@ -906,8 +904,6 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, http_he
 
     if (self->callbacks.process (self->callbacks.process_ptr, &header, &object))
     {
-      echttp_send_DefaultHeader (&header, stream);
-      
       if (isAssigned (self->callbacks.render))
       {
         self->callbacks.render (self->callbacks.render_ptr, &header, stream, &object);
