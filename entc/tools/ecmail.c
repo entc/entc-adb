@@ -74,7 +74,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* check if we have code 220 */
   if(!((response[0] == '2')&&(response[1] == '2')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error %s", buffer );
+    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #1 '%s'", response );
     
     return FALSE;
   }
@@ -91,7 +91,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* check if we have code 250 */
   if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error %s", buffer );    
+    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #2 '%s'", response );    
     return FALSE;
   }
   
@@ -110,7 +110,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* check if we have code 250 */
   if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error %s", buffer );
+    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #3 '%s'", response );
     return FALSE;
   }
   ecsocket_write( socket, "RCPT TO: ", 9 );
@@ -127,7 +127,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* check if we have code 250 */
   if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error %s", buffer );
+    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #4 '%s'", response );
     return FALSE;
   }
   
@@ -143,7 +143,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* check if we have code 354 */
   if(!((response[0] == '3')&&(response[1] == '5')&&(response[2] == '4')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error %s", buffer );
+    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #5 '%s'", response );
     return FALSE;
   }
   
@@ -168,7 +168,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* check if we have code 250 */
   if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error %s", buffer );
+    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #6 '%s'", response );
     return FALSE;
   }
   
@@ -184,7 +184,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* check if we have code 221 */
   if(!((response[0] == '2')&&(response[1] == '2')&&(response[2] == '1')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error %s", buffer );
+    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #7 '%s'", response );
     return FALSE;
   }
   
