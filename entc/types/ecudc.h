@@ -59,6 +59,10 @@ __LIB_EXPORT void* ecudc_get_asP (const EcUdc, const EcString name, void* alt);
 
 __LIB_EXPORT const EcString ecudc_get_asString (const EcUdc, const EcString name, const EcString alt);
 
+__LIB_EXPORT void ecudc_add_asP (EcUdc, const EcString name, void* value);
+
+__LIB_EXPORT void ecudc_add_asString (EcUdc, const EcString name, const EcString value);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif
