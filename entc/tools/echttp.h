@@ -64,6 +64,10 @@ typedef struct {
   
   EcString urlpath;
   
+  uint_t content_length;
+  
+  EcString payload;
+  
 } EcHttpHeader;
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
