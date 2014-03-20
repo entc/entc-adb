@@ -64,6 +64,10 @@ typedef struct {
   
   EcString urlpath;
   
+  uint_t content_length;
+  
+  EcString payload;
+  
 } EcHttpHeader;
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
@@ -118,6 +122,8 @@ __LIB_EXPORT void echttp_escape (EcDevStream stream, const EcString url);
 __LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
+
+__LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream);
 
 __CPP_EXTERN______________________________________________________________________________END
 

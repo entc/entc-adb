@@ -328,3 +328,57 @@ void ecudc_protect (EcUdc self, ubyte_t mode)
 
 //----------------------------------------------------------------------------------------
 
+void* ecudc_get_asP (const EcUdc data, const EcString name, void* alt)
+{
+  const EcUdc res = ecudc_get (data, name);
+  if (isAssigned (res))
+  {
+    return ecudc_asP(res);
+  }
+  else
+  {
+    return alt;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+const EcString ecudc_get_asString (const EcUdc data, const EcString name, const EcString alt)
+{
+  const EcUdc res = ecudc_get (data, name);
+  if (isAssigned (res))
+  {
+    return ecudc_asString(res);
+  }
+  else
+  {
+    return alt;
+  }  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asP (EcUdc node, const EcString name, void* value)
+{
+  // create new item as reference
+  EcUdc item = ecudc_new (ENTC_UDC_REF, name);
+  // set new value to item
+  ecudc_setP(item, value);
+  // add item to node 
+  ecudc_add(node, &item);
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asString (EcUdc node, const EcString name, const EcString value)
+{
+  // create new item as string
+  EcUdc item = ecudc_new (ENTC_UDC_STRING, name);
+  // set new value to item
+  ecudc_setS(item, value);
+  // add item to node 
+  ecudc_add(node, &item);  
+}
+
+//----------------------------------------------------------------------------------------
+

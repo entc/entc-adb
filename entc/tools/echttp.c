@@ -351,6 +351,8 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->tokens = NULL;
   header->token = NULL;
   header->urlpath = ecstr_init();
+  header->content_length = 0;
+  header->payload = ecstr_init();
 }
 
 //---------------------------------------------------------------------------------------
@@ -372,6 +374,7 @@ void echttp_header_clear (EcHttpHeader* header)
     eclist_delete(&(header->tokens));
   }  
   ecstr_delete(&(header->urlpath));
+  ecstr_delete(&(header->payload));
 }
 
 //---------------------------------------------------------------------------------------
@@ -526,6 +529,15 @@ void echttp_header_validate (EcHttpHeader* header)
     {
       ecstr_replace(&(header->session_lang), header->user_lang);
     }
+  }
+  // automatic create a sessionid
+  if (ecstr_empty (header->sessionid))
+  {
+    EcBuffer buffer = ecstr_buffer (_ENTC_SESSION_NAMELENGTH);
+    // create a new sessionid
+    ecstr_random(buffer, _ENTC_SESSION_NAMELENGTH);
+    // transfer ownership to string
+    header->sessionid = ecstr_trans(&buffer);
   }
 }
 
@@ -699,7 +711,34 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 
 //---------------------------------------------------------------------------------------
 
-int echttp_parse_meta (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger logger)
+int echttp_parse_content (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger logger)
+{
+  if (header->content_length > 0)
+  {
+    int error;
+    // parse the first line received
+    int counter;
+    
+    EcBuffer sbuffer = ecstr_buffer(header->content_length + 1);
+    
+    for (counter = 0; counter < header->content_length; counter++)
+    {
+      if (!ecstreambuffer_next(buffer, &error))
+      {
+        ecstr_release(&sbuffer);
+        return FALSE;
+      }
+      sbuffer->buffer[counter] = ecstreambuffer_get(buffer);
+    }
+    
+    header->payload = ecstr_trans(&sbuffer);
+  }
+  return TRUE;
+}
+
+//---------------------------------------------------------------------------------------
+
+int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger logger)
 {
   int error;
   EcStream stream = ecstream_new();
@@ -731,7 +770,11 @@ int echttp_parse_meta (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger log
       {
         ecstr_replace(&(header->user_agent), line + 12);
       }
-      // 
+      // Content-Length: 27
+      else if ((line[0] == 'C')&&(line[7] == '-')&&(line[9] == 'e'))
+      {
+        header->content_length = atoi(line + 16);
+      }
     }
     else
     {
@@ -825,7 +868,12 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
   ret = ret && echttp_parse_method (header, buffer, streambuffer);
   
   // parse meta informations
-  ret = ret && echttp_parse_meta (header, buffer, logger);
+  ret = ret && echttp_parse_header (header, buffer, logger);
+  
+  if (header->method == C_REQUEST_METHOD_PUT)
+  {
+    ret = ret && echttp_parse_content (header, buffer, logger);
+  }
   
   return ret;
 }
@@ -885,9 +933,7 @@ void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSo
     if (self->callbacks.process (self->callbacks.process_ptr, header, &object))
     {
       EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
-      
-      echttp_send_DefaultHeader (header, stream);
-      
+            
       if (isAssigned (self->callbacks.render))
       {
         self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
