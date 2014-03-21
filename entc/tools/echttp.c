@@ -881,7 +881,7 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, http_header_fct fct, void* ptr, EcLogger logger)
+void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* callback_ptr, EcLogger logger)
 {
   EcHttpHeader header;
 
@@ -893,15 +893,24 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, http_he
   {
     void* object = NULL;
     
-    if (fct)
+    if (isAssigned (self->callbacks.header))
     {
-      fct (ptr, &header);
+      self->callbacks.header (callback_ptr, &header, logger);
+    }
+    else
+    {
+      eclogger_log(logger, LL_WARN, "ENTC", "{http} no header callback is set"); 
     }
 
     echttp_header_validate (&header);
     
     echttp_header_title (&header);
 
+    if ((header.method == C_REQUEST_METHOD_PUT) && isAssigned (self->callbacks.content))
+    {
+      self->callbacks.content (callback_ptr, &header, logger);
+    }
+    
     if (self->callbacks.process (self->callbacks.process_ptr, &header, &object))
     {
       if (isAssigned (self->callbacks.render))
@@ -913,6 +922,10 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, http_he
         ecdevstream_appends(stream, "no render");
       }      
     }
+  }
+  else
+  {
+    eclogger_log(logger, LL_WARN, "ENTC", "{http} no process callback is set");  
   }
   
   echttp_header_clear (&header);
