@@ -74,7 +74,8 @@ struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 
 typedef int (_STDCALL *http_process_fct)(void* ptr, EcHttpHeader*, void** object);
 typedef int (_STDCALL *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
-typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*);
+typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*, EcLogger);
+typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, EcLogger);
 
 typedef struct {
   
@@ -84,7 +85,13 @@ typedef struct {
   
   http_render_fct render;
   
-  void* render_ptr;  
+  void* render_ptr; 
+  
+  // needed for custom-dev processing
+  
+  http_header_fct header;
+  
+  http_content_fct content;
   
 } EcHttpCallbacks;
 
@@ -105,9 +112,9 @@ __LIB_EXPORT EcHttpRequest echttp_request_create (const EcString rootdoc, int he
 
 __LIB_EXPORT void echttp_request_destroy (EcHttpRequest*);
 
-__LIB_EXPORT void echttp_request_process (EcHttpRequest, EcSocket socket, EcLogger logger);
+__LIB_EXPORT void echttp_request_process (EcHttpRequest, EcSocket, EcLogger logger);
 
-__LIB_EXPORT void echttp_request_process_dev (EcHttpRequest, EcDevStream, http_header_fct, void*, EcLogger logger);
+__LIB_EXPORT void echttp_request_process_dev (EcHttpRequest, EcDevStream, void* callback_ptr, EcLogger logger);
 
 __LIB_EXPORT void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
 
