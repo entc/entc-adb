@@ -10,7 +10,7 @@ IF(ENTC_LIBRARY-NOTFOUND)
 	find_package(Entc)
 ELSE()
 	MESSAGE(STATUS "**** entc internal ****")
-	SET(ENTC_LIBRARIES ${ENTC_LIBRARY})
+	SET(ENTC_LIBRARIES entc)
 	SET(ENTC_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../entc)
 endif()
 
