@@ -330,6 +330,15 @@ EcString ecfs_getCurrentDirectory()
   return _getcwd( NULL, 0 );
 }
 
+//------------------------------------------------------------------------------------------------
+
+EcString ecfs_getExecutablePath (void)
+{
+  char mybuffer [MAX_PATH + 1];
+  GetModuleFileName (NULL, mybuffer, MAX_PATH);
+  return ecstr_copy (mybuffer);
+}
+
 /*------------------------------------------------------------------------*/
 
 void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_resdir, EcString* ptr_resfile)

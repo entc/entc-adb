@@ -189,6 +189,8 @@ __LIB_EXPORT EcString ecfs_mergeToPath(const EcString path, const EcString file)
 __LIB_EXPORT const EcString ecfs_extractFile(const EcString path);
   
 __LIB_EXPORT EcString ecfs_getCurrentDirectory();
+
+__LIB_EXPORT EcString ecfs_getExecutablePath (void);
   
 __LIB_EXPORT EcString ecfs_getDirectory(const EcString filename);
   

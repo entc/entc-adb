@@ -485,8 +485,11 @@ uint_t eclogger_securityIncidents(EcLogger self)
 //----------------------------------------------------------------------------------------
 
 static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
+#if defined _WIN64 || defined _WIN32
+static WORD clr_matrix[11] = {0, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE, 0, FOREGROUND_RED | FOREGROUND_GREEN};
+#else
 static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;30", "1;34" };
-
+#endif
 static const char* month_matrix[12] = {"01","02","03","04","05","06","07","08","09","10","11","12"};
 
 //----------------------------------------------------------------------------------------
@@ -500,6 +503,11 @@ struct EcEchoLogger_s
 
   EcBuffer buffer02;
 
+#if defined _WIN64 || defined _WIN32
+  HANDLE hConsole;
+  CONSOLE_SCREEN_BUFFER_INFO pInfo;
+#endif
+
 };
 
 //----------------------------------------------------------------------------------------
@@ -511,6 +519,11 @@ EcEchoLogger ecechologger_new ()
   self->mutex = ecmutex_new ();
   self->buffer01 = ecstr_buffer(14);
   self->buffer02 = ecstr_buffer(201);
+
+#if defined _WIN64 || defined _WIN32
+  self->hConsole = GetStdHandle (STD_OUTPUT_HANDLE);
+  GetConsoleScreenBufferInfo(self->hConsole, &(self->pInfo));
+#endif
 
   return self;  
 }
@@ -542,16 +555,17 @@ void ecechologger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   // ***** monitor start *****************************************************
   ecmutex_lock (self->mutex);
 
-  ecstr_format (self->buffer02, 200, "%04u-%s-%2u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
+  ecstr_format (self->buffer02, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
   
   // prepare the message
   ecstr_format (self->buffer01, 11, "%s %4s ", msg_matrix[level], module );
   
 #if defined _WIN64 || defined _WIN32 
-    printf("%s \033[%sm%02i %s%s\033[0m\n", self->buffer02->buffer, clr_matrix[level], id, self->buffer01->buffer, msg);
+  SetConsoleTextAttribute(self->hConsole, self->pInfo.wAttributes);
+  printf("%s %i %s%s\n", self->buffer02->buffer, id, self->buffer01->buffer, msg);
 #else
-    // use color theme for different levels
-    printf("%s \033[%sm%02i %s%s\033[0m\n", self->buffer02->buffer, clr_matrix[level], id, self->buffer01->buffer, msg);
+  // use color theme for different levels
+  printf("%s \033[%sm%02i %s%s\033[0m\n", self->buffer02->buffer, clr_matrix[level], id, self->buffer01->buffer, msg);
 #endif
 
   ecmutex_unlock (self->mutex);
