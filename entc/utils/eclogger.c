@@ -107,6 +107,8 @@ struct EcLogger_s
 
 EcLogger eclogger_new (ubyte_t threadid)
 {
+  EcEchoLogger echo;
+
   EcLogger self = ENTC_NEW(struct EcLogger_s);
   
   self->mutex = ecmutex_new ();
@@ -118,7 +120,7 @@ EcLogger eclogger_new (ubyte_t threadid)
   self->errmsgs = eclist_new();
   self->sccmsgs = eclist_new();
 
-  EcEchoLogger echo = toggleEchoLogger (TRUE);
+  echo = toggleEchoLogger (TRUE);
 
   ecechologger_getCallback(echo, &(self->callbacks));  
     
@@ -546,7 +548,7 @@ void ecechologger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   ecstr_format (self->buffer01, 11, "%s %4s ", msg_matrix[level], module );
   
 #if defined _WIN64 || defined _WIN32 
-    printf("%s %02i %s%s\n", timestamp, self->threadid, self->buffer03->buffer, msg);
+    printf("%s \033[%sm%02i %s%s\033[0m\n", self->buffer02->buffer, clr_matrix[level], id, self->buffer01->buffer, msg);
 #else
     // use color theme for different levels
     printf("%s \033[%sm%02i %s%s\033[0m\n", self->buffer02->buffer, clr_matrix[level], id, self->buffer01->buffer, msg);

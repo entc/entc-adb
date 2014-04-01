@@ -69,4 +69,128 @@ void ecmutex_unlock(EcMutex self)
 
 //-----------------------------------------------------------------------------------
 
+struct EcReadWriteLock_s
+{
+  
+  CRITICAL_SECTION cs_r;  
+  CRITICAL_SECTION cs_w;
+  
+  int counter;
+  
+};
+
+//-----------------------------------------------------------------------------------
+
+EcReadWriteLock ecreadwritelock_new (void)
+{
+  EcReadWriteLock self = ENTC_NEW(struct EcReadWriteLock_s);
+  
+  InitializeCriticalSection(&(self->cs_r));
+  InitializeCriticalSection(&(self->cs_w));
+
+  self->counter = 0;
+  
+  return self;  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_delete (EcReadWriteLock* pself)
+{
+  EcReadWriteLock self = *pself;
+  
+  DeleteCriticalSection(&(self->cs_r));
+  DeleteCriticalSection(&(self->cs_w));
+  
+  ENTC_DEL(pself, struct EcReadWriteLock_s);  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_lockRead (EcReadWriteLock self)
+{
+  EnterCriticalSection(&(self->cs_r));
+  
+  if (self->counter == 0)
+  {
+    EnterCriticalSection(&(self->cs_w));
+  }
+  
+  self->counter++;
+  
+  LeaveCriticalSection(&(self->cs_r));
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_unlockRead (EcReadWriteLock self)
+{
+  EnterCriticalSection(&(self->cs_r));
+  
+  self->counter--;
+
+  if (self->counter == 0)
+  {
+    LeaveCriticalSection(&(self->cs_w));
+  }
+  
+  LeaveCriticalSection(&(self->cs_r));
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_lockWrite (EcReadWriteLock self)
+{
+  EnterCriticalSection(&(self->cs_w));
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecreadwritelock_unlockWrite (EcReadWriteLock self)
+{
+  LeaveCriticalSection(&(self->cs_w));
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecreadwritelock_unlockReadAndTransformIfLast (EcReadWriteLock self)
+{
+  int ret;
+  
+  EnterCriticalSection(&(self->cs_r));
+  
+  self->counter--;
+  
+  ret = self->counter == 0;
+  
+  LeaveCriticalSection(&(self->cs_r));   
+  
+  return ret;
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecreadwritelock_lockReadAndTransformIfFirst (EcReadWriteLock self)
+{
+  int ret = FALSE;
+  
+  EnterCriticalSection(&(self->cs_r));
+
+  if (self->counter == 0)
+  {
+    EnterCriticalSection(&(self->cs_w));
+    ret = TRUE;
+  }
+  else
+  {
+    self->counter++;    
+  }
+  
+  LeaveCriticalSection(&(self->cs_r));    
+  
+  return ret;  
+}
+
+//-----------------------------------------------------------------------------------
+
 #endif

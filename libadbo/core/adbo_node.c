@@ -477,13 +477,14 @@ AdboNode adbo_node_new2 (AdboObject obj, AdboContext context, AdboContainer pare
     }
     else
     {
+	  AdboObject obj;
       AdboValue value = adbo_value_new (fk->column_name, NULL, fk->table);
       
       eclist_append(self->foreign_keys, value);
       
       eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{fromdb} local foreign key: '%s' -> '%s'", adbo_value_getDBColumn(value), fk->table);
       
-      AdboObject obj = adbo_schema_get (context->schema, context, self->spart->container, fk->table, table_info->name, value);
+      obj = adbo_schema_get (context->schema, context, self->spart->container, fk->table, table_info->name, value);
       //if (isAssigned (obj))
       //{
       adbo_container_add (self->spart->container, obj);
