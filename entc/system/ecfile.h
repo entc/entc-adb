@@ -190,8 +190,6 @@ __LIB_EXPORT const EcString ecfs_extractFile(const EcString path);
   
 __LIB_EXPORT EcString ecfs_getCurrentDirectory();
 
-__LIB_EXPORT EcString ecfs_getExecutablePath (void);
-  
 __LIB_EXPORT EcString ecfs_getDirectory(const EcString filename);
   
 __LIB_EXPORT void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_resdir, EcString* ptr_resfile);
