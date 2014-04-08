@@ -368,17 +368,21 @@ namespace entc {
     
     bool applyQuery(OcAdblQuery& query, OcAdblCursor& cursor, EcLogger logger)
     {
-      AdblSecurity adblsec;
-      
-      cursor.mcursor = adbl_dbquery(this->msession, query.mquery, &adblsec );
-      
-      if( adblsec.inicident !=0 )
+      if (this->msession)
       {
-        eclogger_sec (logger, SL_RED);
-        eclogger_log (logger, LL_DEBUG, "ADBL", "a security incident was reported!" );
+        AdblSecurity adblsec;
+        
+        cursor.mcursor = adbl_dbquery(this->msession, query.mquery, &adblsec );
+        
+        if( adblsec.inicident !=0 )
+        {
+          eclogger_sec (logger, SL_RED);
+          eclogger_log (logger, LL_DEBUG, "ADBL", "a security incident was reported!" );
+        }
+        
+        return cursor.isValid();
       }
-      
-      return cursor.isValid();
+      return false;
     }
     
     uint_t applyUpdate(OcAdblUpdate& update, EcLogger logger)
