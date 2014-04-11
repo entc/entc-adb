@@ -342,11 +342,12 @@ void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
   {
     ecstream_append( statement, " LIMIT " );
     ecstream_appendu( statement, query->limit );
-  }
-  if(query->offset > 0)
-  {
-    ecstream_append( statement, " OFFSET " );
-    ecstream_appendu( statement, query->offset );
+
+    if(query->offset > 0)
+    {
+      ecstream_append( statement, " OFFSET " );
+      ecstream_appendu( statement, query->offset );
+    }
   }
   
   eclogger_log(logger, LL_TRACE, "SQLT", ecstream_buffer( statement ) );
@@ -748,7 +749,7 @@ const char* adblmodule_dbcursor_nextdata( void* ptr )
   {
     const char* data = (const char*)sqlite3_column_text(cursor->stmt, cursor->pos );
     cursor->pos++;
-  
+
     return data;
   }
   return 0;
