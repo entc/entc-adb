@@ -182,6 +182,8 @@ __LIB_EXPORT int ecfs_stat(EcStatInfo*, const EcString path);
 
   /* **** path string operations **** */
   
+__LIB_EXPORT EcString ecfs_getExecutablePath (int argc, char *argv[]);
+
 __LIB_EXPORT EcString ecfs_getRealPath(const EcString path);
 
 __LIB_EXPORT EcString ecfs_mergeToPath(const EcString path, const EcString file);
