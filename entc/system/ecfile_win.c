@@ -375,6 +375,7 @@ void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_res
   *ptr_resfile = resfile;
 }
 
+//------------------------------------------------------------------------------------------------------------
 
 
 EcString ecfs_getExecutablePath (int argc, char *argv[])
@@ -382,10 +383,9 @@ EcString ecfs_getExecutablePath (int argc, char *argv[])
     char szFileName [MAX_PATH];
     GetModuleFileName (NULL, szFileName, MAX_PATH);
 
-    printf ("file %s\n", szFileName);
-
     return ecfs_getDirectory (szFileName);
 }
 
+//------------------------------------------------------------------------------------------------------------
 
 #endif

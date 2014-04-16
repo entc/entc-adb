@@ -357,11 +357,21 @@ void adbl_delete (AdblManager* ptr)
     
     ecstr_delete( &(pc->type) );
     
-    free( pc );
+    ENTC_DEL (&pc, AdblCredentials);
   }  
   ecmap_delete( &(self->credentials) );
 
+  for(node = ecmap_first(self->modules); node != ecmap_end(self->modules); node = ecmap_next(node))
+  {
+    ADBLModuleProperties* properties = ecmap_data(node);
+    
+    ecdl_delete(&(properties->handle));
+    
+    ENTC_DEL (&properties, ADBLModuleProperties);
+  }
   ecmap_delete( &(self->modules) );
+  
+  ecstr_delete(&(self->path));
 
   ENTC_DEL( ptr, struct AdblManager_s );
 }
@@ -446,7 +456,7 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   }
   
   //create new credential
-  properties = ENTC_NEW(ADBLModuleProperties);  
+  properties = ENTC_NEW (ADBLModuleProperties);  
   
   properties->handle = handle;
   
@@ -472,7 +482,7 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   properties->dbtable            = (adbl_dbtable_t)            ecdl_method (handle, "dbtable");
   
   //add to map
-  ecmap_append(self->modules, name, properties);  
+  ecmap_append (self->modules, name, properties);  
   
   eclogger_logformat(self->logger, LL_DEBUG, MODULE, "adbl plugin %s successful loaded", name );    
 }

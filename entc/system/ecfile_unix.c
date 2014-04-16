@@ -348,4 +348,12 @@ void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_res
 
 /*------------------------------------------------------------------------*/
 
+EcString ecfs_getExecutablePath (int argc, char *argv[])
+{
+  const EcString execPath = argv[0];
+  return ecfs_getDirectory (execPath);
+}
+
+//-------------------------------------------------------------------------
+
 #endif

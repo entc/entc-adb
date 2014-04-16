@@ -86,7 +86,11 @@ __LIB_EXPORT int ecstr_leading( const EcString, const EcString leading);
 
 __LIB_EXPORT int ecstr_has (const EcString, char c);
 
-__LIB_EXPORT const EcString ecstr_locate( const EcString source, char c, uint_t max );
+__LIB_EXPORT const EcString ecstr_pos (const EcString, char c);
+
+__LIB_EXPORT const EcString ecstr_spos (const EcString, char c, EcString* part);
+
+__LIB_EXPORT const EcString ecstr_npos (const EcString, char c, uint_t max);
 
 __LIB_EXPORT EcString ecstr_extractf( const EcString source, char c );
 

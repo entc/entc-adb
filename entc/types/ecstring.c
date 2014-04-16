@@ -673,7 +673,31 @@ void ecstr_format( EcBuffer buffer, uint_t size, const char* format, ...)
 
 /*------------------------------------------------------------------------*/
 
-const EcString ecstr_locate( const EcString source, char c, uint_t max )
+const EcString ecstr_pos (const EcString source, char c)
+{
+  return strchr (source, c);
+}
+
+//-------------------------------------------------------------------------------
+
+const EcString ecstr_spos (const EcString source, char c, EcString* part)
+{
+  const char* pos = strchr (source, c);
+  if (pos == NULL) 
+  {
+    // easy just return the source
+    ecstr_replace (part, source);
+  }
+  else
+  {
+    ecstr_replaceTO (part, ecstr_part(source, pos - source));
+  }  
+  return pos;
+}
+
+//-------------------------------------------------------------------------------
+
+const EcString ecstr_npos (const EcString source, char c, uint_t max)
 {
   const EcString pos = source;
   
@@ -690,18 +714,13 @@ const EcString ecstr_locate( const EcString source, char c, uint_t max )
 
 /*------------------------------------------------------------------------*/
 
-EcString ecstr_extractf( const EcString source, char c )
+EcString ecstr_extractf (const EcString source, char c)
 {
-  const char* pos = strchr(source, c);
-  if (pos == NULL) 
-  {
-    // easy just return the source
-    return ecstr_copy(source);
-  }
-  else
-  {
-    return ecstr_part(source, pos - source);
-  }
+  EcString part = ecstr_init ();
+  
+  ecstr_spos (source, c, &part);
+  
+  return part;
 }
 
 //----------------------------------------------------------------------------------------
