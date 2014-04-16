@@ -687,12 +687,15 @@ const EcString ecstr_spos (const EcString source, char c, EcString* part)
   {
     // easy just return the source
     ecstr_replace (part, source);
+    
+    return NULL;
   }
   else
   {
     ecstr_replaceTO (part, ecstr_part(source, pos - source));
+
+    return pos + 1;
   }  
-  return pos + 1;
 }
 
 //-------------------------------------------------------------------------------
