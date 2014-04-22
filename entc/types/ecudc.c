@@ -210,6 +210,10 @@ EcUdc ecudc_new (uint_t type, const EcString name)
       break;
     case ENTC_UDC_STRING: self->extension = ecudc_sitem_new (); 
       break;
+    case ENTC_UDC_BYTE: (ubyte_t)self->extension = 0; 
+      break;
+    case ENTC_UDC_LONG: self->extension = ENTC_NEW (ulong_t); 
+      break;
   }
   
   return self;
@@ -228,6 +232,10 @@ void ecudc_del (EcUdc* pself)
     case ENTC_UDC_STRING: ecudc_sitem_del (&(self->extension)); 
       break;
     case ENTC_UDC_REF: self->extension = NULL;
+      break;
+    case ENTC_UDC_BYTE: self->extension = NULL; 
+      break;
+    case ENTC_UDC_LONG: ENTC_DEL (&(self->extension), ulong_t);
       break;
   }
   // delete only if the content was deleted
@@ -285,6 +293,28 @@ void ecudc_setP (EcUdc self, void* ptr)
 
 //----------------------------------------------------------------------------------------
 
+void ecudc_setB (EcUdc self, ubyte_t value)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_BYTE: (ubyte_t)self->extension = value; 
+      break;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_setL (EcUdc self, ulong_t value)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_LONG: *((ulong_t*)self->extension) = value; 
+      break;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 const EcString ecudc_asString (EcUdc self)
 {
   switch (self->type) 
@@ -303,6 +333,28 @@ void* ecudc_asP (EcUdc self)
     case ENTC_UDC_REF: return self->extension; 
   }        
   return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+ubyte_t ecudc_asB (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_BYTE: return (ubyte_t)self->extension; 
+  }        
+  return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
+ulong_t ecudc_asL (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_LONG: return *((ulong_t*)self->extension); 
+  }        
+  return 0;
 }
 
 //----------------------------------------------------------------------------------------
@@ -358,6 +410,36 @@ const EcString ecudc_get_asString (const EcUdc data, const EcString name, const 
 
 //----------------------------------------------------------------------------------------
 
+ubyte_t ecudc_get_asB (const EcUdc self, const EcString name, ubyte_t alt)
+{
+  const EcUdc res = ecudc_get (self, name);
+  if (isAssigned (res))
+  {
+    return ecudc_asB (res);
+  }
+  else
+  {
+    return alt;
+  }  
+}
+
+//----------------------------------------------------------------------------------------
+
+ulong_t ecudc_get_asL (const EcUdc self, const EcString name, ulong_t alt)
+{
+  const EcUdc res = ecudc_get (self, name);
+  if (isAssigned (res))
+  {
+    return ecudc_asL (res);
+  }
+  else
+  {
+    return alt;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_add_asP (EcUdc node, const EcString name, void* value)
 {
   // create new item as reference
@@ -378,6 +460,30 @@ void ecudc_add_asString (EcUdc node, const EcString name, const EcString value)
   ecudc_setS(item, value);
   // add item to node 
   ecudc_add(node, &item);  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asB (EcUdc node, const EcString name, ubyte_t value)
+{
+  // create new item as string
+  EcUdc item = ecudc_new (ENTC_UDC_BYTE, name);
+  // set new value to item
+  ecudc_setB (item, value);
+  // add item to node 
+  ecudc_add (node, &item);
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asL (EcUdc node, const EcString name, ulong_t value)
+{
+  // create new item as string
+  EcUdc item = ecudc_new (ENTC_UDC_LONG, name);
+  // set new value to item
+  ecudc_setL (item, value);
+  // add item to node 
+  ecudc_add (node, &item);
 }
 
 //----------------------------------------------------------------------------------------

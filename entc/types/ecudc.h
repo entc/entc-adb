@@ -28,6 +28,8 @@
 #define ENTC_UDC_NODE 0
 #define ENTC_UDC_STRING 1
 #define ENTC_UDC_REF 2
+#define ENTC_UDC_BYTE 3
+#define ENTC_UDC_LONG 4
 
 struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 
@@ -45,9 +47,17 @@ __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
 
 __LIB_EXPORT void ecudc_setP (EcUdc, void*);
 
+__LIB_EXPORT void ecudc_setB (EcUdc, ubyte_t);
+
+__LIB_EXPORT void ecudc_setL (EcUdc, ulong_t);
+
 __LIB_EXPORT const EcString ecudc_asString (EcUdc);
 
 __LIB_EXPORT void* ecudc_asP (EcUdc);
+
+__LIB_EXPORT ubyte_t ecudc_asB (EcUdc);
+
+__LIB_EXPORT ulong_t ecudc_asL (EcUdc);
 
 __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
@@ -59,9 +69,17 @@ __LIB_EXPORT void* ecudc_get_asP (const EcUdc, const EcString name, void* alt);
 
 __LIB_EXPORT const EcString ecudc_get_asString (const EcUdc, const EcString name, const EcString alt);
 
+__LIB_EXPORT ubyte_t ecudc_get_asB (const EcUdc, const EcString name, ubyte_t alt);
+
+__LIB_EXPORT ulong_t ecudc_get_asL (const EcUdc, const EcString name, ulong_t alt);
+
 __LIB_EXPORT void ecudc_add_asP (EcUdc, const EcString name, void* value);
 
 __LIB_EXPORT void ecudc_add_asString (EcUdc, const EcString name, const EcString value);
+
+__LIB_EXPORT void ecudc_add_asB (EcUdc, const EcString name, ubyte_t value);
+
+__LIB_EXPORT void ecudc_add_asL (EcUdc, const EcString name, ulong_t value);
 
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -82,7 +82,7 @@ EcString ecfs_getDirectory(const EcString filename)
 {
   /* variables */
   const char* pos;
-  
+
   if( !filename )
   {
     return ecstr_init();
@@ -94,7 +94,7 @@ EcString ecfs_getDirectory(const EcString filename)
   {
     return ecstr_init();    
   }
-  
+
   return ecstr_part(filename, pos - filename);
 }
 

@@ -718,7 +718,7 @@ int echttp_parse_content (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger 
   {
     int error;
     // parse the first line received
-    int counter;
+    ulong_t counter;
     
     EcBuffer sbuffer = ecstr_buffer(header->content_length + 1);
     
