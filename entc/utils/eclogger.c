@@ -832,7 +832,7 @@ EcUdc eclistlogger_message (void* ptr, uint_t logid, uint_t messageid, EcUdc* da
         if ( isNotAssigned(ret))
         {
           // create a new udc node
-          ret = ecudc_new(ENTC_UDC_NODE, "ServiceResults");        
+          ret = ecudc_create(ENTC_UDC_NODE, "ServiceResults");        
         }
         // transfer the object to the udc node
         ecudc_add(ret, &res);

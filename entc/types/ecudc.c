@@ -46,6 +46,14 @@ typedef struct {
 
 typedef struct {
   
+  EcList list;
+  
+  ubyte_t protect;
+  
+} EcUdcList;
+
+typedef struct {
+  
   EcString value;
   
 } EcUdcSItem;
@@ -71,7 +79,7 @@ void ecudc_node_clear (EcUdcNode* self)
   for (node = ecmap_first(self->map); node != ecmap_end(self->map); node = ecmap_next(node)) 
   {
     EcUdc item = ecmap_data(node);
-    ecudc_del (&item);
+    ecudc_destroy (&item);
   }
   
   ecmap_clear(self->map);
@@ -161,6 +169,101 @@ void ecudc_node_protect (EcUdcNode* self, ubyte_t mode)
 
 //----------------------------------------------------------------------------------------
 
+void* ecudc_list_new ()
+{
+  EcUdcList* self = ENTC_NEW (EcUdcList);
+
+  self->list = eclist_new ();
+  self->protect = FALSE;
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_list_clear (EcUdcList* self)
+{
+  EcListNode node;
+  
+  for (node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node)) 
+  {
+    EcUdc item = eclist_data(node);
+    ecudc_destroy (&item);
+  }
+  
+  eclist_clear(self->list);
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_list_del (void** pself)
+{
+  EcUdcList* self = *pself;
+  // if protected dont delete
+  if (self->protect == FALSE)
+  {
+    ecudc_list_clear (self);
+    
+    eclist_delete (&(self->list));
+    
+    ENTC_DEL (pself, EcUdcList);    
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_list_add (EcUdcList* self, EcUdc* pnode)
+{
+  EcUdc node = *pnode;
+  
+  if (ecstr_empty (node->name))
+  {
+    return;
+  }
+  
+  eclist_append(self->list, node);
+  
+  *pnode = NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc ecudc_list_next (EcUdcList* self, void** cursor)
+{
+  EcListNode node;
+  
+  if (isNotAssigned (cursor))
+  {
+    return NULL;
+  }
+  
+  if (isAssigned (*cursor))
+  {
+    node = eclist_next(*cursor);
+  }
+  else
+  {
+    node = eclist_first(self->list);
+  }
+  
+  if (node == eclist_end(self->list))
+  {
+    return NULL;
+  }
+  
+  *cursor = node;
+  return eclist_data(node);
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_list_protect (EcUdcList* self, ubyte_t mode)
+{
+  self->protect = mode;
+}
+
+//----------------------------------------------------------------------------------------
+
 void* ecudc_sitem_new ()
 {
   EcUdcSItem* self = ENTC_NEW (EcUdcSItem);
@@ -197,7 +300,7 @@ const EcString ecudc_sitem_asString (EcUdcSItem* self)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_new (uint_t type, const EcString name)
+EcUdc ecudc_create (uint_t type, const EcString name)
 {
   EcUdc self = ENTC_NEW (struct EcUdc_s);
   
@@ -207,6 +310,8 @@ EcUdc ecudc_new (uint_t type, const EcString name)
   switch (type) 
   {
     case ENTC_UDC_NODE: self->extension = ecudc_node_new (); 
+      break;
+    case ENTC_UDC_LIST: self->extension = ecudc_list_new (); 
       break;
     case ENTC_UDC_STRING: self->extension = ecudc_sitem_new (); 
       break;
@@ -221,13 +326,15 @@ EcUdc ecudc_new (uint_t type, const EcString name)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_del (EcUdc* pself)
+void ecudc_destroy (EcUdc* pself)
 {
   EcUdc self = *pself;
   
   switch (self->type) 
   {
     case ENTC_UDC_NODE: ecudc_node_del (&(self->extension)); 
+      break;
+    case ENTC_UDC_LIST: ecudc_list_del (&(self->extension)); 
       break;
     case ENTC_UDC_STRING: ecudc_sitem_del (&(self->extension)); 
       break;
@@ -255,18 +362,34 @@ void ecudc_add (EcUdc self, EcUdc* pnode)
   {
     case ENTC_UDC_NODE: ecudc_node_add (self->extension, pnode); 
       break;
+    case ENTC_UDC_LIST: ecudc_list_add (self->extension, pnode); 
+      break;
   }  
 }
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_get (EcUdc self, const EcString name)
+EcUdc ecudc_node (EcUdc self, const EcString name)
 {
   switch (self->type) 
   {
     case ENTC_UDC_NODE: return ecudc_node_get (self->extension, name); 
   }    
   return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+const EcString ecudc_name (EcUdc self)
+{
+  return self->name;
+}
+
+//----------------------------------------------------------------------------------------
+
+uint_t ecudc_type (EcUdc self)
+{
+  return self->type;
 }
 
 //----------------------------------------------------------------------------------------
@@ -364,6 +487,7 @@ EcUdc ecudc_next (EcUdc self, void** cursor)
   switch (self->type) 
   {
     case ENTC_UDC_NODE: return ecudc_node_next (self->extension, cursor); 
+    case ENTC_UDC_LIST: return ecudc_list_next (self->extension, cursor); 
   }        
   return NULL;  
 }
@@ -374,7 +498,8 @@ void ecudc_protect (EcUdc self, ubyte_t mode)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_NODE: return ecudc_node_protect (self->extension, mode); 
+    case ENTC_UDC_NODE: ecudc_node_protect (self->extension, mode); 
+    case ENTC_UDC_LIST: ecudc_list_protect (self->extension, mode); 
   }        
 }
 
@@ -382,7 +507,7 @@ void ecudc_protect (EcUdc self, ubyte_t mode)
 
 void* ecudc_get_asP (const EcUdc data, const EcString name, void* alt)
 {
-  const EcUdc res = ecudc_get (data, name);
+  const EcUdc res = ecudc_node (data, name);
   if (isAssigned (res))
   {
     return ecudc_asP(res);
@@ -397,7 +522,7 @@ void* ecudc_get_asP (const EcUdc data, const EcString name, void* alt)
 
 const EcString ecudc_get_asString (const EcUdc data, const EcString name, const EcString alt)
 {
-  const EcUdc res = ecudc_get (data, name);
+  const EcUdc res = ecudc_node (data, name);
   if (isAssigned (res))
   {
     return ecudc_asString(res);
@@ -412,7 +537,7 @@ const EcString ecudc_get_asString (const EcUdc data, const EcString name, const 
 
 ubyte_t ecudc_get_asB (const EcUdc self, const EcString name, ubyte_t alt)
 {
-  const EcUdc res = ecudc_get (self, name);
+  const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
     return ecudc_asB (res);
@@ -427,7 +552,7 @@ ubyte_t ecudc_get_asB (const EcUdc self, const EcString name, ubyte_t alt)
 
 ulong_t ecudc_get_asL (const EcUdc self, const EcString name, ulong_t alt)
 {
-  const EcUdc res = ecudc_get (self, name);
+  const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
     return ecudc_asL (res);
@@ -443,7 +568,7 @@ ulong_t ecudc_get_asL (const EcUdc self, const EcString name, ulong_t alt)
 void ecudc_add_asP (EcUdc node, const EcString name, void* value)
 {
   // create new item as reference
-  EcUdc item = ecudc_new (ENTC_UDC_REF, name);
+  EcUdc item = ecudc_create (ENTC_UDC_REF, name);
   // set new value to item
   ecudc_setP(item, value);
   // add item to node 
@@ -455,7 +580,7 @@ void ecudc_add_asP (EcUdc node, const EcString name, void* value)
 void ecudc_add_asString (EcUdc node, const EcString name, const EcString value)
 {
   // create new item as string
-  EcUdc item = ecudc_new (ENTC_UDC_STRING, name);
+  EcUdc item = ecudc_create (ENTC_UDC_STRING, name);
   // set new value to item
   ecudc_setS(item, value);
   // add item to node 
@@ -467,7 +592,7 @@ void ecudc_add_asString (EcUdc node, const EcString name, const EcString value)
 void ecudc_add_asB (EcUdc node, const EcString name, ubyte_t value)
 {
   // create new item as string
-  EcUdc item = ecudc_new (ENTC_UDC_BYTE, name);
+  EcUdc item = ecudc_create (ENTC_UDC_BYTE, name);
   // set new value to item
   ecudc_setB (item, value);
   // add item to node 
@@ -479,7 +604,7 @@ void ecudc_add_asB (EcUdc node, const EcString name, ubyte_t value)
 void ecudc_add_asL (EcUdc node, const EcString name, ulong_t value)
 {
   // create new item as string
-  EcUdc item = ecudc_new (ENTC_UDC_LONG, name);
+  EcUdc item = ecudc_create (ENTC_UDC_LONG, name);
   // set new value to item
   ecudc_setL (item, value);
   // add item to node 

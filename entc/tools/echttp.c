@@ -547,10 +547,10 @@ void echttp_header_validate (EcHttpHeader* header)
 void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
 {
   // generate the udc containers with all the infos we have :-)
-  EcUdc udc = ecudc_new(0, "AccessInfo");
+  EcUdc udc = ecudc_create(0, "AccessInfo");
   
   {
-    EcUdc item = ecudc_new(1, "timestamp");
+    EcUdc item = ecudc_create(1, "timestamp");
     
     EcDate date;
     EcBuffer buffer = ecstr_buffer(200);
@@ -565,28 +565,28 @@ void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
     ecstr_release(&buffer);
   }
   {
-    EcUdc item = ecudc_new(1, "request-url");
+    EcUdc item = ecudc_create(1, "request-url");
     ecudc_setS(item, header->request_url);
     ecudc_add(udc, &item);
   }
   {
-    EcUdc item = ecudc_new(1, "remote-address");
+    EcUdc item = ecudc_create(1, "remote-address");
     ecudc_setS(item, header->remote_address);
     ecudc_add(udc, &item);
   }
   {
-    EcUdc item = ecudc_new(1, "user-language");
+    EcUdc item = ecudc_create(1, "user-language");
     ecudc_setS(item, header->user_lang);
     ecudc_add(udc, &item);
   }
   {
-    EcUdc item = ecudc_new(1, "user-agent");
+    EcUdc item = ecudc_create(1, "user-agent");
     ecudc_setS(item, header->user_agent);
     ecudc_add(udc, &item);
   }
   if (ecstr_valid(header->title))
   {
-    EcUdc item = ecudc_new(1, "title");
+    EcUdc item = ecudc_create(1, "title");
     ecudc_setS(item, header->title);
     ecudc_add(udc, &item);
   }
@@ -595,7 +595,7 @@ void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
   
   if ( isAssigned (udc))
   {
-    ecudc_del(&udc);
+    ecudc_destroy(&udc);
   }  
 }
 

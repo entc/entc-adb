@@ -25,23 +25,28 @@
 
 #include "ecstring.h"
 
-#define ENTC_UDC_NODE 0
-#define ENTC_UDC_STRING 1
-#define ENTC_UDC_REF 2
-#define ENTC_UDC_BYTE 3
-#define ENTC_UDC_LONG 4
+#define ENTC_UDC_NODE    0
+#define ENTC_UDC_LIST    1
+#define ENTC_UDC_STRING  2
+#define ENTC_UDC_BYTE    4
+#define ENTC_UDC_LONG    5
+#define ENTC_UDC_REF     6
 
 struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcUdc ecudc_new (uint_t type, const EcString name);
+__LIB_EXPORT EcUdc ecudc_create (uint_t type, const EcString name);
 
-__LIB_EXPORT void ecudc_del (EcUdc*);
+__LIB_EXPORT void ecudc_destroy (EcUdc*);
 
 __LIB_EXPORT void ecudc_add (EcUdc, EcUdc*);
 
-__LIB_EXPORT EcUdc ecudc_get (EcUdc, const EcString name);
+__LIB_EXPORT EcUdc ecudc_node (EcUdc, const EcString name);
+
+__LIB_EXPORT const EcString ecudc_name (EcUdc);
+
+__LIB_EXPORT uint_t ecudc_type (EcUdc);
 
 __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
 
