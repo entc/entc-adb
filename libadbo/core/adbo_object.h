@@ -23,6 +23,7 @@
 #include <system/macros.h>
 #include <system/types.h>
 #include <types/eclist.h>
+#include <types/ecudc.h>
 
 #include "adbo_types.h"
 #include "adbo_value.h"
@@ -33,7 +34,7 @@ __CPP_EXTERN____________________________________________________________________
 __LIB_EXPORT AdboObject adbo_object_new1 (AdboContainer parent, AdboContext, uint_t type, EcXMLStream, const EcString);
 
 // constructor (creates a new empty object from database structure)
-__LIB_EXPORT AdboObject adbo_object_new2 (AdboContainer parent, AdboContext, uint_t type, AdblTable* table_info, const EcString origin, AdboValue value);
+//__LIB_EXPORT AdboObject adbo_object_new2 (AdboContainer parent, AdboContext, uint_t type, AdblTable* table_info, const EcString origin, AdboValue value);
 
 // destructor (deletes recursively object and data)
 __LIB_EXPORT void adbo_object_del (AdboObject*);
@@ -64,11 +65,11 @@ __LIB_EXPORT void adbo_strToStream (AdboObject, EcStream);
 
 __LIB_EXPORT void adbo_object_transaction (AdboObject, int state);
 
-__LIB_EXPORT void adbo_object_addToQuery (AdboObject, AdblQuery*);
+//__LIB_EXPORT void adbo_object_addToQuery (AdboObject, AdblQuery*);
 
-__LIB_EXPORT void adbo_object_setFromQuery (AdboObject, AdblCursor*, EcLogger);
+//__LIB_EXPORT void adbo_object_setFromQuery (AdboObject, AdblCursor*, EcLogger);
 
-__LIB_EXPORT void adbo_object_addToAttr (AdboObject, AdboContainer, AdblAttributes*);
+//__LIB_EXPORT void adbo_object_addToAttr (AdboObject, AdboContainer, AdblAttributes*);
 
 // accessors
 
@@ -81,6 +82,8 @@ __LIB_EXPORT int adbo_set (AdboObject, const EcString);
 __LIB_EXPORT int adbo_add (AdboObject);
 
 __LIB_EXPORT AdboObject adbo_get (AdboObject, const EcString);
+
+__LIB_EXPORT EcUdc adbo_udc (AdboObject);
 
 // debug
 

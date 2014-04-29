@@ -65,13 +65,15 @@ __LIB_EXPORT EcString adbo_substitute_str (AdboSubstitute);
 
 __LIB_EXPORT AdboObject adbo_substitute_get (AdboSubstitute, const EcString link);
 
+__LIB_EXPORT EcUdc adbo_substitute_udc (AdboSubstitute);
+
 __LIB_EXPORT void adbo_substitute_dump (AdboObject, AdboSubstitute, int tab, int le, EcBuffer, EcLogger);
 
-__LIB_EXPORT void adbo_substitute_addToQuery (AdboSubstitute, AdblQuery*);
+//__LIB_EXPORT void adbo_substitute_addToQuery (AdboSubstitute, AdblQuery*);
 
-__LIB_EXPORT void adbo_substitute_setFromQuery (AdboSubstitute, AdblCursor*, EcLogger);
+//__LIB_EXPORT void adbo_substitute_setFromQuery (AdboSubstitute, AdblCursor*, EcLogger);
 
-__LIB_EXPORT void adbo_substitute_addToAttr (AdboSubstitute, AdblAttributes*);
+//__LIB_EXPORT void adbo_substitute_addToAttr (AdboSubstitute, AdblAttributes*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

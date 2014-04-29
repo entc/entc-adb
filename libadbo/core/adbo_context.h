@@ -17,35 +17,18 @@
  * along with adbo. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADBO_ITEM_H
-#define ADBO_ITEM_H 1
+#ifndef ADBO_CONTEXT_H
+#define ADBO_CONTEXT_H 1
 
 #include <system/macros.h>
 
 #include "adbo_types.h"
 
-struct AdboItem_s; typedef struct AdboItem_s* AdboItem;
-
 __CPP_EXTERN______________________________________________________________________________START
 
-// constructor
-__LIB_EXPORT AdboItem adbo_item_new1 (AdboObject, AdboContainer, EcXMLStream, const EcString, EcLogger);
+__LIB_EXPORT AdboContext adbo_context_create (EcLogger logger, EcEventFiles files, const EcString path);
 
-// constructor
-__LIB_EXPORT AdboItem adbo_item_new2 (AdboObject, AdboValue value);
-
-// constructor
-__LIB_EXPORT AdboItem adbo_item_clone (AdboItem);
-
-__LIB_EXPORT void adbo_item_strToStream (AdboObject, AdboItem, EcStream);
-
-__LIB_EXPORT EcString adbo_item_str (AdboObject);
-
-__LIB_EXPORT AdboObject adbo_item_get (AdboObject, const EcString link);
-
-__LIB_EXPORT EcUdc adbo_item_udc (AdboObject, AdboItem);
-
-__LIB_EXPORT void adbo_item_dump (AdboObject, AdboContainer, int tab, int le, EcBuffer, EcLogger);
+__LIB_EXPORT void adbo_context_destroy (AdboContext*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

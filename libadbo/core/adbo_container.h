@@ -44,13 +44,13 @@ __LIB_EXPORT void adbo_container_del (AdboContainer*);
 __LIB_EXPORT AdboContainer adbo_container_clone (const AdboContainer oself, AdboContainer parent, container_callback_fct, void* ptr1, void* ptr2);
 
 // set all values from db
-__LIB_EXPORT void adbo_container_set (AdboContainer, AdblCursor*, EcLogger);
+//__LIB_EXPORT void adbo_container_set (AdboContainer, AdblCursor*, EcLogger);
 
 // construct query from container
-__LIB_EXPORT void adbo_container_query (AdboContainer, AdblQuery*);
+//__LIB_EXPORT void adbo_container_query (AdboContainer, AdblQuery*);
 
 // construct attributes from container
-__LIB_EXPORT void adbo_container_attrs (AdboContainer, AdblAttributes* attrs);
+//__LIB_EXPORT void adbo_container_attrs (AdboContainer, AdblAttributes* attrs);
 
 // run the request on the container
 __LIB_EXPORT int adbo_container_request (AdboContainer, AdboContext context, int depth, int dpos);
@@ -81,6 +81,9 @@ __LIB_EXPORT void adbo_container_iterate (AdboContainer, iterator_callback_fct, 
 
 // return parent
 __LIB_EXPORT AdboContainer adbo_container_parent (AdboContainer);
+
+// fill udc with content
+__LIB_EXPORT EcUdc adbo_container_udc (AdboContainer);
 
 // dump all elements
 __LIB_EXPORT void adbo_container_dump (AdboContainer, int tab, EcBuffer, EcLogger);

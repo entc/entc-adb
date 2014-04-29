@@ -18,7 +18,7 @@
  */
 
 #include "adbo_container.h"
-
+#include "adbo_context_intern.h"
 #include "adbo_object.h"
 
 struct AdboContainer_s
@@ -405,6 +405,34 @@ void adbo_container_iterate (AdboContainer self, iterator_callback_fct fct, void
 AdboContainer adbo_container_parent (AdboContainer self)
 {
   return self->parent;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_container_udc (AdboContainer self)
+{
+  switch (self->type)
+  {
+    case ADBO_CONTAINER_NODE: case ADBO_CONTAINER_SUBSTITUTE:
+    {
+      EcUdc items = ecudc_create(ENTC_UDC_NODE, "node");
+      EcListNode node;
+      EcList objects = (EcList)self->ext;
+      
+      for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
+      {
+        EcUdc item = adbo_udc (eclist_data (node));
+        if (isAssigned (item))
+        {
+          ecudc_add (items, &item);
+        }
+      }
+      
+      return items;
+    }
+    break;
+  }  
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------

@@ -24,6 +24,7 @@
 #include "adbo_item.h"
 
 #include "adbo_container.h"
+#include "adbo_context_intern.h"
 
 struct AdboObject_s
 {
@@ -470,6 +471,19 @@ void adbo_object_addToAttr (AdboObject self, AdboContainer container, AdblAttrib
     }
     break;
   }    
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_udc (AdboObject self)
+{
+  switch (self->type)
+  {
+    case ADBO_OBJECT_NODE:        return adbo_node_udc (self, (AdboNode)self->extension); break;
+    case ADBO_OBJECT_SUBSTITUTE:  return adbo_substitute_udc ((AdboSubstitute)self->extension); break;
+    case ADBO_OBJECT_ITEM:        return adbo_item_udc (self, (AdboItem)self->extension); break;
+  }  
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------

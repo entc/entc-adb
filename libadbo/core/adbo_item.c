@@ -132,6 +132,25 @@ AdboObject adbo_item_get (AdboObject obj, const EcString link)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc adbo_item_udc (AdboObject obj, AdboItem self)
+{
+  AdboValue value = (AdboValue)adbo_getValue (obj);
+  if (isAssigned (value))
+  {
+    const EcString dbcolumn = adbo_value_getDBColumn (value);
+    if (ecstr_valid(dbcolumn))
+    {
+      EcUdc item = ecudc_create(ENTC_UDC_STRING, ecstr_cstring(dbcolumn));
+      ecudc_setS(item, ecstr_cstring(adbo_value_get (value, obj)));
+      
+      return item;
+    }    
+  }
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
 void adbo_item_dump (AdboObject obj, AdboContainer container, int depth, int le, EcBuffer b2, EcLogger logger)
 {
   AdboValue value;

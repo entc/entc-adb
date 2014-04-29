@@ -21,6 +21,7 @@
 
 #include "adbo_container.h"
 #include "adbo_object.h"
+#include "adbo_context_intern.h"
 
 #include "types/ecmap.h"
 
@@ -239,6 +240,13 @@ AdboObject adbo_substitute_at (AdboSubstitute self, const EcString link)
 void adbo_substitute_strToStream (AdboSubstitute self, EcStream stream)
 {
   adbo_container_str (self->container, stream);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_substitute_udc (AdboSubstitute self)
+{
+  return adbo_container_udc(self->container);
 }
 
 //----------------------------------------------------------------------------------------

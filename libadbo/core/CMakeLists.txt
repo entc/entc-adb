@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.4)
 
 SET (CORE_SOURCES  
   adbo_types.h
+  adbo_context.h
+  adbo_context_intern.h
+  adbo_context.c
   adbo_schema.h
   adbo_schema.c
   adbo_object.h

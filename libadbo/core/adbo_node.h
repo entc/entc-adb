@@ -31,7 +31,7 @@ __CPP_EXTERN____________________________________________________________________
 // constructor
 __LIB_EXPORT AdboNode adbo_node_new1 (AdboObject, AdboContext, AdboContainer, EcXMLStream);
 
-__LIB_EXPORT AdboNode adbo_node_new2 (AdboObject, AdboContext, AdboContainer, AdblTable* table_info, const EcString origin);
+//__LIB_EXPORT AdboNode adbo_node_new2 (AdboObject, AdboContext, AdboContainer, AdblTable* table_info, const EcString origin);
 
 // destructor
 __LIB_EXPORT void adbo_node_del (AdboNode*);
@@ -58,6 +58,8 @@ __LIB_EXPORT void adbo_node_strToStream (AdboNode, EcStream);
 __LIB_EXPORT EcString adbo_node_str (AdboNode);
 
 __LIB_EXPORT AdboObject adbo_node_get (AdboObject, AdboNode, const EcString link);
+
+__LIB_EXPORT EcUdc adbo_node_udc (AdboObject, AdboNode);
 
 __LIB_EXPORT void adbo_node_dump (AdboObject, AdboNode, int tab, int le, EcBuffer, EcLogger);
 

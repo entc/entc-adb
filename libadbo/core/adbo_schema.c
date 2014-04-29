@@ -22,6 +22,8 @@
 
 #include <types/ecmap.h>
 
+#include "adbo_context_intern.h"
+
 struct AdboSchema_s
 {
   

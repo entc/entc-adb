@@ -22,6 +22,7 @@
 #include "adbo_object.h"
 #include "adbo_schema.h"
 #include "adbo_container.h"
+#include "adbo_context_intern.h"
 
 #include <types/eclist.h>
 #include <adbl.h>
@@ -327,6 +328,13 @@ void adbo_nodepart_setValues (AdboNodePart self, AdblCursor* cursor, int state, 
   adbo_container_set (self->container, cursor, logger);
 
   self->state = state;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_nodepart_udc (AdboNodePart self)
+{
+  return adbo_container_udc(self->container);
 }
 
 //----------------------------------------------------------------------------------------
@@ -1201,6 +1209,33 @@ AdboObject adbo_node_get (AdboObject obj, AdboNode self, const EcString link)
   else
   {
     return NULL;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_node_udc (AdboObject obj, AdboNode self)
+{
+  EcListNode node;
+
+  if (isAssigned (self->parts))
+  {
+    EcUdc array = ecudc_create(ENTC_UDC_LIST, "node");
+    
+    for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
+    {
+      EcUdc item = adbo_nodepart_udc ((AdboNodePart)eclist_data (node));
+      if (isAssigned (item))
+      {
+        ecudc_add(array, &item);
+      }
+    }
+    
+    return array;
+  }
+  else
+  {
+    return adbo_nodepart_udc (self->spart);    
   }
 }
 

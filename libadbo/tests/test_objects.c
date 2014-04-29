@@ -7,6 +7,8 @@
 #include "../core/adbo_substitute.h"
 #include "../core/adbo_schema.h"
  
+#include "../core/adbo_context_intern.h"
+
 void test1 (void* ptr, void* obj)
 {
   AdboContext context = ptr;

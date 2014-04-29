@@ -23,7 +23,6 @@
 #include <tools/ecxmlstream.h>
 #include <utils/eclogger.h>
 #include <types/ecstream.h>
-#include <adbl_manager.h>
 
 //##########################################
 
@@ -61,19 +60,6 @@ struct AdboObject_s; typedef struct AdboObject_s* AdboObject;
 struct AdboSubManager_s; typedef struct AdboSubManager_s* AdboSubManager;
 
 struct AdboSchema_s; typedef struct AdboSchema_s* AdboSchema;
-
-struct AdboContext_s
-{
-
-  EcLogger logger;
-
-  AdblManager adblm;
-  
-  AdboSubManager substitutes;
-  
-  AdboSchema schema;
-
-};
 
 typedef struct AdboContext_s* AdboContext;
 
