@@ -45,7 +45,7 @@ __LIB_EXPORT AdboObject adbo_object_clone (const AdboObject, AdboContainer paren
 // request (fill structure recursively with new data from database backend, overrides existing data)
 // depth defines the recursive depth, default should be 1, -1 is infinite
 // dpos is always 0 rom beginning
-__LIB_EXPORT int adbo_object_request (AdboObject, AdboContext, int depth, int dpos);
+__LIB_EXPORT int adbo_object_request (AdboObject, AdboContext, EcUdc, int depth, int dpos);
 
 // update (write data back recursively to database backend, only works with filled object)
 __LIB_EXPORT int adbo_object_update (AdboObject, AdboContext, int withTransaction);

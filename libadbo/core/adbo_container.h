@@ -53,7 +53,7 @@ __LIB_EXPORT AdboContainer adbo_container_clone (const AdboContainer oself, Adbo
 //__LIB_EXPORT void adbo_container_attrs (AdboContainer, AdblAttributes* attrs);
 
 // run the request on the container
-__LIB_EXPORT int adbo_container_request (AdboContainer, AdboContext context, int depth, int dpos);
+__LIB_EXPORT int adbo_container_request (AdboContainer, AdboContext context, EcUdc conditions, int depth, int dpos);
 
 // run the update on the container
 __LIB_EXPORT int adbo_container_update (AdboContainer, AdboContext context);

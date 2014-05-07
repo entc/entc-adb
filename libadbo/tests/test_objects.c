@@ -17,7 +17,7 @@ void test1 (void* ptr, void* obj)
 
   AdboObject clone;
   
-  adbo_object_request (obj, context, -1, 0);
+  adbo_object_request (obj, context, NULL, -1, 0);
   
   adbo_dump(obj, context->logger);
   

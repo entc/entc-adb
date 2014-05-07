@@ -46,7 +46,7 @@ __LIB_EXPORT void adbo_substitute_del (AdboSubstitute*);
 __LIB_EXPORT AdboSubstitute adbo_substitute_clone (const AdboSubstitute, AdboContainer parent);
 
 // fill data from database backend
-__LIB_EXPORT int adbo_substitute_request (AdboSubstitute, AdboContext, int depth, int dpos);
+__LIB_EXPORT int adbo_substitute_request (AdboSubstitute, AdboContext, EcUdc, int depth, int dpos);
 
 // save data to database backend
 __LIB_EXPORT int adbo_substitute_update (AdboSubstitute, AdboContext, int withTransaction);

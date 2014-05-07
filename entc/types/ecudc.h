@@ -42,6 +42,8 @@ __LIB_EXPORT void ecudc_destroy (EcUdc*);
 
 __LIB_EXPORT void ecudc_add (EcUdc, EcUdc*);
 
+__LIB_EXPORT int ecudc_del (EcUdc, const EcString name);
+
 __LIB_EXPORT EcUdc ecudc_node (EcUdc, const EcString name);
 
 __LIB_EXPORT const EcString ecudc_name (EcUdc);

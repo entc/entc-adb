@@ -43,6 +43,30 @@ struct AdboValue_s
 
 //----------------------------------------------------------------------------------------
 
+void adbo_value_add (EcUdc value, const EcString key, const EcString content)
+{
+  if (ecstr_empty(content))
+  {
+    return;
+  }
+  
+  ecudc_add_asString(value, key, content);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream)
+{
+  EcUdc value = ecudc_create(ENTC_UDC_NODE, ".val");
+  
+  adbo_value_add (value, ".dbcolumn", ecxmlstream_nodeAttribute (xmlstream, "dbcolumn"));
+  adbo_value_add (value, ".link", ecxmlstream_nodeAttribute (xmlstream, "link"));
+  
+  return value;
+}
+
+//----------------------------------------------------------------------------------------
+
 AdboValue adbo_value_new (const EcString dbcolumn, const EcString data, const EcString link)
 {
   AdboValue self = ENTC_NEW (struct AdboValue_s);

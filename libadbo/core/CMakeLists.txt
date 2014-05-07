@@ -19,6 +19,9 @@ SET (CORE_SOURCES
   adbo_container.c
   adbo_substitute.h
   adbo_substitute.c
+  
+  adbo.h
+  adbo.c
 )
 
 ADD_LIBRARY( adbo SHARED ${CORE_SOURCES} )

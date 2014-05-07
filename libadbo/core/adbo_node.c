@@ -18,6 +18,7 @@
  */
 
 #include "adbo_node.h"
+#include "adbo.h"
 
 #include "adbo_object.h"
 #include "adbo_schema.h"
@@ -26,6 +27,7 @@
 
 #include <types/eclist.h>
 #include <adbl.h>
+#include <adbl_structs.h>
 
 struct AdboNodePart_s {
   
@@ -87,6 +89,29 @@ EcList adbo_node_dbkeys_clone (const EcList oself)
   }
     
   return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream);
+
+
+EcUdc adbo_dbkeys_fromXml (AdboContext context, EcXMLStream xmlstream, const EcString name, const EcString tag)
+{
+  EcUdc keys = ecudc_create(ENTC_UDC_LIST, name);
+  
+  ENTC_XMLSTREAM_BEGIN
+  
+  if (ecxmlstream_isBegin (xmlstream, "value"))
+  {
+    EcUdc key = adbo_value_fromXml (context, xmlstream);
+    
+    ecudc_add (keys, &key);
+  }
+  
+  ENTC_XMLSTREAM_END (tag)  
+  
+  return keys;
 }
 
 //----------------------------------------------------------------------------------------
@@ -366,6 +391,262 @@ void adbo_nodepart_dump (AdboNodePart self, int depth, int le, int partno, EcBuf
 
 //########################################################################################
 
+void adbo_node_fromXml (EcUdc node, AdboContext context, EcXMLStream xmlstream)
+{
+  if (isAssigned (xmlstream))
+  {
+    ecudc_add_asString(node, ".dbtable", ecxmlstream_nodeAttribute (xmlstream, "dbtable"));
+
+    ENTC_XMLSTREAM_BEGIN
+    
+    if (ecxmlstream_isBegin (xmlstream, "objects"))
+    {
+      EcUdc object = adbo_structure_fromXml (context, xmlstream, "items", "objects");
+      
+      ecudc_add (node, &object);
+    }
+    else if (ecxmlstream_isBegin (xmlstream, "primary_keys"))
+    {
+      EcUdc fkeys = adbo_dbkeys_fromXml (context, xmlstream, ".primary", "primary_keys");
+      ecudc_add (node, &fkeys);
+    }
+    else if (ecxmlstream_isBegin (xmlstream, "foreign_keys"))
+    {
+      EcUdc fkeys = adbo_dbkeys_fromXml (context, xmlstream, ".fkeys", "foreign_keys");
+      ecudc_add (node, &fkeys);
+    }
+    else if (ecxmlstream_isBegin (xmlstream, "value"))
+    {
+    }
+    else if (ecxmlstream_isBegin (xmlstream, "data"))
+    {
+      
+    }    
+    
+    ENTC_XMLSTREAM_END ("node")
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* constraint, EcLogger logger, AdblQuery* query)
+{
+  const EcString dbcolumn = ecudc_get_asString(value, ".dbcolumn", NULL);
+  if (isNotAssigned (dbcolumn))
+  {
+    eclogger_logformat (logger, LL_WARN, "ADBO", "{dkkey} key has no dbcolumn definition"); 
+    return FALSE;
+  }
+
+  adbl_query_addColumn(query, dbcolumn, 0);
+  // check if we have a data value with the same name as the dbcolumn
+  const EcString data_value = ecudc_get_asString(data, dbcolumn, NULL);
+  if (isNotAssigned (data_value))
+  {
+    eclogger_logformat (logger, LL_WARN, "ADBO", "{dkkey} key '%s' no value found", dbcolumn); 
+    return FALSE;
+  }
+    
+  adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, data_value);
+  return TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_dbkeys_constraints (EcUdc dbkeys, EcUdc data, AdblConstraint* constraint, EcLogger logger, AdblQuery* query)
+{
+  int ret = TRUE;
+  
+  void* cursor = NULL;
+  EcUdc dbkey;
+  
+  for (dbkey  = ecudc_next (dbkeys, &cursor); isAssigned (dbkey); dbkey = ecudc_next (dbkeys, &cursor))
+  {
+    ret = ret && adbo_dbkeys_value_contraint_add (dbkey, data, constraint, logger, query);
+  }
+  
+  return ret;
+}
+  
+//----------------------------------------------------------------------------------------
+
+AdblConstraint* adbo_node_constraints (EcUdc node, EcUdc data, AdboContext context, AdblQuery* query)
+{
+  AdblConstraint* constraint = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
+  // check primary keys and foreign keys if exists and add them
+  EcUdc prikeys = ecudc_node (node, ".primary");
+  if (isAssigned (prikeys))
+  {
+    adbo_dbkeys_constraints (prikeys, data, constraint, context->logger, query);
+  }  
+  if (adbl_constraint_empty (constraint))
+  {
+    EcUdc fkeys = ecudc_node (node, ".fkeys");
+    if (isAssigned (fkeys))
+    {
+      adbo_dbkeys_constraints (fkeys, data, constraint, context->logger, query);
+    }
+  }
+  // clean up
+  if (adbl_constraint_empty (constraint))
+  {
+    adbl_constraint_delete (&constraint);
+  }
+  
+  return constraint;    
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_node_parts (EcUdc node)
+{
+  return ecudc_node(node, "parts");
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_node_dbquery_columns (EcUdc node, AdblQuery* query)
+{
+  void* cursor = NULL;
+  EcUdc item;
+  // ignore parts just collect all info from items
+  EcUdc items = ecudc_node (node, "items");
+  if (isNotAssigned (items))
+  {
+    return; 
+  }
+  // iterrate through all items to get info
+  for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
+  {
+    EcUdc val = ecudc_node (item, ".val");
+    if (isNotAssigned (val))
+    {
+      continue;
+    }
+    EcUdc dbcolumn = ecudc_node (val, ".dbcolumn");
+    if (isNotAssigned (dbcolumn))
+    {
+      continue;
+    }
+    adbl_query_addColumn(query, ecudc_asString(dbcolumn), 0);
+  }  
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_dbquery_cursor (EcUdc node, EcUdc values, ulong_t dbmin, AdboContext context, AdblCursor* cursor, AdblQuery* query)
+{
+  int ret = TRUE;
+  
+  // multi mode
+  while (adbl_dbcursor_next (cursor)) 
+  {
+    int colno = 0;
+    EcListNode c;
+
+    EcUdc items = ecudc_create (ENTC_UDC_NODE, "");
+
+    eclogger_log (context->logger, LL_TRACE, "ADBO", "{fetch} got row");
+    
+    for (c = eclist_first(query->columns); c != eclist_end(query->columns); c = eclist_next(c), colno++)
+    {
+      AdblQueryColumn* qc = eclist_data(c);
+      
+      eclogger_log (context->logger, LL_TRACE, "ADBO", "{fetch} got column");
+
+      ecudc_add_asString (items, qc->column, adbl_dbcursor_data(cursor, colno));          
+    }
+    
+    ecudc_add (values, &items);
+  }
+  
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext context, AdblSession session, AdblQuery* query)
+{
+  AdblSecurity adblsec;
+  AdblCursor* cursor;
+  int ret;
+  
+  adbo_node_dbquery_columns (node, query);
+  // execute sql query
+  cursor = adbl_dbquery (session, query, &adblsec);
+  
+  ret = adbo_node_dbquery_cursor (node, parts, dbmin, context, cursor, query);
+  
+  adbl_dbcursor_release (&cursor);
+  
+  return ret;  
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
+{
+  int ret = TRUE;
+  
+  const EcString dbtable = ecudc_get_asString(node, ".dbtable", NULL);
+  if (isNotAssigned (dbtable))
+  {
+    eclogger_log (context->logger, LL_WARN, "ADBO", "{fetch} .dbtable not defined");
+    return FALSE;
+  }
+  
+  ecudc_del (node, dbtable);
+  
+  const EcString dbsource = ecudc_get_asString(node, ".dbsource", "default");  
+  AdblSession dbsession = adbl_openSession (context->adblm, dbsource);
+  // delete all previous entries
+  if (isNotAssigned (dbsession))
+  {
+    eclogger_log (context->logger, LL_WARN, "ADBO", "{fetch} .dbsource not defined");
+    return FALSE;
+  }
+  
+  EcUdc values = ecudc_create(ENTC_UDC_LIST, dbtable);
+  
+  ulong_t dbmin = ecudc_get_asL(node, ".dbmin", 1);
+  
+  AdblConstraint* constraints;
+  AdblQuery* query = adbl_query_new ();
+  // add some default stuff
+  eclogger_log(context->logger, LL_TRACE, "ADBO", "{request} prepare query");
+  
+  // ***** check constraints *****
+  // we can use spart here, because constrainst are the same for all parts
+  constraints = adbo_node_constraints (node, data, context, query);
+  if (isAssigned (constraints))
+  {
+    adbl_query_setConstraint (query, constraints);
+    
+    adbl_query_setTable (query, dbtable);
+    // execute in extra method to avoid memory leaks in query and dbsession
+    ret = adbo_node_dbquery (node, values, dbmin, context, dbsession, query);
+    
+    adbl_constraint_delete (&constraints);
+  }
+  else
+  {
+
+  }
+  adbl_query_delete (&query);
+  
+  adbl_closeSession (&dbsession);
+  
+  eclogger_log(context->logger, LL_TRACE, "ADBO", "{request} query done");
+  
+  ecudc_add (node, &values);
+  
+  return ret;  
+}
+
+//----------------------------------------------------------------------------------------
+
+//########################################################################################
+
 AdboNode adbo_node_new1 (AdboObject obj, AdboContext context, AdboContainer parent, EcXMLStream xmlstream)
 {
   AdboNode self = ENTC_NEW (struct AdboNode_s);
@@ -615,7 +896,28 @@ AdblAttributes* adbo_node_request_attrs (AdboNode self, AdboNodePart part, AdboC
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_reuqest_cursor (AdboNode self, AdboContext context, AdblCursor* cursor, int depth, int dpos)
+void adbo_node_clear (AdboNode self)
+{
+  if (isAssigned (self->parts))
+  {
+    EcListNode node;
+    for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
+    {
+      AdboNodePart part = eclist_data (node);
+      
+      adbo_nodepart_del (&part);      
+    }
+    eclist_clear(self->parts);
+  }
+  else
+  {
+
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_reuqest_cursor (AdboNode self, AdboContext context, EcUdc conditions, AdblCursor* cursor, int depth, int dpos)
 {
   int ret = TRUE;
   
@@ -659,7 +961,7 @@ int adbo_node_reuqest_cursor (AdboNode self, AdboContext context, AdblCursor* cu
       for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
       {
         AdboNodePart part = eclist_data (node);
-        ret = ret && adbo_container_request (part->container, context, depth, dpos);
+        ret = ret && adbo_container_request (part->container, context, conditions, depth, dpos);
       }
     }    
     return ret;
@@ -676,7 +978,7 @@ int adbo_node_reuqest_cursor (AdboNode self, AdboContext context, AdblCursor* cu
         eclogger_log(context->logger, LL_ERROR, "ADBO", "{request} query returned multiple dataset");
         ret = FALSE;
       }
-      return ret && adbo_container_request (self->spart->container, context, depth, dpos);
+      return ret && adbo_container_request (self->spart->container, context, conditions, depth, dpos);
     }
     else
     {
@@ -689,7 +991,7 @@ int adbo_node_reuqest_cursor (AdboNode self, AdboContext context, AdblCursor* cu
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession session, AdblQuery* query, int depth, int dpos)
+int adbo_node_request_query (AdboNode self, AdboContext context, EcUdc conditions, AdblSession session, AdblQuery* query, int depth, int dpos)
 {
   AdblSecurity adblsec;
   AdblCursor* cursor;
@@ -700,7 +1002,7 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
   // execute sql query
   cursor = adbl_dbquery (session, query, &adblsec);
   
-  ret = adbo_node_reuqest_cursor(self, context, cursor, depth, dpos);
+  ret = adbo_node_reuqest_cursor(self, context, conditions, cursor, depth, dpos);
 
   adbl_dbcursor_release (&cursor);
   
@@ -709,11 +1011,15 @@ int adbo_node_request_query (AdboNode self, AdboContext context, AdblSession ses
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_request (AdboNode self, AdboContext context, int depth, int dpos)
+int adbo_node_request (AdboNode self, AdboContext context, EcUdc conditions, int depth, int dpos)
 {
   int ret = TRUE;
   
   AdblSession dbsession = adbl_openSession (context->adblm, self->dbsource);
+  
+  // delete all previous entries
+  adbo_node_clear (self);
+  
   if (isAssigned (dbsession))
   {
     AdblConstraint* constraints;
@@ -730,7 +1036,7 @@ int adbo_node_request (AdboNode self, AdboContext context, int depth, int dpos)
       
       adbl_query_setTable (query, self->dbtable);
       // execute in extra method to avoid memory leaks in query and dbsession
-      ret = adbo_node_request_query (self, context, dbsession, query, depth, dpos);
+      ret = adbo_node_request_query (self, context, conditions, dbsession, query, depth, dpos);
       
       adbl_constraint_delete (&constraints);
     }
@@ -755,7 +1061,7 @@ int adbo_node_request (AdboNode self, AdboContext context, int depth, int dpos)
           for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
           {
             AdboNodePart part = eclist_data (node);
-            ret = ret && adbo_container_request (part->container, context, depth, dpos);
+            ret = ret && adbo_container_request (part->container, context, conditions, depth, dpos);
           }
         }        
       }
@@ -1137,7 +1443,14 @@ void adbo_node_transaction (AdboNode self, int state)
                                              
 AdboObject adbo_node_at (AdboNode self, const EcString link)
 {
-  return adbo_container_at (self->spart->container, link);  
+  if (isAssigned (self->parts))
+  {
+    return adbo_container_at (self->spart->container, link);    
+  }
+  else
+  {
+    return adbo_container_at (self->spart->container, link);    
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -1202,14 +1515,56 @@ EcString adbo_node_str (AdboNode self)
 
 AdboObject adbo_node_get (AdboObject obj, AdboNode self, const EcString link)
 {
+  printf("check node %s\n", link);
+  
+  if (isAssigned (self->parts))
+  {
+    EcString part1;
+    EcString part2;
+
+    printf("check parts %s\n", link);
+
+    part1 = ecstr_init ();
+    part2 = ecstr_init ();
+    // follow link
+    if (ecstr_split (link, &part1, &part2, '.'))
+    {
+      if (ecstr_equal (self->dbtable, part1))
+      {
+        printf("check link '%s' '%s'\n", part1, part2);
+        EcListNode node;
+        int pos = atoi(part2);
+        printf("check pos '%i'\n", pos);
+        int counter = 0;
+        for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
+        {
+          printf("check counter %i pos %i\n", counter, pos);
+          if (counter == pos)
+          {
+            AdboNodePart part = eclist_data (node);
+            
+            printf("goot cool container\n");
+            
+            AdboObject obj2 = adbo_container_get (part->container, part1);
+            
+            ecstr_delete (&part1);
+            ecstr_delete (&part2);
+            
+            return obj2;
+          }
+        }        
+      }
+    }
+    ecstr_delete (&part1);
+    ecstr_delete (&part2);
+  }
+
   if (ecstr_equal (self->dbtable, link))
   {
     return obj;
   }
-  else
-  {
-    return NULL;
-  }
+  
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------

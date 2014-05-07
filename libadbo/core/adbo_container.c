@@ -192,7 +192,7 @@ void adbo_container_set (AdboContainer self, AdblCursor* cursor, EcLogger logger
 
 //----------------------------------------------------------------------------------------
 
-int adbo_container_request (AdboContainer self, AdboContext context, int depth, int dpos)
+int adbo_container_request (AdboContainer self, AdboContext context, EcUdc conditions, int depth, int dpos)
 {
   int ret = TRUE;
 
@@ -205,7 +205,7 @@ int adbo_container_request (AdboContainer self, AdboContext context, int depth, 
       // iterate through all objects and again trigger the request
       for (node = eclist_first (objects); node != eclist_end (objects); node = eclist_next (node))
       {
-        adbo_object_request ((AdboObject)eclist_data (node), context, depth, dpos);
+        adbo_object_request ((AdboObject)eclist_data (node), context, conditions, depth, dpos);
       }      
     }
     break;

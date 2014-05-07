@@ -87,7 +87,7 @@ void ecudc_node_clear (EcUdcNode* self)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_node_del (void** pself)
+void ecudc_node_destroy (void** pself)
 {
   EcUdcNode* self = *pself;
   // if protected dont delete
@@ -115,6 +115,27 @@ void ecudc_node_add (EcUdcNode* self, EcUdc* pnode)
   ecmap_append(self->map, node->name, node);
   
   *pnode = NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecudc_node_del (EcUdcNode* self, const EcString name)
+{
+  EcUdc item;
+  EcMapNode node = ecmap_find(self->map, name);
+  
+  if (node == ecmap_end(self->map))
+  {
+    return FALSE;
+  }
+  
+  item = ecmap_data(node);
+  
+  ecmap_erase(node);
+  
+  ecudc_destroy(&item);
+  
+  return TRUE;  
 }
 
 //----------------------------------------------------------------------------------------
@@ -196,7 +217,7 @@ void ecudc_list_clear (EcUdcList* self)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_list_del (void** pself)
+void ecudc_list_destroy (void** pself)
 {
   EcUdcList* self = *pself;
   // if protected dont delete
@@ -215,11 +236,6 @@ void ecudc_list_del (void** pself)
 void ecudc_list_add (EcUdcList* self, EcUdc* pnode)
 {
   EcUdc node = *pnode;
-  
-  if (ecstr_empty (node->name))
-  {
-    return;
-  }
   
   eclist_append(self->list, node);
   
@@ -332,9 +348,9 @@ void ecudc_destroy (EcUdc* pself)
   
   switch (self->type) 
   {
-    case ENTC_UDC_NODE: ecudc_node_del (&(self->extension)); 
+    case ENTC_UDC_NODE: ecudc_node_destroy (&(self->extension)); 
       break;
-    case ENTC_UDC_LIST: ecudc_list_del (&(self->extension)); 
+    case ENTC_UDC_LIST: ecudc_list_destroy (&(self->extension)); 
       break;
     case ENTC_UDC_STRING: ecudc_sitem_del (&(self->extension)); 
       break;
@@ -365,6 +381,17 @@ void ecudc_add (EcUdc self, EcUdc* pnode)
     case ENTC_UDC_LIST: ecudc_list_add (self->extension, pnode); 
       break;
   }  
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecudc_del (EcUdc self, const EcString name)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_NODE: return ecudc_node_del (self->extension, name); 
+  }  
+  return FALSE;
 }
 
 //----------------------------------------------------------------------------------------

@@ -17,8 +17,8 @@
  * along with adbo. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADBO__H
-#define ADBO__H 1
+#ifndef ADBO_TYPES_H
+#define ADBO_TYPES_H 1
 
 #include <tools/ecxmlstream.h>
 #include <utils/eclogger.h>

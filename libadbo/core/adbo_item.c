@@ -18,6 +18,7 @@
  */
 
 #include "adbo_item.h"
+#include "adbo.h"
 
 #include "adbo_object.h"
 
@@ -27,6 +28,34 @@ struct AdboItem_s
   int dummy;
   
 };
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream);
+
+
+void adbo_item_fromXml (EcUdc item, AdboContext context, EcXMLStream xmlstream, const EcString tag)
+{
+  if (isAssigned (xmlstream))
+  {
+    ENTC_XMLSTREAM_BEGIN
+    
+    if (ecxmlstream_isBegin (xmlstream, "value"))
+    {
+      EcUdc object = adbo_value_fromXml (context, xmlstream);
+      if (isAssigned (object))
+      {
+        ecudc_add (item, &object);      
+      }
+    }
+    else if (ecxmlstream_isBegin (xmlstream, "data"))
+    {
+      
+    }
+    
+    ENTC_XMLSTREAM_END (tag)
+  }  
+}
 
 //----------------------------------------------------------------------------------------
 
