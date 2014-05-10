@@ -38,13 +38,13 @@ __LIB_EXPORT EcUdc adbo_structure_fromDatabase (AdboContext);
 __LIB_EXPORT EcUdc adbo_get_table (EcUdc, const EcString tablename);
 
 // fills the structure with the current content from the database
-__LIB_EXPORT int adbo_fetch (EcUdc, EcUdc, AdboContext);
+__LIB_EXPORT int adbo_fetch (EcUdc, EcUdc filter, AdboContext);
 
 // writes back the content in the structure to the database
-__LIB_EXPORT int adbo_update (EcUdc, AdboContext);
+__LIB_EXPORT int adbo_update (EcUdc, EcUdc filter, AdboContext, EcUdc data);
 
 // delete the content in the structure from database
-__LIB_EXPORT int adbo_delete (EcUdc, AdboContext);
+__LIB_EXPORT int adbo_delete (EcUdc, EcUdc filter, AdboContext);
 
 __CPP_EXTERN______________________________________________________________________________END
 

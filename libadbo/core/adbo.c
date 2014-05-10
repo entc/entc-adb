@@ -133,14 +133,14 @@ int adbo_fetch (EcUdc udc, EcUdc data, AdboContext context)
 
 //----------------------------------------------------------------------------------------
 
-int adbo_update (EcUdc udc, AdboContext context)
+int adbo_update (EcUdc udc, EcUdc filter, AdboContext context, EcUdc data)
 {
   
 }
 
 //----------------------------------------------------------------------------------------
 
-int adbo_delete (EcUdc udc, AdboContext context)
+int adbo_delete (EcUdc udc, EcUdc filter, AdboContext context)
 {
   
 }
