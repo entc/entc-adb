@@ -862,6 +862,15 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
 
 //---------------------------------------------------------------------------------------
 
+int echttp_method_supports_content (EcHttpHeader* header)
+{
+  return (header->method == C_REQUEST_METHOD_PUT)
+      || (header->method == C_REQUEST_METHOD_POST)
+      || (header->method == C_REQUEST_METHOD_DELETE);
+}
+
+//---------------------------------------------------------------------------------------
+
 int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcLogger logger)
 {
   int ret = TRUE;
@@ -871,7 +880,7 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
   // parse meta informations
   ret = ret && echttp_parse_header (header, buffer, logger);
   
-  if (header->method == C_REQUEST_METHOD_PUT)
+  if (echttp_method_supports_content (header))
   {
     ret = ret && echttp_parse_content (header, buffer, logger);
   }
@@ -906,7 +915,7 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
     
     echttp_header_title (&header);
 
-    if ((header.method == C_REQUEST_METHOD_PUT) && isAssigned (self->callbacks.content))
+    if (echttp_method_supports_content (&header) && isAssigned (self->callbacks.content))
     {
       self->callbacks.content (callback_ptr, &header, logger);
     }
