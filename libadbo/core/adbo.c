@@ -133,9 +133,27 @@ int adbo_fetch (EcUdc udc, EcUdc data, AdboContext context)
 
 //----------------------------------------------------------------------------------------
 
+int adbo_node_update (EcUdc udc, EcUdc filter, AdboContext context, EcUdc data, int withTransaction);
+
 int adbo_update (EcUdc udc, EcUdc filter, AdboContext context, EcUdc data)
 {
+  int ret = TRUE;
   
+  switch (ecudc_type (udc))
+  {
+    case ENTC_UDC_LIST:
+    {
+      // must have transaction
+    }
+    break;
+    case ENTC_UDC_NODE:
+    {
+      ret = adbo_node_update (udc, filter, context, data, TRUE);
+    }
+    break;
+  }
+  
+  return ret;  
 }
 
 //----------------------------------------------------------------------------------------

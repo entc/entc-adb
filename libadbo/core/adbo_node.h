@@ -45,9 +45,6 @@ __LIB_EXPORT AdboNode adbo_node_clone (const AdboNode, AdboContainer parent);
 __LIB_EXPORT int adbo_node_request (AdboNode, AdboContext, EcUdc, int depth, int dpos);
 
 // save data to database backend
-__LIB_EXPORT int adbo_node_update (AdboNode, AdboContext, int withTransaction);
-
-// save data to database backend
 __LIB_EXPORT int adbo_node_delete (AdboNode, AdboContext, int withTransaction);
 
 // apply transaction state
