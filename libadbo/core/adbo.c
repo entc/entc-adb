@@ -158,9 +158,27 @@ int adbo_update (EcUdc udc, EcUdc filter, AdboContext context, EcUdc data)
 
 //----------------------------------------------------------------------------------------
 
+int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTransaction);
+
 int adbo_delete (EcUdc udc, EcUdc filter, AdboContext context)
 {
+  int ret = TRUE;
   
+  switch (ecudc_type (udc))
+  {
+    case ENTC_UDC_LIST:
+    {
+      // must have transaction
+    }
+      break;
+    case ENTC_UDC_NODE:
+    {
+      ret = adbo_node_delete (udc, filter, context, TRUE);
+    }
+      break;
+  }
+  
+  return ret;  
 }
 
 //----------------------------------------------------------------------------------------

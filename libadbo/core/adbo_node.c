@@ -450,7 +450,10 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     return FALSE;
   }
     
-  adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, data_value);
+  if (isAssigned(constraint))
+  {
+    adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, data_value);    
+  }
   return TRUE;
 }
 
@@ -514,6 +517,19 @@ int adbo_node_primary (EcUdc node, EcUdc data, AdboContext context, AdblConstrai
 
 //----------------------------------------------------------------------------------------
 
+int adbo_node_foreign (EcUdc node, EcUdc data, AdboContext context, AdblConstraint* constraint)
+{
+  // check only primary key
+  EcUdc prikeys = ecudc_node (node, ".fkeys");
+  if (isAssigned (prikeys))
+  {
+    return adbo_dbkeys_constraints (prikeys, data, constraint, context->logger, NULL);
+  }  
+  return FALSE;  
+}
+
+//----------------------------------------------------------------------------------------
+
 EcUdc adbo_node_parts (EcUdc node)
 {
   return ecudc_node(node, "parts");
@@ -562,14 +578,9 @@ int adbo_node_dbquery_cursor (EcUdc node, EcUdc values, ulong_t dbmin, AdboConte
 
     EcUdc items = ecudc_create (ENTC_UDC_NODE, "");
 
-    eclogger_log (context->logger, LL_TRACE, "ADBO", "{fetch} got row");
-    
     for (c = eclist_first(query->columns); c != eclist_end(query->columns); c = eclist_next(c), colno++)
     {
-      AdblQueryColumn* qc = eclist_data(c);
-      
-      eclogger_log (context->logger, LL_TRACE, "ADBO", "{fetch} got column");
-
+      AdblQueryColumn* qc = eclist_data(c);      
       ecudc_add_asString (items, qc->column, adbl_dbcursor_data(cursor, colno));          
     }
     
@@ -661,7 +672,90 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_update_update (AdboContext context, AdblSession dbsession, const EcString dbtable, EcUdc update_data, EcUdc items, EcUdc values, AdblConstraint* constraint, int iterate)
+void adbo_node_insert_values (AdboContext context, EcUdc items, EcUdc update_item, AdblAttributes* attrs)
+{
+  EcUdc item;
+  void* cursor = NULL;
+  
+  for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
+  {
+    EcUdc val = ecudc_node (item, ".val");
+    if (isNotAssigned (val))
+    {
+      eclogger_log (context->logger, LL_WARN, "ADBO", "{insert} item in items is not a value");
+      continue;
+    }
+    
+    const EcString dbcolumn = ecudc_get_asString(val, ".dbcolumn", NULL);
+    if (isNotAssigned (dbcolumn))
+    {
+      eclogger_log (context->logger, LL_WARN, "ADBO", "{insert} value in items without dbcolumn");
+      continue;
+    }
+
+    const EcString update_value = ecudc_get_asString(update_item, dbcolumn, NULL);
+    if (isNotAssigned (update_value))
+    {
+      eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{insert} item '%s' has no value and will not be insert", dbcolumn);    
+      continue;
+    }
+ 
+    adbl_attrs_addChar(attrs, dbcolumn, update_value);
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_update_multi (EcUdc node, AdboContext context, AdblSession dbsession, const EcString dbtable, EcUdc update_data, EcUdc items, EcUdc values, AdblConstraint* constraint)
+{
+  void* cursor = NULL;
+
+  EcUdc item_update;
+
+  int ret = TRUE;
+  // iterate through all new values
+  for (item_update = ecudc_next (update_data, &cursor); isAssigned (item_update); item_update = ecudc_next (update_data, &cursor))
+  {
+    // has the item a primary key definition
+    if (adbo_node_primary (node, item_update, context, NULL))
+    {
+      // good now check if it is in the original
+      eclogger_log (context->logger, LL_WARN, "ADBO", "{update} multi update not implemented yet");
+      ret = FALSE;
+    } 
+    else
+    {
+      AdblSecurity adblsec;
+      AdblAttributes* attrs = adbl_attrs_new ();
+      // ok so we do need to insert a new one
+      AdblInsert* insert = adbl_insert_new ();
+            
+      adbl_insert_setTable (insert, dbtable);
+      // convert contraint to attribute
+      adbl_constraint_attrs (constraint, attrs);      
+      adbl_insert_setAttributes (insert, attrs);
+
+      // TODO:
+      // check here for auto increment
+      // we assume to use a backend which has this capability
+      
+      // all additional values
+      adbo_node_insert_values (context, items, item_update, attrs);
+      
+      ret = adbl_dbinsert (dbsession, insert, &adblsec);                        
+      
+      adbl_insert_delete (&insert);
+      
+      adbl_attrs_delete (&attrs);
+    }
+  }
+  
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_update_single (AdboContext context, AdblSession dbsession, const EcString dbtable, EcUdc update_data, EcUdc items, EcUdc values, AdblConstraint* constraint)
 {
   int ret = TRUE;
   EcUdc item;
@@ -685,16 +779,11 @@ int adbo_node_update_update (AdboContext context, AdblSession dbsession, const E
       continue;
     }
     
-    if (iterate)
-    {
-
-    }
-    else
     {
       // we grab just the first item from the array
       void* cursor_value = NULL;
       void* cursor_update = NULL;
-
+      
       EcUdc item_value = ecudc_next (values, &cursor_value);
       EcUdc item_update = ecudc_next (update_data, &cursor_update);
       
@@ -764,23 +853,27 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
 
   if (adbo_node_primary (node, filter, context, constraint))
   {
+    // explicitely check the values
+    if (isAssigned (values))
+    {
+      // there is a primary key given: good it makes things easier
+      ret = adbo_node_update_single (context, dbsession, dbtable, update_data, items, values, constraint);            
+    }
+    else
+    {
+      eclogger_log (context->logger, LL_ERROR, "ADBO", "{update} values must be assigned for update");
+      ret = FALSE;
+    }
+  }
+  else if (adbo_node_foreign (node, filter, context, constraint))
+  {
     // there is a primary key given: good it makes things easier
-    adbo_node_update_update (context, dbsession, dbtable, update_data, items, values, constraint, FALSE);
+    ret = adbo_node_update_multi (node, context, dbsession, dbtable, update_data, items, values, constraint);            
   }
   else
   {
-    // no primary key found, try to get foreign keys and update all entries in array
-    // iterrate through all items to get info
-/*
-    for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
-    {
-      EcUdc val = ecudc_node (item, ".val");
-      
-    }
-*/
-    eclogger_log (context->logger, LL_WARN, "ADBO", "{update} multi line update not implemented yet");
-
-    ret = FALSE;
+    eclogger_log (context->logger, LL_ERROR, "ADBO", "{update} needs either valid primary or foreign keys set");
+    ret = FALSE;    
   }
   
   adbl_constraint_delete(&constraint);
@@ -837,13 +930,8 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
     return FALSE;    
   }
 
-  EcUdc values = ecudc_node(node, dbtable);
-  if (isNotAssigned (values))
-  {
-    eclogger_logformat (context->logger, LL_WARN, "ADBO", "{update} no values found for '%s'", dbtable);
-    return FALSE;    
-  }
-  
+  // values can be empty
+  EcUdc values = ecudc_node(node, dbtable);  
   
   if (withTransaction)
   {
@@ -868,7 +956,75 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   adbl_closeSession (&dbsession);
   return ret;  
 }
-                      
+           
+//----------------------------------------------------------------------------------------
+
+int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTransaction)
+{
+  int ret = FALSE;
+  
+  const EcString dbtable = ecudc_get_asString(node, ".dbtable", NULL);
+  if (isNotAssigned (dbtable))
+  {
+    eclogger_log (context->logger, LL_ERROR, "ADBO", "{fetch} .dbtable not defined");
+    return FALSE;
+  }
+  
+  const EcString dbsource = ecudc_get_asString(node, ".dbsource", "default");  
+  AdblSession dbsession = adbl_openSession (context->adblm, dbsource);
+  // delete all previous entries
+  if (isNotAssigned (dbsession))
+  {
+    eclogger_logformat (context->logger, LL_ERROR, "ADBO", "{update} can't connect to database '%s'", dbsource);
+    return FALSE;
+  }
+      
+  if (withTransaction)
+  {
+    adbl_dbbegin (dbsession);
+  }
+  
+  {
+    AdblConstraint* constraint = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
+    
+    if (adbo_node_primary (node, filter, context, constraint))
+    {
+      AdblSecurity adblsec;      
+      AdblDelete* delete = adbl_delete_new ();
+
+      adbl_delete_setConstraint (delete, constraint);
+      
+      adbl_delete_setTable (delete, dbtable);
+      // execute in extra method to avoid memory leaks in query and dbsession
+      ret = adbl_dbdelete (dbsession, delete, &adblsec);
+      
+      adbl_delete_delete(&delete);
+    }
+    else
+    {
+      eclogger_log (context->logger, LL_ERROR, "ADBO", "{delete} needs valid primary keys set");
+      ret = FALSE;
+    }
+
+    adbl_constraint_delete(&constraint);
+  }
+  
+  if (withTransaction)
+  {
+    // commit / rollback all changes
+    if (ret)
+    {
+      adbl_dbcommit (dbsession);
+    }
+    else
+    {
+      adbl_dbrollback (dbsession);        
+    }
+  }
+  
+  adbl_closeSession (&dbsession);
+  return ret;
+}
 
 //----------------------------------------------------------------------------------------
 
@@ -1476,54 +1632,6 @@ int adbo_node_delete_next (AdboNode self, AdboNodePart part, AdboContext context
   adbl_delete_delete (&delete);      
   
   return ret;
-}
-
-//----------------------------------------------------------------------------------------
-
-int adbo_node_delete (AdboNode self, AdboContext context, int withTransaction)
-{
-  int ret = FALSE;
-  AdblSession dbsession = adbl_openSession (context->adblm, self->dbsource);
-  if (isAssigned (dbsession))
-  {
-    if (withTransaction)
-    {
-      adbl_dbbegin (dbsession);
-    }
-    
-    if (isAssigned (self->parts))
-    {
-      // mutli mode  
-      EcListNode node;
-      ret = TRUE;
-      for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
-      {
-        ret = ret && adbo_node_delete_next (self, eclist_data(node), context, dbsession);
-      }
-    }
-    else
-    {
-      // single mode
-      ret = adbo_node_delete_next (self, self->spart, context, dbsession);
-    }
-    
-    if (withTransaction)
-    {
-      // commit / rollback all changes
-      adbo_node_transaction (self, ret);
-      if (ret)
-      {
-        adbl_dbcommit (dbsession);
-      }
-      else
-      {
-        adbl_dbrollback (dbsession);        
-      }
-    }
-
-    adbl_closeSession (&dbsession);
-  }
-  return ret;  
 }
 
 //----------------------------------------------------------------------------------------
