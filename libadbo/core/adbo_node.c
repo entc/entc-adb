@@ -807,12 +807,12 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
         continue;
       }
       
-      const EcString fetched_value = ecudc_get_asString(item_value, dbcolumn, NULL);
+      //const EcString fetched_value = ecudc_get_asString(item_value, dbcolumn, NULL);
       
-      if (ecstr_equal(fetched_value, update_value))
+      //if (ecstr_equal(fetched_value, update_value))
       {
         // ignore if they are anyway the same
-        continue;
+        //continue;
       }
       
       adbl_attrs_addChar(attrs, dbcolumn, update_value);      
