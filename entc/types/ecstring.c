@@ -603,6 +603,25 @@ EcString ecstr_trimEndLine( const EcString s )
   return ecstr_part(s, pos - s - 1);
 }
 
+//---------------------------------------------------------------------------
+
+EcString ecstr_wrappedl (const EcString source, char c)
+{
+  const char* start = strchr (source, c);
+  if (start == NULL)
+  {
+    return NULL;
+  }
+  // start founded
+  const char* end = strchr (start + 1, c);
+  if (end == NULL)
+  {
+    return NULL;
+  }
+  // compose the return
+  return ecstr_part(start + 1, end - start - 2);
+}
+
 /*------------------------------------------------------------------------*/
 
 void ecstr_replaceAllChars( EcString self, char find, char replace )

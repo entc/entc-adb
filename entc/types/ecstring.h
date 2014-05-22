@@ -96,7 +96,7 @@ __LIB_EXPORT EcString ecstr_extractf( const EcString source, char c );
 
 __LIB_EXPORT EcString ecstr_shrink (const EcString source, char from, char to);
 
-__LIB_EXPORT int ecstr_split(const EcString source, EcString*, EcString*, char c);
+__LIB_EXPORT int ecstr_split (const EcString source, EcString*, EcString*, char c);
 
   /* **** transform methods **** */
   
@@ -109,6 +109,8 @@ __LIB_EXPORT EcString ecstr_trimKeepDefault( const EcString );
 __LIB_EXPORT EcString ecstr_trimEndLine( const EcString );
 
 __LIB_EXPORT EcString ecstr_toVersion( uint_t version );
+
+__LIB_EXPORT EcString ecstr_wrappedl (const EcString, char c);
 
 // transform: no change on size
 

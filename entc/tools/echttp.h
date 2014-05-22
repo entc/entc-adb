@@ -48,8 +48,6 @@ typedef struct {
   
   EcString user_agent;
   
-  EcString sessionid;
-
   EcString session_lang;
   
   EcString request_params;
@@ -67,6 +65,10 @@ typedef struct {
   uint_t content_length;
   
   EcString payload;
+  
+  EcString sessionid;
+  
+  EcUdc oauth;
   
 } EcHttpHeader;
 
@@ -129,6 +131,8 @@ __LIB_EXPORT void echttp_escape (EcDevStream stream, const EcString url);
 __LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
+
+__LIB_EXPORT void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code);
 
 __LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream);
 
