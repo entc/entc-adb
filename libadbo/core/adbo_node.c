@@ -431,6 +431,9 @@ void adbo_node_fromXml (EcUdc node, AdboContext context, EcXMLStream xmlstream)
 
 int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* constraint, EcLogger logger, AdblQuery* query)
 {
+  // variables
+  const EcString data_value;
+
   const EcString dbcolumn = ecudc_get_asString(value, ".dbcolumn", NULL);
   if (isNotAssigned (dbcolumn))
   {
@@ -443,7 +446,7 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     adbl_query_addColumn(query, dbcolumn, 0);
   }
   // check if we have a data value with the same name as the dbcolumn
-  const EcString data_value = ecudc_get_asString(data, dbcolumn, NULL);
+  data_value = ecudc_get_asString(data, dbcolumn, NULL);
   if (isNotAssigned (data_value))
   {
     eclogger_logformat (logger, LL_WARN, "ADBO", "{dkkey} key '%s' no value found", dbcolumn); 
@@ -550,12 +553,16 @@ void adbo_node_dbquery_columns (EcUdc node, AdblQuery* query)
   // iterrate through all items to get info
   for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
   {
-    EcUdc val = ecudc_node (item, ".val");
+    // variables
+    EcUdc dbcolumn;
+    EcUdc val;
+
+    val = ecudc_node (item, ".val");
     if (isNotAssigned (val))
     {
       continue;
     }
-    EcUdc dbcolumn = ecudc_node (val, ".dbcolumn");
+    dbcolumn = ecudc_node (val, ".dbcolumn");
     if (isNotAssigned (dbcolumn))
     {
       continue;
@@ -613,6 +620,14 @@ int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext conte
 
 int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
 {
+  // variables
+  const EcString dbsource;
+  AdblSession dbsession;
+  EcUdc values;
+  ulong_t dbmin;
+  AdblConstraint* constraints;
+  AdblQuery* query;
+
   int ret = TRUE;
   
   const EcString dbtable = ecudc_get_asString(node, ".dbtable", NULL);
@@ -624,8 +639,8 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   
   ecudc_del (node, dbtable);
   
-  const EcString dbsource = ecudc_get_asString(node, ".dbsource", "default");  
-  AdblSession dbsession = adbl_openSession (context->adblm, dbsource);
+  dbsource = ecudc_get_asString(node, ".dbsource", "default");  
+  dbsession = adbl_openSession (context->adblm, dbsource);
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
@@ -633,12 +648,12 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
     return FALSE;
   }
   
-  EcUdc values = ecudc_create (ENTC_UDC_LIST, dbtable);
+  values = ecudc_create (ENTC_UDC_LIST, dbtable);
   
-  ulong_t dbmin = ecudc_get_asL(node, ".dbmin", 1);
+  dbmin = ecudc_get_asL(node, ".dbmin", 1);
   
-  AdblConstraint* constraints;
-  AdblQuery* query = adbl_query_new ();
+  
+  query = adbl_query_new ();
   // add some default stuff
   eclogger_log(context->logger, LL_TRACE, "ADBO", "{request} prepare query");
   
@@ -679,21 +694,26 @@ void adbo_node_insert_values (AdboContext context, EcUdc items, EcUdc update_ite
   
   for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
   {
-    EcUdc val = ecudc_node (item, ".val");
+    // variables
+    const EcString dbcolumn;
+    const EcString update_value;
+    EcUdc val;
+
+    val = ecudc_node (item, ".val");
     if (isNotAssigned (val))
     {
       eclogger_log (context->logger, LL_WARN, "ADBO", "{insert} item in items is not a value");
       continue;
     }
     
-    const EcString dbcolumn = ecudc_get_asString(val, ".dbcolumn", NULL);
+    dbcolumn = ecudc_get_asString(val, ".dbcolumn", NULL);
     if (isNotAssigned (dbcolumn))
     {
       eclogger_log (context->logger, LL_WARN, "ADBO", "{insert} value in items without dbcolumn");
       continue;
     }
 
-    const EcString update_value = ecudc_get_asString(update_item, dbcolumn, NULL);
+    update_value = ecudc_get_asString(update_item, dbcolumn, NULL);
     if (isNotAssigned (update_value))
     {
       eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{insert} item '%s' has no value and will not be insert", dbcolumn);    
@@ -765,14 +785,18 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
     
   for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
   {
-    EcUdc val = ecudc_node (item, ".val");
+    // variables
+    const EcString dbcolumn;
+    EcUdc val;
+
+    val = ecudc_node (item, ".val");
     if (isNotAssigned (val))
     {
       eclogger_log (context->logger, LL_WARN, "ADBO", "{update} item in items is not a value");
       continue;
     }
     
-    const EcString dbcolumn = ecudc_get_asString(val, ".dbcolumn", NULL);
+    dbcolumn = ecudc_get_asString(val, ".dbcolumn", NULL);
     if (isNotAssigned (dbcolumn))
     {
       eclogger_log (context->logger, LL_WARN, "ADBO", "{update} value in items without dbcolumn");
@@ -783,6 +807,7 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
       // we grab just the first item from the array
       void* cursor_value = NULL;
       void* cursor_update = NULL;
+      const EcString update_value;
       
       EcUdc item_value = ecudc_next (values, &cursor_value);
       EcUdc item_update = ecudc_next (update_data, &cursor_update);
@@ -800,7 +825,7 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
       }
       
       // now we retrieve the item from original fetched and want to update
-      const EcString update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
+      update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
       if (isNotAssigned (update_value))
       {
         eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{update} item '%s' has no value and will not be updated", dbcolumn);    
@@ -885,6 +910,13 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
 
 int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data, int withTransaction)
 {
+  // variables
+  const EcString dbsource;
+  AdblSession dbsession;
+  EcUdc update_data;
+  EcUdc items;
+  EcUdc values;
+
   int ret = FALSE;
   
   const EcString dbtable = ecudc_get_asString(node, ".dbtable", NULL);
@@ -894,8 +926,8 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
     return FALSE;
   }
   
-  const EcString dbsource = ecudc_get_asString(node, ".dbsource", "default");  
-  AdblSession dbsession = adbl_openSession (context->adblm, dbsource);
+  dbsource = ecudc_get_asString(node, ".dbsource", "default");  
+  dbsession = adbl_openSession (context->adblm, dbsource);
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
@@ -910,7 +942,7 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   }
   
   // check if the data fits the structure
-  EcUdc update_data = ecudc_node(data, dbtable);
+  update_data = ecudc_node(data, dbtable);
   if (isNotAssigned (update_data))
   {
     eclogger_logformat (context->logger, LL_WARN, "ADBO", "{update} missing data for table '%s'", dbtable);
@@ -923,7 +955,7 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
     return FALSE;    
   }
   
-  EcUdc items = ecudc_node(node, "items");
+  items = ecudc_node(node, "items");
   if (isNotAssigned (items))
   {
     eclogger_logformat (context->logger, LL_WARN, "ADBO", "{update} no items found for '%s'", dbtable);
@@ -931,7 +963,7 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   }
 
   // values can be empty
-  EcUdc values = ecudc_node(node, dbtable);  
+  values = ecudc_node(node, dbtable);  
   
   if (withTransaction)
   {
@@ -961,6 +993,10 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
 
 int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTransaction)
 {
+  // variables
+  const EcString dbsource;
+  AdblSession dbsession;
+
   int ret = FALSE;
   
   const EcString dbtable = ecudc_get_asString(node, ".dbtable", NULL);
@@ -970,8 +1006,8 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
     return FALSE;
   }
   
-  const EcString dbsource = ecudc_get_asString(node, ".dbsource", "default");  
-  AdblSession dbsession = adbl_openSession (context->adblm, dbsource);
+  dbsource = ecudc_get_asString(node, ".dbsource", "default");  
+  dbsession = adbl_openSession (context->adblm, dbsource);
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
@@ -1746,20 +1782,16 @@ AdboObject adbo_node_get (AdboObject obj, AdboNode self, const EcString link)
     {
       if (ecstr_equal (self->dbtable, part1))
       {
-        printf("check link '%s' '%s'\n", part1, part2);
         EcListNode node;
         int pos = atoi(part2);
-        printf("check pos '%i'\n", pos);
         int counter = 0;
+
         for (node = eclist_first (self->parts); node != eclist_end (self->parts); node = eclist_next (node))
         {
           printf("check counter %i pos %i\n", counter, pos);
           if (counter == pos)
           {
-            AdboNodePart part = eclist_data (node);
-            
-            printf("goot cool container\n");
-            
+            AdboNodePart part = eclist_data (node);            
             AdboObject obj2 = adbo_container_get (part->container, part1);
             
             ecstr_delete (&part1);

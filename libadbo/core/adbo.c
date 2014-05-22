@@ -34,8 +34,6 @@ void adbo_structure_items_fromXml (EcUdc items, AdboContext context, EcXMLStream
   
   if (ecxmlstream_isBegin (xmlstream, "node"))
   {
-    eclogger_log(context->logger, LL_TRACE, "ADBO", "{parse} found node");
-    
     EcUdc udc = ecudc_create (ENTC_UDC_NODE, "node");
     adbo_node_fromXml (udc, context, xmlstream);
     
@@ -47,8 +45,6 @@ void adbo_structure_items_fromXml (EcUdc items, AdboContext context, EcXMLStream
   }
   else if (ecxmlstream_isBegin (xmlstream, "item"))
   {
-    eclogger_log(context->logger, LL_TRACE, "ADBO", "{parse} found item");
-    
     EcUdc udc = ecudc_create (ENTC_UDC_NODE, "item");
     adbo_item_fromXml (udc, context, xmlstream, "item");
 

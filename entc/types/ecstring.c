@@ -607,13 +607,17 @@ EcString ecstr_trimEndLine( const EcString s )
 
 EcString ecstr_wrappedl (const EcString source, char c)
 {
-  const char* start = strchr (source, c);
+  // variables declaration
+  const char* start;
+  const char* end;
+
+  start = strchr (source, c);
   if (start == NULL)
   {
     return NULL;
   }
   // start founded
-  const char* end = strchr (start + 1, c);
+  end = strchr (start + 1, c);
   if (end == NULL)
   {
     return NULL;
