@@ -433,6 +433,35 @@ EcUdc eclogger_message (EcLogger self, uint_t logid, uint_t messageid, EcUdc* da
 
 //----------------------------------------------------------------------------------------
 
+ulong_t eclogger_getResultCode (EcUdc results)
+{
+  void* cursor = NULL;
+  
+  EcUdc item;
+  
+  ulong_t errorCode = ENTC_RESOURCE_UNKNOWN;
+  
+  if (isNotAssigned (results))
+  {
+    return errorCode;
+  }
+  
+  // iterate through all results
+  for (item = ecudc_next (results, &cursor); isAssigned (item); item = ecudc_next (results, &cursor))
+  {
+    if (ecstr_equal (ecudc_name(item), "ErrorCode"))
+    {
+      errorCode = ecudc_asL(item);
+      continue;
+    }
+    // at least one result is OK
+    return ENTC_RESOURCE_AVAILABLE;
+  }  
+  return errorCode;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcList eclogger_errmsgs (EcLogger self)
 {
   return self->errmsgs;

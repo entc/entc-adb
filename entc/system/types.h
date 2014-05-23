@@ -29,6 +29,11 @@ typedef long long_t;
 typedef unsigned int uint_t;
 typedef signed int int_t;
 
+#define ENTC_RESOURCE_UNKNOWN            0
+#define ENTC_RESOURCE_AVAILABLE          1
+#define ENTC_RESOURCE_NOT_FOUND          2
+#define ENTC_RESOURCE_NEEDS_AUTH         3
+#define ENTC_RESOURCE_NEEDS_PERMISSION   4
 
 #define isAssigned(pointer) (pointer != NULL)
 #define isNotAssigned(pointer) (pointer == NULL)

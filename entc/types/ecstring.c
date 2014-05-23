@@ -623,7 +623,7 @@ EcString ecstr_wrappedl (const EcString source, char c)
     return NULL;
   }
   // compose the return
-  return ecstr_part(start + 1, end - start - 2);
+  return ecstr_part(start + 1, end - start - 1);
 }
 
 /*------------------------------------------------------------------------*/

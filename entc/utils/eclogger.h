@@ -97,6 +97,8 @@ __LIB_EXPORT void eclogger_logbinary (EcLogger, EcLogLevel, const char* module, 
 
 __LIB_EXPORT EcUdc eclogger_message (EcLogger, uint_t logid, uint_t messageid, EcUdc* data);
 
+__LIB_EXPORT ulong_t eclogger_getResultCode (EcUdc results);
+
 // ----- security methods ---------------------------------------------------------------------
 
 __LIB_EXPORT void eclogger_sec (EcLogger, EcSecLevel);

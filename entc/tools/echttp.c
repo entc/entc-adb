@@ -169,15 +169,17 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
     ecstr_delete(&strtime); 
   }
   
-  if (isAssigned (header->oauth))
+  if (isAssigned (header->auth))
   {
     void* cursor = NULL;
     EcUdc item;
     int counter = 0;
     
-    ecdevstream_appends( stream, "Authorization: OAuth ");
+    ecdevstream_appends ( stream, "Authorization: ");
+    ecdevstream_appends ( stream, ecudc_name(header->auth));
+    ecdevstream_appendc (stream, ' ');
     
-    for (item  = ecudc_next (header->oauth, &cursor); isAssigned (item); item = ecudc_next (header->oauth, &cursor), counter++)
+    for (item  = ecudc_next (header->auth, &cursor); isAssigned (item); item = ecudc_next (header->auth, &cursor), counter++)
     {
       if (counter > 0)
       {
@@ -195,6 +197,30 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
   ecdevstream_appends( stream, "Content-Language: ");
   ecdevstream_appends( stream, header->session_lang );
   ecdevstream_appends( stream, "\r\n" );  
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode)
+{
+  switch (errcode)
+  {
+    case ENTC_RESOURCE_NEEDS_AUTH:
+    {
+      echttp_send_header (header, stream, "401 Unauthorized");
+    }
+    break;
+    case ENTC_RESOURCE_NEEDS_PERMISSION:
+    {
+      echttp_send_header (header, stream, "403 Forbidden");      
+    }
+    break;
+    default:
+    {
+      echttp_send_header (header, stream, "404 Not Found");            
+    }
+    break;
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -383,7 +409,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->content_length = 0;
   header->payload = ecstr_init();
   header->sessionid = ecstr_init();
-  header->oauth = NULL;
+  header->auth = NULL;
 }
 
 //---------------------------------------------------------------------------------------
@@ -408,9 +434,9 @@ void echttp_header_clear (EcHttpHeader* header)
   
   ecstr_delete(&(header->sessionid));
   
-  if (isAssigned (header->oauth))
+  if (isAssigned (header->auth))
   {
-    ecudc_destroy(&(header->oauth));
+    ecudc_destroy(&(header->auth));
   }
 }
 
@@ -693,19 +719,35 @@ void echttp_request_destroy (EcHttpRequest* pself)
 
 //---------------------------------------------------------------------------------------
 
-EcUdc echttp_parse_oauth (const EcString source)
+EcUdc echttp_parse_auth (const EcString source)
 {
   EcList list = eclist_new();
   EcListNode node;
-  EcUdc oauth = ecudc_create(ENTC_UDC_NODE, "oauth");
+  EcString auth_type;
+  EcUdc auth;
+  
+  const EcString next_space = ecstr_pos (source, ' ');
+  if (!ecstr_valid (next_space))
+  {
+    return NULL;
+  }
+  
+  auth_type = ecstr_part(source, next_space - source);
+  
+  auth = ecudc_create(ENTC_UDC_NODE, auth_type);
+  
+  ecstr_delete(&auth_type);
 
-  ecstr_tokenizer(list, source, ',');
+  ecstr_tokenizer(list, next_space + 1, ',');
   
   for(node = eclist_first(list); node != eclist_end(list); node = eclist_next(node))
   {
     EcString key = ecstr_init ();
     EcString val = ecstr_init ();
     // check key="val"
+    
+    printf("found token: '%s'\n", eclist_data(node));
+    
     if (ecstr_split (eclist_data(node), &key, &val, '='))
     {
       EcString keyok = ecstr_trim (key);
@@ -713,7 +755,9 @@ EcUdc echttp_parse_oauth (const EcString source)
       
       if (ecstr_valid(keyok)&&ecstr_valid(valok))
       {
-        ecudc_add_asString(oauth, keyok, valok);
+        printf("found key: '%s' value: '%s'\n", keyok, valok);
+        
+        ecudc_add_asString(auth, keyok, valok);
       }
       ecstr_delete(&keyok);
       ecstr_delete(&valok);
@@ -722,7 +766,7 @@ EcUdc echttp_parse_oauth (const EcString source)
     ecstr_delete(&val);
   }
   
-  return oauth;
+  return auth;
 }
 
 //---------------------------------------------------------------------------------------
@@ -845,10 +889,10 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
       {
         header->content_length = atoi(line + 16);
       }
-      // Authorization: OAuth 
-      else if ((line[0] == 'A')&&(line[7] == 'z')&&(line[20] == ' '))
+      // Authorization: xxx
+      else if ((line[0] == 'A')&&(line[7] == 'z')&&(line[14] == ' '))
       {
-        header->oauth = echttp_parse_oauth (line + 20);
+        header->auth = echttp_parse_auth (line + 15);
       }
     }
     else

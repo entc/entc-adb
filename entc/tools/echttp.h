@@ -68,7 +68,7 @@ typedef struct {
   
   EcString sessionid;
   
-  EcUdc oauth;
+  EcUdc auth;
   
 } EcHttpHeader;
 
@@ -133,6 +133,8 @@ __LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const Ec
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
 __LIB_EXPORT void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code);
+
+__LIB_EXPORT void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode);
 
 __LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream);
 
