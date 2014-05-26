@@ -618,6 +618,19 @@ int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext conte
 
 //----------------------------------------------------------------------------------------
 
+EcUdc adbo_node_values (EcUdc node)
+{
+  const EcString dbtable = ecudc_get_asString(node, ".dbtable", NULL);
+  if (isNotAssigned (dbtable))
+  {
+    return NULL;
+  }  
+  
+  return ecudc_node(node, dbtable);
+}
+
+//----------------------------------------------------------------------------------------
+
 int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
 {
   // variables

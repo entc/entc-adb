@@ -88,6 +88,10 @@ __LIB_EXPORT void ecudc_add_asB (EcUdc, const EcString name, ubyte_t value);
 
 __LIB_EXPORT void ecudc_add_asL (EcUdc, const EcString name, ulong_t value);
 
+// tools
+
+__LIB_EXPORT EcUdc ecudc_errcode (uint_t errcode);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

@@ -166,6 +166,8 @@ SET (CORE_SOURCES_TOOLS
   tools/ecmail.c
   tools/ecxmlstream.h
   tools/ecxmlstream.c
+  tools/ecjson.h
+  tools/ecjson.c
 )
 
 

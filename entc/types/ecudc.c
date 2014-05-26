@@ -640,3 +640,14 @@ void ecudc_add_asL (EcUdc node, const EcString name, ulong_t value)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc ecudc_errcode (uint_t errcode)
+{
+  // create the default error code node
+  EcUdc error = ecudc_create (ENTC_UDC_LONG, "ErrorCode");
+  // set the value
+  ecudc_setL (error, errcode);
+  // return
+  return error;  
+}
+
+//----------------------------------------------------------------------------------------

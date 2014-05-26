@@ -178,3 +178,44 @@ int adbo_delete (EcUdc udc, EcUdc filter, AdboContext context)
 }
 
 //----------------------------------------------------------------------------------------
+
+EcUdc adbo_node_values (EcUdc node);
+
+EcUdc adbo_values (EcUdc udc, ulong_t index)
+{
+  switch (ecudc_type (udc))
+  {
+    case ENTC_UDC_LIST:
+    {
+      void* cursor = NULL;
+      EcUdc item;
+      ulong_t i = 0;
+      // iterrate through all nodes
+      for (item = ecudc_next (udc, &cursor); isAssigned (item); item = ecudc_next (udc, &cursor), i++)
+      {
+        if (i == index)
+        {
+          return adbo_node_values (item);
+        }
+      }  
+    }
+    break;
+    case ENTC_UDC_NODE:
+    {
+      return adbo_node_values (udc);
+    }
+    break;
+  }
+  
+  return NULL;    
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_clear (EcUdc node)
+{
+  return TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+
