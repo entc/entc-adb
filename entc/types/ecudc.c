@@ -491,7 +491,7 @@ ubyte_t ecudc_asB (EcUdc self)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_BYTE: return *((ulong_t*)self->extension); 
+    case ENTC_UDC_BYTE: return *((ubyte_t*)self->extension); 
   }        
   return 0;
 }
