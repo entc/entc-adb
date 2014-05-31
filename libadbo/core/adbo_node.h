@@ -30,36 +30,6 @@ __CPP_EXTERN____________________________________________________________________
 
 
 
-// constructor
-__LIB_EXPORT AdboNode adbo_node_new1 (AdboObject, AdboContext, AdboContainer, EcXMLStream);
-
-//__LIB_EXPORT AdboNode adbo_node_new2 (AdboObject, AdboContext, AdboContainer, AdblTable* table_info, const EcString origin);
-
-// destructor
-__LIB_EXPORT void adbo_node_del (AdboNode*);
-
-// constructor
-__LIB_EXPORT AdboNode adbo_node_clone (const AdboNode, AdboContainer parent);
-
-// fill data from database backend
-__LIB_EXPORT int adbo_node_request (AdboNode, AdboContext, EcUdc, int depth, int dpos);
-
-// apply transaction state
-__LIB_EXPORT void adbo_node_transaction (AdboNode, int state);
-
-__LIB_EXPORT AdboObject adbo_node_at (AdboNode, const EcString);
-
-__LIB_EXPORT void adbo_node_strToStream (AdboNode, EcStream);
-
-__LIB_EXPORT EcString adbo_node_str (AdboNode);
-
-__LIB_EXPORT AdboObject adbo_node_get (AdboObject, AdboNode, const EcString link);
-
-__LIB_EXPORT EcUdc adbo_node_udc (AdboObject, AdboNode);
-
-__LIB_EXPORT void adbo_node_clear (AdboNode);
-
-__LIB_EXPORT void adbo_node_dump (AdboObject, AdboNode, int tab, int le, EcBuffer, EcLogger);
 
 __CPP_EXTERN______________________________________________________________________________END
 

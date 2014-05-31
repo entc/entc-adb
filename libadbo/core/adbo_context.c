@@ -19,7 +19,6 @@
 
 #include "adbo_context.h"
 #include "adbo_context_intern.h"
-#include "adbo_substitute.h"
 
 //----------------------------------------------------------------------------------------
 
@@ -32,7 +31,7 @@ AdboContext adbo_context_create (EcLogger logger, EcEventFiles files, const EcSt
   self->adblm = adbl_new (self->logger);
   adbl_scan (self->adblm, files, path);  
 
-  self->substitutes = adbo_subsmgr_new (path, self);  
+ // self->substitutes = adbo_subsmgr_new (path, self);  
   
   return self;
 }
@@ -43,7 +42,7 @@ void adbo_context_destroy (AdboContext* pself)
 {
   AdboContext self = *pself;
   
-  adbo_subsmgr_del (&(self->substitutes));
+ // adbo_subsmgr_del (&(self->substitutes));
   adbl_delete (&(self->adblm));
   
   ENTC_DEL (pself, struct AdboContext_s);
