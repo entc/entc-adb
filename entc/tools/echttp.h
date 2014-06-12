@@ -122,6 +122,8 @@ __LIB_EXPORT void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
 
 __LIB_EXPORT void echttp_parse_cookies (EcHttpHeader*, const EcString s);
 
+__LIB_EXPORT EcUdc echttp_parse_auth (const EcString source);
+
 // misc
 
 __LIB_EXPORT void echttp_unescape (EcString url);
@@ -131,8 +133,6 @@ __LIB_EXPORT void echttp_escape (EcDevStream stream, const EcString url);
 __LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
-
-__LIB_EXPORT void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code);
 
 __LIB_EXPORT void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode);
 

@@ -138,7 +138,7 @@ const EcString echttp_getMimeType (const EcString filename, EcLogger logger)
 
 //---------------------------------------------------------------------------------------
 
-void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code)
+void echttp_send_status (EcHttpHeader* header, EcDevStream stream, const EcString code)
 {
   if (header->header_on)
   {
@@ -149,6 +149,20 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
     ecdevstream_appends( stream, "entc" );
     ecdevstream_appends( stream, "\r\n" );
   }
+  else
+  {
+    // for cgi or fcgi header result
+    ecdevstream_appends( stream, "Status: ");
+    ecdevstream_appends( stream, code );
+    ecdevstream_appends( stream, "\r\n" );      
+  }  
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code)
+{
+  echttp_send_status (header, stream, code);
   
   ecdevstream_appends( stream, "Content-type: ");
   ecdevstream_appends( stream, header->mime);
@@ -196,7 +210,7 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
   
   ecdevstream_appends( stream, "Content-Language: ");
   ecdevstream_appends( stream, header->session_lang );
-  ecdevstream_appends( stream, "\r\n" );  
+  ecdevstream_appends( stream, "\r\n\r\n" );  
 }
 
 //---------------------------------------------------------------------------------------
@@ -207,42 +221,35 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
   {
     case ENTC_RESOURCE_NEEDS_AUTH:
     {
-      echttp_send_header (header, stream, "401 Unauthorized");
+      echttp_send_status (header, stream, "401 Unauthorized");
     }
     break;
     case ENTC_RESOURCE_NEEDS_PERMISSION:
     {
-      echttp_send_header (header, stream, "403 Forbidden");      
+      echttp_send_status (header, stream, "403 Forbidden");      
     }
     break;
     default:
     {
-      echttp_send_header (header, stream, "404 Not Found");            
+      echttp_send_status (header, stream, "404 Not Found");            
     }
     break;
   }
-}
-
-//---------------------------------------------------------------------------------------
-
-void echttp_send_startHeaderOK (EcHttpHeader* header, EcDevStream stream)
-{
-  echttp_send_header (header, stream, "200 OK");
-}
-
-//---------------------------------------------------------------------------------------
-
-void echttp_send_finishHeader(EcHttpHeader* header, EcDevStream stream)
-{
+  // finish
   ecdevstream_append( stream, "\r\n", 2 );
+  
+  ecdevstream_appends( stream, "Status: ");
+  ecdevstream_appendu( stream, errcode );
+  ecdevstream_appends( stream, "\r\n" );      
+  
+  
 }
 
 //---------------------------------------------------------------------------------------
 
 void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream)
 {
-  echttp_send_startHeaderOK (header, stream);  
-  echttp_send_finishHeader (header, stream);  
+  echttp_send_header (header, stream, "200 OK");
 }
 
 //---------------------------------------------------------------------------------------
@@ -746,8 +753,6 @@ EcUdc echttp_parse_auth (const EcString source)
     EcString val = ecstr_init ();
     // check key="val"
     
-    printf("found token: '%s'\n", eclist_data(node));
-    
     if (ecstr_split (eclist_data(node), &key, &val, '='))
     {
       EcString keyok = ecstr_trim (key);
@@ -755,8 +760,6 @@ EcUdc echttp_parse_auth (const EcString source)
       
       if (ecstr_valid(keyok)&&ecstr_valid(valok))
       {
-        printf("found key: '%s' value: '%s'\n", keyok, valok);
-        
         ecudc_add_asString(auth, keyok, valok);
       }
       ecstr_delete(&keyok);
@@ -1071,7 +1074,7 @@ void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSo
     
     if (self->callbacks.process (self->callbacks.process_ptr, header, &object))
     {
-      EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
+      EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
             
       if (isAssigned (self->callbacks.render))
       {
