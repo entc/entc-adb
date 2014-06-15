@@ -22,12 +22,6 @@
 
 #include "platform.h"
 
-#define C_REQUEST_METHOD_INVALID 0
-#define C_REQUEST_METHOD_GET 1
-#define C_REQUEST_METHOD_PUT 2
-#define C_REQUEST_METHOD_POST 3
-#define C_REQUEST_METHOD_DELETE 4
-
 #ifdef ENTC_PLATFORM_WINDOWS
 #define __LIB_EXPORT  __declspec( dllexport )
 #define _STDCALL __stdcall

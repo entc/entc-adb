@@ -128,8 +128,8 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
 {
   // variables
   const EcString data_value;
-
   const EcString dbcolumn = ecudc_get_asString(value, ".dbcolumn", NULL);
+
   if (isNotAssigned (dbcolumn))
   {
     eclogger_logformat (logger, LL_WARN, "ADBO", "{dkkey} key has no dbcolumn definition"); 
@@ -141,6 +141,12 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     adbl_query_addColumn(query, dbcolumn, 0);
   }
   // check if we have a data value with the same name as the dbcolumn
+  if (isNotAssigned (data))
+  {
+    eclogger_logformat (logger, LL_TRACE, "ADBO", "{dkkey} no constraints in data"); 
+    return FALSE;
+  }  
+  
   data_value = ecudc_get_asString(data, dbcolumn, NULL);
   if (isNotAssigned (data_value))
   {
@@ -330,11 +336,15 @@ int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext conte
   
   adbo_node_dbquery_columns (node, query);
   // execute sql query
+  eclogger_log(context->logger, LL_TRACE, "ADBO", "execute query");
+
   cursor = adbl_dbquery (session, query, &adblsec);
-  
-  ret = adbo_node_dbquery_cursor (node, parts, dbmin, context, cursor, query);
-  
-  adbl_dbcursor_release (&cursor);
+  if (isAssigned (cursor))
+  {
+    ret = adbo_node_dbquery_cursor (node, parts, dbmin, context, cursor, query);
+    
+    adbl_dbcursor_release (&cursor);
+  }  
   
   return ret;  
 }

@@ -160,14 +160,25 @@ void echttp_send_status (EcHttpHeader* header, EcDevStream stream, const EcStrin
 
 //---------------------------------------------------------------------------------------
 
-void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code)
+void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code, EcUdc extra_params)
 {
   echttp_send_status (header, stream, code);
   
-  ecdevstream_appends( stream, "Content-type: ");
-  ecdevstream_appends( stream, header->mime);
-  ecdevstream_appends( stream, "\r\n" );    
+  if (!ecstr_empty(header->mime))
+  {
+    ecdevstream_appends( stream, "Content-type: ");
+    ecdevstream_appends( stream, header->mime);
+    ecdevstream_appends( stream, "\r\n" );    
+  }
   
+  if (!ecstr_empty(header->session_lang))
+  {
+    ecdevstream_appends( stream, "Content-Language: ");
+    ecdevstream_appends( stream, header->session_lang );
+    ecdevstream_appends( stream, "\r\n" );  
+  }
+  
+  /*
   if (ecstr_valid(header->sessionid))
   {
     EcString strtime = ecstr_localtime(time(0) + 86400);
@@ -182,6 +193,7 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
     ecdevstream_appends( stream, "; path=/\r\n" );
     ecstr_delete(&strtime); 
   }
+   */
   
   if (isAssigned (header->auth))
   {
@@ -208,9 +220,22 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
     ecdevstream_appends( stream, "\r\n" );
   }
   
-  ecdevstream_appends( stream, "Content-Language: ");
-  ecdevstream_appends( stream, header->session_lang );
-  ecdevstream_appends( stream, "\r\n\r\n" );  
+  // add extra stuff
+  if (isAssigned (extra_params))
+  {
+    void* cursor = NULL;
+    EcUdc item;
+    
+    for (item  = ecudc_next (extra_params, &cursor); isAssigned (item); item = ecudc_next (extra_params, &cursor))
+    {
+      ecdevstream_appends( stream, ecudc_name (item));
+      ecdevstream_appends( stream, ": ");
+      ecdevstream_appends( stream, ecudc_asString(item));
+    }
+  }
+  
+  // finish the header part
+  ecdevstream_appends( stream, "\r\n" );
 }
 
 //---------------------------------------------------------------------------------------
@@ -247,9 +272,9 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
 
 //---------------------------------------------------------------------------------------
 
-void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream)
+void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream, EcUdc extra_params)
 {
-  echttp_send_header (header, stream, "200 OK");
+  echttp_send_header (header, stream, "200 OK", extra_params);
 }
 
 //---------------------------------------------------------------------------------------
@@ -308,7 +333,7 @@ void echttp_send_404NotFound (EcHttpHeader* header, EcSocket socket, const EcStr
 
 void echttp_send_SecureIncidentStream (EcHttpHeader* header, EcDevStream stream)
 {
-  echttp_send_DefaultHeader (header, stream);
+  echttp_send_DefaultHeader (header, stream, NULL);
   
   /* render html part */
   ecdevstream_appends( stream, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\n\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" );
@@ -382,7 +407,7 @@ void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString doc
   {
     EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket);  // output stream for header
     
-    echttp_send_DefaultHeader (header, stream);
+    echttp_send_DefaultHeader (header, stream, NULL);
 
     ecdevstream_delete( &stream ); 
     
@@ -398,7 +423,7 @@ void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString doc
 
 void echttp_header_init (EcHttpHeader* header, int header_on)
 {
-  header->method = C_REQUEST_METHOD_INVALID;
+  header->method = ecstr_init();
   header->header_on = header_on;
   header->host = ecstr_init();
   header->remote_address = ecstr_init();
@@ -423,6 +448,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
 
 void echttp_header_clear (EcHttpHeader* header)
 {
+  ecstr_delete(&(header->method));
   ecstr_delete(&(header->host));
   ecstr_delete(&(header->user_lang));
   ecstr_delete(&(header->user_agent));
@@ -672,9 +698,7 @@ void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
 
 void echttp_header_dump (EcHttpHeader* header, EcLogger logger)
 {
-  static char* method_matrix[5] = {"INVALID", "GET", "PUT", "POST", "DELETE"};
-
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} method:         %s", method_matrix[header->method]);
+  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} method:         %s", ecstr_cstring(header->method));
   eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} host:           %s", ecstr_cstring(header->host));
   eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} remote address: %s", ecstr_cstring(header->remote_address));
   eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} language:       %s", ecstr_cstring(header->session_lang));
@@ -849,6 +873,7 @@ int echttp_parse_content (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger 
     }
     
     header->payload = ecstr_trans(&sbuffer);
+    printf("payload: %s\n", header->payload);
   }
   return TRUE;
 }
@@ -865,7 +890,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
     const char* line = ecstream_buffer(stream);
     if( *line )
     {
-      //eclogger_logformat(logger, LL_TRACE, "SERV", "{recv line} '%s'", line);
+      eclogger_logformat(logger, LL_TRACE, "SERV", "{recv line} '%s'", line);
       
       /* Host: 127.0.0.1:8080 */
       if( line[0] == 'H' && line[1] == 'o' && line[5] == ' ' )        
@@ -912,7 +937,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
 
 //---------------------------------------------------------------------------------------
 
-int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer)
+int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcLogger logger)
 {
   int error;
   // parse the first line received
@@ -921,52 +946,28 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
     const char* line = ecstream_buffer(streambuffer);
     if(!ecstr_empty(line))
     {
-      int lenline = strlen(line);
-      char* pos;
+      eclogger_logformat(logger, LL_TRACE, "SERV", "{first line} '%s'", line);
+
+      const EcString after_method;
+      const EcString afetr_url;
+      // find method
+      after_method = ecstr_pos (line, ' ');
+      if (ecstr_empty (after_method))
+      {
+        return FALSE;
+      }
       
-      if ((lenline > 3)&&(line[0] == 'G')&&(line[3] == ' '))
+      header->method = ecstr_part(line, after_method - line);
+      
+      after_method++;
+      // find url
+      afetr_url = ecstr_pos (after_method, ' ');
+      if (ecstr_empty (afetr_url))
       {
-        // GET
-        if (lenline > 4)
-        {
-          pos = strrchr(line + 4, ' ');
-          *pos = 0;
-          
-          header->url = line + 4;          
-        }
-        else
-        {
-          header->url = NULL;
-        }
-        header->method = C_REQUEST_METHOD_GET;
-      } 
-      else if ((lenline > 3)&&(line[0] == 'P')&&(line[3] == ' '))
-      {
-        // PUT
-        pos = strrchr(line + 4, ' ');
-        *pos = 0;
-        
-        header->url = line + 4;
-        header->method = C_REQUEST_METHOD_PUT;
+        return FALSE;
       }
-      else if ((lenline > 4)&&(line[0] == 'P')&&(line[4] == ' '))
-      {
-        // POST
-        pos = strrchr(line + 5, ' ');
-        *pos = 0;
-        
-        header->url = line + 5;
-        header->method = C_REQUEST_METHOD_POST;
-      }
-      else if ((lenline > 6)&&(line[0] == 'D')&&(line[6] == ' '))
-      {
-        // DELETE
-        pos = strrchr(line + 7, ' ');
-        *pos = 0;
-        
-        header->url = line + 7;
-        header->method = C_REQUEST_METHOD_DELETE;
-      }
+      
+      header->url = ecstr_part(after_method, afetr_url - after_method);         
     }
   }
   else
@@ -978,16 +979,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
     }
   }
   // if not method found, we cannot handle the request
-  return header->method != C_REQUEST_METHOD_INVALID;
-}
-
-//---------------------------------------------------------------------------------------
-
-int echttp_method_supports_content (EcHttpHeader* header)
-{
-  return (header->method == C_REQUEST_METHOD_PUT)
-      || (header->method == C_REQUEST_METHOD_POST)
-      || (header->method == C_REQUEST_METHOD_DELETE);
+  return ecstr_valid (header->method);
 }
 
 //---------------------------------------------------------------------------------------
@@ -996,15 +988,11 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
 {
   int ret = TRUE;
   // parse incoming stream of 'GET/POST/...'
-  ret = ret && echttp_parse_method (header, buffer, streambuffer);
-  
+  ret = ret && echttp_parse_method (header, buffer, streambuffer, logger);
   // parse meta informations
   ret = ret && echttp_parse_header (header, buffer, logger);
-  
-  if (echttp_method_supports_content (header))
-  {
-    ret = ret && echttp_parse_content (header, buffer, logger);
-  }
+  // parse post content
+  ret = ret && echttp_parse_content (header, buffer, logger);
   
   return ret;
 }
@@ -1036,7 +1024,7 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
     
     echttp_header_title (&header);
 
-    if (echttp_method_supports_content (&header) && isAssigned (self->callbacks.content))
+    if (isAssigned (self->callbacks.content))
     {
       self->callbacks.content (callback_ptr, &header, logger);
     }

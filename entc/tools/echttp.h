@@ -34,7 +34,7 @@ typedef struct {
 
   int header_on;
   
-  int method;
+  EcString method;
     
   EcString host;
   
@@ -134,9 +134,11 @@ __LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const Ec
 
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
+__LIB_EXPORT void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code, EcUdc extra_params);
+
 __LIB_EXPORT void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode);
 
-__LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream);
+__LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream, EcUdc extra_params);
 
 __CPP_EXTERN______________________________________________________________________________END
 
