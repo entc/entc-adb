@@ -44,7 +44,7 @@ EcStreamBuffer ecstreambuffer_new(EcLogger logger, EcSocket socket)
 {
   EcStreamBuffer self = ENTC_NEW(struct EcStreamBuffer_s);
   
-  self->buffer = ecstr_buffer(1024);
+  self->buffer = ecbuf_create (1024);
   self->logger = logger;
   self->socket = socket;
   self->pos = self->buffer->buffer;
@@ -61,7 +61,7 @@ void ecstreambuffer_delete(EcStreamBuffer* pself)
 {
   EcStreamBuffer self = *pself;
   
-  ecstr_release(&(self->buffer));
+  ecbuf_destroy (&(self->buffer));
   
   ENTC_DEL(pself, struct EcStreamBuffer_s);
 }

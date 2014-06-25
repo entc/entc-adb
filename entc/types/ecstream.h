@@ -24,6 +24,7 @@
 #include "../system/types.h"
 
 #include "ecstring.h"
+#include "ecbuffer.h"
 
 typedef void (*stream_callback_fct)(void* ptr, const void* buffer, uint_t nbyte);
 

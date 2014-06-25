@@ -277,11 +277,11 @@ EcSocket ecsocket_accept (EcSocket self)
   nself->mutex = ecmutex_new();
   
   {
-    EcBuffer ipbuffer = ecstr_buffer(INET6_ADDRSTRLEN);    
+    EcBuffer ipbuffer = ecbuf_create (INET6_ADDRSTRLEN);    
     // convert address information into string
     inet_ntop(AF_INET, &addr, (char*)ipbuffer->buffer, addrlen);
     
-    nself->host = ecstr_trans(&ipbuffer);
+    nself->host = ecbuf_str (&ipbuffer);
     
     eclogger_logformat(self->logger, LL_TRACE, "CORE", "{socket} connection accepted from '%s'", nself->host);
   }
@@ -444,7 +444,7 @@ int ecsocket_writeStream(EcSocket self, EcStream stream)
 int ecsocket_writeFile(EcSocket self, EcFileHandle fh)
 {
   // write raw data
-  EcBuffer buffer = ecstr_buffer(1024);
+  EcBuffer buffer = ecbuf_create (1024);
   
   uint_t res = ecfh_readBuffer(fh, buffer);
   
@@ -454,7 +454,7 @@ int ecsocket_writeFile(EcSocket self, EcFileHandle fh)
     res = ecfh_readBuffer(fh, buffer);
   }
   
-  ecstr_release(&buffer);
+  ecbuf_destroy (&buffer);
   
   return TRUE;
 }

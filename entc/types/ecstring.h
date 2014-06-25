@@ -28,16 +28,6 @@
 
 #define EcString char*
 
-struct EcBuffer_s {
-
-  unsigned char* buffer;
-
-  uint_t size;
-
-};
-
-typedef struct EcBuffer_s* EcBuffer;
-
 __CPP_EXTERN______________________________________________________________________________START
 
   /* **** basic methods **** */
@@ -121,29 +111,7 @@ __LIB_EXPORT void ecstr_toLower(EcString);
 __LIB_EXPORT void ecstr_toUpper(EcString);
 
   /* **** misc methods **** */
-  
-__LIB_EXPORT EcBuffer ecstr_buffer( uint_t size );
-  
-__LIB_EXPORT EcBuffer ecstr_bufferFilled (uint_t size, char fillupwith);
-
-__LIB_EXPORT void ecstr_bufferSetTerm (EcBuffer, uint_t size);
-
-__LIB_EXPORT void ecstr_bufferFillWith (EcBuffer, uint_t size, char fillupwith);
-
-__LIB_EXPORT void ecstr_release( EcBuffer* );
-
-__LIB_EXPORT void ecstr_random( EcBuffer, uint_t size );
-  
-__LIB_EXPORT void ecstr_format( EcBuffer, uint_t size, const char* format, ...);
-
-__LIB_EXPORT void ecstr_resize( EcBuffer, uint_t size );
-  
-__LIB_EXPORT const EcString ecstr_get( const EcBuffer );
-
-__LIB_EXPORT EcString ecstr_trans(EcBuffer*);
-
-__LIB_EXPORT void ecstr_replaceTrans(EcString*, EcBuffer*);
-  
+    
 __LIB_EXPORT void ecstr_tokenizer(EcList, const EcString source, char delimeter);
   
 __LIB_EXPORT void ecstr_tokenizer_clear(EcList);
@@ -152,8 +120,6 @@ __LIB_EXPORT EcString ecstr_tokenizer_get (EcList, EcListNode);
   
 __LIB_EXPORT int ecstr_empty(const EcString);
 
-__LIB_EXPORT EcString ecstr_localtime(time_t);
-  
 __LIB_EXPORT EcString ecstr_extractParameter(char pn, int argc, char *argv[]);
 
 __CPP_EXTERN______________________________________________________________________________END

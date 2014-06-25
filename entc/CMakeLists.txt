@@ -131,6 +131,8 @@ SET (CORE_SOURCES_TYPES
   types/ecchain.h
   types/ecstring.h
   types/ecstring.c
+  types/ecbuffer.h
+  types/ecbuffer.c
   types/ocstring.h
   types/ecstream.h
   types/ecstream.c

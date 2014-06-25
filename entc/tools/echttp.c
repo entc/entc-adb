@@ -39,8 +39,8 @@ void echttp_init (void)
 {
   if (echhtp_counter == 0)
   {
-    session_name = ecstr_buffer(_ENTC_SESSION_NAMELENGTH);  
-    ecstr_random(session_name, _ENTC_SESSION_NAMELENGTH);
+    session_name = ecbuf_create (_ENTC_SESSION_NAMELENGTH);  
+    ecbuf_random (session_name, _ENTC_SESSION_NAMELENGTH);
     
     mime_types = ecmapchar_new(); 
     
@@ -92,7 +92,7 @@ void echttp_done (void)
   if (echhtp_counter == 0) 
   {
     ecmapchar_delete(&mime_types);
-    ecstr_release(&session_name);
+    ecbuf_destroy (&session_name);
   }
 }
 
@@ -195,6 +195,7 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
   }
    */
   
+  /*
   if (isAssigned (header->auth))
   {
     void* cursor = NULL;
@@ -219,6 +220,7 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
     
     ecdevstream_appends( stream, "\r\n" );
   }
+   */
   
   // add extra stuff
   if (isAssigned (extra_params))
@@ -231,6 +233,7 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
       ecdevstream_appends( stream, ecudc_name (item));
       ecdevstream_appends( stream, ": ");
       ecdevstream_appends( stream, ecudc_asString(item));
+      ecdevstream_appends( stream, "\r\n");
     }
   }
   
@@ -589,7 +592,7 @@ void echttp_header_title (EcHttpHeader* header)
   
   {
     EcBuffer buffer = ecstream_trans (&stream);
-    header->title = ecstr_trans(&buffer);
+    header->title = ecbuf_str (&buffer);
   }
 }
 //---------------------------------------------------------------------------------------
@@ -629,11 +632,11 @@ void echttp_header_validate (EcHttpHeader* header)
   // automatic create a sessionid
   if (ecstr_empty (header->sessionid))
   {
-    EcBuffer buffer = ecstr_buffer (_ENTC_SESSION_NAMELENGTH);
+    EcBuffer buffer = ecbuf_create (_ENTC_SESSION_NAMELENGTH);
     // create a new sessionid
-    ecstr_random(buffer, _ENTC_SESSION_NAMELENGTH);
+    ecbuf_random (buffer, _ENTC_SESSION_NAMELENGTH);
     // transfer ownership to string
-    header->sessionid = ecstr_trans(&buffer);
+    header->sessionid = ecbuf_str (&buffer);
   }
 }
 
@@ -648,16 +651,16 @@ void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
     EcUdc item = ecudc_create(1, "timestamp");
     
     EcDate date;
-    EcBuffer buffer = ecstr_buffer(200);
+    EcBuffer buffer = ecbuf_create (200);
     
     ectime_getDate (&date);
     
-    ecstr_format (buffer, 200, "%04u-%02u-%02u %02u:%02u:%02u", date.year, date.month, date.day, date.hour, date.minute, date.sec);
+    ecbuf_format (buffer, 200, "%04u-%02u-%02u %02u:%02u:%02u", date.year, date.month, date.day, date.hour, date.minute, date.sec);
     
-    ecudc_setS(item, ecstr_get(buffer));
-    ecudc_add(udc, &item);
+    ecudc_setS (item, ecbuf_const_str (buffer));
+    ecudc_add (udc, &item);
     
-    ecstr_release(&buffer);
+    ecbuf_destroy (&buffer);
   }
   {
     EcUdc item = ecudc_create(1, "request-url");
@@ -752,10 +755,8 @@ void echttp_request_destroy (EcHttpRequest* pself)
 
 EcUdc echttp_parse_auth (const EcString source)
 {
-  EcList list = eclist_new();
-  EcListNode node;
   EcString auth_type;
-  EcUdc auth;
+  EcUdc auth = ecudc_create (ENTC_UDC_NODE, "auth");
   
   const EcString next_space = ecstr_pos (source, ' ');
   if (!ecstr_valid (next_space))
@@ -763,35 +764,13 @@ EcUdc echttp_parse_auth (const EcString source)
     return NULL;
   }
   
-  auth_type = ecstr_part(source, next_space - source);
-  
-  auth = ecudc_create(ENTC_UDC_NODE, auth_type);
-  
-  ecstr_delete(&auth_type);
+  auth_type = ecstr_part (source, next_space - source);
 
-  ecstr_tokenizer(list, next_space + 1, ',');
+  ecudc_add_asString(auth, "type", auth_type);
+
+  ecudc_add_asString(auth, "content", next_space + 1);
   
-  for(node = eclist_first(list); node != eclist_end(list); node = eclist_next(node))
-  {
-    EcString key = ecstr_init ();
-    EcString val = ecstr_init ();
-    // check key="val"
-    
-    if (ecstr_split (eclist_data(node), &key, &val, '='))
-    {
-      EcString keyok = ecstr_trim (key);
-      EcString valok = ecstr_wrappedl (val, '"');
-      
-      if (ecstr_valid(keyok)&&ecstr_valid(valok))
-      {
-        ecudc_add_asString(auth, keyok, valok);
-      }
-      ecstr_delete(&keyok);
-      ecstr_delete(&valok);
-    }    
-    ecstr_delete(&key);
-    ecstr_delete(&val);
-  }
+  ecstr_delete (&auth_type);
   
   return auth;
 }
@@ -804,7 +783,7 @@ void echttp_parse_cookies_next (EcHttpHeader* header, const EcString cookie)
   //eclogger_logformat(self->logger, LOGMSG_INFO, "FCGI", "COOKIE '%s'", cookie );
   
   /* search for the quom4 session keyword */
-  res = strstr(cookie, ecstr_get(session_name));
+  res = strstr (cookie, ecbuf_const_str (session_name));
   if(res)
   {
     // split into session part and language part
@@ -860,20 +839,18 @@ int echttp_parse_content (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger 
     // parse the first line received
     ulong_t counter;
     
-    EcBuffer sbuffer = ecstr_buffer(header->content_length + 1);
+    EcBuffer sbuffer = ecbuf_create (header->content_length + 1);
     
     for (counter = 0; counter < header->content_length; counter++)
     {
       if (!ecstreambuffer_next(buffer, &error))
       {
-        ecstr_release(&sbuffer);
+        ecbuf_destroy (&sbuffer);
         return FALSE;
       }
       sbuffer->buffer[counter] = ecstreambuffer_get(buffer);
-    }
-    
-    header->payload = ecstr_trans(&sbuffer);
-    printf("payload: %s\n", header->payload);
+    }    
+    header->payload = ecbuf_str (&sbuffer);
   }
   return TRUE;
 }

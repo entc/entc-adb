@@ -33,6 +33,7 @@
 
 
 #include "../types/ecstring.h"
+#include "../types/ecbuffer.h"
 
 #ifdef _WIN32
 

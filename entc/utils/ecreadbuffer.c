@@ -44,7 +44,7 @@ EcReadBuffer ecreadbuffer_new( EcFileHandle fhandle, int lclose )
   EcReadBuffer self = ENTC_NEW(struct EcReadBuffer_s);
   
   self->fhandle = fhandle;
-  self->buffer = ecstr_buffer(1024);
+  self->buffer = ecbuf_create (1024);
   self->max = 0;
   self->pos = 0;
   self->close = lclose;
@@ -64,7 +64,7 @@ void ecreadbuffer_delete( EcReadBuffer* pself )
   }
   
   self->fhandle = 0;
-  ecstr_release(&(self->buffer));
+  ecbuf_destroy (&(self->buffer));
 
   ENTC_DEL(pself, struct EcReadBuffer_s);
 }
@@ -109,7 +109,7 @@ uint_t ecreadbuffer_get( EcReadBuffer self, uint_t size )
     while (diff < size )
     {
 	  uint_t res;
-	  struct EcBuffer_s diffbuffer;
+	  EcBuffer_s diffbuffer;
 
 	  if (self->buffer->buffer != self->pos)
 	  {

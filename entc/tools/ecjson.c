@@ -442,14 +442,14 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       break;
     case ENTC_UDC_REF:
     {
-      EcBuffer buffer = ecstr_buffer (64);
-      ecstr_format(buffer, 64, "%p", ecudc_asP (node)); 
+      EcBuffer buffer = ecbuf_create (64);
+      ecbuf_format (buffer, 64, "%p", ecudc_asP (node)); 
       
       ecstream_appendc (stream, '"');
-      ecstream_append (stream, ecstr_get (buffer));
+      ecstream_append (stream, ecbuf_const_str (buffer));
       ecstream_appendc (stream, '"');
       
-      ecstr_release (&buffer);
+      ecbuf_destroy (&buffer);
     }
       break;
     case ENTC_UDC_STRING:
@@ -484,7 +484,7 @@ EcString ecjson_write (const EcUdc source)
   
   buffer = ecstream_trans (&stream);
   
-  return ecstr_trans (&buffer);  
+  return ecbuf_str (&buffer);  
 }
 
 //-----------------------------------------------------------------------------------------------------------

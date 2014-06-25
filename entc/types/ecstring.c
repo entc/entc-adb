@@ -19,6 +19,8 @@
 
 #include "ecstring.h"
 
+#include "ecbuffer.h"
+
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -30,66 +32,6 @@
 EcString ecstr_init()
 {
   return 0;  
-}
-
-/*------------------------------------------------------------------------*/
-
-EcBuffer ecstr_buffer( uint_t size )
-{
-  return ecstr_bufferFilled (size, 0x00);
-}
-
-/*------------------------------------------------------------------------*/
-
-EcBuffer ecstr_bufferFilled (uint_t size, char fillupwith)
-{
-  EcBuffer self = ENTC_NEW(struct EcBuffer_s);
-  
-  self->buffer =  (unsigned char*)ENTC_MALLOC( (1 + size) * sizeof(unsigned char) );
-  self->size = size;
-  
-  memset(self->buffer, fillupwith, size);
-  
-  ecstr_bufferSetTerm (self, size);
-  
-  return self;  
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_bufferSetTerm (EcBuffer self, uint_t size)
-{
-  if (size <= self->size)
-  {
-    // set c-string termination
-    self->buffer[size] = 0;
-  }
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_bufferFillWith (EcBuffer self, uint_t size, char fillupwith)
-{
-  uint_t fillup = size < self->size ? size : self->size;
-  
-  memset(self->buffer, fillupwith, fillup);
-
-  ecstr_bufferSetTerm (self, fillup);  
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_resize( EcBuffer self, uint_t size )
-{
-  self->buffer = (unsigned char*) realloc (self->buffer, size);
-  self->size = size;
-}
-
-/*------------------------------------------------------------------------*/
-
-const EcString ecstr_get( const EcBuffer self )
-{
-  return (const EcString)self->buffer;
 }
 
 /*------------------------------------------------------------------------*/
@@ -154,42 +96,42 @@ EcString ecstr_part( const EcString source, uint_t length )
   return ret;  
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-EcString ecstr_long( uint_t value )
+EcString ecstr_long (uint_t value)
 {
   /* create buffer with size 12 */
-  EcBuffer buffer = ecstr_buffer(12);
+  EcBuffer buffer = ecbuf_create (12);
   /* transform unsigned value into string */  
-  ecstr_format(buffer, 11, "%lu", value );
+  ecbuf_format (buffer, 11, "%lu", value );
   /* transform buffer into string */
-  return ecstr_trans(&buffer);
+  return ecbuf_str (&buffer);
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
 EcString ecstr_float (double value, uint_t n)
 {
   EcString s = ecstr_init ();
   if( n > 0 )
   {
-	  EcBuffer buffer01 = ecstr_buffer(7);
-	  EcBuffer buffer02 = ecstr_buffer(31);
+	  EcBuffer buffer01 = ecbuf_create (7);
+	  EcBuffer buffer02 = ecbuf_create (31);
     
-    ecstr_format(buffer01, 6, "%%.%uf", n);
+    ecbuf_format (buffer01, 6, "%%.%uf", n);
     /* transform to integer */
-    ecstr_format(buffer02, 30, ecstr_get(buffer01), value );
+    ecbuf_format (buffer02, 30, ecbuf_const_str (buffer01), value );
     /* copy */
-	  ecstr_replaceTrans(&s, &buffer02);
-	  ecstr_release(&buffer01);
+    s = ecbuf_str (&buffer02);
+	  ecbuf_destroy (&buffer01);
   }
   else
   {
-	  EcBuffer buffer02 = ecstr_buffer(31);
+	  EcBuffer buffer02 = ecbuf_create (31);
     /* transform to integer */
-    ecstr_format(buffer02, 30, "%f", value );
+    ecbuf_format (buffer02, 30, "%f", value);
     /* copy */
-	  ecstr_replaceTrans(&s, &buffer02);
+	  s = ecbuf_str (&buffer02);
   }
   return s;
 }
@@ -208,19 +150,6 @@ void ecstr_delete( EcString* ptr )
     ENTC_FREE(self);
   }
   *ptr = NULL;
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_release( EcBuffer* ptr )
-{
-  EcBuffer self = *ptr;
-  /* clear the whole string */
-  memset(self->buffer, 0x00, self->size);
-  /* clear memory */  
-  ENTC_FREE(self->buffer);
-  
-  ENTC_DEL(ptr, struct EcBuffer_s);
 }
 
 /*------------------------------------------------------------------------*/
@@ -667,35 +596,6 @@ void ecstr_toUpper(EcString self)
 
 /*------------------------------------------------------------------------*/
 
-void ecstr_random( EcBuffer buffer, uint_t size )
-{
-  uint_t i;
-  
-  for(i = 0; (i < size) && (i < buffer->size); i++)
-  {
-    (buffer->buffer)[i] = (rand() % 26) + 97;
-  }
-  (buffer->buffer)[i] = 0;  
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_format( EcBuffer buffer, uint_t size, const char* format, ...)
-{
-  va_list ptr;  
-  va_start(ptr, format);
-#ifdef _WIN32
-  vsnprintf_s( (char*)buffer->buffer, buffer->size, size, format, ptr );
-#elif __DOS__
-  vsprintf((char*)buffer->buffer, format, ptr);
-#else
-  vsnprintf((char*)buffer->buffer, buffer->size, format, ptr );
-#endif
-  va_end(ptr);  
-}
-
-/*------------------------------------------------------------------------*/
-
 const EcString ecstr_pos (const EcString source, char c)
 {
   return strchr (source, c);
@@ -883,45 +783,6 @@ int ecstr_empty(const EcString self)
 
 /*------------------------------------------------------------------------*/
 
-EcString ecstr_trans(EcBuffer* ptr)
-{
-  EcBuffer self = *ptr;
-  // transform buffer content into string
-  EcString ret = (char*)self->buffer;
-  // delete buffer struct
-  ENTC_DEL(ptr, struct EcBuffer_s);
-  // return string
-  return ret;
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_replaceTrans(EcString* string, EcBuffer* buffer)
-{
-  ecstr_delete(string);
-  *string = ecstr_trans(buffer);
-}
-
-/*------------------------------------------------------------------------*/
-
-EcString ecstr_localtime(time_t time)
-{
-  static const char* month_matrix[12] = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
-  /* variables */
-  EcBuffer buffer = ecstr_buffer(30);
-#ifdef _WIN32
-  struct tm l01;
-  localtime_s(&l01, &time);
-  ecstr_format(buffer, 28, "%02u-%s-%04u %02u:%02u:%02u", l01.tm_mday, month_matrix[l01.tm_mon], (l01.tm_year + 1900), l01.tm_hour, l01.tm_min, l01.tm_sec);
-#else
-  struct tm* l01 = localtime( &time );
-  ecstr_format(buffer, 28, "%02u-%s-%04u %02u:%02u:%02u", l01->tm_mday, month_matrix[l01->tm_mon], (l01->tm_year + 1900), l01->tm_hour, l01->tm_min, l01->tm_sec);
-#endif
-  return ecstr_trans(&buffer);
-}
-
-/*------------------------------------------------------------------------*/
-
 EcString ecstr_extractParameter(char pn, int argc, char *argv[])
 {
   int i;
@@ -950,17 +811,17 @@ EcString ecstr_extractParameter(char pn, int argc, char *argv[])
 EcString ecstr_toVersion( uint_t version )
 {
   uint_t size;
-  EcBuffer buffer01 = ecstr_buffer(11);
+  EcBuffer buffer01 = ecbuf_create (11);
   EcBuffer buffer02;
   
   unsigned char* pos01;
   unsigned char* pos02;
   
-  ecstr_format(buffer01, 10, "%05lu", version);
+  ecbuf_format (buffer01, 10, "%05lu", version);
   
   size = strlen((char*)buffer01->buffer);
   
-  buffer02 = ecstr_buffer(size + 3);
+  buffer02 = ecbuf_create (size + 3);
   
   pos01 = buffer01->buffer;
   pos02 = buffer02->buffer;
@@ -983,9 +844,9 @@ EcString ecstr_toVersion( uint_t version )
   
   *pos02 = 0;
   
-  ecstr_release(&buffer01);
+  ecbuf_destroy (&buffer01);
     
-  return ecstr_trans(&buffer02);
+  return ecbuf_str (&buffer02);
 }
 
 /*------------------------------------------------------------------------*/

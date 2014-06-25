@@ -124,8 +124,8 @@ EcLogger eclogger_new (ubyte_t threadid)
 
   ecechologger_getCallback(echo, &(self->callbacks));  
     
-  self->buffer01 = ecstr_buffer(1024);
-  self->buffer02 = ecstr_buffer(1024);
+  self->buffer01 = ecbuf_create (1024);
+  self->buffer02 = ecbuf_create (1024);
 
   return self;
 }
@@ -141,8 +141,8 @@ void eclogger_del (EcLogger* pself)
   eclist_delete(&(self->errmsgs));
   eclist_delete(&(self->sccmsgs));
 
-  ecstr_release(&(self->buffer01));
-  ecstr_release(&(self->buffer02));
+  ecbuf_destroy (&(self->buffer01));
+  ecbuf_destroy (&(self->buffer02));
 
   toggleEchoLogger (FALSE);
   
@@ -237,7 +237,7 @@ void eclogger_logformat (EcLogger self, EcLogLevel level, const char* module, co
 #else
   vsnprintf((char*)self->buffer01->buffer, self->buffer01->size, format, ptr );
 #endif
-  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_logthsafe (self, level, (const EcString)module, ecbuf_const_str (self->buffer01));
   
   va_end(ptr);
   
@@ -268,24 +268,24 @@ void eclogger_logerr (EcLogger self, EcLogLevel level, const char* module, int e
     DWORD res = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error, 0, (LPSTR)&pBuffer, 0, NULL);    
     if(res != 0)
     {
-	  ecstr_format(self->buffer01, self->buffer01->size, "%s : '%s'", ecstr_get(self->buffer02), pBuffer);
+	    ecbuf_format (self->buffer01, self->buffer01->size, "%s : '%s'", ecbuf_const_str (self->buffer02), pBuffer);
     }
     else
     {
-      ecstr_format(self->buffer01, self->buffer01->size, "%s : [error fetching error message]", ecstr_get(self->buffer02));
+      ecbuf_format (self->buffer01, self->buffer01->size, "%s : [error fetching error message]", ecbuf_const_str (self->buffer02));
     }
     
     LocalFree(pBuffer);
   }
 #elif __DOS__
   vsprintf((char*)self->buffer02->buffer, format, ptr);
-  ecstr_format(self->buffer01, 300, "%s : 'system error'", ecstr_get(self->buffer02));
+  ecbuf_format (self->buffer01, 300, "%s : 'system error'", ecbuf_const_str (self->buffer02));
 #else  
   vsnprintf((char*)self->buffer02->buffer, self->buffer02->size, format, ptr );
-  ecstr_format(self->buffer01, 300, "%s : '%s'", ecstr_get(self->buffer02), strerror(error));
+  ecbuf_format (self->buffer01, 300, "%s : '%s'", ecbuf_const_str (self->buffer02), strerror(error));
 #endif
   
-  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_logthsafe (self, level, (const EcString)module, ecbuf_const_str (self->buffer01));
   
   va_end(ptr); 
   
@@ -329,10 +329,10 @@ void eclogger_logerrno (EcLogger self, EcLogLevel level, const char* module, con
   
 #else  
   vsnprintf((char*)self->buffer02->buffer, self->buffer02->size, format, ptr );
-  ecstr_format(self->buffer01, 300, "%s : '%s'", ecstr_get(self->buffer02), strerror(errno));
+  ecbuf_format (self->buffer01, 300, "%s : '%s'", ecbuf_const_str (self->buffer02), strerror(errno));
 #endif
 
-  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_logthsafe (self, level, (const EcString)module, ecbuf_const_str (self->buffer01));
 
   va_end(ptr);
 
@@ -400,7 +400,7 @@ void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, co
   /* terminate */
   *pos02 = 0;
   
-  eclogger_logthsafe (self, level, (const EcString)module, ecstr_get(self->buffer01));
+  eclogger_logthsafe (self, level, (const EcString)module, ecbuf_const_str (self->buffer01));
 
   ecmutex_unlock (self->mutex);  
 }
@@ -546,8 +546,8 @@ EcEchoLogger ecechologger_new ()
   EcEchoLogger self = ENTC_NEW (struct EcEchoLogger_s);
   
   self->mutex = ecmutex_new ();
-  self->buffer01 = ecstr_buffer(14);
-  self->buffer02 = ecstr_buffer(201);
+  self->buffer01 = ecbuf_create (14);
+  self->buffer02 = ecbuf_create (201);
 
 #if defined _WIN64 || defined _WIN32
   self->hConsole = GetStdHandle (STD_OUTPUT_HANDLE);
@@ -563,9 +563,9 @@ void ecechologger_del (EcEchoLogger* pself)
 {
   EcEchoLogger self = *pself;
   
-  ecstr_release(&(self->buffer01));
-  ecstr_release(&(self->buffer02));
-  ecmutex_delete(&(self->mutex));
+  ecbuf_destroy (&(self->buffer01));
+  ecbuf_destroy (&(self->buffer02));
+  ecmutex_delete (&(self->mutex));
   
   ENTC_DEL (pself, struct EcEchoLogger_s);    
 }
@@ -584,10 +584,10 @@ void ecechologger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   // ***** monitor start *****************************************************
   ecmutex_lock (self->mutex);
 
-  ecstr_format (self->buffer02, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
+  ecbuf_format (self->buffer02, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
   
   // prepare the message
-  ecstr_format (self->buffer01, 11, "%s %4s ", msg_matrix[level], module );
+  ecbuf_format (self->buffer01, 11, "%s %4s ", msg_matrix[level], module );
   
 #if defined _WIN64 || defined _WIN32 
   SetConsoleTextAttribute(self->hConsole, self->pInfo.wAttributes);
@@ -634,8 +634,8 @@ EcFileLogger ecfilelogger_new (const EcString filename)
   EcFileLogger self = ENTC_NEW (struct EcFileLogger_s);
   
   self->mutex = ecmutex_new ();
-  self->buffer01 = ecstr_buffer(201);
-  self->buffer02 = ecstr_buffer(17);  
+  self->buffer01 = ecbuf_create (201);
+  self->buffer02 = ecbuf_create (17);  
   
   self->filename = ecstr_copy(filename);
   self->fhandle = NULL;
@@ -657,8 +657,8 @@ void ecfilelogger_del (EcFileLogger* pself)
   ecstr_delete(&(self->filename));
   
   ecmutex_delete(&(self->mutex));
-  ecstr_release(&(self->buffer01));
-  ecstr_release(&(self->buffer02));
+  ecbuf_destroy (&(self->buffer01));
+  ecbuf_destroy (&(self->buffer02));
   
   ENTC_DEL (pself, struct EcFileLogger_s);  
 }
@@ -688,10 +688,10 @@ void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   // ***** monitor start *****************************************************
   ecmutex_lock (self->mutex);
   
-  ecstr_format (self->buffer01, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
+  ecbuf_format (self->buffer01, 200, "%04u-%s-%02u %02u:%02u:%02u.%03u", date.year, month_matrix[date.month], date.day, date.hour, date.minute, date.sec, date.msec);
   
   // prepare the message
-  ecstr_format (self->buffer02, 16, " %02i %s %4s ", id, msg_matrix[level], module );
+  ecbuf_format (self->buffer02, 16, " %02i %s %4s ", id, msg_matrix[level], module );
 
   ecfh_writeBuffer (self->fhandle, self->buffer01, 200);
   ecfh_writeBuffer (self->fhandle, self->buffer02, 16);

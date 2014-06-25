@@ -181,23 +181,23 @@ void adbl_constructListWithTable_Column(EcStream statement, AdblQueryColumn* qc,
   {
     uint_t abs_orderno = abs(qc->orderno);
     
-    EcBuffer buffer = ecstr_buffer(11);
+    EcBuffer buffer = ecbuf_create (11);
    
     ecstream_append( statement, " AS ");
     
-    ecstr_format(buffer, 10, "C%u", abs_orderno );      
+    ecbuf_format (buffer, 10, "C%u", abs_orderno );      
 
-    ecstream_append (statement, ecstr_get(buffer));
+    ecstream_append (statement, ecbuf_const_str (buffer));
     
     if( qc->orderno > 0 )
     {
-      ecintmap_append(orders, abs_orderno, ecstr_cat2 (ecstr_get(buffer), " ASC"));
+      ecintmap_append(orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " ASC"));
     }
     else
     {
-      ecintmap_append(orders, abs_orderno, ecstr_cat2 (ecstr_get(buffer), " DESC"));
+      ecintmap_append(orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " DESC"));
     }
-    ecstr_release(&buffer);
+    ecbuf_destroy (&buffer);
   }
 }
 

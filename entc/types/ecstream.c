@@ -36,7 +36,7 @@ EcStream ecstream_new(void)
 {
   EcStream self = ENTC_NEW(struct EcStream_s);
 
-  self->buffer = ecstr_buffer( 1000 );
+  self->buffer = ecbuf_create (1000);
   self->pos = self->buffer->buffer;
   
   return self;
@@ -57,7 +57,7 @@ void ecstream_delete(EcStream* pself)
   
   ecstream_flush(self);
   
-  ecstr_release(&(self->buffer));
+  ecbuf_destroy (&(self->buffer));
   
   ENTC_DEL(pself, struct EcStream_s);
 }
@@ -96,7 +96,7 @@ const EcString ecstream_buffer( EcStream self )
 
 /*------------------------------------------------------------------------*/
 
-void _ecstream_check(EcStream self, uint_t size)
+void _ecstream_check (EcStream self, uint_t size)
 {
   uint_t filled = 0;
   // already filled bytes
@@ -112,7 +112,7 @@ void _ecstream_check(EcStream self, uint_t size)
       new_size = size + self->buffer->size;
     }
     
-    ecstr_resize(self->buffer, new_size);  
+    ecbuf_resize (self->buffer, new_size);  
     // set new position in possible new buffer
     self->pos = self->buffer->buffer + filled;      
   }
@@ -204,7 +204,7 @@ EcDevStream ecdevstream_new (uint_t size, stream_callback_fct fct, void* ptr)
 {
   EcDevStream self = ENTC_NEW(struct EcDevStream_s);
   
-  self->buffer = ecstr_buffer( size );
+  self->buffer = ecbuf_create (size);
   self->pos = self->buffer->buffer;
   
   self->fct = fct;
@@ -221,7 +221,7 @@ void ecdevstream_delete (EcDevStream* pself)
   
   ecdevstream_flush(self);
   
-  ecstr_release(&(self->buffer));
+  ecbuf_destroy (&(self->buffer));
   
   ENTC_DEL(pself, struct EcDevStream_s);  
 }
@@ -306,7 +306,7 @@ void ecdevstream_appendfile (EcDevStream self, const EcString filename)
 {
   EcFileHandle fh = ecfh_open(filename, O_RDONLY);
   if (fh) {
-    EcBuffer buffer = ecstr_buffer(1024);
+    EcBuffer buffer = ecbuf_create (1024);
 
     uint_t res = ecfh_readBuffer(fh, buffer);
     while (res > 0)
@@ -317,7 +317,7 @@ void ecdevstream_appendfile (EcDevStream self, const EcString filename)
     
     ecfh_close(&fh);
     
-    ecstr_release(&buffer);    
+    ecbuf_destroy (&buffer);    
   } else {
     ecdevstream_appends (self, "fle read error");
   }

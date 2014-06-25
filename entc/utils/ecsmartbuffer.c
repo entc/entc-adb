@@ -50,7 +50,7 @@ EcSmartbuffer ecsmartbuffer_new(uint_t max)
   EcSmartbuffer self = ENTC_NEW( struct EcSmartbuffer_s );
   
   self->fhandle = 0;
-  self->buffer = ecstr_buffer(max);
+  self->buffer = ecbuf_create (max);
   self->bend = self->buffer->buffer + max;
   self->bpos = self->buffer->buffer;
   self->bmax = max;
@@ -76,7 +76,7 @@ void ecsmartbuffer_delete(EcSmartbuffer self)
 	self->fhandle = 0;
   }
 
-  ecstr_release(&(self->buffer));
+  ecbuf_destroy (&(self->buffer));
   
   free(self);
 }
@@ -189,7 +189,7 @@ char* ecsmartbuffer_data(EcSmartbuffer self, uint_t n)
 
 EcString ecsmartbuffer_copy(EcSmartbuffer self)
 {
-  return ecstr_copy(ecstr_get(self->buffer));
+  return ecstr_copy (ecbuf_const_str (self->buffer));
 }
 
 /*------------------------------------------------------------------------*/

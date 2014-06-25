@@ -758,8 +758,11 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
   AdblSession dbsession;
 
   int ret = FALSE;
-  
+
   const EcString dbtable = ecudc_get_asString(node, ".dbtable", NULL);
+  
+  eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{delete} execute");
+  
   if (isNotAssigned (dbtable))
   {
     eclogger_log (context->logger, LL_ERROR, "ADBO", "{fetch} .dbtable not defined");
@@ -783,6 +786,8 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
   {
     AdblConstraint* constraint = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
     
+    eclogger_logformat (context->logger, LL_TRACE, "ADBO", "{delete} prepare constraints");
+
     if (adbo_node_primary (node, filter, context, constraint))
     {
       AdblSecurity adblsec;      
