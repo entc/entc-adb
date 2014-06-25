@@ -258,8 +258,7 @@ EcBuffer ecbuf_decode_base64 (EcBuffer self)
   *(bufout++) = '\0';
   nbytesdecoded -= (4 - nprbytes) & 3;
   
-  
-  realloc (ret->buffer, nbytesdecoded);
+  ret->buffer = realloc (ret->buffer, nbytesdecoded);
   
   ret->size = nbytesdecoded;
     
@@ -318,7 +317,7 @@ EcBuffer ecbuf_encode_base64 (EcBuffer self)
     
   ret->size = p - b;
 
-  realloc (b, ret->size);
+  b = realloc (b, ret->size);
 
   ret->buffer = b;   
 
