@@ -22,6 +22,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "md5.h"
+
 //----------------------------------------------------------------------------------------
 
 EcBuffer ecbuf_create (uint_t size)
@@ -326,14 +328,6 @@ EcBuffer ecbuf_encode_base64 (EcBuffer self)
 
 //----------------------------------------------------------------------------------------
 
-#if defined(__APPLE__)
-#  define COMMON_DIGEST_FOR_OPENSSL
-#  include <CommonCrypto/CommonDigest.h>
-#  define SHA1 CC_SHA1
-#else
-#  include <openssl/md5.h>
-#endif
-
 EcBuffer ecbuf_md5 (EcBuffer self)
 {
   EcBuffer ret = ENTC_NEW (EcBuffer_s);
@@ -342,23 +336,23 @@ EcBuffer ecbuf_md5 (EcBuffer self)
   int l = self->size;
   unsigned char* str = self->buffer;
 
-  MD5_CTX c;
+  md5_state_t state;
   unsigned char digest[16];
   char *out = (char*)malloc(33);
     
-  MD5_Init(&c);
+  md5_init(&state);
   
   while (l > 0) {
     if (l > 512) {
-      MD5_Update(&c, str, 512);
+      md5_append(&state, str, 512);
     } else {
-      MD5_Update(&c, str, l);
+      md5_append(&state, str, l);
     }
     l -= 512;
     str += 512;
   }
   
-  MD5_Final(digest, &c);
+  md5_finish(&state, digest);
   
   for (n = 0; n < 16; ++n)
   {

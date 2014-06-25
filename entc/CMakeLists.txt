@@ -138,6 +138,8 @@ SET (CORE_SOURCES_TYPES
   types/ecstream.c
   types/ecudc.h
   types/ecudc.c
+  
+  types/md5.c
 )
 
 SET (CORE_SOURCES_UTILS
