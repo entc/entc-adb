@@ -923,10 +923,10 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
     const char* line = ecstream_buffer(streambuffer);
     if(!ecstr_empty(line))
     {
-      eclogger_logformat(logger, LL_TRACE, "SERV", "{first line} '%s'", line);
-
       const EcString after_method;
       const EcString afetr_url;
+
+      eclogger_logformat(logger, LL_TRACE, "SERV", "{first line} '%s'", line);
       // find method
       after_method = ecstr_pos (line, ' ');
       if (ecstr_empty (after_method))

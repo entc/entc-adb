@@ -393,7 +393,7 @@ int ecsocket_write(EcSocket self, const void* buffer, int nbyte)
 int ecsocket_writeFile(EcSocket self, EcFileHandle fh)
 {
   // write raw data
-  EcBuffer buffer = ecstr_buffer(1024);
+  EcBuffer buffer = ecbuf_create (1024);
   
   uint_t res = ecfh_readBuffer(fh, buffer);
   

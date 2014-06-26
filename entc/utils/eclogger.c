@@ -316,11 +316,11 @@ void eclogger_logerrno (EcLogger self, EcLogLevel level, const char* module, con
     DWORD res = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, GetLastError(), 0, (LPSTR)&pBuffer, 0, NULL);    
     if(res != 0)
 	{
-      ecstr_format(self->buffer01, self->buffer01->size, "%s : '%s'", ecstr_get(self->buffer02), pBuffer);
+      ecbuf_format(self->buffer01, self->buffer01->size, "%s : '%s'", ecbuf_const_str (self->buffer02), pBuffer);
 	}
 	else
 	{
-      ecstr_format(self->buffer01, self->buffer01->size, "%s : [error fetching error message]", ecstr_get(self->buffer02));
+      ecbuf_format(self->buffer01, self->buffer01->size, "%s : [error fetching error message]", ecbuf_const_str (self->buffer02));
 	}
 
     LocalFree(pBuffer);
