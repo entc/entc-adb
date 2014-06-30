@@ -319,10 +319,7 @@ EcBuffer ecbuf_encode_base64 (EcBuffer self)
   ret = ENTC_NEW (EcBuffer_s);
     
   ret->size = p - b;
-
-  b = realloc (b, ret->size);
-
-  ret->buffer = b;   
+  ret->buffer = (unsigned char*)realloc (b, ret->size);
 
   return ret;    
 }
@@ -358,7 +355,7 @@ EcBuffer ecbuf_md5 (EcBuffer self)
   for (n = 0; n < 16; ++n)
   {
 #ifdef _WIN32
-    _snprintf_s (&(out[n*2]), 16*2, 16*2, "%02x", (unsigned int)digest[n]);
+    _snprintf (&(out[n*2]), 16*2, "%02x", (unsigned int)digest[n]);
 #else
     snprintf (&(out[n*2]), 16*2, "%02x", (unsigned int)digest[n]);
 #endif
