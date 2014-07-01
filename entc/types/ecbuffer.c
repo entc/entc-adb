@@ -170,6 +170,52 @@ void ecbuf_replace (EcString* s, EcBuffer* pself)
 
 //----------------------------------------------------------------------------------------
 
+#ifdef _WIN32
+
+#include <windows.h>
+#include <wincrypt.h>
+#pragma comment (lib, "Crypt32.lib")
+
+EcBuffer ecbuf_encode_base64 (EcBuffer self)
+{
+  EcBuffer ret = ENTC_NEW (EcBuffer_s);
+
+  // calculate the size of the buffer
+  CryptBinaryToString (self->buffer, self->size, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &(ret->size));
+
+  // allocate the buffer
+  ret->buffer = (unsigned char*)ENTC_MALLOC (ret->size + 1);
+
+  // encrypt
+  CryptBinaryToString (self->buffer, self->size, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, ret->buffer, &(ret->size));
+  ret->buffer [ret->size] = 0; 
+
+  return ret;
+}  
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_decode_base64 (EcBuffer self)
+{
+  EcBuffer ret = ENTC_NEW (EcBuffer_s);
+
+  // calculate the size of the buffer
+  CryptStringToBinary (self->buffer, 0, CRYPT_STRING_BASE64, NULL, &(ret->size), NULL, NULL); 
+
+  // allocate the buffer
+  ret->buffer = (unsigned char*)ENTC_MALLOC (ret->size + 1);
+
+  // decrypt
+  CryptStringToBinary (self->buffer, 0, CRYPT_STRING_BASE64, ret->buffer, &(ret->size), NULL, NULL);
+  ret->buffer [ret->size] = 0; 
+
+  return ret; 
+}
+
+#else
+
+//----------------------------------------------------------------------------------------
+
 static const unsigned char pr2six[256] =
 {
   /* ASCII table */
@@ -261,9 +307,10 @@ EcBuffer ecbuf_decode_base64 (EcBuffer self)
   *(bufout++) = '\0';
   nbytesdecoded -= (4 - nprbytes) & 3;
   
-  ret->buffer = realloc (ret->buffer, nbytesdecoded);
+  ret->buffer = realloc (ret->buffer, nbytesdecoded + 1);
+  ret->buffer [nbytesdecoded] = 0;
   
-  ret->size = nbytesdecoded;
+  ret->size = nbytesdecoded + 1;
     
   return ret;    
 }
@@ -323,6 +370,10 @@ EcBuffer ecbuf_encode_base64 (EcBuffer self)
 
   return ret;    
 }
+
+//----------------------------------------------------------------------------------------
+
+#endif
 
 //----------------------------------------------------------------------------------------
 
