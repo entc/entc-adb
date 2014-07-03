@@ -723,7 +723,17 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   }
 
   // values can be empty
-  values = ecudc_node(node, dbtable);  
+  values = ecudc_node(node, dbtable); 
+  if (isNotAssigned (values))
+  {
+    if (!adbo_node_fetch (node, data, context))
+    {
+      eclogger_logformat (context->logger, LL_WARN, "ADBO", "{update} try to fill empty values but failed for '%s'", dbtable);
+      return FALSE; 
+    }
+    // try again
+    values = ecudc_node(node, dbtable); 
+  } 
   
   if (withTransaction)
   {
