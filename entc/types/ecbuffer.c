@@ -379,15 +379,14 @@ EcBuffer ecbuf_encode_base64 (EcBuffer self)
 
 EcBuffer ecbuf_md5 (EcBuffer self)
 {
-  EcBuffer ret = ENTC_NEW (EcBuffer_s);
+  EcBuffer ret = ecbuf_create (33);
 
   int n;
   int l = self->size;
-  unsigned char* str = self->buffer;
+  const unsigned char* str = self->buffer;
 
   md5_state_t state;
   unsigned char digest[16];
-  char *out = (char*)malloc(33);
     
   md5_init(&state);
   
@@ -406,14 +405,11 @@ EcBuffer ecbuf_md5 (EcBuffer self)
   for (n = 0; n < 16; ++n)
   {
 #ifdef _WIN32
-    _snprintf (&(out[n*2]), 16*2, "%02x", (unsigned int)digest[n]);
+    _snprintf_s (&((self->buffer)[n*2]), self->size, _TRUNCATE, "%02x", (unsigned int)digest[n]);
 #else
     snprintf (&(out[n*2]), 16*2, "%02x", (unsigned int)digest[n]);
 #endif
   }  
-  
-  ret->size = 33;
-  ret->buffer = (unsigned char*)out;
   
   return ret;    
 }
