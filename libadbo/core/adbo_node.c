@@ -811,9 +811,22 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
       
       adbl_delete_delete(&delete);
     }
+    else if (adbo_node_foreign (node, filter, context, constraint))
+    {
+      AdblSecurity adblsec;      
+      AdblDelete* delete = adbl_delete_new ();
+      
+      adbl_delete_setConstraint (delete, constraint);
+      
+      adbl_delete_setTable (delete, dbtable);
+      // execute in extra method to avoid memory leaks in query and dbsession
+      ret = adbl_dbdelete (dbsession, delete, &adblsec);
+      
+      adbl_delete_delete(&delete);      
+    }
     else
     {
-      eclogger_log (context->logger, LL_ERROR, "ADBO", "{delete} needs valid primary keys set");
+      eclogger_log (context->logger, LL_ERROR, "ADBO", "{delete} needs valid primary or foreign keys");
       ret = FALSE;
     }
 
