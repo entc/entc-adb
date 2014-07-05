@@ -379,38 +379,53 @@ EcBuffer ecbuf_encode_base64 (EcBuffer self)
 
 EcBuffer ecbuf_md5 (EcBuffer self)
 {
-  // creates a buffer with 32 chars + 1 extra for null termination
-  EcBuffer ret = ecbuf_create (32);
-
-  int n;
-  int l = self->size;
-  const unsigned char* str = self->buffer;
-
-  md5_state_t state;
+  EcBuffer ret;
   unsigned char digest[16];
-    
-  md5_init(&state);
-  
-  while (l > 0) {
-    if (l > 512) {
-      md5_append(&state, str, 512);
-    } else {
-      md5_append(&state, str, l);
-    }
-    l -= 512;
-    str += 512;
-  }
-  
-  md5_finish(&state, digest);
-  
-  for (n = 0; n < 16; n++)
+  // creates the digest as md5 checksum
   {
-#ifdef _WIN32
-    _snprintf_s ((char*)ret->buffer + n + n, self->size, _TRUNCATE, "%02x", (unsigned int)digest[n]);
-#else
-    snprintf ((char*)ret->buffer + n + n, 3, "%02x", (unsigned int)digest[n]);
-#endif
-  } 
+    int l = self->size;
+    const unsigned char* str = self->buffer;
+    
+    md5_state_t state;
+    
+    md5_init(&state);    
+    // do it in chunks if buffer is bigger than 512
+    while (l > 0)
+    {
+      if (l > 512)
+      {
+        md5_append(&state, str, 512);
+      }
+      else
+      {
+        md5_append(&state, str, l);
+      }
+      l -= 512;
+      str += 512;
+    }
+    md5_finish(&state, digest);
+  }
+    
+  // creates a buffer with 32 chars + 1 extra for null termination
+  ret = ecbuf_create (32);
+
+  // fast conversion from digits to hex string
+  {
+    static char hex [] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ,'a', 'b', 'c', 'd', 'e', 'f' };
+    int n;
+    
+    unsigned char* pos = ret->buffer;
+    for (n = 0; n < 16; n++)
+    {
+      unsigned char h = digest[n];
+      // higher 4 bits
+      *pos = hex[h >> 4];  // transform into readable char
+      pos++;
+      // lower 4 bits
+      *pos = hex[h &0xf];  // transform into readable char
+      pos++;
+    } 
+  }
    
   return ret;    
 }
