@@ -517,7 +517,10 @@ int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, co
 
       adbo_node_primary_sequence (node, dbsession, dbtable, values, attrs);      
       // all additional values
-      adbo_node_insert_values (context, items, item_update, values, attrs);
+      if (isAssigned (items) && isAssigned (values))
+      {
+        adbo_node_insert_values (context, items, item_update, values, attrs);
+      }
       
       ret = adbl_dbinsert (dbsession, insert, &adblsec);                        
       
@@ -640,14 +643,14 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
   if (adbo_node_primary (node, filter, context, constraint))
   {
     // explicitely check the values
-    if (isAssigned (values))
+    if (isAssigned (values) && isAssigned (items))
     {
       // there is a primary key given: good it makes things easier
       ret = adbo_node_update_single (context, dbsession, dbtable, update_data, items, values, constraint);            
     }
     else
     {
-      eclogger_log (context->logger, LL_ERROR, "ADBO", "{update} values must be assigned for update");
+      eclogger_log (context->logger, LL_ERROR, "ADBO", "{update} values and items must be assigned for update");
       ret = FALSE;
     }
   }
@@ -716,11 +719,6 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   }
   
   items = ecudc_node(node, "items");
-  if (isNotAssigned (items))
-  {
-    eclogger_logformat (context->logger, LL_WARN, "ADBO", "{update} no items found for '%s'", dbtable);
-    return FALSE;    
-  }
 
   // values can be empty
   values = ecudc_node(node, dbtable); 
