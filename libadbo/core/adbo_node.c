@@ -172,7 +172,8 @@ int adbo_dbkeys_constraints (EcUdc dbkeys, EcUdc data, AdblConstraint* constrain
   
   for (dbkey  = ecudc_next (dbkeys, &cursor); isAssigned (dbkey); dbkey = ecudc_next (dbkeys, &cursor))
   {
-    ret = ret && adbo_dbkeys_value_contraint_add (dbkey, data, constraint, logger, query);
+    int h = adbo_dbkeys_value_contraint_add (dbkey, data, constraint, logger, query);
+    ret = ret && h;
   }
   
   return ret;
@@ -252,10 +253,10 @@ int adbo_node_primary (EcUdc node, EcUdc data, AdboContext context, AdblConstrai
 int adbo_node_foreign (EcUdc node, EcUdc data, AdboContext context, AdblConstraint* constraint)
 {
   // check only primary key
-  EcUdc prikeys = ecudc_node (node, ".fkeys");
-  if (isAssigned (prikeys))
+  EcUdc fkeys = ecudc_node (node, ".fkeys");
+  if (isAssigned (fkeys))
   {
-    return adbo_dbkeys_constraints (prikeys, data, constraint, context->logger, NULL);
+    return adbo_dbkeys_constraints (fkeys, data, constraint, context->logger, NULL);
   }  
   return FALSE;  
 }
