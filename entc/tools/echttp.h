@@ -130,6 +130,8 @@ __LIB_EXPORT void echttp_unescape (EcString url);
 
 __LIB_EXPORT void echttp_escape (EcDevStream stream, const EcString url);
 
+__LIB_EXPORT void echttp_escape_stream (EcStream stream, const EcString url);
+
 __LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
 __LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);

@@ -68,9 +68,15 @@ EcUdc ecxmldom_create_tag (EcUdc parent, const EcString name)
 
 void ecxmldom_set_value (EcUdc tag, const EcString content)
 {
-  EcUdc value = ecudc_node(tag, ".value");
-
-  ecudc_setS(value, content);
+  EcUdc value = ecudc_node (tag, ".value");
+  if (isNotAssigned (value))
+  {
+    ecudc_add_asString (tag, ".value", content);
+  } 
+  else 
+  {
+    ecudc_setS (value, content);    
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -114,7 +120,18 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
     EcUdc attrs = ecudc_node (tag, ".attrs");
     if (isAssigned (attrs))
     {
-
+      void* cursor = NULL;
+      EcUdc item;
+      
+      // iterate through all tags
+      for (item = ecudc_next (attrs, &cursor); isAssigned (item); item = ecudc_next (attrs, &cursor))
+      {
+        ecstream_appendc (stream, ' ');
+        ecstream_append (stream, ecudc_name(item));
+        ecstream_append (stream, "=\"");
+        ecstream_append (stream, ecudc_asString(item));
+        ecstream_appendc (stream, '"');
+      }      
     }
   }
   {
@@ -141,6 +158,7 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
         ecstream_appendc (stream, ':');
       }
       ecstream_append (stream, ecudc_name (tag));
+      ecstream_appendc (stream, '>');
       
       return;
     }
@@ -160,6 +178,7 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
         ecstream_appendc (stream, ':');
       }
       ecstream_append (stream, ecudc_name (tag));
+      ecstream_appendc (stream, '>');
       
       return;
     }
@@ -174,7 +193,7 @@ EcBuffer ecxmldom_buffer (EcUdc* pself)
 {
   EcStream stream = ecstream_new ();
   
-  
+  ecxmldom_write (*pself, stream, NULL);
   
   ENTC_DEL (pself, struct EcXMLDom_s);  
   
@@ -183,7 +202,7 @@ EcBuffer ecxmldom_buffer (EcUdc* pself)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecxmldom_setNamespace (EcUdc tag, const EcString name)
+void ecxmldom_setNamespace (EcUdc tag, const EcString name, const EcString definition)
 {
   EcUdc options = ecudc_node (tag, ".options");
   if (isNotAssigned (options))
@@ -204,6 +223,13 @@ void ecxmldom_setNamespace (EcUdc tag, const EcString name)
     {
       ecudc_add_asString(options, "namespace", name);
     }
+  }
+  {
+    EcString xmlns = ecstr_cat2("xmlns:", name);
+    
+    ecxmldom_add_attribute (tag, xmlns, definition);
+    
+    ecstr_delete(&xmlns);
   }
 }
 

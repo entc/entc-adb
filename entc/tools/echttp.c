@@ -532,6 +532,31 @@ void echttp_escape (EcDevStream stream, const EcString url)
   }
 }
 
+//---------------------------------------------------------------------------------------
+
+void echttp_escape_stream (EcStream stream, const EcString url)
+{
+  /* variables */
+  const char* pos01 = url;
+  
+  while(*pos01)
+  {
+    switch (*pos01)
+    {
+      case ' ' : ecstream_append (stream, "%20"); break;
+      case '!' : ecstream_append (stream, "%21"); break;
+      case '"' : ecstream_append (stream, "%22"); break;
+      case '#' : ecstream_append (stream, "%23"); break;
+      case '$' : ecstream_append (stream, "%24"); break;
+      case '%' : ecstream_append (stream, "%25"); break;
+      case '&' : ecstream_append (stream, "%26"); break;
+      case '\'': ecstream_append (stream, "%27"); break;
+      default: ecstream_appendc (stream, *pos01);
+    }
+    pos01++;
+  }
+}
+
 //-----------------------------------------------------------------------------------------------------------
 
 void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url)
