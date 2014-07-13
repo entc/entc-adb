@@ -687,31 +687,15 @@ void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
     
     ecbuf_destroy (&buffer);
   }
-  {
-    EcUdc item = ecudc_create(1, "request-url");
-    ecudc_setS(item, header->request_url);
-    ecudc_add(udc, &item);
-  }
-  {
-    EcUdc item = ecudc_create(1, "remote-address");
-    ecudc_setS(item, header->remote_address);
-    ecudc_add(udc, &item);
-  }
-  {
-    EcUdc item = ecudc_create(1, "user-language");
-    ecudc_setS(item, header->user_lang);
-    ecudc_add(udc, &item);
-  }
-  {
-    EcUdc item = ecudc_create(1, "user-agent");
-    ecudc_setS(item, header->user_agent);
-    ecudc_add(udc, &item);
-  }
+  
+  ecudc_add_asString(udc, "request-url", header->request_url);
+  ecudc_add_asString(udc, "remote-address", header->remote_address);
+  ecudc_add_asString(udc, "user-language", header->user_lang);
+  ecudc_add_asString(udc, "user-agent", header->user_agent);
+
   if (ecstr_valid(header->title))
   {
-    EcUdc item = ecudc_create(1, "title");
-    ecudc_setS(item, header->title);
-    ecudc_add(udc, &item);
+    ecudc_add_asString(udc, "title", header->title);
   }
   
   eclogger_message(logger, 10000, 1, &udc);
@@ -1036,6 +1020,9 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
       if (isAssigned (self->callbacks.render))
       {
         self->callbacks.render (self->callbacks.render_ptr, &header, stream, &object);
+        
+        // log visit
+        echttp_header_lotToService (&header, self->logger);
       }
       else
       {
@@ -1069,6 +1056,9 @@ void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSo
       if (isAssigned (self->callbacks.render))
       {
         self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
+        
+        // log visit
+        echttp_header_lotToService (header, self->logger);
       }
       else
       {
