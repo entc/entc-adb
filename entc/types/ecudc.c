@@ -503,6 +503,15 @@ ulong_t ecudc_asL (EcUdc self)
   switch (self->type) 
   {
     case ENTC_UDC_LONG: return *((ulong_t*)self->extension); 
+    case ENTC_UDC_STRING:
+    {
+      const EcString h = ecudc_asString (self);
+      if (isAssigned (h))
+      {
+        // can be transformed ?
+        return atoi(h);
+      }
+    }
   }        
   return 0;
 }
@@ -582,7 +591,15 @@ ulong_t ecudc_get_asL (const EcUdc self, const EcString name, ulong_t alt)
   const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
-    return ecudc_asL (res);
+    ulong_t ret = ecudc_asL (res);
+    if (ret == 0)
+    {
+      return alt;
+    }
+    else
+    {
+      return ret;
+    }
   }
   else
   {
