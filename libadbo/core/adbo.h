@@ -34,6 +34,9 @@ __LIB_EXPORT EcUdc adbo_structure_fromXml (AdboContext, EcXMLStream, const EcStr
 // creates the structure from the current database schema
 __LIB_EXPORT EcUdc adbo_structure_fromDatabase (AdboContext);
 
+// get all tables
+__LIB_EXPORT EcUdc adbo_tables (EcUdc);
+
 // get a table node
 __LIB_EXPORT EcUdc adbo_get_table (EcUdc, const EcString tablename);
 

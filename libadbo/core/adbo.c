@@ -74,6 +74,28 @@ EcUdc adbo_structure_fromDatabase (AdboContext context)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc adbo_tables (EcUdc items)
+{
+  switch (ecudc_type (items))
+  {
+    case ENTC_UDC_LIST:
+    {
+      EcUdc list = ecudc_create(ENTC_UDC_LIST, "tables");
+      void* cursor = NULL;
+      EcUdc item;      
+      // iterrate through all nodes
+      for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
+      {
+        ecudc_add_asString(list, NULL, ecudc_get_asString(item, ".dbtable", "table"));
+      }
+      return list;
+    }
+  }
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcUdc adbo_get_table (EcUdc items, const EcString tablename)
 {
   switch (ecudc_type (items))
