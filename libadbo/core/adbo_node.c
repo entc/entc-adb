@@ -333,7 +333,7 @@ int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext conte
 {
   AdblSecurity adblsec;
   AdblCursor* cursor;
-  int ret;
+  int ret = TRUE;
   
   adbo_node_dbquery_columns (node, query);
   // execute sql query

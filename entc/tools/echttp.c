@@ -373,7 +373,7 @@ void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString doc
   
   if (ENTC_PATH_SEPARATOR != '/')
   {
-    //ecstr_replaceAllChars(filename, '/', Ec_PATH_SEPARATOR);
+    ecstr_replaceAllChars (filename, '/', ENTC_PATH_SEPARATOR);
   }
   
   eclogger_logformat(logger, LL_TRACE, "SERV", "try to send file '%s'", filename);
