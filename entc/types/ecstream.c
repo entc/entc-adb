@@ -152,17 +152,13 @@ void ecstream_append( EcStream self, const EcString source )
 
 /*------------------------------------------------------------------------*/
 
-void ecstream_appendc( EcStream self, char c )
+void ecstream_appendc ( EcStream self, char c )
 {
-  // check the value
-  if( c == 0 )
-  {
-    return;  
-  }
   _ecstream_check(self, 1);  
   // copy the source to the buffer
   *(self->pos) = c;
   (self->pos)++;
+  // add termination at the end
   *(self->pos) = 0;   
 }
 

@@ -71,6 +71,8 @@ __LIB_EXPORT const char* ecstr_cstring( const EcString );
 __LIB_EXPORT int ecstr_equal( const EcString, const EcString );
 
 __LIB_EXPORT int ecstr_equaln( const EcString, const EcString, uint_t size );
+
+__LIB_EXPORT int ecstr_equalUnsensitive (const EcString, const EcString);
   
 __LIB_EXPORT int ecstr_leading( const EcString, const EcString leading);
 

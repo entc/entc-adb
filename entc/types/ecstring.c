@@ -382,9 +382,42 @@ int ecstr_equal( const EcString s1, const EcString s2 )
   return strcmp(s1, s2) == 0;
 }
 
-/*------------------------------------------------------------------------*/
+//---------------------------------------------------------------------------
 
-int ecstr_equaln( const EcString s1, const EcString s2, uint_t size )
+int ecstr_equalUnsensitive (const EcString s1, const EcString s2)
+{
+  int ret;
+
+  if( !s1 )
+  {
+    return FALSE;  
+  }
+  
+  if( !s2 )
+  {
+    return FALSE;  
+  }
+  // TODO: make it better
+  {
+    EcString u1 = ecstr_copy (s1);
+    EcString u2 = ecstr_copy (s2);
+
+    ecstr_toUpper (u1);
+    ecstr_toUpper (u2);
+
+printf("compare : '%s' '%s' \n", u1, u2);
+
+    ret = strcmp(u1, u2) == 0;
+
+    ecstr_delete (&u1);
+    ecstr_delete (&u2);
+  }  
+  return ret;
+}
+
+//---------------------------------------------------------------------------
+
+int ecstr_equaln (const EcString s1, const EcString s2, uint_t size)
 {
   if( !s1 )
   {

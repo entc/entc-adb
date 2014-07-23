@@ -48,8 +48,10 @@ __LIB_EXPORT int ecsocket_listen(EcSocket, const EcString host, uint_t port);
 
 __LIB_EXPORT EcSocket ecsocket_accept(EcSocket);
   
-__LIB_EXPORT int ecsocket_read(EcSocket, void* buffer, int nbyte);
+__LIB_EXPORT int ecsocket_read (EcSocket, void* buffer, int nbyte);
   
+__LIB_EXPORT int ecsocket_readBunch (EcSocket, void* buffer, int nbyte);
+
 __LIB_EXPORT int ecsocket_readTimeout(EcSocket, void* buffer, int nbyte, int sec);
   
 __LIB_EXPORT int ecsocket_write(EcSocket, const void* buffer, int nbyte);

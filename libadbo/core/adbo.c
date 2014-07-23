@@ -108,7 +108,7 @@ EcUdc adbo_get_table (EcUdc items, const EcString tablename)
       for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
       {
         const EcString dbtable = ecudc_get_asString(item, ".dbtable", NULL);
-        if (ecstr_equal(dbtable, tablename))
+        if (ecstr_equalUnsensitive (dbtable, tablename))
         {
           return item;
         }

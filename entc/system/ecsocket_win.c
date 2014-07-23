@@ -225,12 +225,12 @@ EcSocket ecsocket_accept (EcSocket self)
   {
     int res = ece_queue_wait (queue, ENTC_INFINTE, self->logger);
     // check the return
-    if (res == 1)
+    if (res == ENTC_EVENT_ABORT)
     {
       // termination of the process
       break;
     }
-    if (res == 0)
+    if (res == ENTC_EVENT_TIMEOUT)
     {
       // timeout
       break;
@@ -274,7 +274,27 @@ EcSocket ecsocket_accept (EcSocket self)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_read(EcSocket self, void* buffer, int nbyte)
+int ecsocket_read (EcSocket self, void* buffer, int nbyte)
+{
+  int bytesread = 0;
+  while (bytesread < nbyte)
+  {
+    int h = ecsocket_readTimeout (self, (unsigned char*)buffer + bytesread, nbyte, 500);
+    if (h > 0)
+    {
+      bytesread += h;
+    }
+    else
+    {
+      return h;
+    }
+  }
+  return nbyte;
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
 {
   // wait maximal 500 milliseconds
   return ecsocket_readTimeout(self, buffer, nbyte, 500);
@@ -282,7 +302,7 @@ int ecsocket_read(EcSocket self, void* buffer, int nbyte)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_readTimeout(EcSocket self, void* buffer, int nbyte, int timeout)
+int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
 {
   // variables
   EcEventQueue queue;
@@ -311,13 +331,13 @@ int ecsocket_readTimeout(EcSocket self, void* buffer, int nbyte, int timeout)
   {
     int res = ece_queue_wait (queue, ENTC_INFINTE, self->logger);
     // check the return
-    if (res == 1)
+    if (res == ENTC_EVENT_ABORT)
     {
       // termination of the process
       ret = ENTC_SOCKET_RETSTATE_ABORT;
       break;
     }
-    if (res == 0)
+    if (res == ENTC_EVENT_TIMEOUT)
     {
       // timeout
       ret = ENTC_SOCKET_RETSTATE_ERROR;
@@ -340,8 +360,7 @@ int ecsocket_readTimeout(EcSocket self, void* buffer, int nbyte, int timeout)
   // delete event list
   ece_queue_delete (&queue);
   
-  WSACloseEvent(shandle);
-  
+  WSACloseEvent(shandle);  
   // leave critical section
   ecmutex_unlock(self->mutex);
 
@@ -350,7 +369,7 @@ int ecsocket_readTimeout(EcSocket self, void* buffer, int nbyte, int timeout)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_write(EcSocket self, const void* buffer, int nbyte)
+int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
 {
   // variables
   int ret = 0;
@@ -390,7 +409,7 @@ int ecsocket_write(EcSocket self, const void* buffer, int nbyte)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_writeFile(EcSocket self, EcFileHandle fh)
+int ecsocket_writeFile (EcSocket self, EcFileHandle fh)
 {
   // write raw data
   EcBuffer buffer = ecbuf_create (1024);
@@ -408,7 +427,7 @@ int ecsocket_writeFile(EcSocket self, EcFileHandle fh)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_writeStream(EcSocket self, EcStream stream)
+int ecsocket_writeStream (EcSocket self, EcStream stream)
 {
   uint_t size = ecstream_size( stream );
   
@@ -417,7 +436,7 @@ int ecsocket_writeStream(EcSocket self, EcStream stream)
 
 //-----------------------------------------------------------------------------------
 
-const EcString ecsocket_address(EcSocket self)
+const EcString ecsocket_address (EcSocket self)
 {
   return 0;
 }

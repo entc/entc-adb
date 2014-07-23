@@ -34,7 +34,7 @@ struct EcEventContext_s {
 
 struct EcEventQueue_s {
 
-  HANDLE* hs;
+  HANDLE hs [10];
 
   uint_t hsn;
 
@@ -46,7 +46,7 @@ EcEventContext ece_context_new (void)
 {
   EcEventContext self = ENTC_NEW(struct EcEventContext_s);
 
-  self->abort = CreateEvent(NULL, FALSE, FALSE, NULL);
+  self->abort = CreateEvent(NULL, TRUE, FALSE, NULL);
 
   return self;
 }
@@ -85,9 +85,7 @@ EcEventQueue ece_queue_new (EcEventContext ec)
   EcEventQueue self = ENTC_NEW(struct EcEventQueue_s);
 
   self->hsn = 1;
-  self->hs = (HANDLE*)malloc(sizeof(HANDLE));
-
-  self->hs[0] = ec->abort;
+  self->hs [0] = ec->abort;
 
   return self;
 }
@@ -103,24 +101,18 @@ void ece_queue_delete (EcEventQueue* pself)
 
 void ece_queue_add (EcEventQueue self, EcHandle handle, int type)
 {
-  self->hsn++;
-  self->hs = (HANDLE*)realloc(self->hs, sizeof(HANDLE) * self->hsn);
-
-  self->hs[self->hsn - 1] = handle;
+  if (self->hsn < 10)
+  {
+    self->hs [self->hsn] = handle;
+    self->hsn++;
+  }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
 int ece_queue_wait (EcEventQueue self, uint_t timeout, EcLogger logger)
 {
-  DWORD res;
-
-  if (self->hs == NULL)
-  {
-    return -1;
-  }
-
-  res = WaitForMultipleObjects(self->hsn, self->hs, FALSE, (timeout == ENTC_INFINTE) ? INFINITE : timeout);
+  DWORD res = WaitForMultipleObjects(self->hsn, self->hs, FALSE, (timeout == ENTC_INFINTE) ? INFINITE : timeout);
 
   if(res == WAIT_ABANDONED_0)
   {

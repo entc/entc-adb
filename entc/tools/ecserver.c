@@ -146,7 +146,7 @@ int ecserver_worker_run (void* params)
     // trigger other threads to continue
     ece_queue_set (self->server->equeue, self->server->worker_lock);
 
-    if( !self->server->callbacks.worker_thread(self->server->callbacks.worker_ptr, &object, self->logger) )
+    if( !self->server->callbacks.worker_thread (self->server->callbacks.worker_ptr, &object, self->logger) )
     {
       eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} aborted");
       // signaled to stop the thread
