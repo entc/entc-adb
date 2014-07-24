@@ -199,8 +199,8 @@ EcDirHandle ecdh_new(const EcString path)
   self->valid = TRUE;
 
   /* init */
-  self->node.d_name = 0;
-  self->node.d_type = 0;
+  self->node.name = ecstr_init ();
+  self->node.type = 0;
 
   return self;
 };
@@ -225,8 +225,15 @@ int ecdh_next(EcDirHandle self, EcDirNode* pnode)
   if( self->valid )
   {
     /* convert from windows infos to entc infos */
-    ecstr_replace( &(self->node.d_name), self->data.cFileName);
-    self->node.d_type = self->data.dwFileAttributes;
+    ecstr_replace( &(self->node.name), self->data.cFileName);
+    self->node.type = self->data.dwFileAttributes;
+
+    self->node.sizeL = self->data.nFileSizeLow;
+    self->node.sizeH = self->data.nFileSizeHigh;
+
+    self->node.cdate = self->data.ftCreationTime.dwLowDateTime;
+    self->node.mdate = self->data.ftLastWriteTime.dwLowDateTime;
+    self->node.adate = self->data.ftLastAccessTime.dwLowDateTime;
   
     self->valid = FindNextFile( self->dhandle, &(self->data) );
 
@@ -240,7 +247,7 @@ int ecdh_next(EcDirHandle self, EcDirNode* pnode)
 
 int ecdh_getFileType(const EcString path, EcDirNode entry)
 {
-  if( entry->d_type & FILE_ATTRIBUTE_DIRECTORY )
+  if( entry->type & FILE_ATTRIBUTE_DIRECTORY )
   {
     return ENTC_FILETYPE_ISDIR;
   }

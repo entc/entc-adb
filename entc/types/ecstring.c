@@ -405,8 +405,6 @@ int ecstr_equalUnsensitive (const EcString s1, const EcString s2)
     ecstr_toUpper (u1);
     ecstr_toUpper (u2);
 
-printf("compare : '%s' '%s' \n", u1, u2);
-
     ret = strcmp(u1, u2) == 0;
 
     ecstr_delete (&u1);

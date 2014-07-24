@@ -266,7 +266,7 @@ EcLocale eclocale_new(const EcString confdir, const EcString path, EcEventFiles 
       
       if( filetype == ENTC_FILETYPE_ISFILE )
       {
-        eclocale_parseFile(self, fullpath, dn->d_name, events, logger);
+        eclocale_parseFile(self, fullpath, dn->name, events, logger);
       }
     }
     ecdh_close(&dh);

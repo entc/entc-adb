@@ -462,6 +462,21 @@ ulong_t eclogger_getResultCode (EcUdc results)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc eclogger_getFirstResult (EcUdc results)
+{
+  // variables
+  void* cursor = NULL;  
+
+  if (isNotAssigned (results))
+  {
+    return NULL;
+  }
+
+  return ecudc_next (results, &cursor);
+}
+
+//----------------------------------------------------------------------------------------
+
 EcList eclogger_errmsgs (EcLogger self)
 {
   return self->errmsgs;

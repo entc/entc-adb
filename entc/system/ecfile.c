@@ -43,7 +43,7 @@ int ecdh_scan (const EcString path, EcList entries, int filetype)
     
     if( ft == filetype )
     {
-      eclist_append(entries, ecfs_mergeToPath(path, entry->d_name));
+      eclist_append(entries, ecfs_mergeToPath(path, entry->name));
     }
   }
 

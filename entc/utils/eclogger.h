@@ -99,6 +99,8 @@ __LIB_EXPORT EcUdc eclogger_message (EcLogger, uint_t logid, uint_t messageid, E
 
 __LIB_EXPORT ulong_t eclogger_getResultCode (EcUdc results);
 
+__LIB_EXPORT EcUdc eclogger_getFirstResult (EcUdc results);
+
 // ----- security methods ---------------------------------------------------------------------
 
 __LIB_EXPORT void eclogger_sec (EcLogger, EcSecLevel);

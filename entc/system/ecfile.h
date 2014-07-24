@@ -52,10 +52,22 @@ struct EcDirHandle_s; typedef struct EcDirHandle_s* EcDirHandle;
 struct EcDirNode_s
 {
 
-  uint_t d_type;
+  EcString name;
 
-  EcString d_name;
+  uint_t type;
 
+  uint_t sizeL;
+
+  uint_t sizeH;
+
+  // creat date
+  uint_t cdate;
+
+  // last modification date
+  uint_t mdate;
+
+  // access date
+  uint_t adate;
 };
 
 typedef struct EcDirNode_s* EcDirNode;
