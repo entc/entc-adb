@@ -24,6 +24,10 @@
 
 #include <stdio.h>
 #include <share.h>
+#include <fcntl.h>
+#include <io.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
@@ -158,14 +162,14 @@ struct EcDirHandle_s
   /* windows structure to store file informations */
   WIN32_FIND_DATA data;
   /* entc structure to store file informations */
-  struct EcDirNode_s node;
+  EcFileInfo_s info;
 
   int valid;
 };
 
 /*------------------------------------------------------------------------*/
 
-EcDirHandle ecdh_new(const EcString path)
+EcDirHandle ecdh_create (const EcString path)
 {
   /* variables */
   EcDirHandle self;
@@ -199,59 +203,63 @@ EcDirHandle ecdh_new(const EcString path)
   self->valid = TRUE;
 
   /* init */
-  self->node.name = ecstr_init ();
-  self->node.type = 0;
+  self->info.name = ecstr_init ();
+  self->info.type = 0;
 
   return self;
 };
 
 /*------------------------------------------------------------------------*/
 
-void ecdh_close(EcDirHandle* pself)
+void ecdh_destroy (EcDirHandle* pself)
 {
   if(!*pself) return;
   /* clsoe the handle */
-  FindClose( (*pself)->dhandle );
+  FindClose ((*pself)->dhandle);
   /* destroy the structures */
   ENTC_DEL(pself, struct EcDirHandle_s);
 };
 
 /*------------------------------------------------------------------------*/
 
-int ecdh_next(EcDirHandle self, EcDirNode* pnode)
+int ecdh_next (EcDirHandle self, EcFileInfo* pinfo)
 {
   if(!self) return FALSE;
 
   if( self->valid )
   {
     /* convert from windows infos to entc infos */
-    ecstr_replace( &(self->node.name), self->data.cFileName);
-    self->node.type = self->data.dwFileAttributes;
+    ecstr_replace( &(self->info.name), self->data.cFileName);
 
-    self->node.sizeL = self->data.nFileSizeLow;
-    self->node.sizeH = self->data.nFileSizeHigh;
+    if (self->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    {
+      self->info.type = ENTC_FILETYPE_ISDIR;
+    }
+    else
+    {
+      self->info.type = ENTC_FILETYPE_ISFILE;
+    }
 
-    self->node.cdate = self->data.ftCreationTime.dwLowDateTime;
-    self->node.mdate = self->data.ftLastWriteTime.dwLowDateTime;
-    self->node.adate = self->data.ftLastAccessTime.dwLowDateTime;
+    self->info.sizeL = self->data.nFileSizeLow;
+    self->info.sizeH = self->data.nFileSizeHigh;
+
+    self->info.cdate = self->data.ftCreationTime.dwLowDateTime;
+    self->info.mdate = self->data.ftLastWriteTime.dwLowDateTime;
+    self->info.adate = self->data.ftLastAccessTime.dwLowDateTime;
   
     self->valid = FindNextFile( self->dhandle, &(self->data) );
 
-    *pnode = &(self->node);
-	return TRUE;
+    *pinfo = &(self->info);
+	  return TRUE;
   }
   return FALSE;
 };
 
 /*------------------------------------------------------------------------*/
 
-int ecdh_getFileType(const EcString path, EcDirNode entry)
+void ecdh_seekType (const EcString path, EcFileInfo entry)
 {
-  if( entry->type & FILE_ATTRIBUTE_DIRECTORY )
-  {
-    return ENTC_FILETYPE_ISDIR;
-  }
-  return ENTC_FILETYPE_ISFILE;
+  // for windows not needed
 }
 
 /*------------------------------------------------------------------------*/
@@ -295,14 +303,24 @@ time_t ecfs_filetime_to_timet(FILETIME ft)
 
 /*------------------------------------------------------------------------*/
 
-int ecfs_stat(EcStatInfo* info, const EcString path)
+int ecfs_fileInfo (EcFileInfo info, const EcString path)
 {
+  struct _stat64 st;
+
   if( !path )
   {
     return FALSE;
   }
   
-  return _stat64( path, info ) == 0;
+  if (_stat64 (path, &st) != 0)
+  {
+    return FALSE;
+  }
+
+  info->name = ecstr_init ();
+  info->mdate = st.st_mtime;
+
+  return TRUE;
 }
 
 /*------------------------------------------------------------------------*/

@@ -365,7 +365,7 @@ void ecd_observer_close(EcDirObserver inst)
 #else
   if( inst->dh )
   {
-    ecdh_close( &(inst->dh) );    
+    ecdh_destroy (&(inst->dh));    
   }
 #endif
 }
