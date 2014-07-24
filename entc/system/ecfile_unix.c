@@ -22,7 +22,8 @@
 #include "ecfile.h"
 #include "../types/eclist.h"
 
-#include <stdio.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 struct EcFileHandle_s
 {
@@ -147,89 +148,111 @@ EcString ecfh_md5(EcFileHandle self)
   return ecstr_copy("askjdhjsadbjavdjha");  
 }
 
-/*------------------------------------------------------------------------*/
+//--------------------------------------------------------------------------------
 
-EcDirHandle ecdh_new(const EcString path)
+struct EcDirHandle_s
 {
-  if( path )
-  {
-    return opendir(path);
-  }
-  else
-  {
-    return 0;  
-  }
-}
 
-/*------------------------------------------------------------------------*/
+  DIR* dir;
 
-void ecdh_close(EcDirHandle* self)
+  EcFileInfo_s node;
+
+};
+
+//--------------------------------------------------------------------------------
+
+EcDirHandle ecdh_create (const EcString path)
 {
-  closedir( *self );
+  EcDirHandle self = NULL;
   
-  self = 0;
+  DIR* dir = opendir (path);
+  if (isAssigned (dir))
+  {
+    self = ENTC_NEW (struct EcDirHandle_s);
+  
+    self->dir = dir;
+    self->node.name = ecstr_init ();
+  }
+
+  return self;
 }
 
-/*------------------------------------------------------------------------*/
+//--------------------------------------------------------------------------------
 
-int ecdh_next(EcDirHandle self, EcDirNode* pnode)
+void ecdh_destroy (EcDirHandle* pself)
 {
-  *pnode = readdir (self);
-  return isAssigned(*pnode);
+  EcDirHandle self = *pself;
+  
+  closedir (self->dir);
+  
+  ecstr_delete(&(self->node.name));
+  
+  ENTC_DEL (pself, struct EcDirHandle_s);
 }
 
-/*------------------------------------------------------------------------*/
+//--------------------------------------------------------------------------------
 
-int ecdh_getFileType(const EcString path, EcDirNode entry)
+void ecdh_seekType (const EcString path, EcFileInfo entry)
 {
-  if( entry->d_type == DT_DIR )
-  {
-    return ENTC_FILETYPE_ISDIR;
-  }
-  else if( ( entry->d_type == DT_REG ) || ( entry->d_type == DT_LNK ) )
-  {
-    return ENTC_FILETYPE_ISFILE;
-  }
-  else if( entry->d_type == DT_UNKNOWN )
-  {
-    /* unknown file type, this could happen on some file system types */
-    /* for solving the issue call stat */
-    EcStatInfo st;
-    /* construct the file name */
-    EcString inodename = ecfs_mergeToPath(path, entry->d_name);
+  // unknown file type, this could happen on some file system types
+  // for solving the issue call stat 
+  // construct the file name 
+  EcString inodename = ecfs_mergeToPath (path, entry->name);
     
-    ecfs_stat(&st, inodename);
+  ecfs_fileInfo (entry, inodename);
     
-    ecstr_delete (&inodename);
+  ecstr_delete (&inodename);
+}
+
+//--------------------------------------------------------------------------------
+
+int ecdh_next (EcDirHandle self, EcFileInfo* pinfo)
+{
+  struct dirent* dentry = readdir (self->dir);
+
+  if (isAssigned (dentry))
+  {
+    ecstr_replace(&(self->node.name), dentry->d_name);
     
-    if(S_ISREG(st.st_mode))
+    if (dentry->d_type == DT_DIR)
     {
-      return ENTC_FILETYPE_ISFILE;
+      self->node.type = ENTC_FILETYPE_ISDIR;
     }
-    else if(S_ISDIR(st.st_mode))
+    else if ((dentry->d_type == DT_REG) || (dentry->d_type == DT_LNK))
     {
-      return ENTC_FILETYPE_ISDIR;
+      self->node.type = ENTC_FILETYPE_ISFILE;
+    }
+    else if (dentry->d_type == DT_UNKNOWN)
+    {
+      self->node.type = ENTC_FILETYPE_ISNONE;
     }
     else
     {
-      return ENTC_FILETYPE_ISNONE;              
+      self->node.type = ENTC_FILETYPE_ISNONE;      
     }
+    
+    *pinfo = &(self->node);
+    
+    return TRUE;
   }
-  return ENTC_FILETYPE_ISNONE;
+  else
+  {
+    return FALSE;
+  }
 }
 
-/*------------------------------------------------------------------------*/
+//--------------------------------------------------------------------------------
 
-int ecfs_move(const EcString source, const EcString dest)
+int ecfs_move (const EcString source, const EcString dest)
 {
-  return rename(source, dest) == 0;
+  return rename (source, dest) == 0;
 }
 
-/*------------------------------------------------------------------------*/
+//--------------------------------------------------------------------------------
 
-int ecfs_mkdir(const EcString source)
+int ecfs_mkdir (const EcString source)
 {
-  return mkdir(source, 0770) == 0;
+  return mkdir (source, 0770) == 0;
 }
 
 /*------------------------------------------------------------------------*/
@@ -248,14 +271,34 @@ int ecfs_rmfile(const EcString source)
 
 /*------------------------------------------------------------------------*/
 
-int ecfs_stat(EcStatInfo* info, const EcString path)
+int ecfs_fileInfo (EcFileInfo info, const EcString path)
 {
+  struct stat st;
+  
   if( !path )
   {
     return FALSE;
   }
   
-  return stat( path, info ) == 0;
+  if (stat (path, &st) != 0)
+  {
+    return FALSE;
+  }
+  
+  if(S_ISREG(st.st_mode))
+  {
+    info->type = ENTC_FILETYPE_ISFILE;
+  }
+  else if(S_ISDIR(st.st_mode))
+  {
+    info->type = ENTC_FILETYPE_ISDIR;
+  }
+  else
+  {
+    info->type = ENTC_FILETYPE_ISNONE;              
+  }
+  
+  return TRUE;
 }
 
 /*------------------------------------------------------------------------*/

@@ -24,6 +24,8 @@
 #include "../types/eclist.h"
 #include "../utils/ecsecfile.h"
 
+#include <fcntl.h>
+
 #if defined _WIN64 || defined _WIN32
 #include <windows.h>
 #endif
@@ -297,12 +299,12 @@ void ecd_observer_delete(EcDirObserver inst)
 #ifdef __APPLE_CC__
   if( inst->dh )
   {
-    ecdh_close(&(inst->dh));    
+    ecdh_destroy (&(inst->dh));    
   }
 #elif __linux__
   if( inst->dh )
   {
-    ecdh_close(&(inst->dh));    
+    ecdh_destroy (&(inst->dh));    
   }
 #endif
   

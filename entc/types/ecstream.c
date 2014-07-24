@@ -22,6 +22,7 @@
 #include <system/ecfile.h>
 
 #include <string.h>
+#include <fcntl.h>
 
 struct EcStream_s
 {

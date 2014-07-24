@@ -23,8 +23,10 @@
 #include <utils/ecreadbuffer.h>
 #include <utils/ecsecfile.h>
 #include <types/ecmapchar.h>
-#include <string.h>
 #include <system/ectime.h>
+
+#include <string.h>
+#include <fcntl.h>
 
 static EcMapChar mime_types = NULL;
 EcBuffer session_name;

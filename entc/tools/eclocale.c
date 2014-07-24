@@ -253,23 +253,27 @@ EcLocale eclocale_new(const EcString confdir, const EcString path, EcEventFiles 
   
   EcString fullpath = ecfs_mergeToPath(confdir, path);
 
-  EcDirHandle dh = ecdh_new(fullpath);
+  EcDirHandle dh = ecdh_create (fullpath);
   
   self->languages = ecmap_new();
   
   if (dh)
   {
-    EcDirNode dn;
-    while (ecdh_next(dh, &dn))
+    EcFileInfo info;
+    while (ecdh_next (dh, &info))
     {
-      int filetype = ecdh_getFileType(fullpath, dn);
-      
-      if( filetype == ENTC_FILETYPE_ISFILE )
+      if (info->type == ENTC_FILETYPE_ISNONE)
       {
-        eclocale_parseFile(self, fullpath, dn->name, events, logger);
+        // scan only again if the type is not clear (on netfs?)
+        ecdh_seekType (path, info);
+      }
+      
+      if (info->type == ENTC_FILETYPE_ISFILE)
+      {
+        eclocale_parseFile (self, fullpath, info->name, events, logger);
       }
     }
-    ecdh_close(&dh);
+    ecdh_destroy (&dh);
   }
   
   ecstr_delete(&fullpath);

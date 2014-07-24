@@ -27,9 +27,9 @@ int ecdh_scan (const EcString path, EcList entries, int filetype)
 {
   /* variables */
   EcDirHandle dh = 0;
-  EcDirNode entry;
+  EcFileInfo info;
   
-  dh = ecdh_new(path);
+  dh = ecdh_create (path);
   /* was the open successful */
   
   if(!dh)
@@ -37,17 +37,21 @@ int ecdh_scan (const EcString path, EcList entries, int filetype)
     return FALSE;
   }
   
-  while(ecdh_next(dh, &entry))
+  while (ecdh_next(dh, &info))
   {
-    int ft = ecdh_getFileType(path, entry);
-    
-    if( ft == filetype )
+    if (info->type == ENTC_FILETYPE_ISNONE)
     {
-      eclist_append(entries, ecfs_mergeToPath(path, entry->name));
+      // scan only again if the type is not clear (on netfs?)
+      ecdh_seekType (path, info);
+    }
+    
+    if (info->type == filetype)
+    {
+      eclist_append(entries, ecfs_mergeToPath(path, info->name));
     }
   }
 
-  ecdh_close(&dh);
+  ecdh_destroy (&dh);
   
   return TRUE;
 }

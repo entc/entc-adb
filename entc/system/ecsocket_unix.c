@@ -293,8 +293,28 @@ EcSocket ecsocket_accept (EcSocket self)
 
 int ecsocket_read (EcSocket self, void* buffer, int nbyte)
 {
+  int bytesread = 0;
+  while (bytesread < nbyte)
+  {
+    int h = ecsocket_readTimeout (self, (unsigned char*)buffer + bytesread, nbyte, 30000);
+    if (h > 0)
+    {
+      bytesread += h;
+    }
+    else
+    {
+      return h;
+    }
+  }
+  return nbyte;  
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
+{
   // wait maximal 30 seconds
-  return ecsocket_readTimeout(self, buffer, nbyte, 30000);  
+  return ecsocket_readTimeout(self, buffer, nbyte, 30000);    
 }
 
 //-----------------------------------------------------------------------------------

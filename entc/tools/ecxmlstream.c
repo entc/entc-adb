@@ -29,6 +29,7 @@
 #include "../types/ecstack.h"
 
 #include <string.h>
+#include <fcntl.h>
 
 /*------------------------------------------------------------------------*/
 

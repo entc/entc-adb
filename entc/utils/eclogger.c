@@ -46,6 +46,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <string.h>
+#include <fcntl.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -689,10 +690,9 @@ void ecfilelogger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   
   if (isNotAssigned(self->fhandle))
   {
-    printf("try to open '%s'\n", self->filename);
-    
     self->fhandle = ecfh_open(self->filename, O_WRONLY | O_APPEND | O_CREAT);
   }
+
   if (isNotAssigned(self->fhandle))
   {
     return;

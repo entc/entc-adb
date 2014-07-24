@@ -20,6 +20,8 @@
 #include "ecsmartbuffer.h"
 #include "../utils/ecsecfile.h"
 
+#include <fcntl.h>
+
 struct EcSmartbuffer_s
 {  
   EcFileHandle fhandle;

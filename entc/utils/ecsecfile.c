@@ -26,6 +26,9 @@
 #include <share.h>
 #endif
 
+#include <fcntl.h>
+#include <sys/stat.h>
+
 #include <string.h>
 #include <errno.h>
 
@@ -117,7 +120,7 @@ int ecsec_extractPathAndCheck(struct EcSecFopen* inst, EcLogger logger, const Ec
 int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcLogger logger, const EcString confdir)
 {
   /* variables */
-  EcStatInfo st;
+  EcFileInfo_s info;
   /* init the structure */
   self->fhandle = 0;
   self->os_error = 0;
@@ -126,16 +129,11 @@ int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcL
   self->size = 0;
   self->filename = 0;
   /* check if the file exists */  
-  if( ecfs_stat(&st, filename) )
+  if (ecfs_fileInfo(&info, filename))
   {
     /* copy attributes from stat */
-#if __DOS__
-    self->mtime = st.wr_time;
-    self->size = st.size;
-#else
-    self->mtime = st.st_mtime;
-    self->size = st.st_size;
-#endif
+    self->mtime = info.mdate;
+    self->size = info.sizeL;
     /* get first the real path from the system */
     self->filename = ecfs_getRealPath(filename);
     
@@ -194,19 +192,14 @@ int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcL
 int ecsec_dopen(struct EcSecDopen* inst, const EcString path, EcLogger logger, const EcString confdir)
 {
   /* variables */
-  EcStatInfo st;
+  EcFileInfo_s info;
   /* init the structure */
   inst->dh = 0;
   inst->mtime = 0;
   /* check if the file exists */  
-  if( ecfs_stat(&st, path) )
+  if (ecfs_fileInfo (&info, path))
   {
-#if __DOS__
-    inst->mtime = st.wr_time;
-#else
-    /* copy attributes from stat */
-    inst->mtime = st.st_mtime;
-#endif
+    inst->mtime = info.mdate;
     /* get first the real path from the system */
     inst->path = ecfs_getRealPath(path);
     
@@ -230,7 +223,7 @@ int ecsec_dopen(struct EcSecDopen* inst, const EcString path, EcLogger logger, c
 
   if( inst->sec_error == 0 )
   {
-    inst->dh = ecdh_new(inst->path);
+    inst->dh = ecdh_create (inst->path);
 
     return TRUE;
   }
@@ -244,9 +237,9 @@ void ecsec_mkdir(const EcString path, EcLogger logger, const EcString confdir)
 {
   // variables
   int res = 0;
-  EcStatInfo st;
+  EcFileInfo_s info;
   // does the path exists
-  if( ecfs_stat(&st, path) )
+  if (ecfs_fileInfo (&info, path))
   {
     // file exists
     return;
