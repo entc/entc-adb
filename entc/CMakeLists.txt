@@ -174,6 +174,8 @@ SET (CORE_SOURCES_TOOLS
   tools/ecxmldom.c
   tools/ecjson.h
   tools/ecjson.c
+  tools/ecasyncvc.h
+  tools/ecasyncvc.c
 )
 
 
