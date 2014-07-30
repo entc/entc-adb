@@ -24,34 +24,67 @@
 #include "../system/types.h"
 #include "../utils/eclogger.h"
 
+#include "system/ecsocket.h"
 #include "system/ecevents.h"
 
 struct EcAsyncSvc_s; typedef struct EcAsyncSvc_s* EcAsyncSvc;
 
-typedef int (*async_context_fct)(void* ptr, EcAsyncSvc);
+struct EcAsyncContext_s; typedef struct EcAsyncContext_s* EcAsyncContext;
 
-typedef struct
+typedef int (*async_context_run_fct)(EcAsyncContext, EcAsyncSvc);
+
+typedef void (*async_context_destroy_fct) (void**);
+
+struct EcAsyncContext_s
 {
   
   EcHandle handle;
   
-  async_context_fct fct;
+  async_context_run_fct run;
+  
+  async_context_destroy_fct del;
   
   void* ptr;
   
-  
-} EcAsyncContext;
-
+};
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncSvc ecasyncsvc_create (void);
+__LIB_EXPORT EcAsyncSvc ecasyncsvc_create (EcEventContext ec, EcLogger logger);
 
 __LIB_EXPORT void ecasyncsvc_destroy (EcAsyncSvc*);
 
 __LIB_EXPORT void ecasyncsvc_start (EcAsyncSvc);
 
-__LIB_EXPORT void ecasyncsvc_add (EcAsyncSvc, EcAsyncContext*);
+__LIB_EXPORT void ecasyncsvc_add (EcAsyncSvc, EcAsyncContext);
+
+__CPP_EXTERN______________________________________________________________________________END
+
+struct EcAsyncServ_s; typedef struct EcAsyncServ_s* EcAsyncServ;
+
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT EcAsyncServ ecaserv_create (EcLogger logger);
+
+__LIB_EXPORT void ecaserv_destroy (EcAsyncServ*);
+
+__LIB_EXPORT int ecaserv_start (EcAsyncServ, const EcString host, ulong_t port);
+
+__LIB_EXPORT void ecaserv_stop (EcAsyncServ);
+
+// misc / debug
+
+__LIB_EXPORT void ecaserv_run (EcAsyncServ);
+
+__LIB_EXPORT EcEventContext ecaserv_getEventContext (EcAsyncServ);
+
+__CPP_EXTERN______________________________________________________________________________END
+
+struct EcAsyncServContext_s; typedef struct EcAsyncServContext_s* EcAsyncServContext;
+
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT void ecaserv_context_recv (EcAsyncServContext, ulong_t len);
 
 __CPP_EXTERN______________________________________________________________________________END
 

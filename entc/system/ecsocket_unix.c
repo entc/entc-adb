@@ -84,9 +84,14 @@ void ecsocket_delete(EcSocket* pself)
   {
     shutdown(self->socket, 2);
     
-    close(self->socket);
+    int res = close(self->socket);
+    printf("socket closed %i\n", res);
     
     self->socket = -1;
+  }
+  else
+  {
+    printf("socket not assigned\n");
   }
   
   ecstr_delete(&(self->host));
@@ -208,7 +213,6 @@ int ecsocket_listen(EcSocket self, const EcString host, uint_t port)
 EcSocket ecsocket_accept (EcSocket self)
 {
   // variables
-  EcEventQueue queue;
   int sock = -1;
   EcSocket nself = NULL;
     
@@ -224,13 +228,10 @@ EcSocket ecsocket_accept (EcSocket self)
   // critical section start
   ecmutex_lock (self->mutex);
   
-  queue = ece_queue_new (self->ec);  
-  ece_queue_add (queue, self->socket, ENTC_EVENTTYPE_READ);
-  
   while (sock == -1) 
   {
     // wait until some data received on one of the handles
-    int res = ece_queue_wait (queue, ENTC_INFINTE, self->logger);
+    int res = ece_context_wait (self->ec, self->socket, ENTC_INFINTE, ENTC_EVENTTYPE_READ);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {
@@ -259,8 +260,6 @@ EcSocket ecsocket_accept (EcSocket self)
       }
     }
   }
-  // delete event list
-  ece_queue_delete (&queue);  
   // leave critical section
   ecmutex_unlock(self->mutex);
   
@@ -291,30 +290,37 @@ EcSocket ecsocket_accept (EcSocket self)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_read (EcSocket self, void* buffer, int nbyte)
+EcHandle ecsocket_getAcceptHandle (EcSocket self)
 {
-  int bytesread = 0;
-  while (bytesread < nbyte)
-  {
-    int h = ecsocket_readTimeout (self, (unsigned char*)buffer + bytesread, nbyte, 30000);
-    if (h > 0)
-    {
-      bytesread += h;
-    }
-    else
-    {
-      return h;
-    }
-  }
-  return nbyte;  
+  return self->socket;
 }
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
+EcHandle ecsocket_getReadHandle (EcSocket self)
 {
-  // wait maximal 30 seconds
-  return ecsocket_readTimeout(self, buffer, nbyte, 30000);    
+  return self->socket;  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecsocket_resetHandle (EcHandle handle)
+{
+  // not needed in unix
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecsocket_closeHandle (EcHandle handle)
+{
+  // not needed in unix
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_read (EcSocket self, void* buffer, int nbyte)
+{
+  return recv (self->socket, buffer, nbyte, 0);  
 }
 
 //-----------------------------------------------------------------------------------
@@ -322,7 +328,6 @@ int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
 int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
 {
   // variables
-  EcEventQueue queue;
   int ret;
   
   if (self->mutex == NULL)
@@ -331,13 +336,11 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
   }
   // critical section start
   ecmutex_lock(self->mutex);
-
-  queue = ece_queue_new (self->ec);  
-  ece_queue_add (queue, self->socket, ENTC_EVENTTYPE_READ);
-  
+    
   while (TRUE) 
-  {
-    int res = ece_queue_wait (queue, timeout, self->logger);
+  {    
+    // wait until some data received on one of the handles
+    int res = ece_context_wait (self->ec, self->socket, timeout, ENTC_EVENTTYPE_READ);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {
@@ -373,8 +376,6 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
     // end
     break;
   }  
-  // delete event list
-  ece_queue_delete (&queue);  
   
   // leave critical section
   ecmutex_unlock(self->mutex);
@@ -384,10 +385,37 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
 
 //-----------------------------------------------------------------------------------
 
+int ecsocket_readAll (EcSocket self, void* buffer, int nbyte, int timeout)
+{
+  int bytesread = 0;
+  while (bytesread < nbyte)
+  {
+    int h = ecsocket_readTimeout (self, (unsigned char*)buffer + bytesread, nbyte, timeout * 1000);
+    if (h > 0)
+    {
+      bytesread += h;
+    }
+    else
+    {
+      return h;
+    }
+  }
+  return nbyte;  
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte, int timeout)
+{
+  // wait maximal 30 seconds
+  return ecsocket_readTimeout(self, buffer, nbyte, timeout * 1000);    
+}
+
+//-----------------------------------------------------------------------------------
+
 int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
 {
   // variables
-  EcEventQueue queue;
   int ret = 0;
   int del = 0;
   
@@ -398,33 +426,29 @@ int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
   // critical section start
   //ecmutex_lock(self->mutex);
   
-  queue = ece_queue_new (self->ec);  
-  ece_queue_add (queue, self->socket, ENTC_EVENTTYPE_WRITE);
-  
   while (del < nbyte)
   {
-    // wait maximum 10 seconds
-    int res = ece_queue_wait (queue, ENTC_INFINTE, self->logger);
+    //int res = ece_context_wait (self->ec, self->socket, ENTC_INFINTE, ENTC_EVENTTYPE_WRITE);
     // check the return
-    if (res == ENTC_EVENT_ABORT)
-    {
+    //if (res == ENTC_EVENT_ABORT)
+    //{
       // termination of the process
-      ret = ENTC_SOCKET_RETSTATE_ABORT;
-      break;
-    }
-    if (res == ENTC_EVENT_TIMEOUT)
-    {
+    //  ret = ENTC_SOCKET_RETSTATE_ABORT;
+    //  break;
+    //}
+    //if (res == ENTC_EVENT_TIMEOUT)
+    //{
       // timeout
-      ret = ENTC_SOCKET_RETSTATE_ERROR;
-      break;
-    }
+    //  ret = ENTC_SOCKET_RETSTATE_ERROR;
+    //  break;
+    //}
     // send
     ret = send(self->socket, (char*)buffer + del, nbyte - del, 0);
     if (ret < 0)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
-        eclogger_logerrno(self->logger, LL_ERROR, "CORE", "Error on recv"); 
+        eclogger_logerrno(self->logger, LL_ERROR, "CORE", "Error on send"); 
         break;
       }
       else
@@ -442,8 +466,9 @@ int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
       del = del + ret;
     }
   }
-  // delete event list
-  ece_queue_delete (&queue);   
+  
+  printf("sent %i bytes\n", ret);
+  
   // leave critical section
   //ecmutex_unlock(self->mutex);
   

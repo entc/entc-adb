@@ -4,12 +4,10 @@ PROJECT(entc-base)
 
 INCLUDE_DIRECTORIES( "../" )
 
-SET(TESTS_SOURCES
-  "system/unittest_exec.c"
-)
-
 source_group("Tests" FILES ${TESTS_SOURCES})
 
 ADD_EXECUTABLE( unittest_exec system/unittest_exec.c )
 TARGET_LINK_LIBRARIES( unittest_exec entc ) 
 
+ADD_EXECUTABLE( unittest_asyncserv tools/unittest_asyncserv.c )
+TARGET_LINK_LIBRARIES( unittest_asyncserv entc ) 

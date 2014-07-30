@@ -40,7 +40,7 @@ struct EcStreamBuffer_s
 
 /*------------------------------------------------------------------------*/
 
-EcStreamBuffer ecstreambuffer_new(EcLogger logger, EcSocket socket)
+EcStreamBuffer ecstreambuffer_new (EcLogger logger, EcSocket socket)
 {
   EcStreamBuffer self = ENTC_NEW(struct EcStreamBuffer_s);
   
@@ -57,7 +57,7 @@ EcStreamBuffer ecstreambuffer_new(EcLogger logger, EcSocket socket)
 
 /*------------------------------------------------------------------------*/
 
-void ecstreambuffer_delete(EcStreamBuffer* pself)
+void ecstreambuffer_delete (EcStreamBuffer* pself)
 {
   EcStreamBuffer self = *pself;
   
@@ -68,9 +68,9 @@ void ecstreambuffer_delete(EcStreamBuffer* pself)
 
 /*------------------------------------------------------------------------*/
 
-int ecstreambuffer_refill(EcStreamBuffer self, int* error)
+int ecstreambuffer_refill (EcStreamBuffer self, int* error)
 {
-  *error = ecsocket_readBunch (self->socket, self->buffer->buffer, self->buffer->size - 2);
+  *error = ecsocket_readBunch (self->socket, self->buffer->buffer, self->buffer->size - 2, 30);
   if( *error > 0 )
   {
     self->pos = self->buffer->buffer;
@@ -91,7 +91,7 @@ int ecstreambuffer_refill(EcStreamBuffer self, int* error)
 
 /*------------------------------------------------------------------------*/
 
-int ecstreambuffer_next(EcStreamBuffer self, int* error)
+int ecstreambuffer_next (EcStreamBuffer self, int* error)
 {
   if( self->pos < self->end )
   {
@@ -110,7 +110,7 @@ int ecstreambuffer_next(EcStreamBuffer self, int* error)
 
 /*------------------------------------------------------------------------*/
 
-char ecstreambuffer_get(EcStreamBuffer self)
+char ecstreambuffer_get (EcStreamBuffer self)
 {
   return *(self->pos);  
 }

@@ -31,11 +31,11 @@
 #define ENTC_EVENTTYPE_WRITE   1
 #define ENTC_EVENTTYPE_USER    2
 
-#define ENTC_EVENT_TIMEOUT     0
-#define ENTC_EVENT_ABORT       1
+#define ENTC_EVENT_TIMEOUT    -2
+#define ENTC_EVENT_ABORT      -4
 
-#define ENTC_EVENT_UNKNOWN    -1
-#define ENTC_EVENT_ERROR      -2
+#define ENTC_EVENT_UNKNOWN    -3
+#define ENTC_EVENT_ERROR      -1
 
 #if defined _WIN64 || defined _WIN32
 
@@ -57,6 +57,8 @@ __LIB_EXPORT EcEventContext ece_context_new (void);
 
 __LIB_EXPORT void ece_context_delete (EcEventContext*);
 
+__LIB_EXPORT int ece_context_wait (EcEventContext, EcHandle handle, uint_t timeout, int type);
+
 __LIB_EXPORT int ece_context_waitforTermination (EcEventContext, uint_t timeout);
 
 __LIB_EXPORT void ece_context_triggerTermination (EcEventContext);
@@ -67,21 +69,21 @@ struct EcEventQueue_s; typedef struct EcEventQueue_s* EcEventQueue;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcEventQueue ece_queue_new (EcEventContext);
+__LIB_EXPORT EcEventQueue ece_list_create (EcEventContext);
   
-__LIB_EXPORT void ece_queue_delete (EcEventQueue*);
+__LIB_EXPORT void ece_list_destroy (EcEventQueue*);
   
-__LIB_EXPORT void ece_queue_add (EcEventQueue, EcHandle, int type);
+__LIB_EXPORT void ece_list_add (EcEventQueue, EcHandle, int type, void* ptr);
 
-__LIB_EXPORT int ece_queue_wait(EcEventQueue, uint_t timeout, EcLogger logger);
+__LIB_EXPORT void ece_list_del (EcEventQueue, EcHandle);
 
-// handle methods
+__LIB_EXPORT int ece_list_wait (EcEventQueue, uint_t timeout, void** ptr, EcLogger logger);
 
-__LIB_EXPORT EcHandle ece_queue_gen (EcEventQueue);
+// misc methods
 
-__LIB_EXPORT void ece_queue_set (EcEventQueue, EcHandle);
+__LIB_EXPORT EcHandle ece_list_handle (EcEventQueue, void* ptr);
 
-__LIB_EXPORT void ece_queue_del (EcEventQueue, EcHandle*);
+__LIB_EXPORT void ece_list_set (EcEventQueue, EcHandle);
 
 __CPP_EXTERN______________________________________________________________________________END
 

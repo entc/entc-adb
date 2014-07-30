@@ -37,72 +37,123 @@
 
 #include <memory.h>
 
-struct EcEventContext_s
-{
-  
-  EcList queues;
-  
-  EcMutex mutex;
-  
-};
-
-
-struct EcEventQueue_s
-{
-  
-  int kq;
-  
-  struct kevent kev_set[10];
-  
-  int idents[10];
-  
-  int pos;
-  
-  EcListNode node;
-  
-  // reference
-  EcEventContext context;
-  
-};
-
 //------------------------------------------------------------------------------------------------------------
 
-EcEventContext ece_context_new()
+void ece_kevent_addHandle (int kq, EcHandle handle, int flag, void* ptr)
 {
-  EcEventContext self = ENTC_NEW(struct EcEventContext_s);
-
-  self->queues = eclist_new ();
-  self->mutex = ecmutex_new ();
+  struct kevent kev;
+  memset (&kev, 0x0, sizeof(struct kevent));
   
-  return self;
+  EV_SET (&kev, handle, flag, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, ptr); 
+  // add handle to kevent
+  kevent (kq, &kev, 1, NULL, 0, NULL);
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_context_delete(EcEventContext* ptr)
+void ece_kevent_delHandle (int kq, EcHandle handle)
 {
-  EcEventContext self = *ptr;
+  struct kevent kev;
+  memset(&kev, 0x0, sizeof(struct kevent));
   
-  eclist_delete (&(self->queues));
-  ecmutex_delete (&(self->mutex));
+  EV_SET (&kev, handle, 0, EV_DELETE, 0, 0, NULL);
+  kevent (kq, &kev, 1, NULL, 0, NULL);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_kevent_setHandle (int kq, EcHandle handle, int flag)
+{
+  struct kevent kev;
+  memset (&kev, 0x0, sizeof(struct kevent));
+  
+  EV_SET( &kev, handle, flag, 0, NOTE_TRIGGER, 0, NULL);
+  kevent (kq, &kev, 1, NULL, 0, NULL);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_kevent_wait (int kq, struct kevent* event, uint_t timeout)
+{
+  int res;
+  // blocks until we got something
+  if (timeout == ENTC_INFINTE)
+  {
+    res = kevent (kq, NULL, 0, event, 1, NULL);
+  }
+  else
+  {
+    struct timespec tmout;
     
-  ENTC_DEL(ptr, struct EcEventContext_s);
+    tmout.tv_sec = timeout / 1000;
+    tmout.tv_nsec = (timeout % 1000) * 1000;
+    
+    res = kevent (kq, NULL, 0, event, 1, &tmout);      
+  }  
+  return res;
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+struct EcEventContext_s
+{
+
+  EcMutex mutex;
+  
+  EcList lists;
+  
+};
+
+//------------------------------------------------------------------------------------------------------------
+
+EcEventContext ece_context_new ()
+{
+  EcEventContext self = ENTC_NEW(struct EcEventContext_s);
+  
+  self->mutex = ecmutex_new ();
+  self->lists = eclist_new ();
+  
+  return self;  
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_context_delete (EcEventContext* pself)
+{
+  EcEventContext self = *pself;
+
+  ecmutex_delete (&(self->mutex));
+  eclist_delete (&(self->lists));
+  
+  ENTC_DEL(pself, struct EcEventContext_s);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int type)
+{
+  EcEventQueue list = ece_list_create (self);
+  
+  ece_list_add (list, handle, type, NULL);
+  
+  int ret = ece_list_wait (list, timeout, NULL, NULL);
+  
+  ece_list_destroy (&list);
+  
+  return ret;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
 int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 {
-  // empty queue just waiting for abort event
-  EcEventQueue queue = ece_queue_new (self);
+  EcEventQueue list = ece_list_create (self);
   
-  int rt = ece_queue_wait (queue, timeout, NULL);
-  // cleanup
-  ece_queue_delete (&queue);
+  int ret = ece_list_wait (list, timeout, NULL, NULL);
   
-  ece_context_triggerTermination (self);
+  ece_list_destroy (&list);
   
-  return rt;
+  return ret;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -110,13 +161,14 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 void ece_context_triggerTermination (EcEventContext self)
 {
   EcListNode node;
-  
+    
   ecmutex_lock (self->mutex);
-  
-  for (node = eclist_first(self->queues); node != eclist_end(self->queues); node = eclist_next(node))
+
+  for (node = eclist_first(self->lists); node != eclist_end(self->lists); node = eclist_next(node))
   {
-    // trigger for all queue the abort event
-    ece_queue_set (eclist_data(node), 0);
+    EcEventQueue self = eclist_data (node);
+    // trigger termination in queue    
+    ece_list_set (self, 0);
   }
 
   ecmutex_unlock (self->mutex);
@@ -124,110 +176,93 @@ void ece_context_triggerTermination (EcEventContext self)
 
 //------------------------------------------------------------------------------------------------------------
 
-EcEventQueue ece_queue_new (EcEventContext ec)
+struct EcEventQueue_s
+{
+
+  // reference from context
+  int kq;
+    
+  EcListNode ecnode;
+  
+  EcMutex ecmutex;
+
+};
+
+//------------------------------------------------------------------------------------------------------------
+
+EcEventQueue ece_list_create (EcEventContext ec)
 {
   EcEventQueue self = ENTC_NEW(struct EcEventQueue_s);
-  
-  self->kq = kqueue();
-  self->pos = 0;
-  {
-    // set event as user event
-    self->idents[self->pos] = 0;
-    EV_SET( &(self->kev_set[self->pos]), 0, EVFILT_USER, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    self->pos++;
-  }  
-  
-  self->context = ec;
 
-  ecmutex_lock (ec->mutex);
+  // create a new queue
+  self->kq = kqueue ();
+  
+  self->ecmutex = ec->mutex;
+  
+  ecmutex_lock (self->ecmutex);
 
-  self->node = eclist_append(ec->queues, self);
-    
-  ecmutex_unlock (ec->mutex);
+  self->ecnode = eclist_append(ec->lists, self);
+  
+  ecmutex_unlock (self->ecmutex);
+
+  ece_kevent_addHandle (self->kq, 0, EVFILT_USER, NULL);
   
   return self;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_queue_delete (EcEventQueue* sptr)
+void ece_list_destroy (EcEventQueue* sptr)
 {
   EcEventQueue self = *sptr;
-  
-  ecmutex_lock (self->context->mutex);
 
-  eclist_erase(self->node);
+  ecmutex_lock (self->ecmutex);
   
-  ecmutex_unlock (self->context->mutex);
-
-  close(self->kq);
+  eclist_erase (self->ecnode);
+  
+  ecmutex_unlock (self->ecmutex);
+      
+  close (self->kq);
   
   ENTC_DEL(sptr, struct EcEventQueue_s);
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_queue_add (EcEventQueue self, EcHandle handle, int type)
+void ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
 {
+  int flag = 0;
   switch (type)
   {
     case ENTC_EVENTTYPE_READ:
     {
-      self->idents[self->pos] = handle;
-      EV_SET( &(self->kev_set[self->pos]), handle, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, NULL); 
-      self->pos++;      
+      flag = EVFILT_READ;
     }
     break;
     case ENTC_EVENTTYPE_WRITE:
     {
-      self->idents[self->pos] = handle;
-      EV_SET( &(self->kev_set[self->pos]), handle, EVFILT_WRITE, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, NULL);       
-      self->pos++;      
+      flag = EVFILT_WRITE;
     }
     break;
     case ENTC_EVENTTYPE_USER:
     {
-      self->idents[self->pos] = handle;
-      EV_SET( &(self->kev_set[self->pos]), handle, EVFILT_USER, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, NULL);   
-      self->pos++;      
+      flag = EVFILT_USER;
     }
     break;
   }
+
+  ece_kevent_addHandle (self->kq, handle, flag, ptr);  
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-int ece_queue_wait (EcEventQueue self, uint_t timeout, EcLogger logger)
+int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logger)
 {
-  int rt = 0;
-  // register events
-  {
-    int res = kevent(self->kq, self->kev_set, self->pos, NULL, 0, NULL);
-    if (res == -1)
-    {
-      eclogger_log (logger, LL_ERROR, "CORE", "{queue} register events failed");
-      return -1;
-    }
-  }
-  
   while (TRUE)
   {
     struct kevent kev_ret;
-    int res;
-    // blocks until we got something
-    if (timeout == ENTC_INFINTE)
-    {
-      res = kevent(self->kq, NULL, 0, &kev_ret, 1, NULL);
-    }
-    else
-    {
-      struct timespec tmout;
-      
-      tmout.tv_sec = timeout / 1000;
-      tmout.tv_nsec = (timeout % 1000) * 1000;
-            
-      res = kevent(self->kq, NULL, 0, &kev_ret, 1, &tmout);      
-    }
+    
+    int res = ece_kevent_wait (self->kq, &kev_ret, timeout);
     if( res == -1 )
     {
       if( errno == EINTR )
@@ -237,67 +272,56 @@ int ece_queue_wait (EcEventQueue self, uint_t timeout, EcLogger logger)
       else
       {
         //eclogger_logerrno(logger, LOGMSG_ERROR, "CORE", "error on kevent");
-        // some error       
+        // some error    
+        return ENTC_EVENT_ERROR;
       }
     }
     else if( res == 0 )
     {
       eclogger_log (logger, LL_TRACE, "CORE", "timeout on kevent");
-      rt = ENTC_EVENT_TIMEOUT;
+      return ENTC_EVENT_TIMEOUT;
     }
     else if( (kev_ret.ident == 0) && (kev_ret.filter == EVFILT_USER) )
     {
       eclogger_log (logger, LL_TRACE, "CORE", "abort in eventcontext");
-      // abort !!!!
-      rt = ENTC_EVENT_ABORT;
-      
-      ece_context_triggerTermination (self->context);
+      // abort !!!!      
+      return ENTC_EVENT_ABORT;
     } 
     else
     {
-      int i;
-      // check all kev sets
-      for (i = 0; i < self->pos; i++)
+      eclogger_logformat (logger, LL_TRACE, "CORE", "got event with ident '%i' with udata %p", kev_ret.ident, kev_ret.udata);
+      
+      if (isAssigned (pptr))
       {
-        if (kev_ret.ident == self->idents[i])
-        {
-          //eclogger_logformat (logger, LOGMSG_DEBUG, "CORE", "got event with ident '%i'", kev_ret.ident);
-          return i + ENTC_EVENT_ABORT + 1;
-        }
+        *pptr = kev_ret.udata;
       }
-      eclogger_log (logger, LL_ERROR, "CORE", "{queue} unknown event found");
-      rt = ENTC_EVENT_UNKNOWN;
-    } 
-    break;
-  }  
-  return rt;
+      
+      return 0;
+    }  
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-EcHandle ece_queue_gen (EcEventQueue self)
+void ece_list_del (EcEventQueue self, EcHandle handle)
 {
-  EcHandle handle = -self->pos;
-  ece_queue_add (self, handle, ENTC_EVENTTYPE_USER);
-  return handle;
+  ece_kevent_delHandle (self->kq, handle);
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_queue_set (EcEventQueue self, EcHandle handle)
+EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 {
-  struct kevent kev;
-  memset(&kev, 0x0, sizeof(struct kevent));
+  ece_kevent_addHandle (self->kq, -9, EVFILT_USER, ptr);
   
-  EV_SET( &kev, handle, EVFILT_USER, 0, NOTE_TRIGGER, 0, NULL);
-  kevent(self->kq, &kev, 1, NULL, 0, NULL);
+  return -9;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_queue_del (EcEventQueue self, EcHandle* phandle)
+void ece_list_set (EcEventQueue self, EcHandle handle)
 {
-  //
+  ece_kevent_setHandle (self->kq, handle, EVFILT_USER);
 }
 
 //------------------------------------------------------------------------------------------------------------

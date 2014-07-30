@@ -96,7 +96,7 @@ int ecserver_accept_run (void* params)
 
     eclogger_logformat (self->logger, LL_TRACE, "QSRV", "{accept} Received object '%p' -> added to queue (pending: %u)", object, pending);
 
-    ece_queue_set (self->server->equeue, self->server->worker_lock);
+    ece_list_set (self->server->equeue, self->server->worker_lock);
   }
   return TRUE;
 }
@@ -115,7 +115,7 @@ int ecserver_worker_run (void* params)
 
     eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} wait on queue");
 
-    res = ece_queue_wait (self->server->equeue, ENTC_INFINTE, self->logger);
+    res = ece_list_wait (self->server->equeue, ENTC_INFINTE, NULL, self->logger);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {
@@ -144,7 +144,7 @@ int ecserver_worker_run (void* params)
     ecmutex_unlock(self->server->mutex);
 
     // trigger other threads to continue
-    ece_queue_set (self->server->equeue, self->server->worker_lock);
+    ece_list_set (self->server->equeue, self->server->worker_lock);
 
     if( !self->server->callbacks.worker_thread (self->server->callbacks.worker_ptr, &object, self->logger) )
     {
@@ -165,10 +165,10 @@ EcServer ecserver_new(EcLogger logger, uint_t poolSize, EcServerCallbacks* callb
   self->logger = logger;
   self->mainabort = ec;
   self->poolSize = poolSize;
-  self->equeue = ece_queue_new (ec);
+  self->equeue = ece_list_create (ec);
   self->queue = eclist_new();
   self->mutex = ecmutex_new();
-  self->worker_lock = ece_queue_gen (self->equeue);
+  self->worker_lock = ece_list_handle (self->equeue, NULL);
 
   memcpy(&(self->callbacks), callbacks, sizeof(EcServerCallbacks));
 
@@ -218,7 +218,7 @@ void ecserver_delete(EcServer* ptr)
   eclist_delete(&(self->queue));
   ecmutex_delete(&(self->mutex));
   
-  ece_queue_delete (&(self->equeue));
+  ece_list_destroy (&(self->equeue));
       
   ENTC_DEL(ptr, struct EcServer_s);
 }

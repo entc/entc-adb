@@ -222,6 +222,12 @@ void ece_queue_delete (EcEventQueue* sptr)
 
 //------------------------------------------------------------------------------------------------------------
 
+int ece_queue_size (EcEventQueue self)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------
+
 void ece_queue_add_nts (EcEventQueue self, EcHandle handle, int type)
 {
   switch (type)
