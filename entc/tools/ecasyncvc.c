@@ -89,10 +89,7 @@ int ecasyncsvc_run (void* params)
   
   EcAsyncContext context;
     
-  int res = ece_list_wait (self->queue, ENTC_INFINTE, (void**)&context, self->logger);
-  
-  printf("res:%i\n", res);
-  
+  int res = ece_list_wait (self->queue, ENTC_INFINTE, (void**)&context, self->logger);  
   if ((res == ENTC_EVENT_TIMEOUT)) // timeout or interupt
   {
     printf("timeout\n");
@@ -307,7 +304,7 @@ int ecaserv_accept (EcAsyncContext ctx, EcAsyncSvc svc)
     else
     {
       ecsocket_delete (&clientSocket);
-      eclogger_log(self->logger, LL_TRACE, "ASYN", "connection refused, maximum reached" );
+      //eclogger_log(self->logger, LL_TRACE, "ASYN", "connection refused, maximum reached" );
     }
   }
   return TRUE;

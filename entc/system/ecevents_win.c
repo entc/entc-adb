@@ -32,7 +32,7 @@ struct EcEventContext_s {
 
 };
 
-#define MAX_EVENTS 64
+#define MAX_EVENTS 50
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -175,16 +175,10 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
 
   ecmutex_lock (self->mutex);
 
-printf ("ece_list_del\n");
-
   for (i = 2; i < self->hsn; i++)
   {
-printf ("compare handle %p with %p\n", self->hs [i], handle);
     if (self->hs [i] == handle)
     {
-
-printf ("removed handle %i\n", i);
-
       self->hsn--;
       self->hs [i] = self->hs [self->hsn];
       self->ps [i] = self->ps [self->hsn];
@@ -206,9 +200,6 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** ptr, EcLogger logge
   {
     DWORD ind;
     DWORD res = WaitForMultipleObjects (self->hsn, self->hs, FALSE, (timeout == ENTC_INFINTE) ? INFINITE : timeout);
-
-printf ("direct res: %i\n", res);
-
     if(res == WAIT_ABANDONED_0)
     {
       return ENTC_EVENT_ERROR;
