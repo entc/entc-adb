@@ -243,10 +243,7 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
     res = ecsocket_readBunch (self->socket, self->buffer + self->pos, self->len - self->pos);
     if (res > 0)
     {
-      self->pos += res;
-      
-      printf("read %lu bytes to total %lu\n", res, self->pos);
-      
+      self->pos += res;     
       if (self->pos == self->len)
       {
         return ecaworker_onRecv (self) && ecaworker_onIdle (self);

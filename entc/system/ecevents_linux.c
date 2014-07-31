@@ -24,32 +24,16 @@
 #include "ecthread.h"
 #include "ecfile.h"
 #include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <sys/eventfd.h>
 
 struct EcEventContext_s
 {
   
-  int pipe[2];
+  //int pipe[2];
   
-};
-
-struct EcEventQueue_s
-{
-  
-  EcEventContext ec;
-  
-  EcMutex mutex;
-  
-  int maxfd;
-    
-  int fds_r[20];
-  int fdp_r;
-  
-  int fds_w[20];
-  int fdp_w;
-
-  int sfds_r[10];
-  int sfds_w[10];
-  int sfd;
+  int efd;
   
 };
 
@@ -73,6 +57,12 @@ void reactOnAbort (int rfd, int wfd)
 
 EcEventContext ece_context_new (void)
 {
+  EcEventContext self = ENTC_NEW(struct EcEventContext_s);
+  
+  self->efd = eventfd (0, 0);
+  
+  return self;
+  /*
   int lp[2];
   
   // 0 = Read-End; 1 = WriteEnd
@@ -96,6 +86,7 @@ EcEventContext ece_context_new (void)
   
     return self;
   }
+  */
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -104,40 +95,44 @@ void ece_context_delete (EcEventContext* pself)
 {
   EcEventContext self = *pself;
   
+  /*
   if( self->pipe[1] > 0 )
   {
     close(self->pipe[0]);
     close(self->pipe[1]);
   }
+  */
+  
+  close (self->efd);
   
   ENTC_DEL(pself, struct EcEventContext_s);
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
+int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int type)
 {
-  struct timeval tv;
   int retval;
-  int rt = -1;
   
   fd_set fdset;
 
   while (TRUE)
   {
     FD_ZERO(&fdset);
-    FD_SET(self->pipe[0], &fdset);      
+    FD_SET(self->efd, &fdset);
+    FD_SET(handle, &fdset);      
 
     if (timeout == ENTC_INFINTE)
     {
-      retval = select(self->pipe[0] + 1, &fdset, NULL, NULL, NULL);      
+      retval = select (handle + 1, &fdset, NULL, NULL, NULL);      
     }
     else
     {
+      struct timeval tv;
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
       
-      retval = select(self->pipe[0] + 1, &fdset, NULL, NULL, &tv);
+      retval = select (handle + 1, &fdset, NULL, NULL, &tv);
     }
 
     if (retval == -1)
@@ -149,14 +144,66 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
     }
     else if (retval)
     {
-      if( FD_ISSET(self->pipe[0], &fdset) )
+      if( FD_ISSET(self->efd, &fdset) )
+      {            
+        return ENTC_EVENT_ABORT;
+      }
+      if( FD_ISSET(handle, &fdset) )
+      {            
+        return handle;
+      }
+      return ENTC_EVENT_ERROR;
+    }
+    else
+    {
+      return ENTC_EVENT_TIMEOUT;
+    }   
+  }  
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
+{
+    struct timeval tv;
+  int retval;
+  int rt = -1;
+  
+  fd_set fdset;
+
+  while (TRUE)
+  {
+    FD_ZERO(&fdset);
+    FD_SET(self->efd, &fdset);     
+
+    if (timeout == ENTC_INFINTE)
+    {
+      retval = select (self->efd + 1, &fdset, NULL, NULL, NULL);      
+    }
+    else
+    {
+      tv.tv_sec = timeout / 1000;
+      tv.tv_usec = (timeout % 1000) * 1000;
+      
+      retval = select (self->efd + 1, &fdset, NULL, NULL, &tv);
+    }
+
+    if (retval == -1)
+    {
+      if (errno == EINTR)
       {
-        reactOnAbort (self->pipe[0], self->pipe[1]);        
+        continue;      
+      }
+    }
+    else if (retval)
+    {
+      if( FD_ISSET(self->efd, &fdset) )
+      {            
         rt = ENTC_EVENT_ABORT;
       }
       else
       {
-        rt = ENTC_EVENT_UNKNOWN;
+        rt = ENTC_EVENT_ERROR;
       }    
     }
     else
@@ -165,311 +212,219 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
     }
     break;    
   }
-  return rt;
+  return rt; 
 }
 
 /*------------------------------------------------------------------------*/
 
 void ece_context_triggerTermination (EcEventContext self)
 {
+  /*
   if( self->pipe[1] > 0 )
   {
     write(self->pipe[1], "\n", 1);    
-  }  
+  } 
+  */
+
+
+  uint64_t u = 1;
+  int s = write(self->efd, &u, sizeof(uint64_t));
+  if (s != sizeof(uint64_t))
+  {
+    
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-EcEventQueue ece_queue_new (EcEventContext ec)
+struct EcEventQueue_s
+{
+  
+  EcEventContext ec;
+  
+  //EcMutex mutex;
+  
+  /*
+  int maxfd;
+    
+  int fds_r[20];
+  int fdp_r;
+  
+  int fds_w[20];
+  int fdp_w;
+
+  int sfds_r[10];
+  int sfds_w[10];
+  int sfd;
+  */
+
+  fd_set fdset_r;
+  fd_set fdset_w;
+  
+  EcHandle intrfd;
+  
+  void* ptrset [FD_SETSIZE];
+  
+};
+
+//------------------------------------------------------------------------------------------------------------
+
+EcEventQueue ece_list_create (EcEventContext ec)
 {
   EcEventQueue self = ENTC_NEW(struct EcEventQueue_s);
 
   self->ec = ec;
-  self->mutex = ecmutex_new ();
+   
+  FD_ZERO (&(self->fdset_r));
+  FD_ZERO (&(self->fdset_w));
   
-  self->maxfd = 0;
-
-  // just for internal use
-  self->fdp_r = 0;
-  self->fdp_w = 0;
+  FD_SET (ec->efd, &(self->fdset_r));
   
-  self->sfd = 0;
+  self->intrfd = ece_list_handle (self, NULL);
   
-  // add the read end of the pipe to react on aborts
-  ece_queue_add (self, self->ec->pipe[0], ENTC_EVENTTYPE_USER);
-  
-  return self;  
+  return self;    
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_queue_delete (EcEventQueue* sptr)
+void ece_list_destroy (EcEventQueue* pself)
 {
-  EcEventQueue self = *sptr;
-  
-  int i;
-  for (i = 0; i < self->sfd; i++)
-  {
-    // close all self assigned pipes
-    close (self->sfds_r[i]);
-    close (self->sfds_w[i]);
-  }
-  
-  ecmutex_delete (&(self->mutex));
-  
-  ENTC_DEL (sptr, struct EcEventQueue_s);  
-}
-
-//------------------------------------------------------------------------------------------------------------
-
-int ece_queue_size (EcEventQueue self)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------
-
-void ece_queue_add_nts (EcEventQueue self, EcHandle handle, int type)
-{
-  switch (type)
-  {
-    case ENTC_EVENTTYPE_READ:
-    {
-      // add handle to our list
-      self->fds_r[self->fdp_r] = handle;
-      self->fdp_r++;
-      // add handle to the fdset
-      if (handle > self->maxfd) self->maxfd = handle;
-    }
-      break;
-    case ENTC_EVENTTYPE_WRITE:
-    {
-      // add handle to our list
-      self->fds_w[self->fdp_w] = handle;
-      self->fdp_w++;
-      // add handle to the fdset
-      if (handle > self->maxfd) self->maxfd = handle;
-    }
-      break;
-    case ENTC_EVENTTYPE_USER:
-    {
-      // add handle to our list
-      self->fds_r[self->fdp_r] = handle;
-      self->fdp_r++;
-      if (handle > self->maxfd) self->maxfd = handle;
-    }
-      break;
-  }  
-}
-
-//------------------------------------------------------------------------------------------------------------
-
-void ece_queue_add (EcEventQueue self, EcHandle handle, int type)
-{
-  ecmutex_lock (self->mutex);
-  
-  ece_queue_add_nts (self, handle, type);
-  
-  ecmutex_unlock (self->mutex);
-}
-
-//------------------------------------------------------------------------------------------------------------
-
-int ece_queue_wait_nts (EcEventQueue self, uint_t timeout, EcLogger logger, int* rt)
-{
-  struct timeval tv;
-  int retval, i;
-  //struct timeval t1, t2;
-  // fd set must be create here, because select will change the content
-  fd_set rfdset;
-  fd_set wfdset;
-  
-  FD_ZERO(&rfdset);
-  FD_ZERO(&wfdset);
-  
-  for (i = 0; i < self->fdp_r; i++)
-  {
-    FD_SET(self->fds_r[i], &rfdset);
-  }
-  for (i = 0; i < self->fdp_w; i++)
-  {
-    FD_SET(self->fds_w[i], &wfdset);
-  }
-  
-  //gettimeofday(&t1, NULL);
-  //eclogger_logformat(logger, LOGMSG_DEBUG, "CORE", "{queue::pipe} select on max:%i", self->maxfd);    
-  if (timeout == ENTC_INFINTE)
-  {
-    retval = select(self->maxfd + 1, &rfdset, self->fdp_w > 0 ? &wfdset : NULL, NULL, NULL);      
-  }
-  else 
-  {
-    tv.tv_sec = timeout / 1000;
-    tv.tv_usec = (timeout % 1000) * 1000;
+  EcEventQueue self = *pself;
     
-    //eclogger_logformat(logger, LOGMSG_DEBUG, "CORE", "{queue::pipe} wait for timeout sec:%lu usec:%lu maxfd:%i", tv.tv_sec, tv.tv_usec, self->maxfd);            
-    
-    retval = select(self->maxfd + 1, &rfdset, self->fdp_w > 0 ? &wfdset : NULL, NULL, &tv);
-  }
-    
-  // check error
-  if (retval == -1)
+  ENTC_DEL (pself, struct EcEventQueue_s);    
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
+{
+  if (handle < FD_SETSIZE)
   {
-    if (errno == EINTR)
+    if (type == ENTC_EVENTTYPE_WRITE)
     {
-      // try again
-      return TRUE;      
+      FD_SET (handle, &(self->fdset_w));
     }
     else
     {
-      eclogger_logerrno(logger, LL_WARN, "CORE", "{queue::pipe} error on select"); 
-      
-      *rt = ENTC_EVENT_ERROR;      
-      return FALSE;
+      FD_SET (handle, &(self->fdset_r));    
     }
-  }  
-
-  if (retval == 0)
-  {
-    eclogger_log(logger, LL_DEBUG, "CORE", "{queue::pipe} timeout on select");  
-    *rt = ENTC_EVENT_TIMEOUT;
-    return FALSE;
-  }
-  
-  // abort
-  if( FD_ISSET(self->ec->pipe[0], &rfdset) )
-  {
-    reactOnAbort (self->ec->pipe[0], self->ec->pipe[1]);
-    eclogger_log(logger, LL_DEBUG, "CORE", "{queue::pipe} received abort event");      
-    *rt = ENTC_EVENT_ABORT;
     
-    return FALSE;
-  } 
-  
-  // check read fds
-  for (i = 0; i < self->fdp_r; i++)
+    self->ptrset [handle] = ptr;
+    
+    ece_list_set (self, self->intrfd);
+    
+    return TRUE;
+  }
+  else
   {
-    if( FD_ISSET(self->fds_r[i], &rfdset) )
+    return FALSE; 
+  }
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_del (EcEventQueue self, EcHandle handle)
+{
+  FD_CLR (handle, &(self->fdset_w));
+  FD_CLR (handle, &(self->fdset_r));
+  
+  ece_list_set (self, self->intrfd);
+  
+  return TRUE;
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logger)
+{
+  int retval, i;
+  
+  fd_set rfdset;
+  fd_set wfdset;
+  
+  
+  while (TRUE)
+  {
+    memcpy (&rfdset, &(self->fdset_r), sizeof (fd_set));
+    memcpy (&wfdset, &(self->fdset_w), sizeof (fd_set));
+       
+    if (timeout == ENTC_INFINTE)
     {
-      int j;
-      for (j = 0; j < self->sfd; j++)
+      retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, NULL);      
+    }
+    else 
+    {
+      struct timeval tv;
+      tv.tv_sec = timeout / 1000;
+      tv.tv_usec = (timeout % 1000) * 1000;
+      
+      //eclogger_logformat(logger, LOGMSG_DEBUG, "CORE", "{queue::pipe} wait for timeout sec:%lu usec:%lu maxfd:%i", tv.tv_sec, tv.tv_usec, self->maxfd);            
+      
+      retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, &tv);
+    }
+    if (retval == -1)
+    {
+      if (errno == EINTR)
       {
-        // check if its a user trigger
-        if (self->sfds_r[j] == self->fds_r[i])
-        {
-          char buffer;
-          int bytesread = read(self->sfds_r[j], &buffer, 1);
-          if (bytesread < 0)
-          {
-            // some fatal error
-            *rt = ENTC_EVENT_ERROR;
-            return FALSE;            
-          }
-          else if (bytesread == 0)
-          {
-            // fd closed
-            *rt = ENTC_EVENT_ERROR;
-            return FALSE;
-          }
-          else
-          {
-            *rt = ENTC_EVENT_ABORT + i + 1;
-            return FALSE;            
-          }
-        }
+        continue;      
       }
-            
-      *rt = ENTC_EVENT_ABORT + i + 1;
-      
-      return FALSE;
     }
-  }
-  
-  // check write fds
-  for (i = 0; i < self->fdp_w; i++)
-  {
-    if( FD_ISSET(self->fds_w[i], &wfdset) )
+    else if (retval)
     {
-      *rt = ENTC_EVENT_ABORT + i + 1;
-      
-      return FALSE;
+      if (FD_ISSET (self->ec->efd, &rfdset))
+      { 
+	return ENTC_EVENT_ABORT;
+      }
+      if (FD_ISSET (self->intrfd, &rfdset))
+      { 
+	continue;
+      }
+      for (i = 0; i < FD_SETSIZE; i++)
+      {
+	if (FD_ISSET (i, &rfdset) || FD_ISSET (i, &wfdset))
+	{
+	  if (isAssigned (pptr))
+	  {
+	    *pptr = self->ptrset [i];
+	  }
+	  return i;
+	}
+      }
+      return ENTC_EVENT_ERROR;
+    }
+    else
+    {
+      return ENTC_EVENT_TIMEOUT;
     }
   }
-  
-  eclogger_log(logger, LL_WARN, "CORE", "{queue::pipe} unknown event received");      
-  *rt = ENTC_EVENT_UNKNOWN;
-  
-  return FALSE;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-int ece_queue_wait (EcEventQueue self, uint_t timeout, EcLogger logger)
+EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 {
-  int rt = -1;
-  int nr = TRUE;
-  
-  while (nr)
+  EcHandle handle = eventfd (0, 0);
+  if (ece_list_add (self, handle, ENTC_EVENTTYPE_USER, ptr))
   {
-    ecmutex_lock (self->mutex);
-                
-    nr = ece_queue_wait_nts (self, timeout, logger, &rt);
-    
-    ecmutex_unlock (self->mutex);
-    
+    return handle;
   }
-  return rt;  
-}
-
-//------------------------------------------------------------------------------------------------------------
-
-EcHandle ece_queue_gen (EcEventQueue self)
-{
-  int lp[2];
-  int ret;
-  // 0 = Read-End; 1 = WriteEnd
-  pipe(lp);
-  // make the both ends noneblocking  
-  ret = fcntl(lp[0], F_SETFL, fcntl( lp[0], F_GETFL, 0 ) | O_NONBLOCK );  
-  if (ret < 0) {
-    return -1;
-  }
-  ret = fcntl(lp[1], F_SETFL, fcntl( lp[1], F_GETFL, 0 ) | O_NONBLOCK );
-  if (ret < 0) {
-    return -1;
-  }
-  // keep the read end
-  
-  ecmutex_lock (self->mutex);
-  
-  self->sfds_r[self->sfd] = lp[0];
-  self->sfds_w[self->sfd] = lp[1];
-  self->sfd++;
-  // add
-  ece_queue_add_nts (self, lp[0], ENTC_EVENTTYPE_USER);
-
-  ecmutex_unlock (self->mutex);
-  // return the write end
-  return lp[1];
-}
-
-//------------------------------------------------------------------------------------------------------------
-
-void ece_queue_set (EcEventQueue self, EcHandle handle)
-{
-  // just write something into the write end
-  if (handle > 0)
+  else
   {
-    write(handle, "\n", 1);    
+    close (handle);
+    return 0;
   }
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_queue_del (EcEventQueue self, EcHandle* phandle)
+void ece_list_set (EcEventQueue self, EcHandle handle)
 {
-  EcHandle handle = *phandle;
-  close (handle);
-  *phandle = 0;
+  uint64_t u = 1;
+  int s = write(handle, &u, sizeof(uint64_t));
+  if (s != sizeof(uint64_t))
+  {
+    
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -621,11 +576,7 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
 int ece_files_nextEvent(EcEventFiles self)
 {  
   int rt = FALSE;
-  
-  EcEventQueue queue = ece_queue_new (self->econtext);
-  // add the inotify file descriptor
-  ece_queue_add (queue, self->notifd, ENTC_EVENTTYPE_READ);
-  
+    
   while (TRUE) 
   {
     int len;
@@ -635,7 +586,7 @@ int ece_files_nextEvent(EcEventFiles self)
     // wait until some data received on one of the handles
     eclogger_log(self->logger, LL_TRACE, "CORE", "{ece_files} wait for events");
 
-    int res = ece_queue_wait (queue, ENTC_INFINTE, self->logger);
+    int res = ece_context_wait (self->econtext, self->notifd, ENTC_INFINTE, ENTC_EVENTTYPE_READ);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {
@@ -679,8 +630,6 @@ int ece_files_nextEvent(EcEventFiles self)
     rt = TRUE;
     break;
   }
-  
-  ece_queue_delete (&queue);
   
   eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} ended with %i", rt);
   
