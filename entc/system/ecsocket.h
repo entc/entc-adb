@@ -46,29 +46,33 @@ __LIB_EXPORT int ecsocket_connect (EcSocket, const EcString host, uint_t port);
 
 __LIB_EXPORT int ecsocket_listen (EcSocket, const EcString host, uint_t port);
 
+// simple data methods
+
 __LIB_EXPORT EcSocket ecsocket_accept (EcSocket);
 
-__LIB_EXPORT int ecsocket_read (EcSocket, void* buffer, int nbyte);
+__LIB_EXPORT int ecsocket_readBunch (EcSocket, void* buffer, int nbyte);
   
+__LIB_EXPORT int ecsocket_write (EcSocket, const void* buffer, int nbyte);
+
+__LIB_EXPORT int ecsocket_writeStream (EcSocket, EcStream);
+
+__LIB_EXPORT int ecsocket_writeFile (EcSocket, EcFileHandle);
+
+// interuptable data methods
+
+__LIB_EXPORT EcSocket ecsocket_acceptIntr (EcSocket);
+
+__LIB_EXPORT int ecsocket_readIntr (EcSocket, void* buffer, int nbyte, int sec);
+
+__LIB_EXPORT int ecsocket_readIntrBunch (EcSocket, void* buffer, int nbyte, int sec);
+
+// misc methods
+
 __LIB_EXPORT EcHandle ecsocket_getAcceptHandle (EcSocket);
 
 __LIB_EXPORT EcHandle ecsocket_getReadHandle (EcSocket);
 
 __LIB_EXPORT void ecsocket_resetHandle (EcHandle);
-
-__LIB_EXPORT void ecsocket_closeHandle (EcHandle);
-
-__LIB_EXPORT int ecsocket_write (EcSocket, const void* buffer, int nbyte);
-
-// smart methods
-
-__LIB_EXPORT int ecsocket_readAll (EcSocket, void* buffer, int nbyte, int sec);
-
-__LIB_EXPORT int ecsocket_readBunch (EcSocket, void* buffer, int nbyte, int sec);
-
-__LIB_EXPORT int ecsocket_writeStream (EcSocket, EcStream);
-
-__LIB_EXPORT int ecsocket_writeFile (EcSocket, EcFileHandle);
 
 __LIB_EXPORT const EcString ecsocket_address (EcSocket);
   

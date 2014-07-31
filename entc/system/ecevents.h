@@ -73,9 +73,11 @@ __LIB_EXPORT EcEventQueue ece_list_create (EcEventContext);
   
 __LIB_EXPORT void ece_list_destroy (EcEventQueue*);
   
-__LIB_EXPORT void ece_list_add (EcEventQueue, EcHandle, int type, void* ptr);
+// returns if this was successfull
+__LIB_EXPORT int ece_list_add (EcEventQueue, EcHandle, int type, void* ptr);
 
-__LIB_EXPORT void ece_list_del (EcEventQueue, EcHandle);
+// returns if this was successfull
+__LIB_EXPORT int ece_list_del (EcEventQueue, EcHandle);
 
 __LIB_EXPORT int ece_list_wait (EcEventQueue, uint_t timeout, void** ptr, EcLogger logger);
 

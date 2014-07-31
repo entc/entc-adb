@@ -74,9 +74,9 @@ void ecasyncsvc_destroy (EcAsyncSvc* pself)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecasyncsvc_add (EcAsyncSvc self, EcAsyncContext context)
+int ecasyncsvc_add (EcAsyncSvc self, EcAsyncContext context)
 {
-  ece_list_add (self->queue, context->handle, ENTC_EVENTTYPE_READ, context);  
+  return ece_list_add (self->queue, context->handle, ENTC_EVENTTYPE_READ, context);  
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -116,9 +116,7 @@ int ecasyncsvc_run (void* params)
   }
   
   ece_list_del (self->queue, context->handle);
-  
-  ecsocket_closeHandle (context->handle);
-  
+    
   if (isAssigned (context->del))
   {
     context->del (&(context->ptr));
@@ -241,9 +239,11 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
   
   if (self->pos < self->len)
   {
+    ulong_t res;
+    
     ecsocket_resetHandle (ctx->handle);
 
-    ulong_t res = ecsocket_read (self->socket, self->buffer + self->pos, self->len - self->pos);
+    res = ecsocket_readBunch (self->socket, self->buffer + self->pos, self->len - self->pos);
     if (res > 0)
     {
       self->pos += res;
@@ -281,28 +281,35 @@ void ecaworker_onDel (void** pptr)
 
 int ecaserv_accept (EcAsyncContext ctx, EcAsyncSvc svc)
 {
+  EcSocket clientSocket;
+
   EcAsyncServ self = ctx->ptr;
   
   ecsocket_resetHandle (ctx->handle);
   
-  EcSocket clientSocket = ecsocket_accept (self->socket);
+  clientSocket = ecsocket_accept (self->socket);
   if (isAssigned (clientSocket))
-  {
-    EcAsyncServContext sc = ecaworker_create (clientSocket);
-    
+  {  
     EcAsyncContext context = ENTC_NEW (struct EcAsyncContext_s);
     
     context->handle = ecsocket_getReadHandle (clientSocket);
 
-    context->ptr = sc;
-    context->run = ecaworker_run;
-    context->del = ecaworker_onDel;
-    
-    ecasyncsvc_add (self->svc, context);
-    
-    eclogger_log(self->logger, LL_TRACE, "ASYN", "client connected" );
+    if (ecasyncsvc_add (self->svc, context))
+    {
+      EcAsyncServContext sc = ecaworker_create (clientSocket);
+
+      context->ptr = sc;
+      context->run = ecaworker_run;
+      context->del = ecaworker_onDel;
+
+      eclogger_log(self->logger, LL_TRACE, "ASYN", "client connected" );
+    }
+    else
+    {
+      ecsocket_delete (&clientSocket);
+      eclogger_log(self->logger, LL_TRACE, "ASYN", "connection refused, maximum reached" );
+    }
   }
-  
   return TRUE;
 }
 

@@ -37,14 +37,16 @@
 
 struct EcSocket_s
 {
-  
+  // reference
   EcEventContext ec;
-  
+  // reference
   EcLogger logger;
-  
+  // the original fd socket 
   SOCKET socket;
-  
-  EcMutex mutex;
+  // accept windows event handle
+  HANDLE haccept;
+  // read windows event handle
+  HANDLE hread;
   
 };
 
@@ -69,11 +71,39 @@ int ecwsa_init()
     
     return init;
   }
-};
+}
 
 //-----------------------------------------------------------------------------------
 
-EcSocket ecsocket_new(EcEventContext ec, EcLogger logger)
+EcHandle ecsocket_createAcceptHandle (EcSocket self)
+{
+  HANDLE handle = WSACreateEvent();
+
+  if (WSAEventSelect (self->socket, handle, FD_ACCEPT | FD_CLOSE ) == SOCKET_ERROR)
+  {
+    WSACloseEvent (handle);
+    return NULL;
+  }
+  return handle;
+}
+
+//-----------------------------------------------------------------------------------
+
+EcHandle ecsocket_createReadHandle (EcSocket self)
+{
+  HANDLE handle = WSACreateEvent();
+
+  if (WSAEventSelect (self->socket, handle, FD_READ | FD_CLOSE ) == SOCKET_ERROR)
+  {
+    WSACloseEvent (handle);
+    return NULL;
+  }
+  return handle;
+}
+
+//-----------------------------------------------------------------------------------
+
+EcSocket ecsocket_new (EcEventContext ec, EcLogger logger)
 {
   EcSocket self = ENTC_NEW(struct EcSocket_s);
   
@@ -81,23 +111,30 @@ EcSocket ecsocket_new(EcEventContext ec, EcLogger logger)
 
   self->ec = ec;
   self->logger = logger;
+
   self->socket = INVALID_SOCKET;
-  self->mutex = NULL;
+
+  self->haccept = NULL;
+  self->hread = NULL;
   
   return self;
 }
 
 //-----------------------------------------------------------------------------------
 
-void ecsocket_delete(EcSocket* pself)
+void ecsocket_delete (EcSocket* pself)
 {
   EcSocket self = *pself;
   
-  if (self->mutex)
+  if (self->haccept)
   {
-    ecmutex_delete(&(self->mutex));
+    WSACloseEvent (self->haccept);  
   }
-  
+  if (self->hread)
+  {
+    WSACloseEvent (self->hread);  
+  }  
+
   if (self->socket != INVALID_SOCKET)
   {
     shutdown(self->socket, SD_BOTH);
@@ -112,7 +149,7 @@ void ecsocket_delete(EcSocket* pself)
 
 //-----------------------------------------------------------------------------------
 
-SOCKET ecsocket_create(EcSocket self, const EcString host, uint_t port, int role)
+SOCKET ecsocket_create (EcSocket self, const EcString host, uint_t port, int role)
 {
   struct addrinfo hints;
   struct addrinfo* addr;
@@ -167,7 +204,7 @@ SOCKET ecsocket_create(EcSocket self, const EcString host, uint_t port, int role
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_connect(EcSocket self, const EcString host, uint_t port)
+int ecsocket_connect (EcSocket self, const EcString host, uint_t port)
 {
   self->socket = ecsocket_create(self, host, port, TRUE);
   
@@ -176,7 +213,7 @@ int ecsocket_connect(EcSocket self, const EcString host, uint_t port)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_listen(EcSocket self, const EcString host, uint_t port)
+int ecsocket_listen (EcSocket self, const EcString host, uint_t port)
 {
   SOCKET sock = ecsocket_create(self, host, port, FALSE);
   
@@ -188,223 +225,107 @@ int ecsocket_listen(EcSocket self, const EcString host, uint_t port)
   
   self->socket = sock;
   // indicates a listen socket
-  self->mutex = ecmutex_new();
+  self->haccept = ecsocket_createAcceptHandle (self);
+  if (isNotAssigned (self->haccept))
+  {
+    closesocket(sock);
+    return FALSE;
+  }
   
   return TRUE;
 }
 
 //-----------------------------------------------------------------------------------
 
-EcSocket ecsocket_accept (EcSocket self)
+EcSocket ecsocket_createReadSocket (EcEventContext ec, EcLogger logger, SOCKET sock)
 {
-  // variables
-  EcEventQueue queue;
-  HANDLE shandle;
-  SOCKET sock = INVALID_SOCKET;
-  EcSocket nself;
-
-  if (self->mutex == NULL)
+  EcSocket self = ENTC_NEW(struct EcSocket_s);
+  // references
+  self->ec = ec;
+  self->logger = logger;
+  // socket
+  self->socket = sock;
+  //handles
+  self->haccept = NULL;
+  self->hread = ecsocket_createReadHandle (self);
+  if (isNotAssigned (self->hread))
   {
-    return NULL;
+    ecsocket_delete (&self);
   }
-  // critical section start
-  ecmutex_lock(self->mutex);
-  
-  shandle = WSACreateEvent();
-  
-  if( WSAEventSelect( self->socket, shandle, FD_ACCEPT | FD_CLOSE ) == SOCKET_ERROR )
-  {
-    ecmutex_unlock(self->mutex);
-    return 0;
-  }
-  
-  queue = ece_queue_new(self->ec);
-  ece_queue_add (queue, shandle, ENTC_EVENTTYPE_READ);
-
-  while (sock == INVALID_SOCKET) 
-  {
-    int res = ece_queue_wait (queue, ENTC_INFINTE, self->logger);
-    // check the return
-    if (res == ENTC_EVENT_ABORT)
-    {
-      // termination of the process
-      break;
-    }
-    if (res == ENTC_EVENT_TIMEOUT)
-    {
-      // timeout
-      break;
-    }
-    // try to accept connection
-    sock = accept(self->socket, 0, 0 );
-    
-    if (sock == INVALID_SOCKET)
-    {
-      int lasterr = WSAGetLastError();
-      // Ingnore this error
-      if (lasterr == WSAEWOULDBLOCK) 
-      {
-        continue;
-      }
-      break;
-    }      
-  }
-  // delete event list
-  ece_queue_delete (&queue);
-
-  WSACloseEvent(shandle);
-  
-  // leave critical section
-  ecmutex_unlock(self->mutex);
-  
-  if (sock == INVALID_SOCKET) 
-  {
-    return NULL;
-  }
-  
-  nself = ENTC_NEW(struct EcSocket_s);
-  
-  nself->ec = self->ec;
-  nself->logger = self->logger;
-  nself->socket = sock;
-  nself->mutex = ecmutex_new();
-  
-  return nself;  
+  return self;
 }
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_read (EcSocket self, void* buffer, int nbyte)
+EcSocket ecsocket_accept (EcSocket self)
 {
-  int bytesread = 0;
-  while (bytesread < nbyte)
+  while (TRUE) 
   {
-    int h = ecsocket_readTimeout (self, (unsigned char*)buffer + bytesread, nbyte, 500);
-    if (h > 0)
+    SOCKET sock = accept (self->socket, 0, 0); 
+    if (sock == INVALID_SOCKET) 
     {
-      bytesread += h;
+      int lasterr = WSAGetLastError();
+      if (lasterr == WSAEWOULDBLOCK) 
+      {
+        continue;
+      }
+      return NULL;
     }
-    else
-    {
-      return h;
-    }
-  }
-  return nbyte;
+    return ecsocket_createReadSocket (self->ec, self->logger, sock);
+  }  
 }
 
 //-----------------------------------------------------------------------------------
 
 int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
 {
-  // wait maximal 500 milliseconds
-  return ecsocket_readTimeout(self, buffer, nbyte, 500);
-}
-
-//-----------------------------------------------------------------------------------
-
-int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
-{
-  // variables
-  EcEventQueue queue;
-  HANDLE shandle;
-  int ret;
-  
-  if (self->mutex == NULL)
-  {
-    return ENTC_SOCKET_RETSTATE_ERROR;
-  }
-  // critical section start
-  ecmutex_lock(self->mutex);
-  
-  shandle = WSACreateEvent();
-  
-  if( WSAEventSelect( self->socket, shandle, FD_READ | FD_CLOSE ) == SOCKET_ERROR )
-  {
-    ecmutex_unlock(self->mutex);
-    return ENTC_SOCKET_RETSTATE_ERROR;
-  }
-  
-  queue = ece_queue_new (self->ec);
-  ece_queue_add (queue, shandle, ENTC_EVENTTYPE_READ);
-  
   while (TRUE) 
   {
-    int res = ece_queue_wait (queue, ENTC_INFINTE, self->logger);
-    // check the return
-    if (res == ENTC_EVENT_ABORT)
+    int res = recv (self->socket, buffer, nbyte, 0);  
+    if (res == 0)
     {
-      // termination of the process
-      ret = ENTC_SOCKET_RETSTATE_ABORT;
-      break;
+      return 0;
     }
-    if (res == ENTC_EVENT_TIMEOUT)
-    {
-      // timeout
-      ret = ENTC_SOCKET_RETSTATE_ERROR;
-      break;
-    }
-    
-    ret = recv(self->socket, buffer, nbyte, 0);  
-    if (ret == SOCKET_ERROR)
+    else if (res == SOCKET_ERROR) 
     {
       int lasterr = WSAGetLastError();
-      // Ingnore this error
       if (lasterr == WSAEWOULDBLOCK) 
       {
         continue;
       }
+      return -1;
     }
-    // end
-    break;
+    return res;
   }  
-  // delete event list
-  ece_queue_delete (&queue);
-  
-  WSACloseEvent(shandle);  
-  // leave critical section
-  ecmutex_unlock(self->mutex);
-
-  return ret;  
 }
 
 //-----------------------------------------------------------------------------------
-
+  
 int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
 {
-  // variables
-  int ret = 0;
   int del = 0;
-  
-  if (self->mutex == NULL)
-  {
-    return ENTC_SOCKET_RETSTATE_ERROR;
-  }
-  // critical section start
-  
   while (del < nbyte)
   {
-    // send
-    ret = send(self->socket, (char*)buffer + del, nbyte - del, 0);
-    if (ret == 0)
+    int res = send (self->socket, (char*)buffer + del, nbyte - del, 0);
+    if (res == 0)
     {
-      break;
-    }
-    else if (ret == SOCKET_ERROR)
+      return 0;
+    } 
+    else if (res == SOCKET_ERROR) 
     {
       int lasterr = WSAGetLastError();
-      // Ingnore this error
       if (lasterr == WSAEWOULDBLOCK) 
       {
         continue;
       }
-      break;
+      return -1;
     }
     else
     {
-      del = del + ret;
-    }
-  }  
-  return ret;  
+      del += res;
+    }    
+  }
+  return nbyte;
 }
 
 //-----------------------------------------------------------------------------------
@@ -436,9 +357,121 @@ int ecsocket_writeStream (EcSocket self, EcStream stream)
 
 //-----------------------------------------------------------------------------------
 
+EcSocket ecsocket_acceptIntr (EcSocket self)
+{ 
+  while (TRUE) 
+  {
+    SOCKET sock;
+    // wait for either data on the handle or terminate signal
+    int res = ece_context_wait (self->ec, self->haccept, INFINITE, ENTC_EVENTTYPE_READ);
+    if (res == ENTC_EVENT_ABORT)
+    {
+      // termination of the process
+      return NULL;
+    }
+    if (res == ENTC_EVENT_TIMEOUT)
+    {
+      // timeout
+      return NULL;
+    }
+    sock = accept (self->socket, 0, 0); 
+    if (sock == INVALID_SOCKET) 
+    {
+      int lasterr = WSAGetLastError();
+      if (lasterr == WSAEWOULDBLOCK) 
+      {
+        continue;
+      }
+      // error
+      return NULL;
+    }
+    return ecsocket_createReadSocket (self->ec, self->logger, sock);
+  }
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
+{
+  while (TRUE) 
+  {
+    int res = ece_context_wait (self->ec, self->hread, timeout == ENTC_INFINTE ? INFINITE : timeout, ENTC_EVENTTYPE_READ);
+    if (res == ENTC_EVENT_ABORT || res == ENTC_EVENT_TIMEOUT)
+    {
+      return res;
+    }
+    res = recv (self->socket, buffer, nbyte, 0); 
+    if (res == 0)
+    {
+      return 0;
+    } 
+    else if (res == SOCKET_ERROR) 
+    {
+      int lasterr = WSAGetLastError();
+      if (lasterr == WSAEWOULDBLOCK) 
+      {
+        continue;
+      }
+      return -1;
+    }
+    return res;
+  }
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readIntr (EcSocket self, void* buffer, int nbyte, int timeout)
+{
+  int bytesread = 0;
+  while (bytesread < nbyte)
+  {
+    int h = ecsocket_readTimeout (self, (unsigned char*)buffer + bytesread, nbyte, timeout);
+    if (h > 0)
+    {
+      bytesread += h;
+    }
+    else
+    {
+      return h;
+    }
+  }
+  return nbyte;
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readIntrBunch (EcSocket self, void* buffer, int nbyte, int timeout)
+{
+  // wait maximal 500 milliseconds
+  return ecsocket_readTimeout (self, buffer, nbyte, timeout);
+}
+
+//-----------------------------------------------------------------------------------
+
 const EcString ecsocket_address (EcSocket self)
 {
   return 0;
+}
+
+//-----------------------------------------------------------------------------------
+
+EcHandle ecsocket_getAcceptHandle (EcSocket self)
+{
+  return self->haccept;
+}
+
+//-----------------------------------------------------------------------------------
+
+EcHandle ecsocket_getReadHandle (EcSocket self)
+{
+  return self->hread;
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecsocket_resetHandle (EcHandle handle)
+{
+  ResetEvent (handle);
 }
 
 //-----------------------------------------------------------------------------------

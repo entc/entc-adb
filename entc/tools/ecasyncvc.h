@@ -37,9 +37,9 @@ typedef void (*async_context_destroy_fct) (void**);
 
 struct EcAsyncContext_s
 {
-  
+    
   EcHandle handle;
-  
+
   async_context_run_fct run;
   
   async_context_destroy_fct del;
@@ -56,7 +56,7 @@ __LIB_EXPORT void ecasyncsvc_destroy (EcAsyncSvc*);
 
 __LIB_EXPORT void ecasyncsvc_start (EcAsyncSvc);
 
-__LIB_EXPORT void ecasyncsvc_add (EcAsyncSvc, EcAsyncContext);
+__LIB_EXPORT int ecasyncsvc_add (EcAsyncSvc, EcAsyncContext);
 
 __CPP_EXTERN______________________________________________________________________________END
 

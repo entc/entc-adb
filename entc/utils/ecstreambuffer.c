@@ -70,7 +70,7 @@ void ecstreambuffer_delete (EcStreamBuffer* pself)
 
 int ecstreambuffer_refill (EcStreamBuffer self, int* error)
 {
-  *error = ecsocket_readBunch (self->socket, self->buffer->buffer, self->buffer->size - 2, 30);
+  *error = ecsocket_readBunch (self->socket, self->buffer->buffer, self->buffer->size - 2);
   if( *error > 0 )
   {
     self->pos = self->buffer->buffer;
