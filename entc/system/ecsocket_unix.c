@@ -210,6 +210,199 @@ int ecsocket_listen(EcSocket self, const EcString host, uint_t port)
 
 //-----------------------------------------------------------------------------------
 
+EcSocket ecsocket_createReadSocket (EcEventContext ec, EcLogger logger, int sock, socklen_t addrlen, struct sockaddr* addr)
+{
+  EcSocket self = ENTC_NEW(struct EcSocket_s);
+  // references
+  self->ec = ec;
+  self->logger = logger;
+  // socket
+  self->socket = sock;
+  {
+    EcBuffer ipbuffer = ecbuf_create (INET6_ADDRSTRLEN);    
+    // convert address information into string
+    inet_ntop(AF_INET, addr, (char*)ipbuffer->buffer, addrlen);
+    
+    self->host = ecbuf_str (&ipbuffer);
+    
+    eclogger_logformat(self->logger, LL_TRACE, "CORE", "{socket} connection accepted from '%s'", self->host);
+  }
+  return self;
+}
+
+//-----------------------------------------------------------------------------------
+
+EcSocket ecsocket_accept (EcSocket self)
+{
+  while (TRUE)
+  {
+    struct sockaddr addr;
+    socklen_t addrlen = 0;
+    
+    memset (&addr, 0x00, sizeof(addr));
+    
+    int sock = accept (self->socket, &addr, &addrlen);
+    if (sock < 0)
+    {
+      if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
+      {
+        eclogger_logerrno(self->logger, LL_ERROR, "CORE", "Error on accept client connection"); 
+        break;
+      }
+      else
+      {
+        eclogger_logerrno(self->logger, LL_TRACE, "CORE", "Minor rrror on accept client connection"); 
+        continue;
+      }
+    }
+    return ecsocket_createReadSocket (self->ec, self->logger, sock, addrlen, &addr);
+  }
+  return NULL;
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
+{
+  while (TRUE) 
+  {
+    int res = recv (self->socket, buffer, nbyte, 0);  
+    if (res < 0)
+    {
+      if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
+      {
+        eclogger_logerrno(self->logger, LL_ERROR, "CORE", "Error on recv"); 
+        return -1;
+      }
+      else
+      {
+        continue;
+      }
+    }
+    else if (res == 0)
+    {
+      eclogger_logerrno(self->logger, LL_WARN, "CORE", "{socket} connection reset by host"); 
+      return 0;
+    }    
+    // end
+    return res;
+  }    
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
+{
+  int del = 0;
+  while (del < nbyte)
+  {
+    int res = send (self->socket, (char*)buffer + del, nbyte - del, 0);
+    if (res < 0)
+    {
+      if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
+      {
+        eclogger_logerrno(self->logger, LL_ERROR, "CORE", "Error on send"); 
+        return -1;
+      }
+      else
+      {
+        continue;
+      }
+    }
+    else if (res == 0)
+    {
+      eclogger_logerrno(self->logger, LL_WARN, "CORE", "{socket} connection reset by host"); 
+      return 0;
+    }    
+    else
+    {
+      del += res;
+    }    
+  }
+  return nbyte;  
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_writeStream (EcSocket self, EcStream stream)
+{
+  uint_t size = ecstream_size( stream );
+  
+  return ecsocket_write(self, ecstream_buffer(stream), size);    
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_writeFile (EcSocket self, EcFileHandle fh)
+{
+  // write raw data
+  EcBuffer buffer = ecbuf_create (1024);
+  
+  uint_t res = ecfh_readBuffer(fh, buffer);
+  
+  while( res )
+  {
+    ecsocket_write(self, buffer->buffer, res);
+    res = ecfh_readBuffer(fh, buffer);
+  }
+  
+  return TRUE;  
+}
+
+//-----------------------------------------------------------------------------------
+
+EcSocket ecsocket_acceptIntr (EcSocket self)
+{
+  
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readIntr (EcSocket self, void* buffer, int nbyte, int sec)
+{
+  
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecsocket_readIntrBunch (EcSocket self, void* buffer, int nbyte, int sec)
+{
+  
+}
+
+//-----------------------------------------------------------------------------------
+
+EcHandle ecsocket_getAcceptHandle (EcSocket self)
+{
+  return self->socket;
+}
+
+//-----------------------------------------------------------------------------------
+
+EcHandle ecsocket_getReadHandle (EcSocket self)
+{
+  return self->socket;  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecsocket_resetHandle (EcHandle handle)
+{
+  // not needed
+}
+
+//-----------------------------------------------------------------------------------
+
+const EcString ecsocket_address (EcSocket self)
+{
+  return self->host;  
+}
+
+//-----------------------------------------------------------------------------------
+
+
+
+
 EcSocket ecsocket_accept (EcSocket self)
 {
   // variables
@@ -405,7 +598,7 @@ int ecsocket_readAll (EcSocket self, void* buffer, int nbyte, int timeout)
 
 //-----------------------------------------------------------------------------------
 
-int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte, int timeout)
+int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
 {
   // wait maximal 30 seconds
   return ecsocket_readTimeout(self, buffer, nbyte, timeout * 1000);    
