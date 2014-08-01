@@ -229,7 +229,7 @@ void ece_list_destroy (EcEventQueue* sptr)
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
+int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
 {
   int flag = 0;
   switch (type)
@@ -251,7 +251,8 @@ void ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
     break;
   }
 
-  ece_kevent_addHandle (self->kq, handle, flag, ptr);  
+  ece_kevent_addHandle (self->kq, handle, flag, ptr); 
+  return TRUE;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -303,9 +304,10 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_list_del (EcEventQueue self, EcHandle handle)
+int ece_list_del (EcEventQueue self, EcHandle handle)
 {
   ece_kevent_delHandle (self->kq, handle);
+  return TRUE;
 }
 
 //------------------------------------------------------------------------------------------------------------

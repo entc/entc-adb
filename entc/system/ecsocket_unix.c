@@ -48,8 +48,6 @@ struct EcSocket_s
   
   int socket;
     
-  EcMutex mutex;
-  
   EcString host;
   
 };
@@ -63,7 +61,6 @@ EcSocket ecsocket_new (EcEventContext ec, EcLogger logger)
   self->ec = ec;
   self->logger = logger;
   self->socket = 0;
-  self->mutex = NULL;
   self->host = ecstr_init();
   
   return self;
@@ -74,12 +71,7 @@ EcSocket ecsocket_new (EcEventContext ec, EcLogger logger)
 void ecsocket_delete (EcSocket* pself)
 {
   EcSocket self = *pself;
-  
-  if (self->mutex)
-  {
-    ecmutex_delete(&(self->mutex));
-  }
-  
+    
   if (self->socket >= 0)
   {
     shutdown(self->socket, 2);
@@ -176,8 +168,6 @@ int ecsocket_connect (EcSocket self, const EcString host, uint_t port)
   
   if (self->socket >= 0)
   {
-    self->mutex = ecmutex_new();
-    
     ecstr_replace(&(self->host), host);
     return TRUE;
   }
@@ -202,7 +192,6 @@ int ecsocket_listen (EcSocket self, const EcString host, uint_t port)
   
   self->socket = sock;
   // indicates a listen socket
-  self->mutex = ecmutex_new(); 
   ecstr_replace(&(self->host), host);
   
   return TRUE;
@@ -381,7 +370,7 @@ EcSocket ecsocket_acceptIntr (EcSocket self)
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
         eclogger_logerrno(self->logger, LL_ERROR, "CORE", "Error on accept client connection"); 
-        break;
+        return NULL;
       }
       else
       {
