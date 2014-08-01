@@ -174,6 +174,7 @@ int ecaworker_onIdle (EcAsyncServContext self)
 
 int ecaworker_onRecv (EcAsyncServContext self)
 {
+  ecsocket_write (self->socket, "HTTP/1.1 200 OK\n\n", 17);
   
   return FALSE;
 }

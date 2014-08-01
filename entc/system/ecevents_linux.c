@@ -377,6 +377,11 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
       }
       if (FD_ISSET (self->intrfd, &rfdset))
       { 
+	uint64_t s = read (self->intrfd, &s, sizeof(uint64_t));
+        if (s != sizeof(uint64_t))
+	{
+	  return ENTC_EVENT_ERROR; 
+	}
 	continue;
       }
       for (i = 0; i < FD_SETSIZE; i++)
