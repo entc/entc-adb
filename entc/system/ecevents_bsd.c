@@ -39,12 +39,19 @@
 
 //------------------------------------------------------------------------------------------------------------
 
-void ece_kevent_addHandle (int kq, EcHandle handle, int flag, void* ptr)
+void ece_kevent_addHandle (int kq, EcHandle handle, int flag, void* ptr, int clear)
 {
   struct kevent kev;
   memset (&kev, 0x0, sizeof(struct kevent));
   
-  EV_SET (&kev, handle, flag, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, ptr); 
+  if (clear)
+  {
+    EV_SET (&kev, handle, flag, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, ptr); 
+  }
+  else
+  {
+    EV_SET (&kev, handle, flag, EV_ADD | EV_ENABLE, 0, 0, ptr);     
+  }
   // add handle to kevent
   kevent (kq, &kev, 1, NULL, 0, NULL);
 }
@@ -158,6 +165,8 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 
 //------------------------------------------------------------------------------------------------------------
 
+#define ECELIST_ABORT_HANDLENO -1
+
 void ece_context_triggerTermination (EcEventContext self)
 {
   EcListNode node;
@@ -166,9 +175,9 @@ void ece_context_triggerTermination (EcEventContext self)
 
   for (node = eclist_first(self->lists); node != eclist_end(self->lists); node = eclist_next(node))
   {
-    EcEventQueue self = eclist_data (node);
+    EcEventQueue list = eclist_data (node);
     // trigger termination in queue    
-    ece_list_set (self, 0);
+    ece_list_set (list, ECELIST_ABORT_HANDLENO);
   }
 
   ecmutex_unlock (self->mutex);
@@ -205,7 +214,7 @@ EcEventQueue ece_list_create (EcEventContext ec)
   
   ecmutex_unlock (self->ecmutex);
 
-  ece_kevent_addHandle (self->kq, 0, EVFILT_USER, NULL);
+  ece_kevent_addHandle (self->kq, ECELIST_ABORT_HANDLENO, EVFILT_USER, NULL, FALSE);
   
   return self;
 }
@@ -251,7 +260,7 @@ int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
     break;
   }
 
-  ece_kevent_addHandle (self->kq, handle, flag, ptr); 
+  ece_kevent_addHandle (self->kq, handle, flag, ptr, TRUE); 
   return TRUE;
 }
 
@@ -279,13 +288,12 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
     }
     else if( res == 0 )
     {
-      eclogger_log (logger, LL_TRACE, "CORE", "timeout on kevent");
+      //eclogger_log (logger, LL_TRACE, "CORE", "timeout on kevent");
       return ENTC_EVENT_TIMEOUT;
     }
-    else if( (kev_ret.ident == 0) && (kev_ret.filter == EVFILT_USER) )
+    else if( (kev_ret.ident == ECELIST_ABORT_HANDLENO) && (kev_ret.filter == EVFILT_USER) )
     {
-      eclogger_log (logger, LL_TRACE, "CORE", "abort in eventcontext");
-      // abort !!!!      
+      //eclogger_log (logger, LL_TRACE, "CORE", "abort in eventcontext");      
       return ENTC_EVENT_ABORT;
     } 
     else
@@ -297,7 +305,7 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
         *pptr = kev_ret.udata;
       }
       
-      return 0;
+      return kev_ret.ident;
     }  
   }
 }
@@ -314,7 +322,7 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
 
 EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 {
-  ece_kevent_addHandle (self->kq, -9, EVFILT_USER, ptr);
+  ece_kevent_addHandle (self->kq, -9, EVFILT_USER, ptr, TRUE);
   
   return -9;
 }

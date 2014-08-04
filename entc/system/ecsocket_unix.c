@@ -77,13 +77,8 @@ void ecsocket_delete (EcSocket* pself)
     shutdown(self->socket, 2);
     
     int res = close(self->socket);
-    printf("socket closed %i\n", res);
     
     self->socket = -1;
-  }
-  else
-  {
-    printf("socket not assigned\n");
   }
   
   ecstr_delete(&(self->host));
