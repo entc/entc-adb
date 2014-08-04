@@ -144,6 +144,10 @@ struct EcAsyncServ_s
   
   EcSocket socket;
   
+  EcAsyncServCallbacks callbacks;
+  
+  void* ptr;  
+  
 };
 
 //-----------------------------------------------------------------------------------------------------------
@@ -159,29 +163,51 @@ struct EcAsyncServContext_s
   
   uint_t len;
   
+  EcAsyncServCallbacks* callbacks;
+  
+  void* ptr;
+  
 };
 
 //-----------------------------------------------------------------------------------------------------------
 
 int ecaworker_onIdle (EcAsyncServContext self)
 {
-  ecaserv_context_recv (self, 20);
+  int bytesToRecv = 0;
   
-  return TRUE;
+  if (isAssigned (self->callbacks->onIdle))
+  {
+    bytesToRecv = self->callbacks->onIdle (self->ptr);
+  }
+  
+  if (bytesToRecv > 0)
+  {
+    ecaserv_context_recv (self, bytesToRecv);
+    return TRUE;
+  }
+  else
+  {
+    return FALSE;
+  }  
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
 int ecaworker_onRecv (EcAsyncServContext self)
 {
-  ecsocket_write (self->socket, "HTTP/1.1 200 OK\n\n", 17);
+  int ret = FALSE;
   
-  return FALSE;
+  if (isAssigned (self->callbacks->onRecv))
+  {
+    ret = self->callbacks->onRecv (self->ptr, self->buffer, self->len);
+  }
+  
+  return ret;
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcAsyncServContext ecaworker_create (EcSocket socket)
+EcAsyncServContext ecaworker_create (EcSocket socket, EcAsyncServCallbacks* callbacks, void* ptr)
 {
   EcAsyncServContext self = ENTC_NEW (struct EcAsyncServContext_s);
   
@@ -189,6 +215,9 @@ EcAsyncServContext ecaworker_create (EcSocket socket)
   self->pos = 0;
   self->buffer = NULL;
 
+  self->callbacks = callbacks;
+  self->ptr = ptr;
+  
   ecaworker_onIdle (self);
   
   return self;
@@ -200,7 +229,10 @@ void ecaworker_destroy (EcAsyncServContext* pself)
 {
   EcAsyncServContext self = *pself;
 
-  printf("delete context\n");
+  if (isAssigned (self->callbacks->onDestroy))
+  {
+    self->callbacks->onDestroy (&(self->ptr));
+  }  
   
   ecsocket_delete (&(self->socket));
 
@@ -291,13 +323,27 @@ int ecaserv_accept (EcAsyncContext ctx, EcAsyncSvc svc)
 
     if (ecasyncsvc_add (self->svc, context))
     {
-      EcAsyncServContext sc = ecaworker_create (clientSocket);
-
-      context->ptr = sc;
-      context->run = ecaworker_run;
-      context->del = ecaworker_onDel;
-
-      eclogger_log(self->logger, LL_TRACE, "ASYN", "client connected" );
+      void* ptr = NULL;
+      
+      if ( isAssigned (self->callbacks.onCreate))
+      {
+        ptr = self->callbacks.onCreate (clientSocket, self->callbacks.ptr);
+      }
+      
+      if (isAssigned (ptr))
+      {
+        EcAsyncServContext sc = ecaworker_create (clientSocket, &(self->callbacks), ptr);
+        
+        context->ptr = sc;
+        context->run = ecaworker_run;
+        context->del = ecaworker_onDel;
+        
+        eclogger_log(self->logger, LL_TRACE, "ASYN", "client connected" );        
+      }
+      else
+      {
+        ecsocket_delete (&clientSocket);        
+      }
     }
     else
     {
@@ -310,7 +356,7 @@ int ecaserv_accept (EcAsyncContext ctx, EcAsyncSvc svc)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcAsyncServ ecaserv_create (EcLogger logger)
+EcAsyncServ ecaserv_create (EcLogger logger, EcAsyncServCallbacks* callbacks)
 {
   EcAsyncServ self = ENTC_NEW (struct EcAsyncServ_s);
 
@@ -318,6 +364,9 @@ EcAsyncServ ecaserv_create (EcLogger logger)
   
   self->ec = ece_context_new ();
   self->svc = ecasyncsvc_create (self->ec, logger);
+  
+  // callbacks
+  memcpy(&(self->callbacks), callbacks, sizeof(EcAsyncServCallbacks));
     
   return self;
 }

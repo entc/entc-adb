@@ -62,9 +62,32 @@ __CPP_EXTERN____________________________________________________________________
 
 struct EcAsyncServ_s; typedef struct EcAsyncServ_s* EcAsyncServ;
 
+typedef void* (*serv_context_onCreate_fct) (EcSocket, void*);
+
+typedef void (*serv_context_onDestroy_fct) (void**);
+
+typedef int (*serv_context_onRecv_fct) (void*, char* buffer, int len);
+
+typedef int (*serv_context_onIdle_fct) (void*);
+
+typedef struct 
+{
+  
+  serv_context_onCreate_fct onCreate;
+  
+  serv_context_onDestroy_fct onDestroy;
+  
+  serv_context_onRecv_fct onRecv;
+  
+  serv_context_onIdle_fct onIdle;
+  
+  void* ptr;
+  
+} EcAsyncServCallbacks;
+
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncServ ecaserv_create (EcLogger logger);
+__LIB_EXPORT EcAsyncServ ecaserv_create (EcLogger logger, EcAsyncServCallbacks*);
 
 __LIB_EXPORT void ecaserv_destroy (EcAsyncServ*);
 
