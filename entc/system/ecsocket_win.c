@@ -267,6 +267,7 @@ EcSocket ecsocket_accept (EcSocket self)
       int lasterr = WSAGetLastError();
       if (lasterr == WSAEWOULDBLOCK) 
       {
+        Sleep (20);
         continue;
       }
       return NULL;
@@ -291,6 +292,7 @@ int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
       int lasterr = WSAGetLastError();
       if (lasterr == WSAEWOULDBLOCK) 
       {
+        Sleep (20);
         continue;
       }
       return -1;
@@ -316,6 +318,7 @@ int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
       int lasterr = WSAGetLastError();
       if (lasterr == WSAEWOULDBLOCK) 
       {
+        Sleep (20);
         continue;
       }
       return -1;
@@ -380,6 +383,7 @@ EcSocket ecsocket_acceptIntr (EcSocket self)
       int lasterr = WSAGetLastError();
       if (lasterr == WSAEWOULDBLOCK) 
       {
+        Sleep (20);
         continue;
       }
       // error
@@ -410,6 +414,7 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
       int lasterr = WSAGetLastError();
       if (lasterr == WSAEWOULDBLOCK) 
       {
+        Sleep (20);
         continue;
       }
       return -1;

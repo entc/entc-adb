@@ -57,6 +57,9 @@ int _STDCALL test_worker_clear (void* ptr, void** object, EcLogger logger)
 
 int main (int argc, char *argv[])
 {
+  EcServerCallbacks callbacks;
+  EcServer serv;
+
   EcLogger logger = eclogger_new(0);
   
   EcEventContext ec = ece_context_new ();
@@ -68,7 +71,6 @@ int main (int argc, char *argv[])
     return 1;
   }
   
-  EcServerCallbacks callbacks;
   callbacks.accept_thread = test_accept;
   callbacks.accept_ptr = socket;
   callbacks.worker_thread = test_worker;
@@ -76,8 +78,9 @@ int main (int argc, char *argv[])
   callbacks.clear_fct = test_worker_clear;
   callbacks.clear_ptr = socket;  
   
-  EcServer serv = ecserver_new (logger, 10, &callbacks, ec);
-  
+  serv = ecserver_new (logger, 10, &callbacks, ec);
+    
+
   ecserver_start(serv);
   
   ecsignal_init ( ec);
