@@ -67,9 +67,11 @@ __CPP_EXTERN____________________________________________________________________
  
 struct EcEventQueue_s; typedef struct EcEventQueue_s* EcEventQueue;
 
+typedef void (*ece_list_ondel_fct) (void**);
+
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcEventQueue ece_list_create (EcEventContext);
+__LIB_EXPORT EcEventQueue ece_list_create (EcEventContext, ece_list_ondel_fct);
   
 __LIB_EXPORT void ece_list_destroy (EcEventQueue*);
   

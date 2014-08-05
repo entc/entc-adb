@@ -165,7 +165,7 @@ EcServer ecserver_new(EcLogger logger, uint_t poolSize, EcServerCallbacks* callb
   self->logger = logger;
   self->mainabort = ec;
   self->poolSize = poolSize;
-  self->equeue = ece_list_create (ec);
+  self->equeue = ece_list_create (ec, NULL);
   self->queue = eclist_new();
   self->mutex = ecmutex_new();
   self->worker_lock = ece_list_handle (self->equeue, NULL);

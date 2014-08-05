@@ -242,22 +242,6 @@ struct EcEventQueue_s
   
   EcEventContext ec;
   
-  //EcMutex mutex;
-  
-  /*
-  int maxfd;
-    
-  int fds_r[20];
-  int fdp_r;
-  
-  int fds_w[20];
-  int fdp_w;
-
-  int sfds_r[10];
-  int sfds_w[10];
-  int sfd;
-  */
-
   fd_set fdset_r;
   fd_set fdset_w;
   
@@ -265,20 +249,25 @@ struct EcEventQueue_s
   
   void* ptrset [FD_SETSIZE];
   
+  ece_list_ondel_fct fct;
+
 };
 
 //------------------------------------------------------------------------------------------------------------
 
-EcEventQueue ece_list_create (EcEventContext ec)
+EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
 {
   EcEventQueue self = ENTC_NEW(struct EcEventQueue_s);
 
   self->ec = ec;
+  self->fct = fct;
    
   FD_ZERO (&(self->fdset_r));
   FD_ZERO (&(self->fdset_w));
   
   FD_SET (ec->efd, &(self->fdset_r));
+  
+  memset (self->ptrset, NULL, sizeof(self->ptrset));
   
   self->intrfd = ece_list_handle (self, NULL);
   
@@ -290,6 +279,16 @@ EcEventQueue ece_list_create (EcEventContext ec)
 void ece_list_destroy (EcEventQueue* pself)
 {
   EcEventQueue self = *pself;
+  
+  int i;
+  for (i = 0; i < FD_SETSIZE; i++)
+  {
+    void* ptr = self->ptrset [i];
+    if (isAssigned (ptr) && isAssigned (self->fct))
+    {
+      self->fct (&ptr);
+    }  
+  }
     
   ENTC_DEL (pself, struct EcEventQueue_s);    
 }
@@ -329,6 +328,13 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
   FD_CLR (handle, &(self->fdset_r));
   
   ece_list_set (self, self->intrfd);
+  
+  void* ptr = self->ptrset [handle];
+  if (isAssigned (ptr) && isAssigned (self->fct))
+  {
+    self->fct (&ptr);
+    self->ptrset [handle] = NULL;
+  }
   
   return TRUE;
 }
@@ -425,7 +431,7 @@ EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 void ece_list_set (EcEventQueue self, EcHandle handle)
 {
   uint64_t u = 1;
-  int s = write(handle, &u, sizeof(uint64_t));
+  int s = write (handle, &u, sizeof(uint64_t));
   if (s != sizeof(uint64_t))
   {
     

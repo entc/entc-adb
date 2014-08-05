@@ -45,6 +45,20 @@ struct EcAsyncSvc_s
 
 //-----------------------------------------------------------------------------------------------------------
 
+void ecasyncsvc_context_destroy (void** pptr)
+{
+  EcAsyncContext self = *pptr;
+  
+  if (isAssigned (self->del))
+  {
+    self->del (&(self->ptr));
+  }
+  
+  ENTC_DEL (pptr, struct EcAsyncContext_s); 
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 EcAsyncSvc ecasyncsvc_create (EcEventContext ec, EcLogger logger)
 {
   EcAsyncSvc self = ENTC_NEW (struct EcAsyncSvc_s);
@@ -54,7 +68,7 @@ EcAsyncSvc ecasyncsvc_create (EcEventContext ec, EcLogger logger)
   
   self->thread = ecthread_new ();
   
-  self->queue = ece_list_create (self->ec);
+  self->queue = ece_list_create (self->ec, ecasyncsvc_context_destroy);
   
   return self;
 }
@@ -65,9 +79,11 @@ void ecasyncsvc_destroy (EcAsyncSvc* pself)
 {
   EcAsyncSvc self = *pself;
   
-  ecthread_join (self->thread);
+  ecasyncsvc_stop (self);
   
   ecthread_delete (&(self->thread));
+  
+  ece_list_destroy (&(self->queue));
   
   ENTC_DEL (pself, struct EcAsyncSvc_s);
 }
@@ -111,14 +127,7 @@ int ecasyncsvc_run (void* params)
   }
   
   ece_list_del (self->queue, context->handle);
-    
-  if (isAssigned (context->del))
-  {
-    context->del (&(context->ptr));
-  }
-  
-  ENTC_DEL (&context, struct EcAsyncContext_s);
-  
+      
   return ret;
 }
 
@@ -126,7 +135,14 @@ int ecasyncsvc_run (void* params)
 
 void ecasyncsvc_start (EcAsyncSvc self)
 {
-  ecthread_start(self->thread, ecasyncsvc_run, (void*)self);
+  ecthread_start (self->thread, ecasyncsvc_run, (void*)self);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void ecasyncsvc_stop (EcAsyncSvc self)
+{
+  ecthread_join (self->thread); 
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -416,6 +432,10 @@ int ecaserv_start (EcAsyncServ self, const EcString host, ulong_t port)
 void ecaserv_stop (EcAsyncServ self)
 {
   ece_context_triggerTermination (self->ec);
+  
+  ecasyncsvc_stop (self->svc);
+  // close listen socket
+  ecsocket_delete(&(self->socket));
 }
 
 //-----------------------------------------------------------------------------------------------------------
