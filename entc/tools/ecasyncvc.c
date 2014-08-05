@@ -126,6 +126,8 @@ int ecasyncsvc_run (void* params)
     return TRUE;
   }
   
+  printf("del\n");
+  
   ece_list_del (self->queue, context->handle);
       
   return ret;
@@ -301,6 +303,8 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
     }
     else
     {
+      printf("fuck\n");
+      
       return FALSE;
     }    
   }

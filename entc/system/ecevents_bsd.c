@@ -61,10 +61,16 @@ void ece_kevent_addHandle (int kq, EcHandle handle, int flag, void* ptr, int cle
 void ece_kevent_delHandle (int kq, EcHandle handle)
 {
   struct kevent kev;
+  struct kevent res;
   memset(&kev, 0x0, sizeof(struct kevent));
   
-  EV_SET (&kev, handle, 0, EV_DELETE, 0, 0, NULL);
-  kevent (kq, &kev, 1, NULL, 0, NULL);
+  EV_SET (&kev, handle, EVFILT_READ | EVFILT_WRITE | EVFILT_USER, EV_CLEAR | EV_DISABLE | EV_DELETE, 0, 0, NULL);
+  kevent (kq, &kev, 1, &res, 1, NULL);
+  
+  printf("data %p\n", res.udata);
+  
+  // be sure that the handle is closed force to do it here
+  close (handle);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -139,7 +145,7 @@ void ece_context_delete (EcEventContext* pself)
 
 int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int type)
 {
-  EcEventQueue list = ece_list_create (self);
+  EcEventQueue list = ece_list_create (self, NULL);
   
   ece_list_add (list, handle, type, NULL);
   
@@ -154,7 +160,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
 
 int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 {
-  EcEventQueue list = ece_list_create (self);
+  EcEventQueue list = ece_list_create (self, NULL);
   
   int ret = ece_list_wait (list, timeout, NULL, NULL);
   
@@ -194,12 +200,14 @@ struct EcEventQueue_s
   EcListNode ecnode;
   
   EcMutex ecmutex;
+  
+  ece_list_ondel_fct fct;
 
 };
 
 //------------------------------------------------------------------------------------------------------------
 
-EcEventQueue ece_list_create (EcEventContext ec)
+EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
 {
   EcEventQueue self = ENTC_NEW(struct EcEventQueue_s);
 
@@ -287,6 +295,10 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
         // some error    
         return ENTC_EVENT_ERROR;
       }
+    }
+    else if (kev_ret.flags & EV_ERROR)
+    {
+      return ENTC_EVENT_ERROR;
     }
     else if( res == 0 )
     {
