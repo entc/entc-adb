@@ -3,6 +3,8 @@
 
 int main (int argc, char *argv[])
 {
+  EcAsyncServ serv;
+
   EcLogger logger = eclogger_new(0);
   
   EcAsyncServCallbacks callbacks;
@@ -11,7 +13,7 @@ int main (int argc, char *argv[])
   callbacks.onIdle = NULL;
   callbacks.onRecv = NULL;
   
-  EcAsyncServ serv = ecaserv_create (logger, &callbacks);
+  serv = ecaserv_create (logger, &callbacks);
   
   ecaserv_start (serv, "127.0.0.1", 8080);
   

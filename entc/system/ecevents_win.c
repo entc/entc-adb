@@ -112,16 +112,22 @@ struct EcEventQueue_s {
 
   EcMutex mutex;
 
+  ece_list_ondel_fct fct;
+
 };
 
 //---------------------------------------------------------------------------------------------------------------------
 
-EcEventQueue ece_list_create (EcEventContext ec)
+EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
 {
   EcEventQueue self = ENTC_NEW (struct EcEventQueue_s);
 
+  self->fct = fct;
+
   self->hs [0] = ec->abort;
   self->hs [1] = CreateEvent (NULL, FALSE, FALSE, NULL);
+
+  memset (self->ps, 0x00, sizeof(self->ps));
 
   self->hsn = 2;
 
@@ -134,11 +140,22 @@ EcEventQueue ece_list_create (EcEventContext ec)
 
 void ece_list_destroy (EcEventQueue* pself)
 {
+  int i;
+
   EcEventQueue self = *pself;
 
   CloseHandle (self->hs [1]);
 
   ecmutex_delete (&(self->mutex));
+
+  for (i = 0; i < FD_SETSIZE; i++)
+  {
+    void* ptr = self->ps [i];
+    if (isAssigned (ptr) && isAssigned (self->fct))
+    {
+      self->fct (&ptr);
+    }  
+  }
 
   ENTC_DEL(pself, struct EcEventQueue_s);
 }
@@ -179,6 +196,15 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
   {
     if (self->hs [i] == handle)
     {
+      // try to call some kind of destructor
+      void* ptr = self->ps [i];
+      if (isAssigned (ptr) && isAssigned (self->fct))
+      {
+        self->fct (&ptr);
+      }  
+
+      // just override the current position with the last one
+      // so we don't need any memory shifting
       self->hsn--;
       self->hs [i] = self->hs [self->hsn];
       self->ps [i] = self->ps [self->hsn];
