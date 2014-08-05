@@ -140,7 +140,7 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
 
 void ece_list_destroy (EcEventQueue* pself)
 {
-  int i;
+  uint_t i;
 
   EcEventQueue self = *pself;
 
@@ -148,7 +148,7 @@ void ece_list_destroy (EcEventQueue* pself)
 
   ecmutex_delete (&(self->mutex));
 
-  for (i = 0; i < FD_SETSIZE; i++)
+  for (i = 2; i < self->hsn; i++)
   {
     void* ptr = self->ps [i];
     if (isAssigned (ptr) && isAssigned (self->fct))
