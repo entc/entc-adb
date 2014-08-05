@@ -92,13 +92,11 @@ int ecasyncsvc_run (void* params)
   int res = ece_list_wait (self->queue, ENTC_INFINTE, (void**)&context, self->logger);  
   if ((res == ENTC_EVENT_TIMEOUT)) // timeout or interupt
   {
-    printf("timeout\n");
     return TRUE;
   }
 
   if (res < 0) // termination of the process
   {
-    printf("abort\n");
     return FALSE;  // tell the thread to terminate
   }
   
@@ -160,6 +158,8 @@ struct EcAsyncServContext_s
   char* buffer;
   
   uint_t pos;
+  
+  uint_t bpos;
   
   uint_t len;
   
@@ -266,7 +266,7 @@ void ecaserv_context_recv (EcAsyncServContext self, ulong_t len)
 int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
 {
   EcAsyncServContext self = ctx->ptr;
-  
+    
   if (self->pos < self->len)
   {
     ulong_t res;
@@ -277,6 +277,7 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
     if (res > 0)
     {
       self->pos += res;     
+      
       if (self->pos == self->len)
       {
         return ecaworker_onRecv (self) && ecaworker_onIdle (self);
@@ -284,8 +285,6 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
     }
     else
     {
-      printf("read error %lu\n", res);
-
       return FALSE;
     }    
   }

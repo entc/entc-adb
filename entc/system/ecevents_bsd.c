@@ -241,6 +241,7 @@ void ece_list_destroy (EcEventQueue* sptr)
 int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
 {
   int flag = 0;
+  int clr = FALSE;
   switch (type)
   {
     case ENTC_EVENTTYPE_READ:
@@ -256,11 +257,12 @@ int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
     case ENTC_EVENTTYPE_USER:
     {
       flag = EVFILT_USER;
+      clr = TRUE;
     }
     break;
   }
 
-  ece_kevent_addHandle (self->kq, handle, flag, ptr, TRUE); 
+  ece_kevent_addHandle (self->kq, handle, flag, ptr, clr); 
   return TRUE;
 }
 
@@ -298,7 +300,7 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
     } 
     else
     {
-      eclogger_logformat (logger, LL_TRACE, "CORE", "got event with ident '%i' with udata %p", kev_ret.ident, kev_ret.udata);
+      //eclogger_logformat (logger, LL_TRACE, "CORE", "got event with ident '%i' with udata %p", kev_ret.ident, kev_ret.udata);
       
       if (isAssigned (pptr))
       {

@@ -250,7 +250,7 @@ int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
 {
   while (TRUE) 
   {
-    int res = recv (self->socket, buffer, nbyte, 0);  
+    int res = read (self->socket, buffer, nbyte);  
     if (res < 0)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
@@ -388,7 +388,7 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
     {
       return res;
     }
-    res = recv (self->socket, buffer, nbyte, 0); 
+    res = read (self->socket, buffer, nbyte); 
     if (res < 0)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
