@@ -398,10 +398,13 @@ int ecudc_del (EcUdc self, const EcString name)
 
 EcUdc ecudc_node (EcUdc self, const EcString name)
 {
-  switch (self->type) 
+  if (isAssigned (self))
   {
-    case ENTC_UDC_NODE: return ecudc_node_get (self->extension, name); 
-  }    
+    switch (self->type) 
+    {
+      case ENTC_UDC_NODE: return ecudc_node_get (self->extension, name); 
+    }        
+  }
   return NULL;
 }
 
@@ -558,15 +561,15 @@ void* ecudc_get_asP (const EcUdc data, const EcString name, void* alt)
 
 const EcString ecudc_get_asString (const EcUdc data, const EcString name, const EcString alt)
 {
-  const EcUdc res = ecudc_node (data, name);
-  if (isAssigned (res))
+  if (isAssigned (data))
   {
-    return ecudc_asString(res);
+    const EcUdc res = ecudc_node (data, name);
+    if (isAssigned (res))
+    {
+      return ecudc_asString(res);
+    }
   }
-  else
-  {
-    return alt;
-  }  
+  return alt; 
 }
 
 //----------------------------------------------------------------------------------------

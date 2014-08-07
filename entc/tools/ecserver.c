@@ -109,7 +109,7 @@ int ecserver_worker_run (void* params)
   // check if we have a callback method
   if(self->server->callbacks.worker_thread)
   {
-    void* object;
+    void* object = NULL;
     EcListNode node;
     int res;
 
@@ -130,6 +130,7 @@ int ecserver_worker_run (void* params)
 
     if (node == eclist_end(self->server->queue))
     {
+      eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} no items in queue");
       // no items/objects available
       ecmutex_unlock(self->server->mutex);
       return TRUE;

@@ -248,6 +248,7 @@ struct EcEventQueue_s
   EcHandle intrfd;
   
   void* ptrset [FD_SETSIZE];
+  char userhdl [FD_SETSIZE];
   
   ece_list_ondel_fct fct;
 
@@ -267,9 +268,11 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   
   FD_SET (ec->efd, &(self->fdset_r));
   
-  memset (self->ptrset, NULL, sizeof(self->ptrset));
-  
-  self->intrfd = ece_list_handle (self, NULL);
+  memset (self->ptrset, 0x00, sizeof(self->ptrset));
+  memset (self->userhdl, 0x00, sizeof(self->userhdl));
+
+  self->intrfd = eventfd (0, 0);
+  ece_list_add (self, self->intrfd, ENTC_EVENTTYPE_USER, NULL);
   
   return self;    
 }
@@ -302,10 +305,17 @@ int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
     if (type == ENTC_EVENTTYPE_WRITE)
     {
       FD_SET (handle, &(self->fdset_w));
+      self->userhdl [handle] = 0x00;
+    }
+    else if (type == ENTC_EVENTTYPE_USER)
+    {
+      FD_SET (handle, &(self->fdset_r));    
+      self->userhdl [handle] = 0x42;
     }
     else
     {
       FD_SET (handle, &(self->fdset_r));    
+      self->userhdl [handle] = 0x00;
     }
     
     self->ptrset [handle] = ptr;
@@ -398,6 +408,16 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
 	  {
 	    *pptr = self->ptrset [i];
 	  }
+	  // user defined handle needs to read data
+	  // otherwise this event is triggered forever
+	  if (self->userhdl [i] == 0x42)
+	  {
+	    uint64_t s = read (i, &s, sizeof(uint64_t));
+            if (s != sizeof(uint64_t))
+	    {
+	      return ENTC_EVENT_ERROR; 
+	    }  
+	  }
 	  return i;
 	}
       }
@@ -415,15 +435,18 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
 EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 {
   EcHandle handle = eventfd (0, 0);
-  if (ece_list_add (self, handle, ENTC_EVENTTYPE_USER, ptr))
+  if (handle > 0)
   {
-    return handle;
+    if (ece_list_add (self, handle, ENTC_EVENTTYPE_USER, ptr))
+    {
+      return handle;
+    }
+    else
+    {
+      close (handle);
+    }
   }
-  else
-  {
-    close (handle);
-    return 0;
-  }
+  return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -431,6 +454,7 @@ EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 void ece_list_set (EcEventQueue self, EcHandle handle)
 {
   uint64_t u = 1;
+  memset (&u, 0x00, sizeof(uint64_t));
   int s = write (handle, &u, sizeof(uint64_t));
   if (s != sizeof(uint64_t))
   {
