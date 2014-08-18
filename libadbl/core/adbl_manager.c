@@ -286,7 +286,7 @@ void adbl_parseXML( AdblManager self, EcXMLStream xmlstream, const char* confpat
 void adbl_parseConfig (AdblManager self, const char* confpath, int preread)
 {
   /* open the file */
-  EcXMLStream xmlstream = ecxmlstream_openobserver(self->observer, self->logger);
+  EcXMLStream xmlstream = ecxmlstream_openobserver (self->observer, self->logger);
   /* parse the xml structure */
   while( ecxmlstream_nextNode( xmlstream ) )
   {
@@ -296,7 +296,7 @@ void adbl_parseConfig (AdblManager self, const char* confpath, int preread)
     }
   }
   /* close the file */
-  ecxmlstream_close( xmlstream );
+  ecxmlstream_close (xmlstream);
 }
 
 /*------------------------------------------------------------------------*/

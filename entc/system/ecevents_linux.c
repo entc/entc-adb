@@ -453,12 +453,14 @@ EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 
 void ece_list_set (EcEventQueue self, EcHandle handle)
 {
-  uint64_t u = 1;
-  memset (&u, 0x00, sizeof(uint64_t));
-  int s = write (handle, &u, sizeof(uint64_t));
-  if (s != sizeof(uint64_t))
+  if ((handle < FD_SETSIZE) && (self->userhdl [handle] == 0x42))
   {
-    
+    uint64_t u = 1;
+    int s = write (handle, &u, sizeof(uint64_t));
+    if (s != sizeof(uint64_t))
+    {
+      
+    }    
   }
 }
 
@@ -497,7 +499,7 @@ struct EcEventFiles_s
   
   int32_t size;
   
-  EcEventFilesData* matrix;
+  EcEventFilesData matrix[FD_SETSIZE];
   
   /* reference */
   EcLogger logger;
@@ -505,27 +507,6 @@ struct EcEventFiles_s
 };
 #define EVENT_SIZE ( sizeof (struct inotify_event) )
 #define EVENT_BUF_LEN ( 1024 * (EVENT_SIZE + 16) )
-
-/*------------------------------------------------------------------------*/
-
-void ece_files_resize(EcEventFiles self, int32_t resize)
-{
-  int32_t old_size = sizeof(EcEventFilesData) * self->size;
-  int32_t new_size = sizeof(EcEventFilesData) * resize;
-  /* allocate new buffer */
-  EcEventFilesData* new_matrix = malloc( new_size );
-  /* copy */
-  memcpy(new_matrix, self->matrix, old_size);
-  /* set */
-  memset(new_matrix + old_size, 0, new_size - old_size );
-  
-  /* delete old matrix */
-  memset(self->matrix, 0, old_size );
-  free( self->matrix );
-  
-  self->matrix = new_matrix;
-  self->size = resize;
-}
 
 /*------------------------------------------------------------------------*/
 
@@ -555,11 +536,6 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
       {
         eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{ece_files} Can't register event for inotify");
         return;
-      }
-      
-      if( new_ident > self->size )
-      {
-        ece_files_resize( self, ident + self->size );
       }
       
       memcpy(&(self->matrix[new_ident]), data, sizeof(EcEventFilesData));
@@ -680,7 +656,7 @@ int ecevents_run(void* params)
 
 /*------------------------------------------------------------------------*/
 
-EcEventFiles ece_files_new(EcLogger logger)
+EcEventFiles ece_files_new (EcLogger logger)
 {
   EcEventFiles self = ENTC_NEW( struct EcEventFiles_s );
   
@@ -690,11 +666,7 @@ EcEventFiles ece_files_new(EcLogger logger)
   
   self->notifd = inotify_init();
   
-  /* create a pool of matrix */
-  self->size = 100;
-  self->matrix = malloc( sizeof(EcEventFilesData) * self->size );
-  
-  memset(self->matrix, 0, sizeof(EcEventFilesData) * self->size );
+  memset(self->matrix, 0, sizeof(self->matrix));
   
   self->thread = ecthread_new();
   
@@ -707,6 +679,7 @@ EcEventFiles ece_files_new(EcLogger logger)
 
 void ece_files_delete(EcEventFiles* ptr)
 {
+  int i;
   EcEventFiles self = *ptr;
   
   ece_context_triggerTermination (self->econtext);
@@ -717,7 +690,13 @@ void ece_files_delete(EcEventFiles* ptr)
   
   ece_context_delete (&(self->econtext));
   
-  free(self->matrix);
+  // delete all strings
+  for (i = 0; i < FD_SETSIZE; i++)
+  {
+    EcEventFilesData* data = &(self->matrix[i]);
+    
+    ecstr_delete(&(data->filename));
+  }
   
   //inotify_done( self->notifd );
   
@@ -726,29 +705,23 @@ void ece_files_delete(EcEventFiles* ptr)
 
 /*------------------------------------------------------------------------*/
 
-void ece_files_register(EcEventFiles self, const EcString filename, events_callback_fct onChange, void* onChangePtr, events_callback_fct onDelete, void* onDeletePtr)
+void ece_files_register (EcEventFiles self, const EcString filename, events_callback_fct onChange, void* onChangePtr, events_callback_fct onDelete, void* onDeletePtr)
 {
   int ident = inotify_add_watch(self->notifd, filename, IN_ALL_EVENTS);
   
   if( ident < 0 )
   {
-    eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{ece_files} Can't register event for inotify");
-    
+    eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{ece_files} Can't register event for inotify");    
     return;
   }
-  
-  if( ident > self->size )
-  {
-    ece_files_resize( self, ident + self->size );
-  }
-  
+    
   EcEventFilesData* data = &(self->matrix[ident]);
   
   data->onChange = onChange;
   data->onChangePtr = onChangePtr;
   data->onDelete = onDelete;
   data->onDeletePtr = onDeletePtr;
-  data->filename = ecstr_copy (filename);
+  ecstr_replace(&(data->filename), filename);
   
   eclogger_logformat(self->logger, LL_DEBUG, "CORE", "{ece_files} Registered event at inotify on %i", ident);
   eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} at '%s'", filename);

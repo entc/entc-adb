@@ -174,7 +174,7 @@ void eclogger_setCallback (EcLogger self, EcLoggerCallbacks* callbacks)
 
 void eclogger_getCallback (EcLogger self, EcLoggerCallbacks* callbacks)
 {
-  ecmutex_lock (self->mutex);  
+  ecmutex_lock (self->mutex);
   memcpy (callbacks, &(self->callbacks), sizeof(EcLoggerCallbacks));
   ecmutex_unlock (self->mutex);
 }
@@ -533,7 +533,7 @@ static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", 
 #if defined _WIN64 || defined _WIN32
 static WORD clr_matrix[11] = {0, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE, 0, FOREGROUND_RED | FOREGROUND_GREEN};
 #else
-static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;30", "1;34" };
+static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;34", "1;30" };
 #endif
 static const char* month_matrix[12] = {"01","02","03","04","05","06","07","08","09","10","11","12"};
 
@@ -594,6 +594,11 @@ void ecechologger_log (void* ptr, EcLogLevel level, ubyte_t id, const EcString m
   EcEchoLogger self = ptr;
   // variables
   EcDate date;
+  
+  if (level >= LL_DEBUG)
+  {
+    return;
+  }
   
   ectime_getDate (&date);
   
@@ -906,15 +911,16 @@ void eclistlogger_getCallback (EcListLogger self, EcLoggerCallbacks* callbacks)
 
 void eclistlogger_register (EcListLogger self, EcLogger logger)
 {
-  EcLoggerCallbacks* tmp1 = ENTC_NEW (EcLoggerCallbacks);
+  //EcLoggerCallbacks* tmp1 = ENTC_NEW (EcLoggerCallbacks);
   EcLoggerCallbacks tmp2;
 
-  eclogger_getCallback(logger, tmp1);
+  //eclogger_getCallback(logger, tmp1);
   
   eclistlogger_getCallback(self, &tmp2);
   
   eclogger_setCallback(logger, &tmp2);
   
+  /*
   ecreadwritelock_lockWrite (self->rwlock);
   
   eclist_append(self->shadow_list, tmp1);
@@ -922,6 +928,7 @@ void eclistlogger_register (EcListLogger self, EcLogger logger)
   self->list_changed = TRUE;
   
   ecreadwritelock_unlockWrite (self->rwlock);
+  */
 }
 
 //----------------------------------------------------------------------------------------
