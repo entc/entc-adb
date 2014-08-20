@@ -22,6 +22,18 @@
 #include "adbo_object.h"
 #include "adbo_container.h"
 
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream)
+{
+  EcUdc value = ecudc_create (ENTC_UDC_STRING, ecxmlstream_nodeAttribute (xmlstream, "dbcolumn"));
+  
+  return value;
+}
+
+//----------------------------------------------------------------------------------------
+
+/*
 struct AdboValue_s
 {
   
@@ -53,17 +65,6 @@ void adbo_value_add (EcUdc value, const EcString key, const EcString content)
   ecudc_add_asString(value, key, content);
 }
 
-//----------------------------------------------------------------------------------------
-
-EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream)
-{
-  EcUdc value = ecudc_create(ENTC_UDC_NODE, ".val");
-  
-  adbo_value_add (value, ".dbcolumn", ecxmlstream_nodeAttribute (xmlstream, "dbcolumn"));
-  adbo_value_add (value, ".link", ecxmlstream_nodeAttribute (xmlstream, "link"));
-  
-  return value;
-}
 
 //----------------------------------------------------------------------------------------
 
@@ -121,3 +122,4 @@ void adbo_value_del (AdboValue* pself)
 }
 
 //----------------------------------------------------------------------------------------
+*/

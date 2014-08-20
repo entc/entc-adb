@@ -176,6 +176,8 @@ SET (CORE_SOURCES_TOOLS
   tools/ecjson.c
   tools/ecasyncvc.h
   tools/ecasyncvc.c
+  tools/ecdata.h
+  tools/ecdata.c
 )
 
 

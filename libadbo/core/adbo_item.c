@@ -30,7 +30,7 @@ struct AdboItem_s
 
 EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream);
 
-void adbo_item_fromXml (EcUdc item, AdboContext context, EcXMLStream xmlstream, const EcString tag)
+void adbo_item_fromXml (EcUdc cols, AdboContext context, EcXMLStream xmlstream, const EcString tag)
 {
   if (isAssigned (xmlstream))
   {
@@ -41,7 +41,7 @@ void adbo_item_fromXml (EcUdc item, AdboContext context, EcXMLStream xmlstream, 
       EcUdc object = adbo_value_fromXml (context, xmlstream);
       if (isAssigned (object))
       {
-        ecudc_add (item, &object);      
+        ecudc_add (cols, &object);      
       }
     }
     else if (ecxmlstream_isBegin (xmlstream, "data"))

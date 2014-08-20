@@ -26,6 +26,7 @@
 
 __CPP_EXTERN______________________________________________________________________________START
 
+/*
 // constructor
 __LIB_EXPORT AdboValue adbo_value_new (const EcString dbcolumn, const EcString data, const EcString link);
 
@@ -58,6 +59,7 @@ __LIB_EXPORT int adbo_value_hasLocalLink (AdboValue);
 __LIB_EXPORT void adbo_value_commit (AdboValue);
 
 __LIB_EXPORT void adbo_value_rollback (AdboValue);
+ */
 
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -41,10 +41,10 @@ __LIB_EXPORT EcUdc adbo_tables (EcUdc);
 __LIB_EXPORT EcUdc adbo_get_table (EcUdc, const EcString tablename);
 
 // fills the structure with the current content from the database
-__LIB_EXPORT int adbo_fetch (EcUdc, EcUdc filter, AdboContext);
+__LIB_EXPORT int adbo_item_fetch (EcUdc item, EcUdc filter, AdboContext);
 
 // gets back the structure with its first items result array
-__LIB_EXPORT EcUdc adbo_values (EcUdc, ulong_t index);
+__LIB_EXPORT EcUdc adbo_item_values (EcUdc item);
 
 // clears the first result array
 __LIB_EXPORT int adbo_clear (EcUdc);

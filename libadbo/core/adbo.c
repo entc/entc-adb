@@ -19,6 +19,8 @@
 
 #include "adbo.h"
 #include "adbo_context_intern.h"
+#include <tools/ecdata.h>
+#include <tools/ecjson.h>
 
 //----------------------------------------------------------------------------------------
 
@@ -28,27 +30,17 @@ void adbo_item_fromXml (EcUdc, AdboContext, EcXMLStream, const EcString tag);
 
 //----------------------------------------------------------------------------------------
 
-void adbo_structure_items_fromXml (EcUdc items, AdboContext context, EcXMLStream xmlstream, const EcString tag)
+void adbo_structure_items_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstream, const EcString tag)
 {
   ENTC_XMLSTREAM_BEGIN
   
   if (ecxmlstream_isBegin (xmlstream, "node"))
   {
-    EcUdc udc = ecudc_create (ENTC_UDC_NODE, "node");
-    adbo_node_fromXml (udc, context, xmlstream);
-    
-    ecudc_add (items, &udc);
+    adbo_node_fromXml (rootNode, context, xmlstream);
   }
   else if (ecxmlstream_isBegin (xmlstream, "substitute"))
   {
     
-  }
-  else if (ecxmlstream_isBegin (xmlstream, "item"))
-  {
-    EcUdc udc = ecudc_create (ENTC_UDC_NODE, "item");
-    adbo_item_fromXml (udc, context, xmlstream, "item");
-
-    ecudc_add (items, &udc);
   }
   
   ENTC_XMLSTREAM_END (tag)  
@@ -58,11 +50,22 @@ void adbo_structure_items_fromXml (EcUdc items, AdboContext context, EcXMLStream
 
 EcUdc adbo_structure_fromXml (AdboContext context, EcXMLStream xmlstream, const EcString name, const EcString tag)
 {
-  EcUdc items = ecudc_create(ENTC_UDC_LIST, name);
+  // create a default data node
+  EcUdc node = ecnode_create (name);
   
-  adbo_structure_items_fromXml (items, context, xmlstream, tag);
+  // all tables are stored as additional nodes at the first level
+  adbo_structure_items_fromXml (node, context, xmlstream, tag);
   
-  return items;
+  /*
+  {
+    EcString json = ecjson_write (node);
+    
+    printf("%s\n", json);
+    
+  }
+  */
+  
+  return node;
 }
 
 //----------------------------------------------------------------------------------------
@@ -74,46 +77,19 @@ EcUdc adbo_structure_fromDatabase (AdboContext context)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc adbo_tables (EcUdc items)
+EcUdc adbo_tables (EcUdc node)
 {
-  switch (ecudc_type (items))
-  {
-    case ENTC_UDC_LIST:
-    {
-      EcUdc list = ecudc_create(ENTC_UDC_LIST, "tables");
-      void* cursor = NULL;
-      EcUdc item;      
-      // iterrate through all nodes
-      for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
-      {
-        ecudc_add_asString(list, NULL, ecudc_get_asString(item, ".dbtable", "table"));
-      }
-      return list;
-    }
-  }
-  return NULL;
+  return ecudc_node (node, ECDATA_ITEMS);
 }
 
 //----------------------------------------------------------------------------------------
 
-EcUdc adbo_get_table (EcUdc items, const EcString tablename)
+EcUdc adbo_get_table (EcUdc node, const EcString tablename)
 {
-  switch (ecudc_type (items))
+  EcUdc items = ecudc_node (node, ECDATA_ITEMS);
+  if (isAssigned (items))
   {
-    case ENTC_UDC_LIST:
-    {
-      void* cursor = NULL;
-      EcUdc item;      
-      // iterrate through all nodes
-      for (item = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
-      {
-        const EcString dbtable = ecudc_get_asString(item, ".dbtable", NULL);
-        if (ecstr_equalUnsensitive (dbtable, tablename))
-        {
-          return item;
-        }
-      }      
-    }
+    return ecudc_node (items, tablename);
   }
   return NULL;
 }
@@ -122,31 +98,9 @@ EcUdc adbo_get_table (EcUdc items, const EcString tablename)
 
 int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context);
 
-int adbo_fetch (EcUdc udc, EcUdc data, AdboContext context)
+int adbo_item_fetch (EcUdc item, EcUdc data, AdboContext context)
 {
-  int ret = TRUE;
-  
-  switch (ecudc_type (udc))
-  {
-    case ENTC_UDC_LIST:
-    {
-      void* cursor = NULL;
-      EcUdc item;
-      // iterrate through all nodes
-      for (item = ecudc_next (udc, &cursor); isAssigned (item); item = ecudc_next (udc, &cursor))
-      {
-        ret = ret && adbo_node_fetch (item, data, context);
-      }  
-    }
-    break;
-    case ENTC_UDC_NODE:
-    {
-      ret = adbo_node_fetch (udc, data, context);
-    }
-    break;
-  }
-  
-  return ret;
+  return adbo_node_fetch (item, data, context);
 }
 
 //----------------------------------------------------------------------------------------
@@ -203,33 +157,9 @@ int adbo_delete (EcUdc udc, EcUdc filter, AdboContext context)
 
 EcUdc adbo_node_values (EcUdc node);
 
-EcUdc adbo_values (EcUdc udc, ulong_t index)
+EcUdc adbo_item_values (EcUdc item)
 {
-  switch (ecudc_type (udc))
-  {
-    case ENTC_UDC_LIST:
-    {
-      void* cursor = NULL;
-      EcUdc item;
-      ulong_t i = 0;
-      // iterrate through all nodes
-      for (item = ecudc_next (udc, &cursor); isAssigned (item); item = ecudc_next (udc, &cursor), i++)
-      {
-        if (i == index)
-        {
-          return adbo_node_values (item);
-        }
-      }  
-    }
-    break;
-    case ENTC_UDC_NODE:
-    {
-      return adbo_node_values (udc);
-    }
-    break;
-  }
-  
-  return NULL;    
+  return adbo_node_values (item);
 }
 
 //----------------------------------------------------------------------------------------
