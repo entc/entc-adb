@@ -89,10 +89,6 @@ void ecnode_set_attributes (EcUdc node, ulong_t size, ulong_t cdate, ulong_t mda
 EcUdc ecnode_create_item (EcUdc node, const EcString name)
 {
   EcUdc self = ecudc_create (ENTC_UDC_NODE, name);
-
-  EcUdc cols = ecudc_create (ENTC_UDC_NODE, ECDATA_COLS);
-  
-  ecudc_add(self, &cols);
   
   ecnode_add_default (self);  
 

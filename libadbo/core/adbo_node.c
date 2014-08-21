@@ -84,13 +84,13 @@ void adbo_dbkeys_fromXml (EcUdc dbkeys, AdboContext context, EcXMLStream xmlstre
 
 void adbo_item_fromXml (EcUdc cols, AdboContext context, EcXMLStream xmlstream, const EcString tag);
 
-void adbo_node_structure_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstream, const EcString tag)
+void adbo_node_structure_fromXml (EcUdc cols, AdboContext context, EcXMLStream xmlstream, const EcString tag)
 {
   ENTC_XMLSTREAM_BEGIN
   
   if (ecxmlstream_isBegin (xmlstream, "item"))
   {
-    adbo_item_fromXml (ecudc_node(rootNode, ECDATA_COLS), context, xmlstream, "item");
+    adbo_item_fromXml (cols, context, xmlstream, "item");
   }
   
   ENTC_XMLSTREAM_END (tag)  
@@ -109,7 +109,11 @@ void adbo_node_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstre
     
     if (ecxmlstream_isBegin (xmlstream, "objects"))
     {
-      adbo_node_structure_fromXml (node, context, xmlstream, "objects");
+      EcUdc cols = ecudc_create(ENTC_UDC_NODE, ECDATA_COLS);
+
+      adbo_node_structure_fromXml (cols, context, xmlstream, "objects");
+
+      ecudc_add (node, &cols);
     }
     else if (ecxmlstream_isBegin (xmlstream, "primary_keys"))
     {
