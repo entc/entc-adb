@@ -80,6 +80,7 @@ void echttp_init (void)
     ecmapchar_append( mime_types, "asc",      "text/plain" );
     ecmapchar_append( mime_types, "c",        "text/plain" ); 
     ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
+    ecmapchar_append( mime_types, "woff",     "application/font-woff" );
     
     ecmapchar_append( mime_types, "exe",      "application/octet-stream" );     
   }

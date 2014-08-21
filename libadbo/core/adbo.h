@@ -37,6 +37,9 @@ __LIB_EXPORT EcUdc adbo_structure_fromDatabase (AdboContext);
 // get all tables
 __LIB_EXPORT EcUdc adbo_tables (EcUdc);
 
+// get size/count(*) for all tables
+__LIB_EXPORT void adbo_updateSize (EcUdc, AdboContext);
+
 // get a table node
 __LIB_EXPORT EcUdc adbo_get_table (EcUdc, const EcString tablename);
 

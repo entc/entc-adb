@@ -830,3 +830,32 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
 }
 
 //----------------------------------------------------------------------------------------
+
+void adbo_node_updateSize (EcUdc node, AdboContext context)
+{
+  // variables
+  const EcString dbsource;
+  AdblSession dbsession;
+
+  EcUdc size = ecudc_node (node, ECDATA_SIZE);
+
+  dbsource = ecudc_get_asString(node, ".dbsource", "default");  
+  dbsession = adbl_openSession (context->adblm, dbsource);
+  // delete all previous entries
+  if (isNotAssigned (dbsession))
+  {
+    eclogger_logformat (context->logger, LL_ERROR, "ADBO", "{update} can't connect to database '%s'", dbsource);
+    return;
+  }
+
+  if (isAssigned (size))
+  {
+    ecudc_setL (size, adbl_table_size (dbsession, ecudc_name (node)));
+  }
+  else
+  {
+    ecudc_add_asL (node, ECDATA_SIZE, adbl_table_size (dbsession, ecudc_name (node)));
+  }
+}
+
+//----------------------------------------------------------------------------------------
