@@ -27,6 +27,7 @@
 #include "../types/ecbuffer.h"
 
 #include <stdio.h>
+#include <inttypes.h>
 
 /* definitions for all platforms */
 #define ENTC_FILETYPE_ISNONE  0
@@ -108,12 +109,10 @@ typedef struct
   
   EcString name;
   
-  uint_t type;
+  ubyte_t type;
   
-  uint_t sizeL;
-  
-  uint_t sizeH;
-  
+  uint64_t size;
+    
   // creat date
   uint_t cdate;
   

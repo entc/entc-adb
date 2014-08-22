@@ -84,6 +84,25 @@ EcUdc adbo_tables (EcUdc node)
 
 //----------------------------------------------------------------------------------------
 
+void adbo_node_updateSize (EcUdc node, AdboContext context);
+
+void adbo_updateSize (EcUdc rootNode, AdboContext context)
+{
+  EcUdc items = ecudc_node (rootNode, ECDATA_ITEMS);
+  if (isAssigned (items))
+  {
+    void* cursor = NULL;
+    EcUdc item;
+  
+    for (item  = ecudc_next (items, &cursor); isAssigned (item); item = ecudc_next (items, &cursor))
+    {
+      adbo_node_updateSize (item, context);
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 EcUdc adbo_get_table (EcUdc node, const EcString tablename)
 {
   EcUdc items = ecudc_node (node, ECDATA_ITEMS);

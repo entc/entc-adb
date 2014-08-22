@@ -212,7 +212,17 @@ int ecdh_next (EcDirHandle self, EcFileInfo* pinfo)
 
   if (isAssigned (dentry))
   {
+    struct stat attribut;
+
     ecstr_replace(&(self->node.name), dentry->d_name);
+
+    self->node.size = 0;
+    
+    stat (self->node.name, &attribut);
+    
+    self->node.cdate = attribut.st_ctime;
+    self->node.mdate = attribut.st_mtime;
+    self->node.adate = attribut.st_atime;
     
     if (dentry->d_type == DT_DIR)
     {
@@ -220,6 +230,8 @@ int ecdh_next (EcDirHandle self, EcFileInfo* pinfo)
     }
     else if ((dentry->d_type == DT_REG) || (dentry->d_type == DT_LNK))
     {
+      self->node.size = attribut.st_size;
+
       self->node.type = ENTC_FILETYPE_ISFILE;
     }
     else if (dentry->d_type == DT_UNKNOWN)
