@@ -27,7 +27,11 @@
 #include "../types/ecbuffer.h"
 
 #include <stdio.h>
+#ifdef _WIN32
+typedef unsigned __int64 uint64_t;
+#else
 #include <inttypes.h>
+#endif
 
 /* definitions for all platforms */
 #define ENTC_FILETYPE_ISNONE  0
