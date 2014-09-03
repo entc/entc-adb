@@ -310,6 +310,12 @@ int ecfs_fileInfo (EcFileInfo info, const EcString path)
     info->type = ENTC_FILETYPE_ISNONE;              
   }
   
+  info->size = st.st_size;
+
+  info->cdate = st.st_ctime;
+  info->mdate = st.st_mtime;
+  info->adate = st.st_atime;
+  
   return TRUE;
 }
 

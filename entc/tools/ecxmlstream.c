@@ -58,6 +58,16 @@ struct EcXMLStream_s
   
 };
 
+
+typedef struct 
+{
+  
+  EcString name;
+  
+  EcString namespace;
+  
+} EcXMLTag_s; typedef EcXMLTag_s* EcXMLTag;
+
 /*------------------------------------------------------------------------*/
 
 EcXMLStream ecxmlstream_new(EcLogger logger)
@@ -148,22 +158,22 @@ EcXMLStream ecxmlstream_openbuffer(const char* buffer, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-void ecxmlstream_clean( EcXMLStream self )
+void ecxmlstream_clean (EcXMLStream self)
 {
-  /* variables */
-  char* selfnode = 0;
-
   /* delete all remaining node names */
-  selfnode = ecstack_top( self->nodes );
+  EcXMLTag tag = ecstack_top (self->nodes);
 
-  while( selfnode )
+  while (isAssigned (tag))
   {
-    /* clean the char* */
-    free( selfnode );
+    // clean the tag
+    ecstr_delete (&(tag->name));
+    ecstr_delete (&(tag->namespace));
+    
+    ENTC_DEL (&tag, EcXMLTag_s);    
     /* get the element */    
-    ecstack_pop( self->nodes );
+    ecstack_pop (self->nodes);
     /* get next char* */
-    selfnode = ecstack_top( self->nodes );
+    tag = ecstack_top (self->nodes);
   }
 }
 
@@ -200,7 +210,9 @@ void ecxmlstream_close( EcXMLStream self )
 void ecxmlstream_parseNode( EcXMLStream self, const char* node )
 {
   //eclogger_logformat(self->logger, LOGMSG_XML, "parse node '%s'", node);
-  char* selfnode = 0;
+  EcString tagname = 0;
+  EcString nsname = 0;
+
   const char* pos = node;
   const char* key_pos = 0;
   EcString key_val = 0;
@@ -216,12 +228,10 @@ void ecxmlstream_parseNode( EcXMLStream self, const char* node )
     pos++;
   }
   
-  ecstr_replacePos(&selfnode, node, pos);
+  ecstr_replacePos (&tagname, node, pos);
 
   //eclogger_logformat(self->logger, LOGMSG_XML, "CORE", "found node '%s' from '%s'", selfnode, node);
-  
-  ecstack_push(self->nodes, (void*)selfnode );
-  
+
   ecmapchar_clear(self->lastattrs);
   
   //eclogger_logformat(self->logger, LOGMSG_XML, "found node '%s'", selfnode);
@@ -250,7 +260,39 @@ void ecxmlstream_parseNode( EcXMLStream self, const char* node )
         
         ecstr_replacePos(&value, value_pos + 1, pos);
         
-        ecmapchar_append(self->lastattrs, key_val, value);
+        if (ecstr_leading (key_val, "xmlns:"))
+        {
+          EcString ns1 = NULL;
+          EcString ns2 = NULL;
+          
+          if (ecstr_split (key_val, &ns1, &ns2, ':'))
+          {
+            EcString ts1 = NULL;
+            EcString ts2 = NULL;
+
+            if (ecstr_split (tagname, &ts1, &ts2, ':'))
+            {
+              if (ecstr_equal(ts1, ns2))
+              {
+                printf("found valid namespace '%s' for tag '%s'\n", ts1, ts2);
+                
+                ecstr_replaceTO (&tagname, ts2);
+                ts2 = NULL;
+                
+                ecstr_replaceTO (&nsname, ts1);
+                ts1 = NULL;
+              }
+            }
+          }
+          
+          ecstr_delete (&ns1);
+          ecstr_delete (&ns2);
+        }
+        else
+        {
+          ecmapchar_append(self->lastattrs, key_val, value);
+        }
+        
         /*
         eclogger_logformat(self->logger, LOGMSG_XML, "QXML", "found attribute [%s]=[%s]", key_val, value );
         */
@@ -275,6 +317,65 @@ void ecxmlstream_parseNode( EcXMLStream self, const char* node )
   }
   // clean up
   ecstr_delete( &key_val );
+  
+  {
+    EcXMLTag tag = ENTC_NEW (EcXMLTag_s);
+        
+    if (ecstr_valid (nsname))
+    {
+      tag->name = tagname;
+      tag->namespace = nsname;
+    }
+    else
+    {
+      EcXMLTag tag_parent = ecstack_top (self->nodes);
+      
+      if (isAssigned (tag_parent))
+      {
+        EcString ts1 = NULL;
+        EcString ts2 = NULL;
+
+        if (ecstr_valid(tag_parent->namespace))
+        {
+          // derive from parent tag
+          tag->namespace = ecstr_copy (tag_parent->namespace);
+          // remove namespace from tag
+          if (ecstr_split (tagname, &ts1, &ts2, ':'))
+          {
+            if (ecstr_equal(ts1, tag->namespace))
+            {
+              printf("found tag '%s', removed namespace '%s'\n", ts2, ts1);
+
+              tag->name = ts2;
+              ts2 = NULL;
+            }
+            else
+            {
+              
+            }
+          }
+          else
+          {
+            
+          }
+          ecstr_delete (&ts1);
+          ecstr_delete (&ts2);          
+        }
+        else
+        {
+          tag->name = tagname;
+          tag->namespace = ecstr_init ();
+        }
+      }
+      else
+      {
+        tag->name = tagname;
+        tag->namespace = ecstr_init ();
+      }
+    }
+        
+    ecstack_push (self->nodes, tag);
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -284,13 +385,16 @@ void ecxmlstream_cleanLastNode( EcXMLStream self )
   if( self->lastype == ENTC_XMLTYPE_SINGLE || self->lastype == ENTC_XMLTYPE_NEND )
   {
     /* remove the top element */
-    char* selfnode = ecstack_top( self->nodes );
-	
-	  if( selfnode )
-    {
-      free( selfnode );
+    EcXMLTag tag = ecstack_top (self->nodes);
 
-	    ecstack_pop( self->nodes );      
+    if (isAssigned (tag))
+    {
+      ecstr_delete (&(tag->name));
+      ecstr_delete (&(tag->namespace));
+
+      ENTC_DEL (&tag, EcXMLTag_s);
+      
+	    ecstack_pop (self->nodes);      
     }
     else
     {
@@ -368,9 +472,30 @@ const EcString ecxmlstream_nextBuffer( EcXMLStream self )
 
 /*------------------------------------------------------------------------*/
 
-const char* ecxmlstream_nodeName( EcXMLStream self )
+const EcString ecxmlstream_nodeName (EcXMLStream self)
 {
-  return ecstack_top( self->nodes );
+  EcXMLTag tag = ecstack_top (self->nodes);
+  
+  if (isAssigned (tag))
+  {
+    return tag->name;
+  }
+  
+  return NULL;
+}
+
+/*------------------------------------------------------------------------*/
+
+const EcString ecxmlstream_nodeNamespace (EcXMLStream self)
+{
+  EcXMLTag tag = ecstack_top (self->nodes);
+  
+  if (isAssigned (tag))
+  {
+    return tag->namespace;
+  }
+  
+  return NULL;  
 }
 
 /*------------------------------------------------------------------------*/
@@ -398,31 +523,28 @@ const char* ecxmlstream_nodeValue( EcXMLStream self )
 
 const EcString ecxmlstream_isNode( EcXMLStream self )
 {
-  char* tag = ecstack_top( self->nodes );
-  if( tag )
+  if ((self->lastype == ENTC_XMLTYPE_SINGLE)||(self->lastype == ENTC_XMLTYPE_NSTART))
   {
-    if ((self->lastype == ENTC_XMLTYPE_SINGLE)||(self->lastype == ENTC_XMLTYPE_NSTART))
+    EcXMLTag tag = ecstack_top (self->nodes);
+    
+    if (isAssigned (tag))
     {
-      return tag;      
-    }
+      return tag->name;
+    }    
   }
-  return ecstr_init();  
+
+  return NULL;  
 }
 
 /*------------------------------------------------------------------------*/
 
-int ecxmlstream_isBegin( EcXMLStream self, const char* name )
+int ecxmlstream_isBegin (EcXMLStream self, const char* name)
 {
-  char* tag = ecstack_top( self->nodes );
-  
-  //eclogger_logformat(self->logger, LOGMSG_XML, "CORE", "tag '%s'", tag);
-  
-  if( tag )
+  if ((self->lastype == ENTC_XMLTYPE_SINGLE)||(self->lastype == ENTC_XMLTYPE_NSTART))
   {
-    if(    (self->lastype == ENTC_XMLTYPE_SINGLE || self->lastype == ENTC_XMLTYPE_NSTART)
-        && (strcmp(tag, name) == 0) )
-      return TRUE;
+    EcXMLTag tag = ecstack_top (self->nodes);
     
+    return isAssigned (tag) && ecstr_equal(tag->name, name);
   }
   return FALSE;
 }
@@ -431,18 +553,18 @@ int ecxmlstream_isBegin( EcXMLStream self, const char* name )
 
 int ecxmlstream_isEnd( EcXMLStream self, const char* name )
 {
-  char* tag = ecstack_top( self->nodes );
-  if( tag )
-  {    
-    if ( (self->lastype == ENTC_XMLTYPE_NEND) && (strcmp(tag, name) == 0) )
-      return TRUE;
+  if (self->lastype == ENTC_XMLTYPE_NEND)
+  {
+    EcXMLTag tag = ecstack_top (self->nodes);
+    
+    return isAssigned (tag) && ecstr_equal(tag->name, name);    
   }
   return FALSE;
 }
 
 /*------------------------------------------------------------------------*/
 
-int ecxmlstream_isOpen( EcXMLStream self )
+int ecxmlstream_isOpen (EcXMLStream self)
 {
   if( self )
   {
@@ -454,7 +576,7 @@ int ecxmlstream_isOpen( EcXMLStream self )
 
 /*------------------------------------------------------------------------*/
 
-int ecxmlstream_isValue( EcXMLStream self )
+int ecxmlstream_isValue (EcXMLStream self)
 {
   return self->lastype == ENTC_XMLTYPE_VALUE;
 }
@@ -476,9 +598,9 @@ int ecxmlstream_checkValue( EcXMLStream self, EcStream stream_tag )
   {
     //eclogger_logformat(self->logger, LOGMSG_XML, "CORE", "found value [%s]", value);
     
-    /* clean up the last type */
-    ecxmlstream_cleanLastNode( self );
-    
+    // clean up the last type
+    ecxmlstream_cleanLastNode (self);
+
     self->lastype = ENTC_XMLTYPE_VALUE;
 
     ecstr_replaceTO( &(self->value), value );
@@ -541,17 +663,24 @@ int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
   }
   else if( node[0] == '/')
   {
-    const EcString selfnode = ecstack_top( self->nodes );
-
-    if( !ecstr_equal(selfnode, node + 1) )
+    EcXMLTag tag = ecstack_top (self->nodes);
+    
+    if (isNotAssigned (tag))
     {
-      eclogger_logformat(self->logger, LL_ERROR, "CORE", "SYNTAX Error: start and end tag missmatch [%s][%s]", selfnode, node + 1);
-      
-      ecxmlstream_logError(self);
-            
+      eclogger_logformat(self->logger, LL_ERROR, "CORE", "SYNTAX Error: start and end tag missmatch [NULL][%s]", node + 1);
+
+      ecxmlstream_logError (self);
       return FALSE;      
     }
 
+    if (!ecstr_equal (tag->name, node + 1))
+    {
+      eclogger_logformat(self->logger, LL_ERROR, "CORE", "SYNTAX Error: start and end tag missmatch [%s][%s]", tag->name, node + 1);
+      
+      ecxmlstream_logError (self);
+      return FALSE;      
+    }
+    
     self->lastype = ENTC_XMLTYPE_NEND;
   }
   else
