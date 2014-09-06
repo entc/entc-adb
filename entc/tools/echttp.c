@@ -81,6 +81,7 @@ void echttp_init (void)
     ecmapchar_append( mime_types, "c",        "text/plain" ); 
     ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
     ecmapchar_append( mime_types, "woff",     "application/font-woff" );
+    ecmapchar_append( mime_types, "map",      "application/json");
     
     ecmapchar_append( mime_types, "exe",      "application/octet-stream" );     
   }
@@ -268,12 +269,6 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
   }
   // finish
   ecdevstream_append( stream, "\r\n", 2 );
-  
-  ecdevstream_appends( stream, "Status: ");
-  ecdevstream_appendu( stream, errcode );
-  ecdevstream_appends( stream, "\r\n" );      
-  
-  
 }
 
 //---------------------------------------------------------------------------------------

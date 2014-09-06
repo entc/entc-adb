@@ -240,8 +240,7 @@ int ecdh_next (EcDirHandle self, EcFileInfo* pinfo)
       self->info.type = ENTC_FILETYPE_ISFILE;
     }
 
-    self->info.sizeL = self->data.nFileSizeLow;
-    self->info.sizeH = self->data.nFileSizeHigh;
+    self->info.size = (uint64_t) self->data.nFileSizeLow << 32 | self->data.nFileSizeHigh;
 
     self->info.cdate = self->data.ftCreationTime.dwLowDateTime;
     self->info.mdate = self->data.ftLastWriteTime.dwLowDateTime;

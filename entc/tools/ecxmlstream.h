@@ -51,8 +51,10 @@ __LIB_EXPORT void ecxmlstream_close( EcXMLStream );
   
 __LIB_EXPORT int ecxmlstream_nextNode( EcXMLStream );
   
-__LIB_EXPORT const char* ecxmlstream_nodeName( EcXMLStream );
-  
+__LIB_EXPORT const EcString ecxmlstream_nodeName (EcXMLStream);
+
+__LIB_EXPORT const EcString ecxmlstream_nodeNamespace (EcXMLStream);
+
 __LIB_EXPORT ubyte_t ecxmlstream_nodeType( EcXMLStream );
   
 __LIB_EXPORT const char* ecxmlstream_nodeAttribute( EcXMLStream, const char* name );

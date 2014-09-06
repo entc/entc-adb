@@ -133,7 +133,7 @@ int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcL
   {
     /* copy attributes from stat */
     self->mtime = info.mdate;
-    self->size = info.sizeL;
+    self->size = info.size;
     /* get first the real path from the system */
     self->filename = ecfs_getRealPath(filename);
     

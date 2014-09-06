@@ -37,7 +37,7 @@
 #define ECDATA_REFS    ".refs"
 #define ECDATA_COLS    ".cols"
 #define ECDATA_ROWS    ".rows"
-#define ECDATA_RAWDATA ".rawdata"
+#define ECDATA_FILE    ".file"
 
 __CPP_EXTERN______________________________________________________________________________START
 
