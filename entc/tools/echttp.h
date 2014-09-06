@@ -70,6 +70,8 @@ typedef struct {
   
   EcUdc auth;
   
+  EcMapChar values;
+  
 } EcHttpHeader;
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;

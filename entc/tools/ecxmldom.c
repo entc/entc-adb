@@ -193,7 +193,7 @@ EcBuffer ecxmldom_buffer (EcUdc* pself)
 {
   EcStream stream = ecstream_new ();
   
-  ecstream_append (stream, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");  
+  ecstream_append (stream, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");  
   
   ecxmldom_write (*pself, stream, NULL);
   

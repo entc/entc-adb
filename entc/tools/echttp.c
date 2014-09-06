@@ -389,12 +389,14 @@ void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString doc
   {
     ecstr_delete(&filename);
     ecstr_delete(&(secopen.filename));
-    
+
+    /*
     if (secopen.sec_error != 0) 
     {
       echttp_send_SecureIncident (header, socket);
       return;
     }
+     */
     echttp_send_404NotFound (header, socket, ecstr_init());    
     return;
   }
@@ -443,6 +445,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->payload = ecstr_init();
   header->sessionid = ecstr_init();
   header->auth = NULL;
+  header->values = ecmapchar_new ();
 }
 
 //---------------------------------------------------------------------------------------
@@ -472,6 +475,8 @@ void echttp_header_clear (EcHttpHeader* header)
   {
     ecudc_destroy(&(header->auth));
   }
+  
+  ecmapchar_delete(&(header->values));
 }
 
 //---------------------------------------------------------------------------------------
@@ -640,6 +645,13 @@ void echttp_header_validate (EcHttpHeader* header)
       ecstr_replace(&(header->request_url), header->url); 
     }    
   }
+  // check url again if the last character is '/'
+  if (header->request_url[strlen(header->request_url)] != '/')
+  {
+    ecstr_replaceTO (&(header->request_url), ecstr_cat2(header->request_url, "/"));
+  }
+  
+  
   // set correct language
   if (ecstr_empty(header->session_lang)) 
   {
@@ -905,6 +917,23 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
       else if ((line[0] == 'A')&&(line[7] == 'z')&&(line[14] == ' '))
       {
         header->auth = echttp_parse_auth (line + 15);
+      }
+      else
+      {
+        // add special header value to map
+        EcString key = ecstr_init ();
+        EcString val = ecstr_init ();
+        
+        if (ecstr_split(line, &key, &val, ':'))
+        {
+          ecstr_replaceTO (&key, ecstr_trim (key));
+          ecstr_replaceTO (&val, ecstr_trim (val));
+          
+          ecmapchar_append(header->values, key, val);
+        }
+
+        ecstr_delete (&key);
+        ecstr_delete (&val);
       }
     }
     else

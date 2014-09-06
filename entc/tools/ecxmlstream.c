@@ -325,6 +325,8 @@ void ecxmlstream_parseNode( EcXMLStream self, const char* node )
     {
       tag->name = tagname;
       tag->namespace = nsname;
+      
+      printf("set namespace '%s'\n", nsname);
     }
     else
     {
