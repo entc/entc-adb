@@ -646,12 +646,10 @@ void echttp_header_validate (EcHttpHeader* header)
     }    
   }
   // check url again if the last character is '/'
-  if (header->request_url[strlen(header->request_url)] != '/')
+  if (header->request_url[strlen(header->request_url)] == '/')
   {
-    ecstr_replaceTO (&(header->request_url), ecstr_cat2(header->request_url, "/"));
+    header->request_url[strlen(header->request_url)] = 0;
   }
-  
-  
   // set correct language
   if (ecstr_empty(header->session_lang)) 
   {
