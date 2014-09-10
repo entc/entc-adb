@@ -131,13 +131,13 @@ typedef struct
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT int ecfs_move(const EcString source, const EcString dest);
+__LIB_EXPORT int ecfs_move (const EcString source, const EcString dest);
 
-__LIB_EXPORT int ecfs_mkdir(const EcString source);
+__LIB_EXPORT int ecfs_mkdir (const EcString source);
 
-__LIB_EXPORT int ecfs_rmdir(const EcString source);
+__LIB_EXPORT int ecfs_rmdir (const EcString source, int forceOnNoneEmpty);
 
-__LIB_EXPORT int ecfs_rmfile(const EcString source);
+__LIB_EXPORT int ecfs_rmfile (const EcString source);
 
 __LIB_EXPORT int ecfs_fileInfo (EcFileInfo, const EcString path);
 

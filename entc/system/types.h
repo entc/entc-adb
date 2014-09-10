@@ -34,6 +34,7 @@ typedef signed int int_t;
 #define ENTC_RESOURCE_NOT_FOUND          2
 #define ENTC_RESOURCE_NEEDS_AUTH         3
 #define ENTC_RESOURCE_NEEDS_PERMISSION   4
+#define ENTC_RESOURCE_ALREADY_EXISTS     5
 
 #define isAssigned(pointer) (pointer != NULL)
 #define isNotAssigned(pointer) (pointer == NULL)

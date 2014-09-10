@@ -261,6 +261,11 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
       echttp_send_status (header, stream, "403 Forbidden");      
     }
     break;
+    case ENTC_RESOURCE_ALREADY_EXISTS:
+    {
+      echttp_send_status (header, stream, "405 Method Not Allowed");
+    }
+    break;
     default:
     {
       echttp_send_status (header, stream, "404 Not Found");            

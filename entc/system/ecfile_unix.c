@@ -267,11 +267,71 @@ int ecfs_mkdir (const EcString source)
   return mkdir (source, 0770) == 0;
 }
 
-/*------------------------------------------------------------------------*/
+//--------------------------------------------------------------------------------
 
-int ecfs_rmdir(const EcString source)
+int ecfs_rmdir_loop (const EcString source, DIR* dir)
 {
-  return unlink( source ) == 0;
+  int res = TRUE;
+  struct dirent* dentry;
+  
+  // iterate through all entries
+  for (dentry = readdir (dir); res && isAssigned (dentry); dentry = readdir (dir))
+  {
+    // ignore those 
+    if (ecstr_equal (dentry->d_name, ".") || ecstr_equal (dentry->d_name, ".."))
+    {
+      continue;
+    }
+    
+    {      
+      struct stat st;
+      
+      EcString path = ecfs_mergeToPath (source, dentry->d_name);
+      
+      res = stat (path, &st) == 0;      
+      if (res) 
+      {
+        if (S_ISDIR (st.st_mode))
+        {
+          res = ecfs_rmdir (path, TRUE);
+        }
+        else
+        {
+          res = unlink(path);
+        }        
+      }
+
+      ecstr_delete (&path);      
+    }
+  }
+  return res;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
+{
+  int res = TRUE;
+  
+  if (forceOnNoneEmpty)
+  {
+    DIR* dir = opendir (source);
+    if (isNotAssigned (dir))
+    {
+      return FALSE;
+    }
+    
+    res = ecfs_rmdir_loop (source, dir);
+    
+    closedir(dir);
+  }
+
+  if (res)
+  {
+    res = rmdir (source) == 0;
+  }
+  
+  return res;
 }
 
 /*------------------------------------------------------------------------*/
