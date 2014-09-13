@@ -32,9 +32,13 @@
 
 struct EcHttpContent_s; typedef struct EcHttpContent_s* EcHttpContent;
 
+typedef int (*http_content_callback) (void* ptr, char* buffer, ulong_t size);
+
 __CPP_EXTERN______________________________________________________________________________START
 
 __LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, EcStreamBuffer, const EcString path, EcLogger);
+
+__LIB_EXPORT EcHttpContent echttp_content_create_cb (http_content_callback, void*, ulong_t size, const EcString path, EcLogger);
 
 __LIB_EXPORT void echttp_content_destroy (EcHttpContent*);
 
@@ -97,7 +101,7 @@ struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 typedef int (_STDCALL *http_process_fct)(void* ptr, EcHttpHeader*, void** object);
 typedef int (_STDCALL *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
 typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*, EcLogger);
-typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, EcLogger);
+typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, EcLogger, const EcString tmproot);
 
 typedef struct {
   

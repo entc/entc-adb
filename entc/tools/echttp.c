@@ -153,6 +153,85 @@ EcHttpContent echttp_content_create (ulong_t size, EcStreamBuffer bstream, const
 
 //---------------------------------------------------------------------------------------
 
+EcHttpContent echttp_content_create_cb (http_content_callback fct, void* ptr, ulong_t size, const EcString path, EcLogger logger)
+{
+  EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
+  
+  self->path = ecstr_copy (path);
+  self->logger = logger;
+  
+  if (size > _ENTC_MAX_BUFFERSIZE)
+  {
+    self->buffer = NULL;
+    
+    echttp_content_newRandomFile (self);
+    {
+      ulong_t read = 0;
+      
+      // open a new file
+      EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
+      if (isAssigned (fh))
+      {
+        self->buffer = ecbuf_create (_ENTC_MAX_BUFFERSIZE);
+
+        while (read < size)
+        {
+          int res = fct (ptr, (char*)self->buffer->buffer, _ENTC_MAX_BUFFERSIZE);          
+          if (res > 0)
+          {
+            if (ecfh_writeConst (fh, (char*)self->buffer->buffer, res) != res)
+            {
+              eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
+              
+              echttp_content_destroy (&self);
+              return NULL;            
+            }
+            
+            read += res;          
+          }
+          else
+          {
+            break;
+          }
+        }
+        
+        ecfh_close (&fh);
+      }
+      else
+      {
+        echttp_content_destroy (&self);
+        return NULL;
+      }
+    }
+  }
+  else
+  {
+    // setup
+    self->filename = NULL;
+    self->buffer = ecbuf_create (size);
+    {
+      ulong_t read = 0;
+      
+      while (read < size)
+      {
+        int res = fct (ptr, (char*)self->buffer->buffer + read, size - read);        
+        if (res > 0)
+        {          
+          read += res;          
+        }
+        else
+        {
+          break;
+        }
+      }
+    }    
+  }
+  
+  return self;
+}
+
+//---------------------------------------------------------------------------------------
+
 void echttp_content_destroy (EcHttpContent* pself)
 {
   EcHttpContent self = *pself;
@@ -1238,7 +1317,7 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
 
     if (isAssigned (self->callbacks.content))
     {
-      self->callbacks.content (callback_ptr, &header, logger);
+      self->callbacks.content (callback_ptr, &header, logger, self->tmproot);
     }
     
     if (self->callbacks.process (self->callbacks.process_ptr, &header, &object))
