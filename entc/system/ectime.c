@@ -116,3 +116,16 @@ void ectime_toTimeInfo (struct tm* timeinfo, const time_t* t)
 }
 
 //-----------------------------------------------------------------------------------
+
+void ectime_toGmtString (const time_t* t, char* buffer)
+{
+  struct tm timeinfo;
+
+  // fill the timeinfo
+  ectime_toTimeInfo (&timeinfo, t);
+
+  // convert to string
+
+}
+
+//-----------------------------------------------------------------------------------

@@ -9,6 +9,9 @@ source_group("Tests" FILES ${TESTS_SOURCES})
 ADD_EXECUTABLE( unittest_exec system/unittest_exec.c )
 TARGET_LINK_LIBRARIES( unittest_exec entc ) 
 
+ADD_EXECUTABLE( unittest_dh system/unittest_dh.c )
+TARGET_LINK_LIBRARIES( unittest_dh entc ) 
+
 ADD_EXECUTABLE( unittest_asyncserv tools/unittest_asyncserv.c )
 TARGET_LINK_LIBRARIES( unittest_asyncserv entc ) 
 
