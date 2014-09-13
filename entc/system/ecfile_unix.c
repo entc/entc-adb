@@ -32,7 +32,7 @@ struct EcFileHandle_s
 
 /*------------------------------------------------------------------------*/
 
-EcFileHandle ecfh_open(const EcString filename, int flags)
+EcFileHandle ecfh_open (const EcString filename, int flags)
 {
   /* variables */
   EcFileHandle fhandle;
@@ -209,63 +209,59 @@ void ecdh_seekType (const EcString path, EcFileInfo entry)
 
 //--------------------------------------------------------------------------------
 
+int ecdh_next_full (EcDirHandle self, EcFileInfo* pinfo, struct dirent* dentry)
+{
+  // create the full path
+  EcString filename = ecfs_mergeToPath (self->path, dentry->d_name);
+  
+  int res = ecfs_fileInfo (&(self->node), filename);
+  
+  ecstr_delete (&filename);
+  
+  if (!res)
+  {
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecdh_next_simple (EcDirHandle self, EcFileInfo* pinfo, struct dirent* dentry)
+{
+  if (dentry->d_type == DT_DIR)
+  {
+    self->node.type = ENTC_FILETYPE_ISDIR;
+  }
+  else if ((dentry->d_type == DT_REG) || (dentry->d_type == DT_LNK))
+  {
+    self->node.type = ENTC_FILETYPE_ISFILE;
+  }
+
+  return ecdh_next_full (self, pinfo, dentry);
+}
+
+//--------------------------------------------------------------------------------
+
 int ecdh_next (EcDirHandle self, EcFileInfo* pinfo, int fullInfo)
 {
   struct dirent* dentry = readdir (self->dir);
-
+  
   if (isAssigned (dentry))
   {
-    struct stat attribut;
-
-    ecstr_replace(&(self->node.name), dentry->d_name);
-
-    self->node.size = 0;
-    
-    if (dentry->d_type == DT_DIR)
-    {
-      self->node.type = ENTC_FILETYPE_ISDIR;
-      
-      if (fullInfo)
-      {
-        EcString filename = ecfs_mergeToPath(self->path, dentry->d_name);
-
-        if (ecfs_fileInfo (&(self->node), filename))
-        {
-          
-        }
-        
-        ecstr_delete (&filename);
-      }
-    }
-    else if ((dentry->d_type == DT_REG) || (dentry->d_type == DT_LNK))
-    {
-      self->node.size = attribut.st_size;
-
-      self->node.type = ENTC_FILETYPE_ISFILE;
-    }
-    else // can't retrieve the full information, just do a stat
-    {
-      EcString filename = ecfs_mergeToPath(self->path, dentry->d_name);
-      
-      if (ecfs_fileInfo (&(self->node), filename))
-      {
-      
-      }
-      
-      ecstr_delete (&filename);
-      
-      self->node.type = ENTC_FILETYPE_ISNONE;      
-    }
-    
-    self->node.cdate = attribut.st_ctime;
-    self->node.mdate = attribut.st_mtime;
-    self->node.adate = attribut.st_atime;    
-    
     *pinfo = &(self->node);
-
-    printf("NEXT: size %lu, cdate %lu, mdate %lu\n", (*pinfo)->size, (*pinfo)->cdate, (*pinfo)->mdate);
     
-    return TRUE;
+    ecstr_replace (&(self->node.name), dentry->d_name);              
+    
+    if (fullInfo)
+    {
+      return ecdh_next_full (self, pinfo, dentry);
+    }
+    else 
+    {
+      return ecdh_next_simple (self, pinfo, dentry);
+    }
   }
   else
   {
@@ -395,10 +391,7 @@ int ecfs_fileInfo (EcFileInfo info, const EcString path)
   info->cdate = st.st_ctime;
   info->mdate = st.st_mtime;
   info->adate = st.st_atime;
-  
-  printf("FILEINFO: size %lu, cdate %lu, mdate %lu\n", info->size, info->cdate, info->mdate);
 
-  
   return TRUE;
 }
 

@@ -117,15 +117,15 @@ void ectime_toTimeInfo (struct tm* timeinfo, const time_t* t)
 
 //-----------------------------------------------------------------------------------
 
-void ectime_toGmtString (const time_t* t, char* buffer)
+void ectime_toGmtString (const time_t* t, char* buffer, ulong_t size)
 {
   struct tm timeinfo;
 
   // fill the timeinfo
   ectime_toTimeInfo (&timeinfo, t);
 
-  // convert to string
-
+  // create buffer with timeinfo as string
+  strftime (buffer, size, "%a, %d %b %Y %T GMT", &timeinfo);
 }
 
 //-----------------------------------------------------------------------------------

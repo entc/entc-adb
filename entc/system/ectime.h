@@ -56,7 +56,7 @@ __LIB_EXPORT void ectime_getDate (EcDate*);
 
 __LIB_EXPORT void ectime_toTimeInfo (struct tm*, const time_t*);
 
-__LIB_EXPORT void ectime_toGmtString (const time_t*, char* buffer);
+__LIB_EXPORT void ectime_toGmtString (const time_t*, char* buffer, ulong_t size);
 
 __CPP_EXTERN______________________________________________________________________________END
 
