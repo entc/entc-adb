@@ -23,9 +23,11 @@
 
 void ecnode_add_default (EcUdc self)
 {
-  ecudc_add_asL (self, ECDATA_SIZE, 0);
-  ecudc_add_asL (self, ECDATA_CDATE, 0);
-  ecudc_add_asL (self, ECDATA_MDATE, 0);
+  time_t t = 0;
+  
+  ecudc_add_asUInt64 (self, ECDATA_SIZE, 0);
+  ecudc_add_asTime (self, ECDATA_CDATE, &t);
+  ecudc_add_asTime (self, ECDATA_MDATE, &t);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -47,39 +49,39 @@ EcUdc ecnode_create (const EcString name)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecnode_set_attributes (EcUdc node, ulong_t size, ulong_t cdate, ulong_t mdate)
+void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, const time_t* mdate)
 {
   {
     EcUdc h = ecudc_node (node, ECDATA_SIZE);
     if (isAssigned (h))
     {
-      ecudc_setL (h, size);
+      ecudc_setUInt64 (h, size);
     }
     else
     {
-      ecudc_add_asL (node, ECDATA_SIZE, size);    
+      ecudc_add_asUInt64 (node, ECDATA_SIZE, size);    
     }
   }
   {
     EcUdc h = ecudc_node (node, ECDATA_CDATE);
     if (isAssigned (h))
     {
-      ecudc_setL (h, cdate);
+      ecudc_setTime (h, cdate);
     }
     else
     {
-      ecudc_add_asL (node, ECDATA_CDATE, cdate);    
+      ecudc_add_asTime (node, ECDATA_CDATE, cdate);    
     }
   }
   {
     EcUdc h = ecudc_node (node, ECDATA_MDATE);
     if (isAssigned (h))
     {
-      ecudc_setL (h, mdate);
+      ecudc_setTime (h, mdate);
     }
     else
     {
-      ecudc_add_asL (node, ECDATA_MDATE, mdate);    
+      ecudc_add_asTime (node, ECDATA_MDATE, mdate);    
     }
   }
 }

@@ -117,14 +117,14 @@ char ecstreambuffer_get (EcStreamBuffer self)
 
 /*------------------------------------------------------------------------*/
 
-const char* ecstreambuffer_buffer(EcStreamBuffer self)
+void* ecstreambuffer_buffer (EcStreamBuffer self)
 {
-  return (char*)self->pos;
+  return self->pos;
 }
 
 /*------------------------------------------------------------------------*/
 
-uint_t ecstreambuffer_filled(EcStreamBuffer self, int* error)
+uint_t ecstreambuffer_filled (EcStreamBuffer self, int* error)
 {
   /* variables */
   uint_t size = self->end - self->pos;
@@ -149,43 +149,150 @@ uint_t ecstreambuffer_fill(EcStreamBuffer self, int* error)
   return 0;
 }
 
-/*------------------------------------------------------------------------*/
+//---------------------------------------------------------------
 
-int ecstreambuffer_readln(EcStreamBuffer self, EcStream stream, int* error)
-{
-  /* clean up the stream */
-  ecstream_clear( stream );
-  
-  while( ecstreambuffer_next(self, error) )
+int ecstreambuffer_readln_1break (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+{  
+  while (ecstreambuffer_next (self, error))
   {
-    char c = ecstreambuffer_get(self);
-    /* parse */
-    if( c == '\n' )
+    char c = *(self->pos);
+    
+    if (c == *b1)
     {
       return TRUE;
     }
-    /* filter other characters */
-    else if( c == '\r' )
+    else if (c == '\r' || c == '\n')
     {
-      /* do nothing */
+      // error, but we count it as line break
+      return TRUE;
     }
     else
     {
-      ecstream_appendc(stream, c);      
-    }
-    
+      ecstream_appendc (stream, c);      
+    }            
   }
+  
+  return FALSE;    
+}
+
+//---------------------------------------------------------------
+
+int ecstreambuffer_readln_2breaks (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+{
+  int hasBreak1 = FALSE;
+  
+  while (ecstreambuffer_next (self, error))
+  {
+    char c = *(self->pos);
+    
+    if (hasBreak1)
+    {
+      if (c == *b2)
+      {
+        return TRUE;
+      }
+      else
+      {        
+        self->pos--;
+        return TRUE;
+      }
+    }
+    else
+    {
+      if (c == *b1)
+      {
+        hasBreak1 = TRUE;
+      }
+      else if (c == '\r' || c == '\n')
+      {
+        // error, but we count it as line break
+        return TRUE;
+      }
+      else
+      {
+        ecstream_appendc (stream, c);      
+      }                  
+    }
+  }
+  
   return FALSE;  
+}
+
+//---------------------------------------------------------------
+
+int ecstreambuffer_readln_getbreaks (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+{
+  int hasBreak1 = FALSE;
+  
+  while (ecstreambuffer_next (self, error))
+  {
+    char c = *(self->pos);
+    
+    if (hasBreak1)
+    {
+      if (c == *b1)
+      {
+        self->pos--;
+        return TRUE;
+      }
+      else if (c == '\r' || c == '\n')
+      {
+        *b2 = c;
+        return TRUE;
+      }
+      else
+      {
+        self->pos--;
+        return TRUE;
+      }
+    }
+    else
+    {
+      if (c == '\r' || c == '\n')
+      {
+        *b1 = c;
+        hasBreak1 = TRUE;
+        continue;
+      }
+      else
+      {
+        ecstream_appendc (stream, c);      
+      }                  
+    }
+  }
+  
+  return FALSE;    
+}
+
+//---------------------------------------------------------------
+
+int ecstreambuffer_readln (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+{
+  /* clean up the stream */
+  ecstream_clear( stream );
+
+  if (*b1 && *b2)
+  {
+    return ecstreambuffer_readln_2breaks (self, stream, error, b1, b2);
+  }
+  else if (*b1 && (*b2 == 0))
+  {
+    return ecstreambuffer_readln_1break (self, stream, error, b1, b2);
+  }
+  else
+  {
+    return ecstreambuffer_readln_getbreaks (self, stream, error, b1, b2);
+  }
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecstreambuffer_read(EcStreamBuffer self, EcStream stream, int* error)
+void ecstreambuffer_read (EcStreamBuffer self, EcStream stream, int* error)
 {
   /* clean up the stream */
   ecstream_clear( stream );
   
-  while( ecstreambuffer_next(self, error) )
+  while( ecstreambuffer_next (self, error) )
   {
     char c = ecstreambuffer_get(self);
     
@@ -194,3 +301,27 @@ void ecstreambuffer_read(EcStreamBuffer self, EcStream stream, int* error)
 }
 
 /*------------------------------------------------------------------------*/
+
+void* ecstreambuffer_getBunch (EcStreamBuffer self, ulong_t size, int* res)
+{
+  void* ret = NULL;
+
+  if (ecstreambuffer_next (self, res))
+  {
+    uint_t filled = ecstreambuffer_filled (self, res);      
+    if (filled > 0)
+    {
+      ulong_t diff = filled < size ? filled : size;
+      
+      ret = self->pos;
+      
+      self->pos += diff;
+      
+      *res = diff;
+    }    
+  }
+  
+  return ret;
+}
+
+//--------------------------------------------------------------------------

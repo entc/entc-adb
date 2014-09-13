@@ -115,16 +115,16 @@ typedef struct
   
   ubyte_t type;
   
-  uint64_t size;
+  off_t size;
     
   // creat date
-  uint_t cdate;
+  time_t cdate;
   
   // last modification date
-  uint_t mdate;
+  time_t mdate;
   
   // access date
-  uint_t adate;
+  time_t adate;
   
 } EcFileInfo_s; typedef EcFileInfo_s* EcFileInfo;
 
@@ -171,11 +171,11 @@ __LIB_EXPORT EcFileHandle ecfh_open(const EcString filename, int flags);
   
 __LIB_EXPORT void ecfh_close(EcFileHandle*);
   
-__LIB_EXPORT void ecfh_writeString(EcFileHandle, const EcString);
+__LIB_EXPORT int ecfh_writeString (EcFileHandle, const EcString);
   
-__LIB_EXPORT void ecfh_writeBuffer(EcFileHandle, const EcBuffer buffer, uint_t size);
+__LIB_EXPORT int ecfh_writeBuffer (EcFileHandle, const EcBuffer buffer, uint_t size);
 
-__LIB_EXPORT void ecfh_writeConst(EcFileHandle, const char* buffer, uint_t size);
+__LIB_EXPORT int ecfh_writeConst (EcFileHandle, const char* buffer, uint_t size);
 
 __LIB_EXPORT uint_t ecfh_readBuffer(EcFileHandle, EcBuffer buffer);
   
@@ -197,7 +197,7 @@ __LIB_EXPORT EcDirHandle ecdh_create (const EcString path);
   
 __LIB_EXPORT void ecdh_destroy (EcDirHandle*);
   
-__LIB_EXPORT int ecdh_next (EcDirHandle, EcFileInfo*);
+__LIB_EXPORT int ecdh_next (EcDirHandle, EcFileInfo*, int fullInfo);
   
 // fills a list with all files found -> filename as list entry
 __LIB_EXPORT int ecdh_scan (const EcString path, EcList entries, int filetype);

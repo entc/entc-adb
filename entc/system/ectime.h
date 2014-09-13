@@ -23,6 +23,8 @@
 #include <system/macros.h>
 #include <system/types.h>
 
+#include <time.h>
+
 typedef struct {
   
   uint_t usec;
@@ -51,6 +53,8 @@ __CPP_EXTERN____________________________________________________________________
 __LIB_EXPORT void ectime_getTime (EcTime*);
 
 __LIB_EXPORT void ectime_getDate (EcDate*);
+
+__LIB_EXPORT void ectime_toTimeInfo (struct tm*, const time_t*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

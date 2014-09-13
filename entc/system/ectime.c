@@ -105,3 +105,14 @@ void ectime_getDate (EcDate* ecdate)
 }
 
 //-----------------------------------------------------------------------------------
+
+void ectime_toTimeInfo (struct tm* timeinfo, const time_t* t)
+{
+#if defined _WIN64 || defined _WIN32
+  gmtime_s (timeinfo, t);
+#else
+  gmtime_r (t, timeinfo);
+#endif
+}
+
+//-----------------------------------------------------------------------------------

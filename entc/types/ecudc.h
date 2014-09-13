@@ -29,8 +29,10 @@
 #define ENTC_UDC_LIST    1
 #define ENTC_UDC_STRING  2
 #define ENTC_UDC_BYTE    4
-#define ENTC_UDC_LONG    5
-#define ENTC_UDC_REF     6
+#define ENTC_UDC_UINT32  5
+#define ENTC_UDC_UINT64  6
+#define ENTC_UDC_REF     7
+#define ENTC_UDC_TIME    8
 
 struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 
@@ -56,7 +58,11 @@ __LIB_EXPORT void ecudc_setP (EcUdc, void*);
 
 __LIB_EXPORT void ecudc_setB (EcUdc, ubyte_t);
 
-__LIB_EXPORT void ecudc_setL (EcUdc, ulong_t);
+__LIB_EXPORT void ecudc_setUInt32 (EcUdc, uint32_t);
+
+__LIB_EXPORT void ecudc_setUInt64 (EcUdc, uint64_t);
+
+__LIB_EXPORT void ecudc_setTime (EcUdc, const time_t*);
 
 __LIB_EXPORT const EcString ecudc_asString (EcUdc);
 
@@ -64,7 +70,11 @@ __LIB_EXPORT void* ecudc_asP (EcUdc);
 
 __LIB_EXPORT ubyte_t ecudc_asB (EcUdc);
 
-__LIB_EXPORT ulong_t ecudc_asL (EcUdc);
+__LIB_EXPORT uint32_t ecudc_asUInt32 (EcUdc);
+
+__LIB_EXPORT uint64_t ecudc_asUInt64 (EcUdc);
+
+__LIB_EXPORT const time_t* ecudc_asTime (EcUdc);
 
 __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
@@ -78,7 +88,11 @@ __LIB_EXPORT const EcString ecudc_get_asString (const EcUdc, const EcString name
 
 __LIB_EXPORT ubyte_t ecudc_get_asB (const EcUdc, const EcString name, ubyte_t alt);
 
-__LIB_EXPORT ulong_t ecudc_get_asL (const EcUdc, const EcString name, ulong_t alt);
+__LIB_EXPORT uint32_t ecudc_get_asUInt32 (const EcUdc, const EcString name, uint32_t alt);
+
+__LIB_EXPORT uint64_t ecudc_get_asUInt64 (const EcUdc, const EcString name, uint64_t alt);
+
+__LIB_EXPORT const time_t* ecudc_get_asTime (const EcUdc, const EcString name, const time_t* alt);
 
 __LIB_EXPORT void ecudc_add_asP (EcUdc, const EcString name, void* value);
 
@@ -86,7 +100,11 @@ __LIB_EXPORT void ecudc_add_asString (EcUdc, const EcString name, const EcString
 
 __LIB_EXPORT void ecudc_add_asB (EcUdc, const EcString name, ubyte_t value);
 
-__LIB_EXPORT void ecudc_add_asL (EcUdc, const EcString name, ulong_t value);
+__LIB_EXPORT void ecudc_add_asUInt32 (EcUdc, const EcString name, uint32_t value);
+
+__LIB_EXPORT void ecudc_add_asUInt64 (EcUdc, const EcString name, uint64_t value);
+
+__LIB_EXPORT void ecudc_add_asTime (EcUdc, const EcString name, const time_t* value);
 
 // tools
 

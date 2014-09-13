@@ -20,11 +20,12 @@
 #ifndef ENTC_SYSTEM_TYPES_H
 #define ENTC_SYSTEM_TYPES_H 1
 
+#include <stdint.h>
+
 typedef unsigned char ubyte_t;
 
 typedef unsigned long ulong_t;
 typedef long long_t;
-
 
 typedef unsigned int uint_t;
 typedef signed int int_t;

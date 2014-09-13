@@ -452,7 +452,7 @@ ulong_t eclogger_getResultCode (EcUdc results)
   {
     if (ecstr_equal (ecudc_name(item), "ErrorCode"))
     {
-      errorCode = ecudc_asL(item);
+      errorCode = ecudc_asB(item);
       continue;
     }
     // at least one result is OK

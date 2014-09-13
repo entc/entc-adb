@@ -19,7 +19,6 @@
 
 #include "echttp.h"
 
-#include <utils/ecstreambuffer.h>
 #include <utils/ecreadbuffer.h>
 #include <utils/ecsecfile.h>
 #include <types/ecmapchar.h>
@@ -34,6 +33,199 @@ EcBuffer session_name;
 #define _ENTC_SESSION_NAMELENGTH 23
 
 static int echhtp_counter = 0;
+
+
+#define _ENTC_MAX_BUFFERSIZE 32000 //  32kb
+
+struct EcHttpContent_s
+{
+  
+  //ref
+  EcLogger logger;
+  
+  
+  // owned
+  EcBuffer buffer;
+  
+  EcString filename;
+  
+  EcString path;
+  
+};
+
+//---------------------------------------------------------------------------------------
+
+void echttp_content_newRandomFile (EcHttpContent self)
+{
+  EcBuffer h = ecbuf_create (32);
+  
+  ecbuf_random(h, 32);
+  
+  self->filename = ecfs_mergeToPath (self->path, (char*)h->buffer);
+  
+  ecbuf_destroy (&h);        
+}
+
+//---------------------------------------------------------------------------------------
+
+EcHttpContent echttp_content_create (ulong_t size, EcStreamBuffer bstream, const EcString path, EcLogger logger)
+{
+  EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
+  
+  self->path = ecstr_copy (path);
+  self->logger = logger;
+  
+  if (size > _ENTC_MAX_BUFFERSIZE)
+  {
+    self->buffer = NULL;
+
+    echttp_content_newRandomFile (self);
+    {
+      ulong_t read = 0;
+      
+      // open a new file
+      EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
+      if (isAssigned (fh))
+      {
+        while (read < size)
+        {
+          int res = 0;
+          
+          void* data = ecstreambuffer_getBunch (bstream, size - read, &res);        
+          
+          if (res > 0)
+          {
+            if (ecfh_writeConst (fh, data, res) != res)
+            {
+              eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
+
+              echttp_content_destroy (&self);
+              return NULL;            
+            }
+            
+            read += res;          
+          }
+          else
+          {
+            break;
+          }
+        }
+        
+        ecfh_close (&fh);
+      }
+      else
+      {
+        echttp_content_destroy (&self);
+        return NULL;
+      }
+    }
+  }
+  else
+  {
+    // setup
+    self->filename = NULL;
+    self->buffer = ecbuf_create (size);
+    {
+      ulong_t read = 0;
+      
+      while (read < size)
+      {
+        int res = 0;
+        
+        void* data = ecstreambuffer_getBunch (bstream, size - read, &res);        
+        
+        if (res > 0)
+        {          
+          memcpy (self->buffer->buffer + read, data, res);
+          
+          read += res;          
+        }
+        else
+        {
+          break;
+        }
+      }
+    }    
+  }
+  
+  return self;
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_content_destroy (EcHttpContent* pself)
+{
+  EcHttpContent self = *pself;
+  
+  if (isAssigned (self->buffer))
+  {
+    ecbuf_destroy(&(self->buffer));
+  }
+
+  if (isAssigned (self->filename))
+  {
+    ecfs_rmfile (self->filename);
+    
+    ecstr_delete(&(self->filename));
+  }
+
+  ecstr_delete (&(self->path));
+  
+  ENTC_DEL (pself, struct EcHttpContent_s);
+}
+
+//---------------------------------------------------------------------------------------
+
+int echttp_content_hasBuffer (EcHttpContent self)
+{
+  return isAssigned (self->buffer);
+}
+
+//---------------------------------------------------------------------------------------
+
+int echttp_content_hasFile (EcHttpContent self)
+{
+  return isAssigned (self->filename);
+}
+
+//---------------------------------------------------------------------------------------
+
+EcString echttp_content_getFile (EcHttpContent self)
+{
+  if (isAssigned (self->filename))
+  {
+    return self->filename;
+  }
+  else if (isAssigned (self->buffer))
+  {
+    echttp_content_newRandomFile (self);
+    
+    // open a new file
+    EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
+    if (isAssigned (fh))
+    {
+      if (ecfh_writeBuffer (fh, self->buffer, self->buffer->size) != self->buffer->size)
+      {
+        eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
+        
+        ecfh_close (&fh);
+        return NULL;        
+      }
+
+      ecfh_close (&fh);
+      
+      return self->filename;
+    }
+  }
+  return NULL;
+}
+
+//---------------------------------------------------------------------------------------
+
+EcBuffer echttp_content_getBuffer (EcHttpContent self)
+{
+  return self->buffer;
+}
 
 //---------------------------------------------------------------------------------------
 
@@ -292,7 +484,7 @@ void q4http_callback(void* ptr, const void* buffer, uint_t nbyte)
 
 //---------------------------------------------------------------------------------------
 
-void echttp_send_408Timeout (EcHttpHeader* header, EcSocket socket)
+void echttp_send_408 (EcHttpHeader* header, EcSocket socket)
 {  
   if (header->header_on)
   {
@@ -301,6 +493,21 @@ void echttp_send_408Timeout (EcHttpHeader* header, EcSocket socket)
     ecdevstream_appends( stream, "HTTP/1.1 408 Request Timeout\r\n" );
     ecdevstream_appends( stream, "\r\n\r\n" );
 
+    ecdevstream_delete( &stream );  
+  }
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_send_500 (EcHttpHeader* header, EcSocket socket)
+{  
+  if (header->header_on)
+  {
+    EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
+    // send back that the file doesn't exists
+    ecdevstream_appends( stream, "HTTP/1.1 500 Internal Server Error\r\n" );
+    ecdevstream_appends( stream, "\r\n\r\n" );
+    
     ecdevstream_delete( &stream );  
   }
 }
@@ -447,7 +654,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->token = NULL;
   header->urlpath = ecstr_init();
   header->content_length = 0;
-  header->payload = ecstr_init();
+  header->content = NULL;
   header->sessionid = ecstr_init();
   header->auth = NULL;
   header->values = ecmapchar_new ();
@@ -472,8 +679,12 @@ void echttp_header_clear (EcHttpHeader* header)
     eclist_delete(&(header->tokens));
   }  
   ecstr_delete(&(header->urlpath));
-  ecstr_delete(&(header->payload));
   
+  if (isAssigned (header->content))
+  {
+    echttp_content_destroy (&(header->content));
+  }
+    
   ecstr_delete(&(header->sessionid));
   
   if (isAssigned (header->auth))
@@ -741,6 +952,8 @@ struct EcHttpRequest_s
   
   EcString docroot;
   
+  EcString tmproot;
+  
   int header_on;
   
   EcHttpCallbacks callbacks;
@@ -749,12 +962,13 @@ struct EcHttpRequest_s
 
 //---------------------------------------------------------------------------------------
 
-EcHttpRequest echttp_request_create (const EcString docroot, int header, EcLogger logger)
+EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header, EcLogger logger)
 {
   EcHttpRequest self = ENTC_NEW (struct EcHttpRequest_s);
   
   self->logger = logger;
   self->docroot = ecstr_copy (docroot);
+  self->tmproot = ecstr_copy (tmproot);
   self->header_on = header;
   
   memset (&(self->callbacks), 0x0, sizeof(EcHttpCallbacks));
@@ -853,43 +1067,20 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 
 //---------------------------------------------------------------------------------------
 
-int echttp_parse_content (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger logger)
-{
-  if (header->content_length > 0)
-  {
-    int error;
-    // parse the first line received
-    ulong_t counter;
-    
-    EcBuffer sbuffer = ecbuf_create (header->content_length + 1);
-    
-    for (counter = 0; counter < header->content_length; counter++)
-    {
-      if (!ecstreambuffer_next(buffer, &error))
-      {
-        ecbuf_destroy (&sbuffer);
-        return FALSE;
-      }
-      sbuffer->buffer[counter] = ecstreambuffer_get(buffer);
-    }    
-    header->payload = ecbuf_str (&sbuffer);
-  }
-  return TRUE;
-}
-
-//---------------------------------------------------------------------------------------
-
 int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger logger)
 {
   int error;
   EcStream stream = ecstream_new();
   
-  while( ecstreambuffer_readln(buffer, stream, &error) )
+  char b1 = 0;
+  char b2 = 0;
+  
+  while (ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
   {      
     const char* line = ecstream_buffer(stream);
     if( *line )
     {
-      eclogger_logformat(logger, LL_TRACE, "SERV", "{recv line} '%s'", line);
+      //printf("{recv line} '%s'\n", line);
       
       /* Host: 127.0.0.1:8080 */
       if( line[0] == 'H' && line[1] == 'o' && line[5] == ' ' )        
@@ -941,7 +1132,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
     }
     else
     {
-      //eclogger_logformat(qo->logger, LOGMSG_INFO, "SERV", "{recv end} '%s'", line);
+      //printf("{recv end}\n");
       break;        
     }
   }
@@ -956,8 +1147,12 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
 int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcLogger logger)
 {
   int error;
+  
+  char b1 = 0;
+  char b2 = 0;
+
   // parse the first line received
-  if ( ecstreambuffer_readln (buffer, streambuffer, &error) )
+  if ( ecstreambuffer_readln (buffer, streambuffer, &error, &b1, &b2) )
   {
     const char* line = ecstream_buffer(streambuffer);
     if(!ecstr_empty(line))
@@ -1007,9 +1202,7 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
   ret = ret && echttp_parse_method (header, buffer, streambuffer, logger);
   // parse meta informations
   ret = ret && echttp_parse_header (header, buffer, logger);
-  // parse post content
-  ret = ret && echttp_parse_content (header, buffer, logger);
-  
+    
   return ret;
 }
 
@@ -1105,6 +1298,36 @@ void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSo
 
 //---------------------------------------------------------------------------------------
 
+void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcSocket socket, EcLogger logger)
+{
+  if (!echttp_request_next (header, buffer, streambuffer, logger))
+  {
+    echttp_send_408 (header, socket); 
+    return;
+  }
+  
+  echttp_header_validate (header);
+    
+  if (header->content_length > 0)
+  {
+    if (isAssigned (header->content))
+    {
+      echttp_content_destroy (&(header->content));
+    }
+    
+    header->content =  echttp_content_create (header->content_length, buffer, self->tmproot, logger);  
+    if (isNotAssigned (header->content)) 
+    {
+      echttp_send_500 (header, socket);
+      return;
+    }
+  }
+  
+  echttp_request_process_next (self, header, socket, logger);
+}
+
+//---------------------------------------------------------------------------------------
+
 void echttp_request_process (EcHttpRequest self, EcSocket socket, EcLogger logger)
 {
   EcHttpHeader header;
@@ -1115,16 +1338,7 @@ void echttp_request_process (EcHttpRequest self, EcSocket socket, EcLogger logge
   // initialize the header struct
   echttp_header_init (&header, self->header_on);
 
-  if (echttp_request_next (&header, buffer, streambuffer, logger))
-  {
-    echttp_header_validate (&header);
-    
-    echttp_request_process_next (self, &header, socket, logger);
-  }
-  else
-  {
-    echttp_send_408Timeout (&header, socket); 
-  }
+  echttp_request_process_check (self, &header, buffer, streambuffer, socket, logger);
   
   echttp_header_clear (&header);
   

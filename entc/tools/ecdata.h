@@ -45,7 +45,7 @@ __CPP_EXTERN____________________________________________________________________
 
 __LIB_EXPORT EcUdc ecnode_create (const EcString name);
 
-__LIB_EXPORT void ecnode_set_attributes (EcUdc node, ulong_t size, ulong_t cdate, ulong_t mdate);
+__LIB_EXPORT void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, const time_t* mdate);
 
 __LIB_EXPORT EcUdc ecnode_create_item (EcUdc node, const EcString name);
 

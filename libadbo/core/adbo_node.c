@@ -245,11 +245,11 @@ void adbo_node_primary_sequence (EcUdc node, AdblSession dbsession, const EcStri
       {
         AdblSequence* seq = adbl_dbsequence_get(dbsession, dbtable);
         
-        uint_t id = adbl_sequence_next (seq);
+        uint32_t id = adbl_sequence_next (seq);
         
         adbl_attrs_addLong(attrs, dbcolumn, id);
         
-        ecudc_add_asL(values, dbcolumn, id);        
+        ecudc_add_asUInt32(values, dbcolumn, id);        
       }
     }
   }
@@ -377,7 +377,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   const EcString dbsource;
   AdblSession dbsession;
   EcUdc values;
-  ulong_t dbmin;
+  uint32_t dbmin;
   AdblConstraint* constraints;
   AdblQuery* query;
 
@@ -403,7 +403,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   
   values = ecudc_create (ENTC_UDC_LIST, ECDATA_ROWS);
   
-  dbmin = ecudc_get_asL(node, ".dbmin", 1);
+  dbmin = ecudc_get_asUInt32(node, ".dbmin", 1);
   
   
   query = adbl_query_new ();
@@ -854,11 +854,11 @@ void adbo_node_updateSize (EcUdc node, AdboContext context)
 
   if (isAssigned (size))
   {
-    ecudc_setL (size, adbl_table_size (dbsession, ecudc_name (node)));
+    ecudc_setUInt64 (size, adbl_table_size (dbsession, ecudc_name (node)));
   }
   else
   {
-    ecudc_add_asL (node, ECDATA_SIZE, adbl_table_size (dbsession, ecudc_name (node)));
+    ecudc_add_asUInt64 (node, ECDATA_SIZE, adbl_table_size (dbsession, ecudc_name (node)));
   }
 }
 

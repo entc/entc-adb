@@ -28,7 +28,25 @@
 #include <types/ecstream.h>
 #include <types/ecmapchar.h>
 
+#include <utils/ecstreambuffer.h>
 
+struct EcHttpContent_s; typedef struct EcHttpContent_s* EcHttpContent;
+
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, EcStreamBuffer, const EcString path, EcLogger);
+
+__LIB_EXPORT void echttp_content_destroy (EcHttpContent*);
+
+__LIB_EXPORT int echttp_content_hasBuffer (EcHttpContent);
+
+__LIB_EXPORT int echttp_content_hasFile (EcHttpContent);
+
+__LIB_EXPORT EcString echttp_content_getFile (EcHttpContent);
+
+__LIB_EXPORT EcBuffer echttp_content_getBuffer (EcHttpContent);
+
+__CPP_EXTERN______________________________________________________________________________END
 
 typedef struct {
 
@@ -64,7 +82,7 @@ typedef struct {
   
   uint_t content_length;
   
-  EcString payload;
+  EcHttpContent content;
   
   EcString sessionid;
   
@@ -112,7 +130,7 @@ __LIB_EXPORT void echttp_init (void);
 
 __LIB_EXPORT void echttp_done (void);
 
-__LIB_EXPORT EcHttpRequest echttp_request_create (const EcString rootdoc, int header, EcLogger);
+__LIB_EXPORT EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header, EcLogger);
 
 __LIB_EXPORT void echttp_request_destroy (EcHttpRequest*);
 

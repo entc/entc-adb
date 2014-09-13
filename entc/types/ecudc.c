@@ -333,7 +333,11 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_BYTE: self->extension = 0;
       break;
-    case ENTC_UDC_LONG: self->extension = ENTC_NEW (ulong_t); 
+    case ENTC_UDC_UINT32: self->extension = ENTC_NEW (uint32_t); 
+      break;
+    case ENTC_UDC_UINT64: self->extension = ENTC_NEW (uint64_t); 
+      break;
+    case ENTC_UDC_TIME: self->extension = ENTC_NEW (time_t); 
       break;
   }
   
@@ -358,7 +362,11 @@ void ecudc_destroy (EcUdc* pself)
       break;
     case ENTC_UDC_BYTE: self->extension = NULL; 
       break;
-    case ENTC_UDC_LONG: ENTC_DEL (&(self->extension), ulong_t);
+    case ENTC_UDC_UINT32: ENTC_DEL (&(self->extension), uint32_t);
+      break;
+    case ENTC_UDC_UINT64: ENTC_DEL (&(self->extension), uint64_t);
+      break;
+    case ENTC_UDC_TIME: ENTC_DEL (&(self->extension), time_t);
       break;
   }
   // delete only if the content was deleted
@@ -457,12 +465,34 @@ void ecudc_setB (EcUdc self, ubyte_t value)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_setL (EcUdc self, ulong_t value)
+void ecudc_setUInt32 (EcUdc self, uint32_t value)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_LONG: *((ulong_t*)self->extension) = value; 
+    case ENTC_UDC_UINT32: memcpy(self->extension, &value, sizeof(uint32_t)); 
       break;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_setUInt64 (EcUdc self, uint64_t value)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_UINT64: memcpy(self->extension, &value, sizeof(uint64_t)); 
+    break;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_setTime (EcUdc self, const time_t* value)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_TIME: memcpy(self->extension, value, sizeof(time_t)); 
+    break;
   }
 }
 
@@ -501,11 +531,11 @@ ubyte_t ecudc_asB (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
-ulong_t ecudc_asL (EcUdc self)
+uint32_t ecudc_asUInt32 (EcUdc self)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_LONG: return *((ulong_t*)self->extension); 
+    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension); 
     case ENTC_UDC_STRING:
     {
       const EcString h = ecudc_asString (self);
@@ -515,6 +545,37 @@ ulong_t ecudc_asL (EcUdc self)
         return atoi(h);
       }
     }
+  }        
+  return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
+uint64_t ecudc_asUInt64 (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension); 
+    case ENTC_UDC_STRING:
+    {
+      const EcString h = ecudc_asString (self);
+      if (isAssigned (h))
+      {
+        // can be transformed ?
+        return atoi(h);
+      }
+    }
+  }        
+  return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
+const time_t* ecudc_asTime (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_TIME: return self->extension; 
   }        
   return 0;
 }
@@ -589,12 +650,58 @@ ubyte_t ecudc_get_asB (const EcUdc self, const EcString name, ubyte_t alt)
 
 //----------------------------------------------------------------------------------------
 
-ulong_t ecudc_get_asL (const EcUdc self, const EcString name, ulong_t alt)
+uint32_t ecudc_get_asUInt32 (const EcUdc self, const EcString name, uint32_t alt)
 {
   const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
-    ulong_t ret = ecudc_asL (res);
+    uint32_t ret = ecudc_asUInt32 (res);
+    if (ret == 0)
+    {
+      return alt;
+    }
+    else
+    {
+      return ret;
+    }
+  }
+  else
+  {
+    return alt;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+uint64_t ecudc_get_asUInt64 (const EcUdc self, const EcString name, uint64_t alt)
+{
+  const EcUdc res = ecudc_node (self, name);
+  if (isAssigned (res))
+  {
+    uint64_t ret = ecudc_asUInt64 (res);
+    if (ret == 0)
+    {
+      return alt;
+    }
+    else
+    {
+      return ret;
+    }
+  }
+  else
+  {
+    return alt;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+const time_t* ecudc_get_asTime (const EcUdc self, const EcString name, const time_t* alt)
+{
+  const EcUdc res = ecudc_node (self, name);
+  if (isAssigned (res))
+  {
+    const time_t* ret = ecudc_asTime (res);
     if (ret == 0)
     {
       return alt;
@@ -638,7 +745,6 @@ void ecudc_add_asString (EcUdc node, const EcString name, const EcString value)
 
 void ecudc_add_asB (EcUdc node, const EcString name, ubyte_t value)
 {
-  // create new item as string
   EcUdc item = ecudc_create (ENTC_UDC_BYTE, name);
   // set new value to item
   ecudc_setB (item, value);
@@ -648,14 +754,35 @@ void ecudc_add_asB (EcUdc node, const EcString name, ubyte_t value)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_add_asL (EcUdc node, const EcString name, ulong_t value)
+void ecudc_add_asUInt32 (EcUdc node, const EcString name, uint32_t value)
 {
-  // create new item as string
-  EcUdc item = ecudc_create (ENTC_UDC_LONG, name);
+  EcUdc item = ecudc_create (ENTC_UDC_UINT32, name);
   // set new value to item
-  ecudc_setL (item, value);
+  ecudc_setUInt32 (item, value);
   // add item to node 
-  ecudc_add (node, &item);
+  ecudc_add (node, &item);  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asUInt64 (EcUdc node, const EcString name, uint64_t value)
+{
+  EcUdc item = ecudc_create (ENTC_UDC_UINT64, name);
+  // set new value to item
+  ecudc_setUInt64 (item, value);
+  // add item to node 
+  ecudc_add (node, &item);    
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asTime (EcUdc node, const EcString name, const time_t* value)
+{
+  EcUdc item = ecudc_create (ENTC_UDC_TIME, name);
+  // set new value to item
+  ecudc_setTime (item, value);
+  // add item to node 
+  ecudc_add (node, &item);    
 }
 
 //----------------------------------------------------------------------------------------
@@ -663,9 +790,9 @@ void ecudc_add_asL (EcUdc node, const EcString name, ulong_t value)
 EcUdc ecudc_errcode (uint_t errcode)
 {
   // create the default error code node
-  EcUdc error = ecudc_create (ENTC_UDC_LONG, "ErrorCode");
+  EcUdc error = ecudc_create (ENTC_UDC_BYTE, "ErrorCode");
   // set the value
-  ecudc_setL (error, errcode);
+  ecudc_setB (error, errcode);
   // return
   return error;  
 }

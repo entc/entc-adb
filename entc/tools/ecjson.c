@@ -464,9 +464,19 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       ecstream_appendu (stream, ecudc_asB (node));
     }
       break;
-    case ENTC_UDC_LONG:
+    case ENTC_UDC_UINT32:
     {
-      ecstream_appendu (stream, ecudc_asL (node));
+      ecstream_appendu (stream, ecudc_asUInt32 (node));
+    }
+      break;
+    case ENTC_UDC_UINT64:
+    {
+      ecstream_appendu (stream, ecudc_asUInt64 (node));
+    }
+      break;
+    case ENTC_UDC_TIME:
+    {
+      ecstream_appendu (stream, ecudc_asTime (node));
     }
       break;
   }

@@ -42,15 +42,17 @@ __LIB_EXPORT int ecstreambuffer_next(EcStreamBuffer, int* error);
 
 __LIB_EXPORT char ecstreambuffer_get(EcStreamBuffer);
 
-__LIB_EXPORT const char* ecstreambuffer_buffer(EcStreamBuffer);
+__LIB_EXPORT void* ecstreambuffer_buffer (EcStreamBuffer);
 
 __LIB_EXPORT uint_t ecstreambuffer_filled(EcStreamBuffer, int* error);
 
 __LIB_EXPORT uint_t ecstreambuffer_fill(EcStreamBuffer, int* error);
   
-__LIB_EXPORT int ecstreambuffer_readln(EcStreamBuffer, EcStream stream, int* error);
+__LIB_EXPORT int ecstreambuffer_readln (EcStreamBuffer, EcStream stream, int* error, char* b1, char* b2);
 
 __LIB_EXPORT void ecstreambuffer_read(EcStreamBuffer, EcStream stream, int* error);
+
+__LIB_EXPORT void* ecstreambuffer_getBunch (EcStreamBuffer, ulong_t size, int* res);
 
 __CPP_EXTERN______________________________________________________________________________END
 
