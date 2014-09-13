@@ -78,23 +78,23 @@ void ecfh_close(EcFileHandle* self)
 
 /*------------------------------------------------------------------------*/
 
-void ecfh_writeString(EcFileHandle self, const EcString value)
+int ecfh_writeString (EcFileHandle self, const EcString value)
 {
-  _write(self->fd, value, strlen(value));
+  return _write (self->fd, value, strlen(value));
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecfh_writeBuffer(EcFileHandle self, const EcBuffer buffer, uint_t size)
+int ecfh_writeBuffer (EcFileHandle self, const EcBuffer buffer, uint_t size)
 {
-  _write(self->fd, buffer->buffer, size);
+  return _write (self->fd, buffer->buffer, size);
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecfh_writeConst(EcFileHandle self, const char* buffer, uint_t size)
+int ecfh_writeConst (EcFileHandle self, const char* buffer, uint_t size)
 {
-  _write(self->fd, buffer, size);
+  return _write(self->fd, buffer, size);
 }
 
 /*------------------------------------------------------------------------*/
@@ -222,7 +222,7 @@ void ecdh_destroy (EcDirHandle* pself)
 
 /*------------------------------------------------------------------------*/
 
-int ecdh_next (EcDirHandle self, EcFileInfo* pinfo)
+int ecdh_next (EcDirHandle self, EcFileInfo* pinfo, int fullInfo)
 {
   if(!self) return FALSE;
 

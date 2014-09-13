@@ -115,7 +115,7 @@ typedef struct
   
   ubyte_t type;
   
-  off_t size;
+  uint64_t size;
     
   // creat date
   time_t cdate;

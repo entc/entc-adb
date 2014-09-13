@@ -37,7 +37,7 @@ int ecdh_scan (const EcString path, EcList entries, int filetype)
     return FALSE;
   }
   
-  while (ecdh_next(dh, &info))
+  while (ecdh_next(dh, &info, FALSE))
   {
     if (info->type == ENTC_FILETYPE_ISNONE)
     {

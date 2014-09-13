@@ -260,7 +260,7 @@ EcLocale eclocale_new(const EcString confdir, const EcString path, EcEventFiles 
   if (dh)
   {
     EcFileInfo info;
-    while (ecdh_next (dh, &info))
+    while (ecdh_next (dh, &info, FALSE))
     {
       if (info->type == ENTC_FILETYPE_ISNONE)
       {

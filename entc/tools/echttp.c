@@ -198,10 +198,13 @@ EcString echttp_content_getFile (EcHttpContent self)
   }
   else if (isAssigned (self->buffer))
   {
+    // variables
+    EcFileHandle fh;
+
     echttp_content_newRandomFile (self);
     
     // open a new file
-    EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
+    fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
     if (isAssigned (fh))
     {
       if (ecfh_writeBuffer (fh, self->buffer, self->buffer->size) != self->buffer->size)
