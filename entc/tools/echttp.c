@@ -68,92 +68,109 @@ void echttp_content_newRandomFile (EcHttpContent self)
 
 //---------------------------------------------------------------------------------------
 
-EcHttpContent echttp_content_create (ulong_t size, EcStreamBuffer bstream, const EcString path, EcLogger logger)
+char* echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* outRes)
 {
-  EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
+  EcStreamBuffer bstream = ptr;
   
-  self->path = ecstr_copy (path);
-  self->logger = logger;
+  void* data = ecstreambuffer_getBunch (bstream, inSize, outRes);
   
-  if (size > _ENTC_MAX_BUFFERSIZE)
+  if (*outRes > 0)
   {
-    self->buffer = NULL;
-
-    echttp_content_newRandomFile (self);
-    {
-      ulong_t read = 0;
-      
-      // open a new file
-      EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
-      if (isAssigned (fh))
-      {
-        while (read < size)
-        {
-          int res = 0;
-          
-          void* data = ecstreambuffer_getBunch (bstream, size - read, &res);        
-          
-          if (res > 0)
-          {
-            if (ecfh_writeConst (fh, data, res) != res)
-            {
-              eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
-
-              echttp_content_destroy (&self);
-              return NULL;            
-            }
-            
-            read += res;          
-          }
-          else
-          {
-            break;
-          }
-        }
-        
-        ecfh_close (&fh);
-      }
-      else
-      {
-        echttp_content_destroy (&self);
-        return NULL;
-      }
-    }
-  }
-  else
-  {
-    // setup
-    self->filename = NULL;
-    self->buffer = ecbuf_create (size);
-    {
-      ulong_t read = 0;
-      
-      while (read < size)
-      {
-        int res = 0;
-        
-        void* data = ecstreambuffer_getBunch (bstream, size - read, &res);        
-        
-        if (res > 0)
-        {          
-          memcpy (self->buffer->buffer + read, data, res);
-          
-          read += res;          
-        }
-        else
-        {
-          break;
-        }
-      }
-    }    
+    memcpy (buffer, data, *outRes);
   }
   
-  return self;
+  return data;
 }
 
 //---------------------------------------------------------------------------------------
 
-EcHttpContent echttp_content_create_cb (http_content_callback fct, void* ptr, ulong_t size, const EcString path, EcLogger logger)
+char* echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+{
+  EcStreamBuffer bstream = ptr;
+  
+  return ecstreambuffer_getBunch (bstream, inSize, outRes);
+}
+
+//---------------------------------------------------------------------------------------
+
+int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_callback bf, void* ptr)
+{
+  ulong_t read = 0;
+
+  self->buffer = ecbuf_create (_ENTC_MAX_BUFFERSIZE);
+  
+  echttp_content_newRandomFile (self);
+
+  // open a new file
+  EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
+  if (isNotAssigned (fh))
+  {
+    return FALSE;
+  }
+  
+  while (read < size)
+  {
+    int res = 0;
+    
+    ulong_t diff = size - read;
+    
+    void* data = bf (ptr, (char*)self->buffer->buffer, diff < _ENTC_MAX_BUFFERSIZE ? diff : _ENTC_MAX_BUFFERSIZE, &res);    
+    if (res > 0)
+    {
+      if (ecfh_writeConst (fh, data, res) != res)
+      {
+        eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
+        
+        ecfh_close (&fh);  
+        return FALSE;            
+      }
+      
+      read += res;          
+    }
+    else
+    {
+      break;
+    }
+  }
+  
+  ecfh_close (&fh);  
+  
+  ecbuf_destroy (&(self->buffer));
+  
+  return TRUE;
+}
+
+//---------------------------------------------------------------------------------------
+
+int echttp_content_fillBuffer (EcHttpContent self, ulong_t size, http_content_callback mm, void* ptr)
+{
+  // setup
+  self->filename = NULL;
+  self->buffer = ecbuf_create (size);
+  {
+    ulong_t read = 0;
+    
+    while (read < size)
+    {
+      int res = 0;
+      
+      mm (ptr, (char*)self->buffer->buffer + read, size - read, &res);      
+      if (res > 0)
+      {          
+        read += res;          
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+  return TRUE;
+}
+
+//---------------------------------------------------------------------------------------
+
+EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path, EcLogger logger)
 {
   EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
   
@@ -162,69 +179,19 @@ EcHttpContent echttp_content_create_cb (http_content_callback fct, void* ptr, ul
   
   if (size > _ENTC_MAX_BUFFERSIZE)
   {
-    self->buffer = NULL;
-    
-    echttp_content_newRandomFile (self);
+    if (!echttp_content_fillFile (self, size, bf, ptr))
     {
-      ulong_t read = 0;
-      
-      // open a new file
-      EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
-      if (isAssigned (fh))
-      {
-        self->buffer = ecbuf_create (_ENTC_MAX_BUFFERSIZE);
-
-        while (read < size)
-        {
-          int res = fct (ptr, (char*)self->buffer->buffer, _ENTC_MAX_BUFFERSIZE);          
-          if (res > 0)
-          {
-            if (ecfh_writeConst (fh, (char*)self->buffer->buffer, res) != res)
-            {
-              eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
-              
-              echttp_content_destroy (&self);
-              return NULL;            
-            }
-            
-            read += res;          
-          }
-          else
-          {
-            break;
-          }
-        }
-        
-        ecfh_close (&fh);
-      }
-      else
-      {
-        echttp_content_destroy (&self);
-        return NULL;
-      }
+      echttp_content_destroy (&self);
+      return NULL;      
     }
   }
   else
   {
-    // setup
-    self->filename = NULL;
-    self->buffer = ecbuf_create (size);
+    if (!echttp_content_fillBuffer (self, size, mm, ptr))
     {
-      ulong_t read = 0;
-      
-      while (read < size)
-      {
-        int res = fct (ptr, (char*)self->buffer->buffer + read, size - read);        
-        if (res > 0)
-        {          
-          read += res;          
-        }
-        else
-        {
-          break;
-        }
-      }
-    }    
+      echttp_content_destroy (&self);
+      return NULL;      
+    }
   }
   
   return self;
@@ -1397,7 +1364,7 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
       echttp_content_destroy (&(header->content));
     }
     
-    header->content =  echttp_content_create (header->content_length, buffer, self->tmproot, logger);  
+    header->content =  echttp_content_create (header->content_length, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot, logger);  
     if (isNotAssigned (header->content)) 
     {
       echttp_send_500 (header, socket);
