@@ -95,6 +95,7 @@ char* echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* 
 
 int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_callback bf, void* ptr)
 {
+  EcFileHandle fh;
   ulong_t read = 0;
 
   self->buffer = ecbuf_create (_ENTC_MAX_BUFFERSIZE);
@@ -102,7 +103,7 @@ int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_call
   echttp_content_newRandomFile (self);
 
   // open a new file
-  EcFileHandle fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
+  fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
   if (isNotAssigned (fh))
   {
     return FALSE;

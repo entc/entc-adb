@@ -279,7 +279,7 @@ int ecfs_mkdir(const EcString source)
 
 /*------------------------------------------------------------------------*/
 
-int ecfs_rmdir(const EcString source)
+int ecfs_rmdir(const EcString source, int forceOnNoneEmpty)
 {
   return RemoveDirectory(source);
 }

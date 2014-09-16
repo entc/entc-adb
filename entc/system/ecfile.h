@@ -20,24 +20,16 @@
 #ifndef ENTC_SYSTEM_FILE_H
 #define ENTC_SYSTEM_FILE_H 1
 
-
 #include "../system/macros.h"
+#include "../system/types.h"
 
 #include "../types/ecstring.h"
 #include "../types/ecbuffer.h"
-
-#include <stdio.h>
-#ifdef _WIN32
-typedef unsigned __int64 uint64_t;
-#else
-#include <inttypes.h>
-#endif
 
 /* definitions for all platforms */
 #define ENTC_FILETYPE_ISNONE  0
 #define ENTC_FILETYPE_ISDIR   1
 #define ENTC_FILETYPE_ISFILE  2
-
 
 #ifdef _WIN32
 
@@ -107,6 +99,8 @@ typedef int EcOsHandle;
 #endif
 
 /* start with some methods */
+
+struct EcFileHandle_s; typedef struct EcFileHandle_s* EcFileHandle;
 
 typedef struct
 {
