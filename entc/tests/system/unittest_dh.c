@@ -1,6 +1,8 @@
 #include <utils/eclogger.h>
 #include <system/ecfile.h>
 
+#include <inttypes.h>
+
 int main (int argc, char *argv[])
 {
   EcLogger logger = eclogger_new(0);

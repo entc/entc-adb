@@ -76,6 +76,7 @@ typedef struct EcDirHandle_s* EcDirHandle;
 
 #else
 
+#include <stdio.h>
 #include <dirent.h>
 #include <unistd.h>
 
@@ -99,8 +100,6 @@ typedef int EcOsHandle;
 #endif
 
 /* start with some methods */
-
-struct EcFileHandle_s; typedef struct EcFileHandle_s* EcFileHandle;
 
 typedef struct
 {
