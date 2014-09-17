@@ -1,8 +1,6 @@
 #include <utils/eclogger.h>
 #include <system/ecfile.h>
 
-#include <inttypes.h>
-
 int main (int argc, char *argv[])
 {
   EcLogger logger = eclogger_new(0);
@@ -13,7 +11,7 @@ int main (int argc, char *argv[])
 
   while (ecdh_next (dh1, &info, TRUE))
   {
-    printf ("item %s size %" PRIu64 "\n", info->name, info->size);
+    printf ("item %s size %llu\n", info->name, info->size);
   }
   
   ecdh_destroy (&dh1);
