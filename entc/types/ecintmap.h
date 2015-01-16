@@ -50,7 +50,9 @@ __LIB_EXPORT EcIntMapNode ecintmap_first(const EcIntMap);
 __LIB_EXPORT EcIntMapNode ecintmap_next(const EcIntMapNode);
   
 __LIB_EXPORT EcIntMapNode ecintmap_end(EcIntMap);
-  
+
+__LIB_EXPORT EcIntMapNode ecintmap_erase(EcIntMapNode);
+
 __LIB_EXPORT void* ecintmap_data(const EcIntMapNode);
   
   /* extra functions */

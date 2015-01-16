@@ -143,6 +143,8 @@ SET (CORE_SOURCES_TYPES
 )
 
 SET (CORE_SOURCES_UTILS
+  utils/ecmessages.h
+  utils/ecmessages.c
   utils/eclogger.h
   utils/eclogger.c
   utils/ecreadbuffer.h

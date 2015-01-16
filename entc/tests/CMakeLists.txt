@@ -17,3 +17,6 @@ TARGET_LINK_LIBRARIES( unittest_asyncserv entc )
 
 ADD_EXECUTABLE( unittest_server tools/unittest_server.c )
 TARGET_LINK_LIBRARIES( unittest_server entc ) 
+
+ADD_EXECUTABLE( unittest_messages utils/unittest_ecmessages.c )
+TARGET_LINK_LIBRARIES( unittest_messages entc ) 

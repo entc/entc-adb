@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
     cp.port = 0;
     cp.schema = "test";
     cp.username = "root";  
-    cp.password = "root";    
+    cp.password = "";    
   }
   
   connptr = adblmodule_dbconnect(&cp, logger );
@@ -34,6 +34,32 @@ int main (int argc, char *argv[])
     eclogger_log(logger, LL_ERROR, "TEST", "Error by connecting");
     res = FALSE;
   }
+  
+  
+  AdblQuery* q1 = adbl_query_new ();
+  
+  adbl_query_setTable (q1, "test1");
+  
+  //adbl_query_addColumn (q1, "id", 0);
+  adbl_query_addColumn (q1, "c1", 0);
+  
+  AdblConstraint* const1 = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
+  
+  adbl_constraint_addChar (const1, "id", QUOMADBL_CONSTRAINT_EQUAL, "1");
+  
+  adbl_query_setConstraint (q1, const1);
+  
+  void* c1 = adblmodule_dbquery (connptr, q1, logger);
+  if (c1)
+  {
+    while (adblmodule_dbcursor_next (c1))
+    {
+      eclogger_log(logger, LL_INFO, "TEST", adblmodule_dbcursor_data (c1, 0));    
+     // eclogger_log(logger, LL_INFO, "TEST", adblmodule_dbcursor_data (c1, 1));    
+    }    
+  }
+  
+  
   
   adblmodule_dbdisconnect( connptr, logger );
   
