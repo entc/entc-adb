@@ -85,10 +85,11 @@ void ecmessages_add_next (EcIntMap modules, uint_t module, ecmessages_request_fc
 void ecmessages_add (uint_t module, uint_t method, ecmessages_request_fct fct, void* ptr)
 {
   EcIntMap modules;
-  
+  EcIntMapNode node;
+
   ecreadwritelock_lockWrite (g_messages.mutex);
   
-  EcIntMapNode node = ecintmap_find (g_messages.functions, method);
+  node = ecintmap_find (g_messages.functions, method);
   if (node == ecintmap_end (g_messages.functions))
   {
     modules = ecintmap_new ();
@@ -245,10 +246,11 @@ int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessages
 int ecmessages_broadcast (uint_t method, EcMessageData* data, EcMessagesOutput output)
 {
   int ret = FALSE;
-  
+  EcIntMapNode node;
+
   ecreadwritelock_lockRead (g_messages.mutex);
 
-  EcIntMapNode node = ecintmap_find (g_messages.functions, method);
+  node = ecintmap_find (g_messages.functions, method);
   if (node != ecintmap_end (g_messages.functions))
   {
     ret = ecmessages_broadcast_next (ecintmap_data (node), data, output);
@@ -284,10 +286,11 @@ int ecmessages_send_next (EcIntMap modules, uint_t module, EcMessageData* dIn, E
 int ecmessages_send (uint_t module, uint_t method, EcMessageData* dIn, EcMessageData* dOut)
 {
   int ret = FALSE;
-  
+  EcIntMapNode node;
+
   ecreadwritelock_lockRead (g_messages.mutex);
 
-  EcIntMapNode node = ecintmap_find (g_messages.functions, method);
+  node = ecintmap_find (g_messages.functions, method);
   if (node != ecintmap_end (g_messages.functions))
   {
     ret = ecmessages_send_next (ecintmap_data (node), module, dIn, dOut);
