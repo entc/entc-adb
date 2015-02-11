@@ -37,6 +37,19 @@ typedef long long_t;
 typedef unsigned int uint_t;
 typedef signed int int_t;
 
+
+#define ENTC_RESCODE_OK                  1
+#define ENTC_RESCODE_UNKNOWN_ERROR       0
+#define ENTC_RESCODE_IGNORE              2
+
+#define ENTC_RESCODE_NOT_FOUND           10
+#define ENTC_RESCODE_NOT_AVAILABLE       11
+
+#define ENTC_RESCODE_NEEDS_AUTH          21
+#define ENTC_RESCODE_NEEDS_PERMISSION    22
+#define ENTC_RESCODE_ALREADY_EXISTS      23
+
+
 #define ENTC_RESOURCE_UNKNOWN            0
 #define ENTC_RESOURCE_AVAILABLE          1
 #define ENTC_RESOURCE_NOT_FOUND          2

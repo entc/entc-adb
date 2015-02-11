@@ -211,13 +211,35 @@ int ecaworker_onIdle (EcAsyncServContext self)
 
 //-----------------------------------------------------------------------------------------------------------
 
-int ecaworker_onRecv (EcAsyncServContext self)
+int ecaworker_onRecvAll (EcAsyncServContext self)
 {
   int ret = FALSE;
   
-  if (isAssigned (self->callbacks->onRecv))
+  if (isAssigned (self->callbacks->onRecvAll))
   {
-    ret = self->callbacks->onRecv (self->ptr, self->buffer, self->len);
+    ret = self->callbacks->onRecvAll (self->ptr, self->buffer, self->len);
+  }
+  
+  return ret;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+int ecaworker_onRecvPart (EcAsyncServContext self)
+{
+  // this means continue on collecting data
+  int ret = TRUE;
+  
+  if (isAssigned (self->callbacks->onRecvPart))
+  {
+    ret = self->callbacks->onRecvPart (self->ptr, self->buffer, self->pos);
+    
+    // if continue, assume that all data was read out of the buffer
+    // set the buffer to start pos
+    if (ret)
+    {
+      self->pos = 0;
+    }
   }
   
   return ret;
@@ -296,9 +318,17 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
     {
       self->pos += res;     
       
-      if (self->pos == self->len)
+      // true: continue with data collecting, false: abort
+      if (ecaworker_onRecvPart (self))
       {
-        return ecaworker_onRecv (self) && ecaworker_onIdle (self);
+        if (self->pos == self->len)
+        {
+          return ecaworker_onRecvAll (self) && ecaworker_onIdle (self);
+        }        
+      }
+      else 
+      {
+        return FALSE;
       }
     }
     else

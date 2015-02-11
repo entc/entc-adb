@@ -63,11 +63,15 @@ void ece_kevent_delHandle (int kq, EcHandle handle)
   struct kevent kev;
   struct kevent res;
   memset(&kev, 0x0, sizeof(struct kevent));
+  memset(&res, 0x0, sizeof(struct kevent));
   
-  EV_SET (&kev, handle, EVFILT_READ | EVFILT_WRITE | EVFILT_USER, EV_CLEAR | EV_DISABLE | EV_DELETE, 0, 0, NULL);
+  printf("start del handle %p\n", res.udata);
+
+  EV_SET (&kev, handle, EVFILT_READ | EVFILT_WRITE | EVFILT_USER, EV_DISPATCH | EV_RECEIPT, 0, 0, NULL);
   kevent (kq, &kev, 1, &res, 1, NULL);
   
-  printf("data %p\n", res.udata);
+  printf("rdata %p\n", kev.udata);
+  printf("rdata %p\n", res.udata);
   
   // be sure that the handle is closed force to do it here
   close (handle);
@@ -215,6 +219,7 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   self->kq = kqueue ();
   
   self->ecmutex = ec->mutex;
+  self->fct = fct;
   
   ecmutex_lock (self->ecmutex);
 
@@ -317,6 +322,7 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
       if (isAssigned (pptr))
       {
         *pptr = kev_ret.udata;
+        printf("udata %p\n", kev_ret.udata);
       }
       
       return kev_ret.ident;
@@ -328,6 +334,10 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
 
 int ece_list_del (EcEventQueue self, EcHandle handle)
 {
+  if (self->fct)
+  {
+
+  }
   ece_kevent_delHandle (self->kq, handle);
   return TRUE;
 }

@@ -20,6 +20,7 @@
 #include "eclogger.h"
 
 #include "system/ectime.h"
+#include "ecmessages.h"
 
 #ifdef __DOS__
 
@@ -959,6 +960,59 @@ void eclistlogger_remove (EcListLogger self, EcListNode node)
   eclist_erase(node);
   
   self->list_changed = TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclogger_msg (EcLogLevel lvl, const char* unit, const char* method, const char* msg)
+{
+  EcMessageData data;
+  
+  data.type = ENTC_MSGTYPE_LOG; data.rev = 1;
+  data.ref = lvl;
+  
+  data.content = ecudc_create (ENTC_UDC_NODE, NULL);
+  
+  // better do the text format in the listeners
+  ecudc_add_asString (data.content, "unit", unit);
+  ecudc_add_asString (data.content, "method", method);
+  ecudc_add_asString (data.content, "msg", msg);
+  
+  // send the message by messaging system
+  ecmessages_broadcast (ENTC_MSGSRVC_LOG, &data, NULL);
+  
+  ecudc_destroy (&(data.content));
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclogger_fmt (EcLogLevel lvl, const char* unit, const char* method, const char* format, ...)
+{
+  char buffer [1001];
+  // variables
+  va_list ptr;
+
+  va_start(ptr, format);
+
+  vsnprintf(buffer, 1000, format, ptr);
+  
+  eclogger_msg (lvl, unit, method, buffer);
+  
+  va_end(ptr);
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclogger_err (EcLogLevel lvl, const char* unit, const char* method, int errcode, const char* format, ...)
+{
+  
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclogger_errno (EcLogLevel lvl, const char* unit, const char* method, const char* format, ...)
+{
+  
 }
 
 //----------------------------------------------------------------------------------------

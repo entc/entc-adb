@@ -14,7 +14,6 @@ ENTCDIR=$(dirname $PWD)
 
 cp $PWD/core/$BCONFIG/libadbl.dylib $INSTALLDIR/libadbl.$VERSION.dylib
 install_name_tool -id $INSTALLDIR/libadbl.$VERSION.dylib $INSTALLDIR/libadbl.$VERSION.dylib
-install_name_tool -change $ENTCDIR/entc/$BCONFIG/libentc.dylib  $INSTALLDIR/libentc.dylib $INSTALLDIR/libadbl.$VERSION.dylib
 
 echo $ENTCDIR/entc/$BCONFIG/libentc.dylib
 

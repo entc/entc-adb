@@ -62,6 +62,35 @@ struct EcEchoLogger_s; typedef struct EcEchoLogger_s* EcEchoLogger;
 struct EcFileLogger_s; typedef struct EcFileLogger_s* EcFileLogger;
 struct EcListLogger_s; typedef struct EcListLogger_s* EcListLogger;
 
+// new format
+__CPP_EXTERN______________________________________________________________________________START
+
+
+__LIB_EXPORT void eclogger_msg (EcLogLevel, const char* unit, const char* method, const char* msg);
+
+__LIB_EXPORT void eclogger_fmt (EcLogLevel, const char* unit, const char* method, const char* format, ...);
+
+__LIB_EXPORT void eclogger_err (EcLogLevel, const char* unit, const char* method, int errcode, const char* format, ...);
+
+__LIB_EXPORT void eclogger_errno (EcLogLevel, const char* unit, const char* method, const char* format, ...);
+
+
+// different logger instances
+
+__LIB_EXPORT void eclogger_console_init ();
+
+__LIB_EXPORT void eclogger_console_done ();
+
+
+__LIB_EXPORT void eclogger_file_init ();
+
+__LIB_EXPORT void eclogger_file_done ();
+
+
+__CPP_EXTERN______________________________________________________________________________END
+
+
+
 __CPP_EXTERN______________________________________________________________________________START
 
 // constructor for the logger object (creates a console logger per default)

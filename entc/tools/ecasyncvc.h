@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2015 "Alexander Kalkhof" [email:entc@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -79,8 +79,10 @@ typedef struct
   
   serv_context_onDestroy_fct onDestroy;
   
-  serv_context_onRecv_fct onRecv;
+  serv_context_onRecv_fct onRecvAll;
   
+  serv_context_onRecv_fct onRecvPart;
+
   serv_context_onIdle_fct onIdle;
   
   void* ptr;

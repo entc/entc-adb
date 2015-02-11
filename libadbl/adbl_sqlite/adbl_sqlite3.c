@@ -5,6 +5,7 @@
 #include <types/ecstream.h>
 #include <types/eclist.h>
 #include <types/ecintmap.h>
+#include <utils/ecmessages.h>
 
 #include "sqlite3.h"
 
@@ -54,7 +55,7 @@ struct AdblSqliteSequence
 
 void* adblmodule_dbconnect(AdblConnectionProperties* cp, EcLogger logger )
 {
-  struct AdblSqlite3Connection* conn = ENTC_NEW(struct AdblSqlite3Connection);
+  struct AdblSqlite3Connection* conn = ENTC_NEW (struct AdblSqlite3Connection);
   
   conn->schema = cp->schema;
   conn->handle = 0;
@@ -68,22 +69,24 @@ void* adblmodule_dbconnect(AdblConnectionProperties* cp, EcLogger logger )
       int res = sqlite3_open(cp->file, &(conn->handle) );
       if( res == SQLITE_OK )
       {
-        eclogger_logformat(logger, LL_DEBUG, MODULE, "successful connected to Sqlite3 database '%s'", lrealpath );      
+        eclogger_fmt (LL_DEBUG, MODULE, "connect", "successful connected to Sqlite3 database '%s'", lrealpath);
       }
       else
       {
-        eclogger_logformat(logger, LL_ERROR, MODULE, "can't connect error[%i]", res );  
+        eclogger_fmt (LL_ERROR, MODULE, "connect", "can't connect error[%i]", res);
       }
     }
     else
     {
-      eclogger_logformat(logger, LL_ERROR, MODULE, "can't resolve path '%s'", cp->file );        
+      eclogger_fmt (LL_ERROR, MODULE, "connect", "can't resolve path '%s'", cp->file);
     }
     
     ecstr_delete( &lrealpath );
   }
   else
-    eclogger_log(logger, LL_WARN, MODULE, "filename was not set" );
+  {
+    eclogger_msg (LL_ERROR, MODULE, "connect", "filename was not set");
+  }
   
   return conn;
 }
@@ -112,14 +115,14 @@ int adbl_preparexec1( sqlite3* db, const char* statement, EcLogger logger )
   int res;
   char* errmsg;
   
-  eclogger_log(logger, LL_TRACE, "SQLT", statement );
+  eclogger_msg (LL_TRACE, MODULE, "sql", statement);
 
   res = sqlite3_exec(db, statement, 0, 0, &errmsg );
 
   if( res != SQLITE_OK )
   {
     /* print out the sqlite3 error message */
-    eclogger_logformat(logger, LL_WARN, "SQLT", "Error in execute the statement: %s", errmsg );
+    eclogger_fmt (LL_ERROR, MODULE, "prepare", "execute the statement: %s", errmsg);
 
     sqlite3_free(errmsg);    
     
@@ -283,8 +286,7 @@ void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
   /* check if the handle is ok */
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
-    
+    eclogger_msg (LL_ERROR, MODULE, "query", "not connected to database");    
     return 0;
   }
   
@@ -350,7 +352,7 @@ void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
     }
   }
   
-  eclogger_log(logger, LL_TRACE, "SQLT", ecstream_buffer( statement ) );
+  eclogger_msg (LL_TRACE, MODULE, "query", ecstream_buffer (statement));    
   
   res = sqlite3_prepare_v2( conn->handle,
                             ecstream_buffer( statement ),
@@ -375,11 +377,11 @@ void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
   }
   else if( res == SQLITE_ERROR )
   {
-		eclogger_logformat(logger, LL_WARN, "SQLT", "%s", sqlite3_errmsg(conn->handle) );
+    eclogger_msg (LL_ERROR, MODULE, "query", sqlite3_errmsg(conn->handle));    
   }
 	else
 	{
-		eclogger_logformat(logger, LL_WARN, "SQLT", "Error in preparing the statement code[%i]", res );
+    eclogger_fmt (LL_ERROR, MODULE, "query", "error in preparing the statement code [%i]", res);    
 	}
   
   ecmutex_unlock(conn->mutex);

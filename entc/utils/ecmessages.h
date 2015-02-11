@@ -38,8 +38,9 @@ struct EcMessagesOutput_s; typedef struct EcMessagesOutput_s* EcMessagesOutput;
 typedef struct {
   
   uint_t type;
+  uint_t rev;
   
-  uint_t ref;
+  uint_t ref;  
   
   EcUdc content;
   
@@ -47,8 +48,13 @@ typedef struct {
 #pragma pack(pop)
 
 // function definitions
-typedef int (*ecmessages_request_fct) (void* ptr, EcMessageData* dIn, EcMessageData* dOut);
-typedef int (*ecmessages_result_fct) (void* ptr, EcMessageData* data);
+typedef int (_STDCALL *ecmessages_request_fct) (void* ptr, EcMessageData* dIn, EcMessageData* dOut);
+typedef int (_STDCALL *ecmessages_result_fct) (void* ptr, EcMessageData* data, int errorcode);
+
+// this are reserved constants from the system
+#define ENTC_MSGMODD_LOG 100
+#define ENTC_MSGSRVC_LOG 100
+#define ENTC_MSGTYPE_LOG 100
 
 __CPP_EXTERN______________________________________________________________________________START
 
@@ -73,6 +79,10 @@ __LIB_EXPORT void ecmessages_output_destroy (EcMessagesOutput*);
 __LIB_EXPORT int ecmessages_broadcast (uint_t method, EcMessageData* data, EcMessagesOutput output);
 
 __LIB_EXPORT int ecmessages_send (uint_t module, uint_t method, EcMessageData* dIn, EcMessageData* dOut);
+
+// misc
+
+__LIB_EXPORT void ecmessages_initData (EcMessageData*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

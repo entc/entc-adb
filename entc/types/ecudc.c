@@ -427,7 +427,11 @@ const EcString ecudc_name (EcUdc self)
 
 uint_t ecudc_type (EcUdc self)
 {
-  return self->type;
+  if (isAssigned (self))
+  {
+    return self->type;    
+  }
+  return 4000;
 }
 
 //----------------------------------------------------------------------------------------

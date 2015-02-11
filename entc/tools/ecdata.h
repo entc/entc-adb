@@ -39,6 +39,10 @@
 #define ECDATA_ROWS    ".rows"
 #define ECDATA_FILE    ".file"
 
+// additional generics
+#define ECDATA_OBJECT  ".obj"
+#define ECDATA_AUTH    ".auth"
+
 __CPP_EXTERN______________________________________________________________________________START
 
 // node methods

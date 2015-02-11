@@ -406,6 +406,26 @@ void echttp_send_status (EcHttpHeader* header, EcDevStream stream, const EcStrin
 
 //---------------------------------------------------------------------------------------
 
+void echttp_send_params (EcDevStream stream, EcUdc extra_params)
+{
+  // add extra stuff
+  if (isAssigned (extra_params))
+  {
+    void* cursor = NULL;
+    EcUdc item;
+    
+    for (item  = ecudc_next (extra_params, &cursor); isAssigned (item); item = ecudc_next (extra_params, &cursor))
+    {
+      ecdevstream_appends( stream, ecudc_name (item));
+      ecdevstream_appends( stream, ": ");
+      ecdevstream_appends( stream, ecudc_asString(item));
+      ecdevstream_appends( stream, "\r\n");
+    }
+  }  
+}
+
+//---------------------------------------------------------------------------------------
+
 void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code, EcUdc extra_params)
 {
   echttp_send_status (header, stream, code);
@@ -468,20 +488,7 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
   }
    */
   
-  // add extra stuff
-  if (isAssigned (extra_params))
-  {
-    void* cursor = NULL;
-    EcUdc item;
-    
-    for (item  = ecudc_next (extra_params, &cursor); isAssigned (item); item = ecudc_next (extra_params, &cursor))
-    {
-      ecdevstream_appends( stream, ecudc_name (item));
-      ecdevstream_appends( stream, ": ");
-      ecdevstream_appends( stream, ecudc_asString(item));
-      ecdevstream_appends( stream, "\r\n");
-    }
-  }
+  echttp_send_params (stream, extra_params);
   
   // finish the header part
   ecdevstream_appends( stream, "\r\n" );
@@ -489,21 +496,21 @@ void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcStrin
 
 //---------------------------------------------------------------------------------------
 
-void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode)
+void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode, EcUdc extra_params)
 {
   switch (errcode)
   {
-    case ENTC_RESOURCE_NEEDS_AUTH:
+    case ENTC_RESCODE_NEEDS_AUTH:
     {
       echttp_send_status (header, stream, "401 Unauthorized");
     }
     break;
-    case ENTC_RESOURCE_NEEDS_PERMISSION:
+    case ENTC_RESCODE_NEEDS_PERMISSION:
     {
       echttp_send_status (header, stream, "403 Forbidden");      
     }
     break;
-    case ENTC_RESOURCE_ALREADY_EXISTS:
+    case ENTC_RESCODE_ALREADY_EXISTS:
     {
       echttp_send_status (header, stream, "405 Method Not Allowed");
     }
@@ -514,6 +521,9 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
     }
     break;
   }
+  
+  echttp_send_params (stream, extra_params);
+  
   // finish
   ecdevstream_append( stream, "\r\n", 2 );
 }

@@ -2,17 +2,9 @@ cmake_minimum_required(VERSION 2.4)
 
 PROJECT(adbl)
 
-MESSAGE(STATUS "+---- ADBL ----+")
+find_package(Entc)
 
-GET_TARGET_PROPERTY(ENTC_LIBRARY entc "LOCATION")
-IF(ENTC_LIBRARY-NOTFOUND)
-	MESSAGE(STATUS "**** entc external ****")
-	find_package(Entc)
-ELSE()
-	MESSAGE(STATUS "**** entc internal ****")
-	SET(ENTC_LIBRARIES entc)
-	SET(ENTC_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../entc)
-endif()
+MESSAGE(STATUS "+---- ADBL ----+")
 
 add_subdirectory(core)
 

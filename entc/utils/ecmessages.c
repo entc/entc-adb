@@ -25,6 +25,8 @@
 // include type
 #include "types/ecintmap.h"
 
+#include <stdio.h>
+
 struct EcMessages_s
 {
   
@@ -58,10 +60,40 @@ static struct EcMessages_s g_messages;
 
 //----------------------------------------------------------------------------------------
 
+static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
+#if defined _WIN64 || defined _WIN32
+static WORD clr_matrix[11] = {0, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE, 0, FOREGROUND_RED | FOREGROUND_GREEN};
+#else
+static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;34", "0;30" };
+#endif
+
+_STDCALL int ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
+{
+  if (isAssigned (dIn) && (dIn->type == ENTC_MSGTYPE_LOG) && (dIn->rev == 1))
+  {
+    if (dIn->ref >= 0 && dIn->ref < 10)
+    {
+#if defined _WIN64 || defined _WIN32 
+      
+      
+#else
+      printf("\033[%sm%-12s %s|%s] %s\033[0m\n", clr_matrix[dIn->ref], ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+#endif
+      
+    }    
+  }
+  
+  return ENTC_RESCODE_IGNORE;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecmessages_initialize ()
 {
   g_messages.mutex = ecreadwritelock_new ();
   g_messages.functions = ecintmap_new ();
+  
+  ecmessages_add (ENTC_MSGMODD_LOG, ENTC_MSGSRVC_LOG, ecmessages_logger_callback, NULL);
 }
 
 //----------------------------------------------------------------------------------------
@@ -206,7 +238,7 @@ void ecmessages_output_destroy (EcMessagesOutput* pself)
 
 int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessagesOutput output)
 {
-  int ret = FALSE;
+  int ret = 0;
   
   EcIntMapNode node;
   for (node = ecintmap_first (modules); node != ecintmap_end (modules); node = ecintmap_next (node))
@@ -215,6 +247,7 @@ int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessages
     
     if (isAssigned (item->fct))
     {
+      int errorcode;
       EcMessageData out;
       
       out.type = 0;
@@ -222,12 +255,22 @@ int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessages
       out.content = NULL;
       
       // call the callback function and maybe fill out with data
-      item->fct (item->ptr, data, &out);
+      errorcode = item->fct (item->ptr, data, &out);
       
-      // if a output callback was set, this is called with the out data as input
-      if (isAssigned (output) && isAssigned (output->fct))
+      if (errorcode != ENTC_RESCODE_IGNORE)
       {
-        output->fct (output->ptr, &out);
+        // if a output callback was set, this is called with the out data as input
+        if (isAssigned (output) && isAssigned (output->fct))
+        {
+          if (output->fct (output->ptr, &out, errorcode) == ENTC_RESCODE_OK)
+          {
+            ret++;
+          }
+        }
+        else
+        {
+          ret++;
+        }
       }
       
       if (isAssigned (out.content))
@@ -244,7 +287,7 @@ int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessages
 
 int ecmessages_broadcast (uint_t method, EcMessageData* data, EcMessagesOutput output)
 {
-  int ret = FALSE;
+  int ret = 0;
   
   ecreadwritelock_lockRead (g_messages.mutex);
 
@@ -263,7 +306,7 @@ int ecmessages_broadcast (uint_t method, EcMessageData* data, EcMessagesOutput o
 
 int ecmessages_send_next (EcIntMap modules, uint_t module, EcMessageData* dIn, EcMessageData* dOut)
 {
-  int ret = FALSE;
+  int ret = ENTC_RESCODE_NOT_FOUND;
   
   EcIntMapNode node = ecintmap_find (modules, module);
   if (node != ecintmap_end (modules))
@@ -283,7 +326,7 @@ int ecmessages_send_next (EcIntMap modules, uint_t module, EcMessageData* dIn, E
 
 int ecmessages_send (uint_t module, uint_t method, EcMessageData* dIn, EcMessageData* dOut)
 {
-  int ret = FALSE;
+  int ret = ENTC_RESCODE_NOT_FOUND;
   
   ecreadwritelock_lockRead (g_messages.mutex);
 
@@ -295,6 +338,16 @@ int ecmessages_send (uint_t module, uint_t method, EcMessageData* dIn, EcMessage
   ecreadwritelock_unlockRead (g_messages.mutex);
   
   return ret;  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecmessages_initData (EcMessageData* data)
+{
+  data->content = NULL;
+  data->type = 0;
+  data->rev = 0;
+  data->ref = 0;
 }
 
 //----------------------------------------------------------------------------------------

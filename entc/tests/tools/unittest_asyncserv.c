@@ -11,7 +11,7 @@ int main (int argc, char *argv[])
   callbacks.onCreate = NULL;
   callbacks.onDestroy = NULL;
   callbacks.onIdle = NULL;
-  callbacks.onRecv = NULL;
+  callbacks.onRecvAll = NULL;
   
   serv = ecaserv_create (logger, &callbacks);
   
