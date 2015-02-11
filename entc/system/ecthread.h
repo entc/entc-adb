@@ -23,7 +23,7 @@
 #include "../system/macros.h"
 #include "../system/types.h"
 
-typedef void (*ecthread_main_fct)(int argc, char *argv[]);
+typedef void (_STDCALL *ecthread_main_fct)(int argc, char *argv[]);
 
 __CPP_EXTERN______________________________________________________________________________START
 
@@ -31,7 +31,7 @@ __LIB_EXPORT void ecthread_schedule(ecthread_main_fct, int argc, char* argv[]);
 
 __CPP_EXTERN______________________________________________________________________________END
 
-typedef int (*ecthread_callback_fct)(void* ptr);
+typedef int (_STDCALL *ecthread_callback_fct)(void* ptr);
 
 struct EcThread_s; typedef struct EcThread_s* EcThread;
 

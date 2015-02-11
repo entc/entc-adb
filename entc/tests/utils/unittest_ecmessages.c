@@ -6,7 +6,7 @@
 
 //-------------------------------------------------------------------------------------
 
-_STDCALL int m01 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
+int _STDCALL m01 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
 {
   if (isAssigned (dIn))
   {
@@ -29,7 +29,7 @@ _STDCALL int m01 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
 
 //-------------------------------------------------------------------------------------
 
-_STDCALL int m02 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
+int _STDCALL m02 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
 {
   if (isAssigned (dIn))
   {
@@ -56,7 +56,7 @@ _STDCALL int m02 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
 
 //-------------------------------------------------------------------------------------
 
-_STDCALL int c01 (void* ptr, EcMessageData* data, int errorcode)
+int _STDCALL c01 (void* ptr, EcMessageData* data, int errorcode)
 {
   if (isAssigned (data))
   {
@@ -72,7 +72,7 @@ _STDCALL int c01 (void* ptr, EcMessageData* data, int errorcode)
 
 //-------------------------------------------------------------------------------------
 
-_STDCALL int th01 (void* ptr)
+int _STDCALL th01 (void* ptr)
 {
   int i;
   

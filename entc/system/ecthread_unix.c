@@ -163,7 +163,7 @@ void ectimedthread_delete(EcTimedThread* pself)
 
 //-----------------------------------------------------------------------------------
 
-int ectimedthread_run(void* params)
+int _STDCALL ectimedthread_run (void* params)
 {
   EcTimedThread self = params;
 

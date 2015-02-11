@@ -97,7 +97,7 @@ int ecasyncsvc_add (EcAsyncSvc self, EcAsyncContext context)
 
 //-----------------------------------------------------------------------------------------------------------
 
-int ecasyncsvc_run (void* params)
+int _STDCALL ecasyncsvc_run (void* params)
 {
   int ret = TRUE;
   

@@ -65,7 +65,7 @@ struct EcServer_s
 
 /*------------------------------------------------------------------------*/
 
-int ecserver_accept_run (void* params)
+int _STDCALL ecserver_accept_run (void* params)
 {
   void* object = NULL;
   EcServerThread* self = params;
@@ -103,7 +103,7 @@ int ecserver_accept_run (void* params)
 
 /*------------------------------------------------------------------------*/
                             
-int ecserver_worker_run (void* params)
+int _STDCALL ecserver_worker_run (void* params)
 {
   EcServerThread* self = params;
   // check if we have a callback method

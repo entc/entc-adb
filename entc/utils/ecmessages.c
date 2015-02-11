@@ -62,12 +62,13 @@ static struct EcMessages_s g_messages;
 
 static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
 #if defined _WIN64 || defined _WIN32
+#include <windows.h>
 static WORD clr_matrix[11] = {0, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE, 0, FOREGROUND_RED | FOREGROUND_GREEN};
 #else
 static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;34", "0;30" };
 #endif
 
-_STDCALL int ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
+int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
 {
   if (isAssigned (dIn) && (dIn->type == ENTC_MSGTYPE_LOG) && (dIn->rev == 1))
   {
