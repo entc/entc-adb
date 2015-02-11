@@ -56,7 +56,7 @@ _STDCALL int m02 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
 
 //-------------------------------------------------------------------------------------
 
-_STDCALL int c01 (void* ptr, EcMessageData* data)
+_STDCALL int c01 (void* ptr, EcMessageData* data, int errorcode)
 {
   if (isAssigned (data))
   {
@@ -79,13 +79,14 @@ _STDCALL int th01 (void* ptr)
   for (i = 0; i < 40; i++)
   {  
     EcMessageData d01;
-    
+    EcMessagesOutput o1;
+
     d01.type = 0;
     d01.ref = 0;
     d01.content = ecudc_create (ENTC_UDC_STRING, NULL);
     ecudc_setS (d01.content, "Hello Thread");
     
-    EcMessagesOutput o1 = ecmessages_output_create (c01, NULL);
+    o1 = ecmessages_output_create (c01, NULL);
     ecmessages_broadcast (0x01, &d01, o1);
     ecmessages_output_destroy (&o1);
 
@@ -99,6 +100,11 @@ _STDCALL int th01 (void* ptr)
 
 int main (int argc, char *argv[])
 {
+  EcMessageData d01;
+  EcMessagesOutput o1;
+  EcThread threads [21];
+  int i;
+
   ecmessages_initialize ();
   
   ecmessages_add (0x01, 0x01, m01, NULL);
@@ -109,9 +115,7 @@ int main (int argc, char *argv[])
   ecmessages_send (0x02, 0x01, NULL, NULL);
   ecmessages_send (0x01, 0x01, NULL, NULL);
   ecmessages_send (0x01, 0x02, NULL, NULL);
-  
-  EcMessageData d01;
-  
+    
   d01.type = 0;
   d01.ref = 0;
   d01.content = ecudc_create (ENTC_UDC_STRING, NULL);
@@ -121,15 +125,12 @@ int main (int argc, char *argv[])
   
   ecudc_destroy(&(d01.content));
   
-  EcMessagesOutput o1 = ecmessages_output_create (c01, NULL);
+  o1 = ecmessages_output_create (c01, NULL);
   ecmessages_broadcast (0x01, NULL, o1);
   ecmessages_output_destroy (&o1);
   
   printf("threading !!!!\n");
   
-  EcThread threads [21];
-  
-  int i;
   for (i = 0; i < 20; i++)
   {
     threads [i] = ecthread_new ();
