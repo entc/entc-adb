@@ -174,7 +174,7 @@ int _STDCALL ectimedthread_run (void* params)
     
   if (ece_context_waitforTermination (self->ec, self->timeout) == ENTC_EVENT_TIMEOUT)
   {
-    self->fct(self->ptr);
+    self->fct (self->ptr);
     return TRUE;
   }
   else

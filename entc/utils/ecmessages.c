@@ -34,7 +34,6 @@ struct EcMessages_s
   
   EcIntMap functions;
   
-  
 };
 
 struct EcMessagesOutput_s
@@ -55,15 +54,18 @@ typedef struct
   
 } EcMessageModule;
 
-
-static struct EcMessages_s g_messages;
+static EcMessages getGlobalMessages (void)
+{
+  static struct EcMessages_s h;
+  return &h; 
+}
 
 //----------------------------------------------------------------------------------------
 
 static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
 #if defined _WIN64 || defined _WIN32
 #include <windows.h>
-static WORD clr_matrix[11] = {0, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE, 0, FOREGROUND_RED | FOREGROUND_GREEN};
+static WORD clr_matrix[11] = {0, FOREGROUND_RED | FOREGROUND_INTENSITY, FOREGROUND_RED, FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED, FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_BLUE};
 #else
 static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;34", "0;30" };
 #endif
@@ -75,8 +77,17 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
     if (dIn->ref >= 0 && dIn->ref < 10)
     {
 #if defined _WIN64 || defined _WIN32 
-      
-      
+      CONSOLE_SCREEN_BUFFER_INFO info;
+      // get the console handle
+      HANDLE hStdout = GetStdHandle (STD_OUTPUT_HANDLE);      
+      // remember the original background color
+      GetConsoleScreenBufferInfo (hStdout, &info);
+      // do some fancy stuff
+      SetConsoleTextAttribute (hStdout, clr_matrix[dIn->ref]);
+
+      printf("%-12s %s|%s] %s\n", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+
+      SetConsoleTextAttribute (hStdout, info.wAttributes);
 #else
       printf("\033[%sm%-12s %s|%s] %s\033[0m\n", clr_matrix[dIn->ref], ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
 #endif
@@ -91,8 +102,10 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
 
 void ecmessages_initialize ()
 {
-  g_messages.mutex = ecreadwritelock_new ();
-  g_messages.functions = ecintmap_new ();
+  EcMessages self = getGlobalMessages ();
+
+  self->mutex = ecreadwritelock_new ();
+  self->functions = ecintmap_new ();
   
   ecmessages_add (ENTC_MSGMODD_LOG, ENTC_MSGSRVC_LOG, ecmessages_logger_callback, NULL);
 }
@@ -120,13 +133,15 @@ void ecmessages_add (uint_t module, uint_t method, ecmessages_request_fct fct, v
   EcIntMap modules;
   EcIntMapNode node;
 
-  ecreadwritelock_lockWrite (g_messages.mutex);
+  EcMessages self = getGlobalMessages ();
+
+  ecreadwritelock_lockWrite (self->mutex);
   
-  node = ecintmap_find (g_messages.functions, method);
-  if (node == ecintmap_end (g_messages.functions))
+  node = ecintmap_find (self->functions, method);
+  if (node == ecintmap_end (self->functions))
   {
     modules = ecintmap_new ();
-    ecintmap_append (g_messages.functions, method, modules);
+    ecintmap_append (self->functions, method, modules);
   }
   else
   {
@@ -135,7 +150,7 @@ void ecmessages_add (uint_t module, uint_t method, ecmessages_request_fct fct, v
 
   ecmessages_add_next (modules, module, fct, ptr);
 
-  ecreadwritelock_unlockWrite (g_messages.mutex);
+  ecreadwritelock_unlockWrite (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
@@ -157,11 +172,13 @@ void ecmessages_removeAll_next (EcIntMap modules, uint_t module)
 
 void ecmessages_removeAll (uint_t module)
 {
+  EcMessages self = getGlobalMessages ();
+
   EcIntMapNode node;
 
-  ecreadwritelock_lockWrite (g_messages.mutex);
+  ecreadwritelock_lockWrite (self->mutex);
 
-  for (node = ecintmap_first (g_messages.functions); node != ecintmap_end (g_messages.functions); node = ecintmap_next (node))
+  for (node = ecintmap_first (self->functions); node != ecintmap_end (self->functions); node = ecintmap_next (node))
   {
     EcIntMap modules = ecintmap_data (node);
     
@@ -174,7 +191,7 @@ void ecmessages_removeAll (uint_t module)
       node = ecintmap_erase (node);
     }
   }
-  ecreadwritelock_unlockWrite (g_messages.mutex);
+  ecreadwritelock_unlockWrite (self->mutex);
 }
 
 //----------------------------------------------------------------------------------------
@@ -194,8 +211,10 @@ void ecmessages_clear_modules (EcIntMap modules)
 
 void ecmessages_clear ()
 {
+  EcMessages self = getGlobalMessages ();
+
   EcIntMapNode node;
-  for (node = ecintmap_first (g_messages.functions); node != ecintmap_end (g_messages.functions); node = ecintmap_next (node))
+  for (node = ecintmap_first (self->functions); node != ecintmap_end (self->functions); node = ecintmap_next (node))
   {
     EcIntMap modules = ecintmap_data (node);
 
@@ -204,17 +223,19 @@ void ecmessages_clear ()
     ecintmap_delete (&modules);
   }
   
-  ecintmap_clear (g_messages.functions);
+  ecintmap_clear (self->functions);
 }
 
 //----------------------------------------------------------------------------------------
 
 void ecmessages_deinitialize ()
 {
+  EcMessages self = getGlobalMessages ();
+
   ecmessages_clear ();
   
-  ecintmap_delete (&(g_messages.functions));
-  ecreadwritelock_delete (&(g_messages.mutex));
+  ecintmap_delete (&(self->functions));
+  ecreadwritelock_delete (&(self->mutex));
 }
 
 //----------------------------------------------------------------------------------------
@@ -289,18 +310,20 @@ int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessages
 
 int ecmessages_broadcast (uint_t method, EcMessageData* data, EcMessagesOutput output)
 {
+  EcMessages self = getGlobalMessages ();
+
   int ret = ENTC_RESCODE_IGNORE;
   EcIntMapNode node;
 
-  ecreadwritelock_lockRead (g_messages.mutex);
+  ecreadwritelock_lockRead (self->mutex);
 
-  node = ecintmap_find (g_messages.functions, method);
-  if (node != ecintmap_end (g_messages.functions))
+  node = ecintmap_find (self->functions, method);
+  if (node != ecintmap_end (self->functions))
   {
     ret = ecmessages_broadcast_next (ecintmap_data (node), data, output);
   }
 
-  ecreadwritelock_unlockRead (g_messages.mutex);
+  ecreadwritelock_unlockRead (self->mutex);
   
   return ret;
 }
@@ -329,17 +352,19 @@ int ecmessages_send_next (EcIntMap modules, uint_t module, EcMessageData* dIn, E
 
 int ecmessages_send (uint_t module, uint_t method, EcMessageData* dIn, EcMessageData* dOut)
 {
+  EcMessages self = getGlobalMessages ();
+
   int ret = ENTC_RESCODE_NOT_FOUND;  
   EcIntMapNode node;
 
-  ecreadwritelock_lockRead (g_messages.mutex);
+  ecreadwritelock_lockRead (self->mutex);
 
-  node = ecintmap_find (g_messages.functions, method);
-  if (node != ecintmap_end (g_messages.functions))
+  node = ecintmap_find (self->functions, method);
+  if (node != ecintmap_end (self->functions))
   {
     ret = ecmessages_send_next (ecintmap_data (node), module, dIn, dOut);
   }
-  ecreadwritelock_unlockRead (g_messages.mutex);
+  ecreadwritelock_unlockRead (self->mutex);
   
   return ret;  
 }
