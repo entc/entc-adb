@@ -315,6 +315,8 @@ void echttp_init (void)
     ecmapchar_append( mime_types, "xbm",      "image/x-xbitmap" );
     ecmapchar_append( mime_types, "xpm",      "image/x-xpixmap" );
     ecmapchar_append( mime_types, "xwd",      "image/x-xwindowdump" );
+    ecmapchar_append( mime_types, "svg",      "image/svg+xml");
+
     ecmapchar_append( mime_types, "css",      "text/css" );
     ecmapchar_append( mime_types, "html",     "text/html" );
     ecmapchar_append( mime_types, "htm",      "text/html" );
@@ -322,9 +324,13 @@ void echttp_init (void)
     ecmapchar_append( mime_types, "asc",      "text/plain" );
     ecmapchar_append( mime_types, "c",        "text/plain" ); 
     ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
-    ecmapchar_append( mime_types, "woff",     "application/font-woff" );
     ecmapchar_append( mime_types, "map",      "application/json");
-    
+
+    ecmapchar_append( mime_types, "woff",     "application/font-woff");
+    ecmapchar_append( mime_types, "ttf",      "application/font-ttf");
+    ecmapchar_append( mime_types, "eot",      "application/vnd.ms-fontobject");
+    ecmapchar_append( mime_types, "otf",      "application/font-otf");
+
     ecmapchar_append( mime_types, "exe",      "application/octet-stream" );     
   }
   echhtp_counter++;
