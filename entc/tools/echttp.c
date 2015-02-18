@@ -501,6 +501,7 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
   switch (errcode)
   {
     case ENTC_RESCODE_NEEDS_AUTH:
+    case ENTC_RESCODE_CLEAR_AUTH:
     {
       echttp_send_status (header, stream, "401 Unauthorized");
     }
