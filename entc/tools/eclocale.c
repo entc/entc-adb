@@ -35,8 +35,6 @@ typedef struct
   
   uint_t maxitems;
   
-  EcLogger logger;
-
 } EcLocaleSetData;
 
 struct EcLocaleSet_s
@@ -145,9 +143,9 @@ const EcString eclocaleset_get(EcLocaleSet self, const EcString text)
 
 /*------------------------------------------------------------------------*/
 
-void eclocale_parseXml(EcLocaleSetData* data)
+void eclocale_parseXml (EcLocaleSetData* data)
 {
-  EcXMLStream xmlstream = ecxmlstream_openobserver(data->observer, data->logger);
+  EcXMLStream xmlstream = ecxmlstream_openobserver (data->observer);
   
   while( ecxmlstream_nextNode( xmlstream ) )
   {
@@ -184,33 +182,32 @@ void eclocale_onchange(void* ptr)
 
 /*------------------------------------------------------------------------*/
 
-void eclocale_parseFile_data(EcLocaleSetData* data, const EcString path, const EcString filename, EcEventFiles events , EcLogger logger)
+void eclocale_parseFile_data (EcLocaleSetData* data, const EcString path, const EcString filename, EcEventFiles events)
 {
-  data->observer = ecf_observer_newFromPath(path, filename, path, events, logger, eclocale_onchange, data);
+  data->observer = ecf_observer_newFromPath (path, filename, path, events, eclocale_onchange, data);
   
   data->maxitems = 0;
-  data->logger = logger;
   
-  eclocale_parseXml(data);
+  eclocale_parseXml (data);
 }
 
 /*------------------------------------------------------------------------*/
 
-void eclocale_parseFile_pre(EcLocaleSet self, const EcString path, const EcString filename, EcEventFiles events , EcLogger logger, const EcString langcode)
+void eclocale_parseFile_pre(EcLocaleSet self, const EcString path, const EcString filename, EcEventFiles events , const EcString langcode)
 {
   if (ecstr_equal(langcode, "sys"))
   {
-    eclocale_parseFile_data(&(self->data_sys), path, filename, events, logger);
+    eclocale_parseFile_data (&(self->data_sys), path, filename, events);
   }
   else if (ecstr_equal(langcode, "user"))
   {
-    eclocale_parseFile_data(&(self->data_usr), path, filename, events, logger);    
+    eclocale_parseFile_data (&(self->data_usr), path, filename, events);    
   }
 }
 
 /*------------------------------------------------------------------------*/
 
-void eclocale_parseFile(EcLocale self, const EcString path, const EcString filename, EcEventFiles events , EcLogger logger)
+void eclocale_parseFile (EcLocale self, const EcString path, const EcString filename, EcEventFiles events)
 {
   // remove file extension
   EcString langcode = ecfs_extractFileName(filename);
@@ -228,15 +225,15 @@ void eclocale_parseFile(EcLocale self, const EcString path, const EcString filen
       EcLocaleSet lset = ENTC_NEW(struct EcLocaleSet_s);
       lset->lang = lang;
 
-      eclocale_parseFile_pre(lset, path, filename, events, logger, langcode);
+      eclocale_parseFile_pre (lset, path, filename, events, langcode);
 
       ecmap_append(self->languages, lset->lang, lset);
 
-      eclogger_logformat(logger, LL_DEBUG, "CORE", "{locale} Successful registered '%s'", lset->lang);    
+      eclogger_fmt (LL_DEBUG, "TOOL", "locale", "Successful registered '%s'", lset->lang);
     }
     else
     {
-      eclocale_parseFile_pre(ecmap_data(node), path, filename, events, logger, langcode);
+      eclocale_parseFile_pre (ecmap_data(node), path, filename, events, langcode);
       
       ecstr_delete(&lang);
     }
@@ -247,7 +244,7 @@ void eclocale_parseFile(EcLocale self, const EcString path, const EcString filen
 
 /*------------------------------------------------------------------------*/
 
-EcLocale eclocale_new(const EcString confdir, const EcString path, EcEventFiles events , EcLogger logger)
+EcLocale eclocale_new (const EcString confdir, const EcString path, EcEventFiles events)
 {
   EcLocale self = ENTC_NEW(struct EcLocale_s);
   
@@ -270,7 +267,7 @@ EcLocale eclocale_new(const EcString confdir, const EcString path, EcEventFiles 
       
       if (info->type == ENTC_FILETYPE_ISFILE)
       {
-        eclocale_parseFile (self, fullpath, info->name, events, logger);
+        eclocale_parseFile (self, fullpath, info->name, events);
       }
     }
     ecdh_destroy (&dh);

@@ -28,7 +28,7 @@ struct EcExec_s; typedef struct EcExec_s* EcExec;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcExec ecexec_new (const EcString script, EcLogger);
+__LIB_EXPORT EcExec ecexec_new (const EcString script);
 
 __LIB_EXPORT void ecexec_delete (EcExec*);
 

@@ -190,7 +190,7 @@ int echtmlreq_get(EcHtmlRequest self, const EcString host, uint_t port, const Ec
   
   EcSocket socket;
   
-  socket = ecsocket_new(ec, self->logger);
+  socket = ecsocket_new(ec);
   
   if( ecsocket_connect( socket, host, port ) )
   {
@@ -198,14 +198,14 @@ int echtmlreq_get(EcHtmlRequest self, const EcString host, uint_t port, const Ec
     EcString chost = ecstr_cat3(host, ":", cport);
     
     EcStream stream = ecstream_new();    
-    EcStreamBuffer sbuffer = ecstreambuffer_new(self->logger, socket);
+    EcStreamBuffer sbuffer = ecstreambuffer_create (socket);
     
     if (echtmlreq_process (self, socket, chost, url, stream, sbuffer))
     {
       res = TRUE;
     }
     
-    ecstreambuffer_delete(&sbuffer);
+    ecstreambuffer_destroy (&sbuffer);
     ecstream_delete(&stream);
     
     ecstr_delete(&chost);
@@ -229,7 +229,7 @@ int echtmlreq_post (EcHtmlRequest self, const EcString host, uint_t port, const 
   
   EcSocket socket;
   
-  socket = ecsocket_new(ec, self->logger);
+  socket = ecsocket_new(ec);
   
   if( ecsocket_connect( socket, host, port ) )
   {
@@ -238,11 +238,11 @@ int echtmlreq_post (EcHtmlRequest self, const EcString host, uint_t port, const 
     EcString curl = ecstr_cat2(chost, url);
 
     EcStream stream = ecstream_new();    
-    EcStreamBuffer sbuffer = ecstreambuffer_new(self->logger, socket);
+    EcStreamBuffer sbuffer = ecstreambuffer_create (socket);
 
     echtmlreq_process_post (self, socket, curl, message, stream, sbuffer);
 
-    ecstreambuffer_delete(&sbuffer);
+    ecstreambuffer_destroy (&sbuffer);
     ecstream_delete(&stream);
 
     ecstr_delete(&chost);

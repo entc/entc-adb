@@ -38,7 +38,7 @@ struct EcSocket_s; typedef struct EcSocket_s* EcSocket;
 
 __CPP_EXTERN______________________________________________________________________________START 
 
-__LIB_EXPORT EcSocket ecsocket_new (EcEventContext, EcLogger);
+__LIB_EXPORT EcSocket ecsocket_new (EcEventContext);
   
 __LIB_EXPORT void ecsocket_delete (EcSocket*);
 

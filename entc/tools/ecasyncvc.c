@@ -105,7 +105,7 @@ int _STDCALL ecasyncsvc_run (void* params)
   
   EcAsyncContext context;
     
-  int res = ece_list_wait (self->queue, ENTC_INFINTE, (void**)&context, self->logger);  
+  int res = ece_list_wait (self->queue, ENTC_INFINTE, (void**)&context);  
   if ((res == ENTC_EVENT_TIMEOUT)) // timeout or interupt
   {
     return TRUE;
@@ -437,7 +437,7 @@ void ecaserv_destroy (EcAsyncServ* pself)
 
 int ecaserv_start (EcAsyncServ self, const EcString host, ulong_t port)
 {
-  self->socket = ecsocket_new (self->ec, self->logger);
+  self->socket = ecsocket_new (self->ec);
   if( !ecsocket_listen (self->socket, host, port) )
   {
     ecsocket_delete(&(self->socket));

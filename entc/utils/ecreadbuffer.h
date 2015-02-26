@@ -30,17 +30,17 @@ struct EcReadBuffer_s; typedef struct EcReadBuffer_s* EcReadBuffer;
 
 __CPP_EXTERN______________________________________________________________________________START
     
-__LIB_EXPORT EcReadBuffer ecreadbuffer_new( EcFileHandle, int close );
+__LIB_EXPORT EcReadBuffer ecreadbuffer_create (EcFileHandle, int close);
 
-__LIB_EXPORT void ecreadbuffer_delete( EcReadBuffer* );
+__LIB_EXPORT void ecreadbuffer_destroy (EcReadBuffer*);
 
-__LIB_EXPORT int ecreadbuffer_getnext( EcReadBuffer, char* character );
+__LIB_EXPORT int ecreadbuffer_getnext (EcReadBuffer, char* character);
 
   /* ensure to read size amount of characters into the buffer */
   /* return the real amount, could be < size if end of file reached */
-__LIB_EXPORT uint_t ecreadbuffer_get( EcReadBuffer, uint_t size );
+__LIB_EXPORT uint_t ecreadbuffer_get ( EcReadBuffer, uint_t size );
 
-__LIB_EXPORT const EcString ecreadbuffer_buffer( EcReadBuffer );
+__LIB_EXPORT const EcString ecreadbuffer_buffer ( EcReadBuffer );
 
 __CPP_EXTERN______________________________________________________________________________END
 

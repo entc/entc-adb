@@ -38,8 +38,6 @@ struct QCSocket_s
 
   QCEventContext eventcontext;
   
-  QCLogger logger;
-  
   void* handle;
   
 };
@@ -51,7 +49,6 @@ QCSocket qcsocket_new(QCEventContext eventcontext, QCLogger logger)
   QCSocket self = QNEW(struct QCSocket_s);
   
   self->eventcontext = eventcontext;
-  self->logger = logger;
   self->handle = qctcp_new();
   
   return self;

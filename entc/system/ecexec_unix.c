@@ -41,18 +41,14 @@ struct EcExec_s
   
   EcStream stderr;
   
-  EcLogger logger;
-  
 };
 
 //-----------------------------------------------------------------------------------
 
-EcExec ecexec_new (const EcString script, EcLogger logger)
+EcExec ecexec_new (const EcString script)
 {
   int i;
   EcExec self = ENTC_NEW (struct EcExec_s);
-  
-  self->logger = logger;
   
   self->arguments[0] = ecstr_copy(script);
   
@@ -73,7 +69,8 @@ void ecexec_delete (EcExec* pself)
   int i;
   EcExec self = *pself;
 
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < 10; i++)
+  {
     ecstr_delete(&(self->arguments[i]));
   }
   
@@ -88,8 +85,10 @@ void ecexec_delete (EcExec* pself)
 void ecexec_addParameter (EcExec self, const EcString param)
 {
   int i;
-  for (i = 1; i < 10; i++) {
-    if (isNotAssigned(self->arguments[i])) {
+  for (i = 1; i < 10; i++)
+  {
+    if (isNotAssigned(self->arguments[i]))
+    {
       self->arguments[i] = ecstr_copy(param);
       self->arguments[i + 1] = NULL;
       return;
@@ -106,7 +105,8 @@ int ecexec_run (EcExec self)
   int outfd[2], errfd[2];
   if (pipe(outfd) == -1 || pipe(errfd) == -1) return -1;
   ///maybe here thread instead of fork  
-  eclogger_logformat(self->logger, LL_TRACE, "CORE", "{exec:run} '%s' '%s'", self->arguments[0], self->arguments[1]);
+  
+  eclogger_fmt (LL_TRACE, "_SYS", "exec", "run '%s' '%s'", self->arguments[0], self->arguments[1]);    
 
   pid = fork();
 
@@ -114,8 +114,9 @@ int ecexec_run (EcExec self)
   {
     case -1: // error
     {
-      eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{exec} fork failed");
-    } break;
+      eclogger_errno (LL_ERROR, "_SYS", "exec", "fork failed");    
+    }
+    break;
     case  0: // child process
     { 
       /* child process */
@@ -133,7 +134,8 @@ int ecexec_run (EcExec self)
       close(errfd[PIPE_WRITE]);
       
       exit(0);
-    } break;
+    }
+    break;
     default: // parent
     {
       int status = 0;
@@ -164,7 +166,8 @@ int ecexec_run (EcExec self)
       FILE * stdout = fdopen(outfd[0], "r");
       FILE * stderr = fdopen(errfd[0], "r");
       
-      do {
+      do 
+      {
         w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
         
         res01 = select(errfd[PIPE_READ] + 1, &fdsread, NULL, NULL, NULL);
@@ -174,7 +177,7 @@ int ecexec_run (EcExec self)
           res02 = fread(buffer, 1, 20, stdout);
           while(res02 > 0)
           {
-            eclogger_logformat(self->logger, LL_TRACE, "CORE", "{exec:stdout} got data %i", res02);
+            eclogger_fmt (LL_TRACE, "_SYS", "exec", "stdout: got data %i", res02);    
             
             ecstream_appendd (self->stdout, buffer, res02);
             res02 = fread(buffer, 1, 20, stdout);
@@ -186,24 +189,25 @@ int ecexec_run (EcExec self)
           res02 = fread(buffer, 1, 20, stderr);
           while(res02 > 0)
           {
-            eclogger_logformat(self->logger, LL_TRACE, "CORE", "{exec:stderr} got data %i", res02);
-            
+            eclogger_fmt (LL_TRACE, "_SYS", "exec", "stderr: got data %i", res02);    
+
             ecstream_appendd (self->stderr, buffer, res02);
             res02 = fread(buffer, 1, 20, stderr);
           }
         }        
-      } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+      }
+      while (!WIFEXITED(status) && !WIFSIGNALED(status));
       
-      eclogger_logformat(self->logger, LL_TRACE, "CORE", "{exec:run} '%s' done", self->arguments[0]);
+      eclogger_fmt (LL_TRACE, "_SYS", "exec", "run '%s' done", self->arguments[0]);    
       
       fclose(stdout);
       fclose(stderr);
       
       close(outfd[PIPE_READ]);
       close(errfd[PIPE_READ]);
-    } break;
+    }
+    break;
   }
-  
   return 0;
 }
 

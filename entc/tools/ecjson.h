@@ -22,14 +22,13 @@
 
 #include "../system/macros.h"
 #include "../system/types.h"
-#include "../utils/eclogger.h"
 
 #include "../types/ecudc.h"
 #include "../types/ecstring.h"
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcUdc ecjson_read (const EcString, const EcString name, EcLogger logger);
+__LIB_EXPORT EcUdc ecjson_read (const EcString, const EcString name);
 
 __LIB_EXPORT EcString ecjson_write (const EcUdc);
 

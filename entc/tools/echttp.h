@@ -30,13 +30,16 @@
 
 #include <utils/ecstreambuffer.h>
 
+#define Q5_MSGTYPE_HTTP_REQUEST_INFO      14
+#define Q5_SERVICE_HTTP_REQUEST_INFO    3002
+
 struct EcHttpContent_s; typedef struct EcHttpContent_s* EcHttpContent;
 
 typedef char* (*http_content_callback) (void* ptr, char* buffer, ulong_t inSize, int* outRes);
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void*, const EcString path, EcLogger);
+__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void*, const EcString path);
 
 __LIB_EXPORT void echttp_content_destroy (EcHttpContent*);
 
@@ -98,8 +101,8 @@ struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 
 typedef int (_STDCALL *http_process_fct)(void* ptr, EcHttpHeader*, void** object);
 typedef int (_STDCALL *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
-typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*, EcLogger);
-typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, EcLogger, const EcString tmproot);
+typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*);
+typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, const EcString tmproot);
 
 typedef struct {
   
@@ -132,13 +135,13 @@ __LIB_EXPORT void echttp_init (void);
 
 __LIB_EXPORT void echttp_done (void);
 
-__LIB_EXPORT EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header, EcLogger);
+__LIB_EXPORT EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header);
 
 __LIB_EXPORT void echttp_request_destroy (EcHttpRequest*);
 
-__LIB_EXPORT void echttp_request_process (EcHttpRequest, EcSocket, EcLogger logger);
+__LIB_EXPORT void echttp_request_process (EcHttpRequest, EcSocket);
 
-__LIB_EXPORT void echttp_request_process_dev (EcHttpRequest, EcDevStream, void* callback_ptr, EcLogger logger);
+__LIB_EXPORT void echttp_request_process_dev (EcHttpRequest, EcDevStream, void* callback_ptr);
 
 __LIB_EXPORT void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
 
@@ -164,7 +167,7 @@ __LIB_EXPORT void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream strea
 
 __LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream, EcUdc extra_params);
 
-__LIB_EXPORT const EcString echttp_getMimeType(const EcString filename, EcLogger logger);
+__LIB_EXPORT const EcString echttp_getMimeType (const EcString filename);
 
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -22,11 +22,10 @@
 
 #include "../system/macros.h"
 
-#include "../utils/eclogger.h"
 #include "../system/ecsocket.h"
 #include "../system/ecevents.h"
 
-typedef int  (_STDCALL *ecserver_callback_fct)(void* ptr, void** object, EcLogger logger);
+typedef int  (_STDCALL *ecserver_callback_fct)(void* ptr, void** object);
 
 struct EcServer_s; typedef struct EcServer_s* EcServer;
 
@@ -51,11 +50,11 @@ typedef struct {
 
 __CPP_EXTERN______________________________________________________________________________START  
   
-__LIB_EXPORT EcServer ecserver_new(EcLogger logger, uint_t poolSize, EcServerCallbacks*, EcEventContext);
+__LIB_EXPORT EcServer ecserver_create (uint_t poolSize, EcServerCallbacks*, EcEventContext);
   
-__LIB_EXPORT void ecserver_delete(EcServer*);
+__LIB_EXPORT void ecserver_destroy (EcServer*);
   
-__LIB_EXPORT int ecserver_start(EcServer);
+__LIB_EXPORT int ecserver_start (EcServer);
   
 __CPP_EXTERN______________________________________________________________________________END
 

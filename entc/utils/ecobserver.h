@@ -27,7 +27,6 @@
 
 #include "../system/ecevents.h"
 #include "../system/ecfile.h"
-#include "../utils/eclogger.h"
 
 struct EcFileObserver_s;
 
@@ -40,9 +39,9 @@ typedef struct EcDirObserver_s* EcDirObserver;
 __CPP_EXTERN______________________________________________________________________________START
 
   /* needs a dir filedescriptor, the descriptor is closed after usage */
-__LIB_EXPORT EcFileObserver ecf_observer_newFromPath(const EcString path, const EcString filename, const EcString confdir, EcEventFiles, EcLogger, events_callback_fct, void*);
+__LIB_EXPORT EcFileObserver ecf_observer_newFromPath(const EcString path, const EcString filename, const EcString confdir, EcEventFiles, events_callback_fct, void*);
   
-__LIB_EXPORT EcFileObserver ecf_observer_new(const EcString filename, const EcString confdir, EcEventFiles, EcLogger, events_callback_fct, void*);
+__LIB_EXPORT EcFileObserver ecf_observer_new(const EcString filename, const EcString confdir, EcEventFiles, events_callback_fct, void*);
   
 __LIB_EXPORT void ecf_observer_delete(EcFileObserver);
   
@@ -58,7 +57,7 @@ __LIB_EXPORT const EcString ecf_observer_getFileName(EcFileObserver);
   
   
   /* needs a dir filedescriptor, the descriptor is closed after usage */
-__LIB_EXPORT EcDirObserver ecd_observer_new(const EcString path, EcEventFiles, EcLogger);
+__LIB_EXPORT EcDirObserver ecd_observer_new(const EcString path, EcEventFiles);
   
 __LIB_EXPORT void ecd_observer_delete(EcDirObserver);
   

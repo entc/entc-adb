@@ -39,8 +39,6 @@ struct EcSocket_s
 {
   // reference
   EcEventContext ec;
-  // reference
-  EcLogger logger;
   // the original fd socket 
   SOCKET socket;
   // accept windows event handle

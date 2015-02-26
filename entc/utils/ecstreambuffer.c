@@ -26,8 +26,6 @@ struct EcStreamBuffer_s
   
   EcBuffer buffer;
   
-  EcLogger logger;
-  
   uint_t size;
   
   /* reference */
@@ -40,12 +38,11 @@ struct EcStreamBuffer_s
 
 /*------------------------------------------------------------------------*/
 
-EcStreamBuffer ecstreambuffer_new (EcLogger logger, EcSocket socket)
+EcStreamBuffer ecstreambuffer_create (EcSocket socket)
 {
   EcStreamBuffer self = ENTC_NEW(struct EcStreamBuffer_s);
   
   self->buffer = ecbuf_create (1024);
-  self->logger = logger;
   self->socket = socket;
   self->pos = self->buffer->buffer;
   self->end = self->buffer->buffer;
@@ -57,7 +54,7 @@ EcStreamBuffer ecstreambuffer_new (EcLogger logger, EcSocket socket)
 
 /*------------------------------------------------------------------------*/
 
-void ecstreambuffer_delete (EcStreamBuffer* pself)
+void ecstreambuffer_destroy (EcStreamBuffer* pself)
 {
   EcStreamBuffer self = *pself;
   

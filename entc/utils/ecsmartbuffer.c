@@ -66,7 +66,7 @@ EcSmartbuffer ecsmartbuffer_new(uint_t max)
 
 /*------------------------------------------------------------------------*/
 
-void ecsmartbuffer_delete(EcSmartbuffer self)
+void ecsmartbuffer_delete (EcSmartbuffer self)
 {
   /* ecsmartbuffer_flush(this, 0); */
   
@@ -85,7 +85,7 @@ void ecsmartbuffer_delete(EcSmartbuffer self)
 
 /*------------------------------------------------------------------------*/
 
-void ecsmartbuffer_setFile(EcSmartbuffer self, const EcString filename, const EcString confdir, EcLogger logger)
+void ecsmartbuffer_setFile (EcSmartbuffer self, const EcString filename, const EcString confdir)
 {
   if(self->fhandle)
   {
@@ -95,7 +95,7 @@ void ecsmartbuffer_setFile(EcSmartbuffer self, const EcString filename, const Ec
   if(filename)
   {
     struct EcSecFopen secopen;
-    if( ecsec_fopen(&secopen, filename, O_WRONLY | O_CREAT | O_TRUNC, logger, confdir) )
+    if (ecsec_fopen (&secopen, filename, O_WRONLY | O_CREAT | O_TRUNC, confdir))
     {
       self->fhandle = secopen.fhandle;
       

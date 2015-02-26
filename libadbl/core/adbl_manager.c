@@ -286,7 +286,7 @@ void adbl_parseXML( AdblManager self, EcXMLStream xmlstream, const char* confpat
 void adbl_parseConfig (AdblManager self, const char* confpath, int preread)
 {
   /* open the file */
-  EcXMLStream xmlstream = ecxmlstream_openobserver (self->observer, self->logger);
+  EcXMLStream xmlstream = ecxmlstream_openobserver (self->observer);
   /* parse the xml structure */
   while( ecxmlstream_nextNode( xmlstream ) )
   {
@@ -494,7 +494,7 @@ void adbl_scanPlugin (AdblManager self, const EcString filename)
   EcLibraryHandle handle;
   adbl_info_t info;
     
-  handle = ecdl_new (filename, self->logger);
+  handle = ecdl_new (filename);
   if( !handle )
   {
     // cannot be loaded for some reason
@@ -535,7 +535,7 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
   
   eclogger_logformat(self->logger, LL_TRACE, MODULE, "{scan} using configpath '%s'", configpath);        
 
-  self->observer = ecf_observer_newFromPath(configpath, "adbl.xml", configpath, events, self->logger, 0, 0);
+  self->observer = ecf_observer_newFromPath (configpath, "adbl.xml", configpath, events, 0, 0);
   
   adbl_parseConfig (self, configpath, TRUE);  
   

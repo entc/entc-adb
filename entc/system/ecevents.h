@@ -22,7 +22,6 @@
 
 #include "../system/macros.h"
 #include "../types/ecstring.h"
-#include "../utils/eclogger.h"
 
 #include "ecmutex.h"
 
@@ -81,7 +80,7 @@ __LIB_EXPORT int ece_list_add (EcEventQueue, EcHandle, int type, void* ptr);
 // returns if this was successfull
 __LIB_EXPORT int ece_list_del (EcEventQueue, EcHandle);
 
-__LIB_EXPORT int ece_list_wait (EcEventQueue, uint_t timeout, void** ptr, EcLogger logger);
+__LIB_EXPORT int ece_list_wait (EcEventQueue, uint_t timeout, void** ptr);
 
 // misc methods
 
@@ -97,7 +96,7 @@ struct EcEventFiles_s; typedef struct EcEventFiles_s* EcEventFiles;
 
 __CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcEventFiles ece_files_new(EcLogger logger);
+__LIB_EXPORT EcEventFiles ece_files_new ();
   
 __LIB_EXPORT void ece_files_delete(EcEventFiles*);
   

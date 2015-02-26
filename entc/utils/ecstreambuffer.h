@@ -27,30 +27,29 @@
 #include "../types/ecstream.h"
 
 #include "../utils/ecobserver.h"
-#include "../utils/eclogger.h"
 #include "../system/ecsocket.h"
 
 struct EcStreamBuffer_s; typedef struct EcStreamBuffer_s* EcStreamBuffer;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcStreamBuffer ecstreambuffer_new(EcLogger logger, EcSocket);
+__LIB_EXPORT EcStreamBuffer ecstreambuffer_create (EcSocket);
 
-__LIB_EXPORT void ecstreambuffer_delete(EcStreamBuffer*);
+__LIB_EXPORT void ecstreambuffer_destroy (EcStreamBuffer*);
 
-__LIB_EXPORT int ecstreambuffer_next(EcStreamBuffer, int* error);
+__LIB_EXPORT int ecstreambuffer_next (EcStreamBuffer, int* error);
 
-__LIB_EXPORT char ecstreambuffer_get(EcStreamBuffer);
+__LIB_EXPORT char ecstreambuffer_get (EcStreamBuffer);
 
 __LIB_EXPORT void* ecstreambuffer_buffer (EcStreamBuffer);
 
-__LIB_EXPORT uint_t ecstreambuffer_filled(EcStreamBuffer, int* error);
+__LIB_EXPORT uint_t ecstreambuffer_filled (EcStreamBuffer, int* error);
 
-__LIB_EXPORT uint_t ecstreambuffer_fill(EcStreamBuffer, int* error);
+__LIB_EXPORT uint_t ecstreambuffer_fill (EcStreamBuffer, int* error);
   
 __LIB_EXPORT int ecstreambuffer_readln (EcStreamBuffer, EcStream stream, int* error, char* b1, char* b2);
 
-__LIB_EXPORT void ecstreambuffer_read(EcStreamBuffer, EcStream stream, int* error);
+__LIB_EXPORT void ecstreambuffer_read (EcStreamBuffer, EcStream stream, int* error);
 
 __LIB_EXPORT void* ecstreambuffer_getBunch (EcStreamBuffer, ulong_t size, int* res);
 

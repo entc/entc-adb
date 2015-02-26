@@ -20,6 +20,7 @@
 #ifdef __APPLE_CC__
 
 #include "ecevents.h"
+#include "utils/eclogger.h"
 
 #include "ecthread.h"
 #include "ecfile.h"
@@ -153,7 +154,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
   
   ece_list_add (list, handle, type, NULL);
   
-  int ret = ece_list_wait (list, timeout, NULL, NULL);
+  int ret = ece_list_wait (list, timeout, NULL);
   
   ece_list_destroy (&list);
   
@@ -166,7 +167,7 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 {
   EcEventQueue list = ece_list_create (self, NULL);
   
-  int ret = ece_list_wait (list, timeout, NULL, NULL);
+  int ret = ece_list_wait (list, timeout, NULL);
   
   ece_list_destroy (&list);
   
@@ -281,7 +282,7 @@ int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
 
 //------------------------------------------------------------------------------------------------------------
 
-int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logger)
+int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
 {
   while (TRUE)
   {
@@ -393,9 +394,6 @@ struct EcEventFiles_s
   
   EcEventFilesData* matrix;
   
-  /* reference */
-  EcLogger logger;
-  
 };
 
 
@@ -408,7 +406,7 @@ int ece_files_nextEvent(EcEventFiles self)
   
   int res = kevent(self->kqueue, NULL, 0, &event, 1, NULL);
   
-  eclogger_log(self->logger, LL_TRACE, "CORE", "{events} Received event");
+  eclogger_msg (LL_TRACE, "ENTC", "events", "Received event");
   
   if( res == -1 )
   {
@@ -423,7 +421,7 @@ int ece_files_nextEvent(EcEventFiles self)
 #ifdef EVFILT_USER  
   if( (event.ident == self->abortfd) && (event.filter == EVFILT_USER) )
   {
-    eclogger_log(self->logger, LL_TRACE, "CORE", "{events} Received abort event");
+    eclogger_msg (LL_TRACE, "ENTC", "events", "Received abort event");
     
     return FALSE;
   }
@@ -442,19 +440,18 @@ int ece_files_nextEvent(EcEventFiles self)
   
   if( event.fflags & NOTE_WRITE )
   {
-    eclogger_log(self->logger, LL_TRACE, "CORE", "{events} Received 'WRITE' event");
+    eclogger_msg (LL_TRACE, "ENTC", "events", "Received 'WRITE' event");
   }
 
   if( event.fflags & NOTE_EXTEND )
   {
-    eclogger_log(self->logger, LL_TRACE, "CORE", "{events} Received 'EXTEND' event");
+    eclogger_msg (LL_TRACE, "ENTC", "events", "Received 'EXTEND' event");
   }
 
   if( event.fflags & NOTE_ATTRIB )
   {
-    eclogger_log(self->logger, LL_TRACE, "CORE", "{events} Received 'ATTRIB' event");
+    eclogger_msg (LL_TRACE, "ENTC", "events", "Received 'ATTRIB' event");
   }
-   
   
   if( event.fflags & data->fflags )
   {        
@@ -476,7 +473,7 @@ int ecevents_thread(void* a)
 
 /*------------------------------------------------------------------------*/
 
-int ece_files_registerEvent (int kqueue, EcLogger logger, int filter, int fflags, int fd)
+int ece_files_registerEvent (int kqueue, int filter, int fflags, int fd)
 {
   /* variables */
   struct kevent kev;
@@ -489,8 +486,7 @@ int ece_files_registerEvent (int kqueue, EcLogger logger, int filter, int fflags
   
   if( res < 0 )
   {
-    eclogger_logerrno(logger, LL_FATAL, "CORE", "{events} Can't register kevent");
-    
+    eclogger_errno (LL_FATAL, "ENTC", "events", "Can't register kevent");    
     return -1;  
   }
   else
@@ -502,7 +498,7 @@ int ece_files_registerEvent (int kqueue, EcLogger logger, int filter, int fflags
 /*------------------------------------------------------------------------*/
 
 #ifdef EVFILT_USER  
-void ece_files_triggerEvent (int kqueue, EcLogger logger, int filter)
+void ece_files_triggerEvent (int kqueue, int filter)
 {
   /* variables */
   struct kevent kev;
@@ -515,22 +511,21 @@ void ece_files_triggerEvent (int kqueue, EcLogger logger, int filter)
   
   if( res < 0 )
   {
-    eclogger_logerrno(logger, LL_ERROR, "CORE", "{events} Can't trigger kevent");
+    eclogger_errno (LL_ERROR, "ENTC", "events", "Can't trigger kevent");    
   }
 }
 #endif
 
 /*------------------------------------------------------------------------*/
 
-EcEventFiles ece_files_new (EcLogger logger)
+EcEventFiles ece_files_new ()
 {
   EcEventFiles self = ENTC_NEW (struct EcEventFiles_s);
   
-  self->logger = logger;
   /* init kqueue */
   self->kqueue = kqueue();
 #ifdef EVFILT_USER
-  self->abortfd = ece_files_registerEvent (self->kqueue, logger, EVFILT_USER, 0, 0);
+  self->abortfd = ece_files_registerEvent (self->kqueue, EVFILT_USER, 0, 0);
 #else
   self->abortfd = 0;
 #endif
@@ -556,7 +551,7 @@ void ece_files_delete (EcEventFiles* ptr)
   
 #ifdef EVFILT_USER  
   /* trigger the abort event */
-  ece_files_triggerEvent (self->kqueue, self->logger, EVFILT_USER);
+  ece_files_triggerEvent (self->kqueue, EVFILT_USER);
 #endif
   
   /* wait until the thread returns */
@@ -598,7 +593,7 @@ void ece_files_resize (EcEventFiles self, int32_t resize)
 
 void ece_files_register(EcEventFiles self, int fd, int filter, int fflags, events_callback_fct onChange, void* onChangePtr, events_callback_fct onDelete, void* onDeletePtr)
 {
-  int ident = ece_files_registerEvent (self->kqueue, self->logger, filter, fflags | NOTE_DELETE, fd);
+  int ident = ece_files_registerEvent (self->kqueue, filter, fflags | NOTE_DELETE, fd);
   
   if( ident > 0 )
   {

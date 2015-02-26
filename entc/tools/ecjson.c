@@ -19,6 +19,7 @@
 
 #include "ecjson.h"
 #include "types/ecstream.h"
+#include "utils/eclogger.h"
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -29,8 +30,6 @@
 typedef struct {
   
   const unsigned char* pos;
-  
-  EcLogger logger;
   
 } JsonParser;
 
@@ -134,7 +133,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         {
           if (isAssigned (udc))
           {
-            eclogger_log (parser->logger, LL_TRACE, "JSON", "{reader} array already assigned");
+            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
             // error
             ecudc_destroy(&udc);
             
@@ -151,7 +150,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         {
           if (isAssigned (udc))
           {
-            eclogger_log (parser->logger, LL_TRACE, "JSON", "{reader} array already assigned");
+            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
             // error
             ecudc_destroy(&udc);
             
@@ -356,12 +355,11 @@ EcUdc json_parse (JsonParser* parser, const char* name)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcUdc ecjson_read (const EcString source, const EcString name, EcLogger logger)
+EcUdc ecjson_read (const EcString source, const EcString name)
 {
   JsonParser parser;
   
   parser.pos = (unsigned char*)source;
-  parser.logger = logger;
   
   return json_parse (&parser, name);  
 }

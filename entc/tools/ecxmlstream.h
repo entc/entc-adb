@@ -39,41 +39,41 @@ struct EcXMLStream_s; typedef struct EcXMLStream_s* EcXMLStream;
 
 __CPP_EXTERN______________________________________________________________________________START
     
-__LIB_EXPORT EcXMLStream ecxmlstream_openfile(const char* filename, EcLogger logger, const char* confdir);
+__LIB_EXPORT EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir);
 
-__LIB_EXPORT EcXMLStream ecxmlstream_openpath(const char* path, const char* filename, EcLogger logger, const char* confdir);
+__LIB_EXPORT EcXMLStream ecxmlstream_openpath (const char* path, const char* filename, const char* confdir);
 
-__LIB_EXPORT EcXMLStream ecxmlstream_openobserver(EcFileObserver, EcLogger logger);
+__LIB_EXPORT EcXMLStream ecxmlstream_openobserver (EcFileObserver);
 
-__LIB_EXPORT EcXMLStream ecxmlstream_openbuffer(const char* buffer, EcLogger logger);
+__LIB_EXPORT EcXMLStream ecxmlstream_openbuffer (const char* buffer);
 
-__LIB_EXPORT void ecxmlstream_close( EcXMLStream );
+__LIB_EXPORT void ecxmlstream_close (EcXMLStream);
   
-__LIB_EXPORT int ecxmlstream_nextNode( EcXMLStream );
+__LIB_EXPORT int ecxmlstream_nextNode (EcXMLStream);
   
 __LIB_EXPORT const EcString ecxmlstream_nodeName (EcXMLStream);
 
 __LIB_EXPORT const EcString ecxmlstream_nodeNamespace (EcXMLStream);
 
-__LIB_EXPORT ubyte_t ecxmlstream_nodeType( EcXMLStream );
+__LIB_EXPORT ubyte_t ecxmlstream_nodeType (EcXMLStream);
   
-__LIB_EXPORT const char* ecxmlstream_nodeAttribute( EcXMLStream, const char* name );
+__LIB_EXPORT const char* ecxmlstream_nodeAttribute (EcXMLStream, const char* name);
 
-__LIB_EXPORT const char* ecxmlstream_nodeValue( EcXMLStream );
+__LIB_EXPORT const char* ecxmlstream_nodeValue (EcXMLStream);
   
-__LIB_EXPORT const EcString ecxmlstream_isNode( EcXMLStream );
+__LIB_EXPORT const EcString ecxmlstream_isNode (EcXMLStream);
 
-__LIB_EXPORT int ecxmlstream_isBegin( EcXMLStream, const char* name );
+__LIB_EXPORT int ecxmlstream_isBegin (EcXMLStream, const char* name);
 
-__LIB_EXPORT int ecxmlstream_isEnd( EcXMLStream, const char* name );
+__LIB_EXPORT int ecxmlstream_isEnd (EcXMLStream, const char* name);
 
-__LIB_EXPORT int ecxmlstream_isOpen( EcXMLStream );
+__LIB_EXPORT int ecxmlstream_isOpen (EcXMLStream);
   
-__LIB_EXPORT int ecxmlstream_isValue( EcXMLStream );
+__LIB_EXPORT int ecxmlstream_isValue (EcXMLStream);
   
   /* helper functions */
   
-__LIB_EXPORT void ecxmlstream_parseNodeValue( EcXMLStream, EcString* value, const EcString node);
+__LIB_EXPORT void ecxmlstream_parseNodeValue (EcXMLStream, EcString* value, const EcString node);
   
 __CPP_EXTERN______________________________________________________________________________END
 

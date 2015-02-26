@@ -39,7 +39,7 @@ struct EcLocaleSet_s; typedef struct EcLocaleSet_s* EcLocaleSet;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcLocale eclocale_new(const EcString confdir, const EcString path, EcEventFiles events , EcLogger logger);
+__LIB_EXPORT EcLocale eclocale_new (const EcString confdir, const EcString path, EcEventFiles events);
   
 __LIB_EXPORT void eclocale_delete(EcLocale* ptr);
 

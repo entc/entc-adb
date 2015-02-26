@@ -35,7 +35,7 @@
 /* quom core includes */
 #include "types/ecstring.h"
 
-int ecsec_file_checkpath(const EcString path, const EcString confdir, EcLogger logger)
+int ecsec_file_checkpath (const EcString path, const EcString confdir)
 {
   const char* c1 = confdir;
   const char* c2 = path;
@@ -44,9 +44,9 @@ int ecsec_file_checkpath(const EcString path, const EcString confdir, EcLogger l
     if( *c1 != *c2 )
     {
       // report security breach level yellow
-      eclogger_sec (logger, SL_YELLOW);
+      //eclogger_sec (logger, SL_YELLOW);
       
-      eclogger_logformat(logger, LL_INFO, "QSEC", "access to path '%s' outside confdir '%s'", path, confdir);
+      eclogger_fmt (LL_WARN, "ENTC", "ecsec", "access to path '%s' outside confdir '%s'", path, confdir);
 
       return FALSE;  
     }
@@ -59,17 +59,17 @@ int ecsec_file_checkpath(const EcString path, const EcString confdir, EcLogger l
 
 /*------------------------------------------------------------------------*/
 
-int ecsec_checkPath(const EcString path, const EcString confdir, EcLogger logger)
+int ecsec_checkPath (const EcString path, const EcString confdir)
 {
   /* check if the found path is indside the confdir */
-  if( !ecsec_file_checkpath(path, confdir, logger) )
+  if (!ecsec_file_checkpath(path, confdir))
   {
-    if( strcmp(path, "/etc") == 0 )
+    if (ecstr_equal(path, "/etc"))
     {
       // report security breach level red
-      eclogger_sec (logger, SL_RED);
+      //eclogger_sec (logger, SL_RED);
       
-      eclogger_logformat (logger, LL_INFO, "QSEC", "tried to access /etc with file '%s'", path );      
+      eclogger_fmt (LL_WARN, "ENTC", "ecsec", "tried to access /etc with file '%s'", path);      
 
       return 2;
     }
@@ -81,7 +81,7 @@ int ecsec_checkPath(const EcString path, const EcString confdir, EcLogger logger
 
 /*------------------------------------------------------------------------*/
 
-int ecsec_extractPathAndCheck(struct EcSecFopen* inst, EcLogger logger, const EcString confdir)
+int ecsec_extractPathAndCheck (struct EcSecFopen* inst, const EcString confdir)
 {
   /* variables */
   char* find = 0;
@@ -98,7 +98,7 @@ int ecsec_extractPathAndCheck(struct EcSecFopen* inst, EcLogger logger, const Ec
     
     if(!find)
     {
-      eclogger_logformat(logger, LL_ERROR, "QSEC", "no valid path or file '%s'", filename_copy);
+      eclogger_fmt (LL_ERROR, "ENTC", "ecsec", "no valid path or file '%s'", filename_copy);
       // clean up
       ecstr_delete( &filename_copy );
       return FALSE;
@@ -108,7 +108,7 @@ int ecsec_extractPathAndCheck(struct EcSecFopen* inst, EcLogger logger, const Ec
   /* override separator with null */
   *find = 0;
   
-  inst->sec_error = ecsec_checkPath(filename_copy, confdir, logger);
+  inst->sec_error = ecsec_checkPath (filename_copy, confdir);
   
   ecstr_delete( &filename_copy );
 
@@ -117,7 +117,7 @@ int ecsec_extractPathAndCheck(struct EcSecFopen* inst, EcLogger logger, const Ec
 
 /*------------------------------------------------------------------------*/
 
-int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcLogger logger, const EcString confdir)
+int ecsec_fopen (struct EcSecFopen* self, const EcString filename, int flags, const EcString confdir)
 {
   /* variables */
   EcFileInfo_s info;
@@ -139,8 +139,7 @@ int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcL
     
     if( !(self->filename) )
     {     
-      eclogger_logerrno(logger, LL_ERROR, "QSEC", "can't get correct realpath for '%s'", ecstr_cstring(filename));
-      
+      eclogger_errno (LL_ERROR, "ENTC", "ecsec", "can't get correct realpath for '%s'", ecstr_cstring(filename));      
       return FALSE;
     }
   }
@@ -154,16 +153,14 @@ int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcL
     }
     else
     {
-      eclogger_logerrno(logger, LL_ERROR, "QSEC", "can't open '%s'", ecstr_cstring(filename));
-      
-	     return FALSE;
+      eclogger_errno (LL_ERROR, "ENTC", "ecsec", "can't open '%s'", ecstr_cstring(filename));      
+      return FALSE;
     }
   }
   
-  if( !ecsec_extractPathAndCheck(self, logger, confdir) )
+  if( !ecsec_extractPathAndCheck(self, confdir) )
   {
     ecstr_delete( &(self->filename) );
-    
     return FALSE;
   }
   /* now all checks are done, open the file */
@@ -173,7 +170,7 @@ int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcL
 
   if( !self->fhandle )
   {
-    eclogger_logerrno(logger, LL_ERROR, "QSEC", "can't open the file '%s'", self->filename);
+    eclogger_errno (LL_ERROR, "ENTC", "ecsec", "can't open the file '%s'", self->filename);
     
     self->os_error = errno;
     
@@ -189,7 +186,7 @@ int ecsec_fopen(struct EcSecFopen* self, const EcString filename, int flags, EcL
 
 /*------------------------------------------------------------------------*/
 
-int ecsec_dopen(struct EcSecDopen* inst, const EcString path, EcLogger logger, const EcString confdir)
+int ecsec_dopen (struct EcSecDopen* inst, const EcString path, const EcString confdir)
 {
   /* variables */
   EcFileInfo_s info;
@@ -205,8 +202,7 @@ int ecsec_dopen(struct EcSecDopen* inst, const EcString path, EcLogger logger, c
     
     if( !inst->path )
     {      
-      eclogger_logerrno(logger, LL_ERROR, "QSEC", "can't get correct realpath for '%s'", ecstr_cstring(path));
-      
+      eclogger_errno (LL_ERROR, "ENTC", "ecsec", "can't get correct realpath for '%s'", ecstr_cstring(path));      
       return FALSE;
     }
   }
@@ -214,12 +210,11 @@ int ecsec_dopen(struct EcSecDopen* inst, const EcString path, EcLogger logger, c
   {
     inst->path = ecstr_copy( path );
     
-    eclogger_logerrno(logger, LL_ERROR, "QSEC", "can't open '%s'", ecstr_cstring(path));
-    
-	   return FALSE;
+    eclogger_errno (LL_ERROR, "ENTC", "ecsec", "can't open '%s'", ecstr_cstring(path));
+    return FALSE;
   }  
   /* now check the path */
-  inst->sec_error = ecsec_checkPath(inst->path, confdir, logger);
+  inst->sec_error = ecsec_checkPath (inst->path, confdir);
 
   if( inst->sec_error == 0 )
   {
@@ -233,7 +228,7 @@ int ecsec_dopen(struct EcSecDopen* inst, const EcString path, EcLogger logger, c
 
 /*------------------------------------------------------------------------*/
 
-void ecsec_mkdir(const EcString path, EcLogger logger, const EcString confdir)
+void ecsec_mkdir(const EcString path, const EcString confdir)
 {
   // variables
   int res = 0;
@@ -253,7 +248,7 @@ void ecsec_mkdir(const EcString path, EcLogger logger, const EcString confdir)
   
   if (res != 0)
   {
-    eclogger_logerrno(logger, LL_ERROR, "CORE", "create path '%s'", path );    
+    eclogger_errno (LL_ERROR, "ENTC", "ecsec", "create path '%s'", path);    
   }  
 }
 

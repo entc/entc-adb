@@ -20,6 +20,7 @@
 #include "ecdl.h"
 
 #include "../system/ecfile.h"
+#include "../utils/eclogger.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -40,10 +41,7 @@ struct EcLibraryHandle_s
 {
   
   void* handle;
-  
-  // reference
-  EcLogger logger;
-  
+    
 };
 
 #endif /* _WIN32 */
@@ -51,7 +49,7 @@ struct EcLibraryHandle_s
 
 /*------------------------------------------------------------------------*/
 
-EcLibraryHandle ecdl_new(const EcString filename, EcLogger logger)
+EcLibraryHandle ecdl_new (const EcString filename)
 {
   /* variables */
   EcLibraryHandle self;
@@ -102,7 +100,6 @@ EcLibraryHandle ecdl_new(const EcString filename, EcLogger logger)
     {
       self = ENTC_NEW(struct EcLibraryHandle_s);
       
-      self->logger = logger;
       self->handle = handle;
       
       return self;
@@ -110,9 +107,9 @@ EcLibraryHandle ecdl_new(const EcString filename, EcLogger logger)
     else
     {
 #ifdef _WIN32
-      eclogger_logerrno(logger, LL_WARN, "CORE", "can't load library");    
+      eclogger_errno (LL_WARN, "_SYS", "dl", "can't load library");
 #else
-      eclogger_logformat(logger, LL_WARN, "CORE", "can't load library: %s", dlerror());
+      eclogger_fmt (LL_WARN, "_SYS", "dl", "can't load library: %s", dlerror());
 #endif
 	}
     return 0;
@@ -121,8 +118,7 @@ EcLibraryHandle ecdl_new(const EcString filename, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-EcLibraryHandle
-ecdl_fromName(const EcString path, const EcString name, EcLogger logger)
+EcLibraryHandle ecdl_fromName (const EcString path, const EcString name)
 {
   EcLibraryHandle ret = 0;
 #ifdef __APPLE_CC__
@@ -146,7 +142,6 @@ ecdl_fromName(const EcString path, const EcString name, EcLogger logger)
 	{
     EcLibraryHandle self = ENTC_NEW(struct EcLibraryHandle_s);
     
-    self->logger = logger;
     self->handle = handle;
 
     ecstr_delete(&fullname);
@@ -157,9 +152,9 @@ ecdl_fromName(const EcString path, const EcString name, EcLogger logger)
   else
   {
 #ifdef _WIN32
-    eclogger_logerrno(logger, LL_WARN, "CORE", "can't load library '%s' from '%s'", name, fullpath);    
+    eclogger_errno (LL_WARN, "_SYS", "dl", "can't load library '%s' from '%s'", name, fullpath);
 #else
-    eclogger_logformat(logger, LL_WARN, "CORE", "can't load library '%s' : %s", name, dlerror());
+    eclogger_fmt (LL_WARN, "_SYS", "dl", "can't load library '%s' : %s", name, dlerror());
 #endif
   }
   

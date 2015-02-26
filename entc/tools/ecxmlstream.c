@@ -36,8 +36,6 @@
 struct EcXMLStream_s
 {
   
-  EcLogger logger;
-  
   /* sources */
   EcReadBuffer readbuffer;
   
@@ -70,11 +68,9 @@ typedef struct
 
 /*------------------------------------------------------------------------*/
 
-EcXMLStream ecxmlstream_new(EcLogger logger)
+EcXMLStream ecxmlstream_new (void)
 {
   EcXMLStream self = ENTC_NEW(struct EcXMLStream_s);
-  /* reference */
-  self->logger = logger;
   /* fhandle */
   self->observer = 0;
   /* data sources */
@@ -92,17 +88,17 @@ EcXMLStream ecxmlstream_new(EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-EcXMLStream ecxmlstream_openfile(const char* filename, EcLogger logger, const char* confdir)
+EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir)
 {
   /* create the instance */
-  EcXMLStream self = ecxmlstream_new(logger);
+  EcXMLStream self = ecxmlstream_new ();
   /* create a new readbuffer for the file */
   struct EcSecFopen st;
   
-  if( ecsec_fopen(&st, filename, O_RDONLY, logger, confdir) )
+  if (ecsec_fopen(&st, filename, O_RDONLY, confdir))
   {
     /* transfer ownership to our object */
-    self->readbuffer = ecreadbuffer_new( st.fhandle, TRUE );
+    self->readbuffer = ecreadbuffer_create (st.fhandle, TRUE);
   }
   /* clean up */
   self->filename = st.filename;
@@ -112,11 +108,11 @@ EcXMLStream ecxmlstream_openfile(const char* filename, EcLogger logger, const ch
 
 /*------------------------------------------------------------------------*/
 
-EcXMLStream ecxmlstream_openpath(const char* path, const char* filename, EcLogger logger, const char* confdir)
+EcXMLStream ecxmlstream_openpath (const char* path, const char* filename, const char* confdir)
 {
   char* file = ecfs_mergeToPath(path, filename);
   
-  EcXMLStream self = ecxmlstream_openfile(file, logger, confdir);
+  EcXMLStream self = ecxmlstream_openfile(file, confdir);
   
   free( file );
   
@@ -125,15 +121,15 @@ EcXMLStream ecxmlstream_openpath(const char* path, const char* filename, EcLogge
 
 /*------------------------------------------------------------------------*/
 
-EcXMLStream ecxmlstream_openobserver(EcFileObserver observer, EcLogger logger)
+EcXMLStream ecxmlstream_openobserver (EcFileObserver observer)
 {
-  EcXMLStream self = ecxmlstream_new(logger);
+  EcXMLStream self = ecxmlstream_new ();
   /* create a new readbuffer for the file */
   EcFileHandle fhandle = ecf_observer_open(observer);
 
   if( fhandle )
   {
-    self->readbuffer = ecreadbuffer_new( fhandle, FALSE );
+    self->readbuffer = ecreadbuffer_create (fhandle, FALSE);
 
     self->observer = observer;
     
@@ -145,9 +141,9 @@ EcXMLStream ecxmlstream_openobserver(EcFileObserver observer, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-EcXMLStream ecxmlstream_openbuffer(const char* buffer, EcLogger logger)
+EcXMLStream ecxmlstream_openbuffer (const char* buffer)
 {
-  EcXMLStream self = ecxmlstream_new(logger);
+  EcXMLStream self = ecxmlstream_new ();
 
   self->constbuffer = buffer;
   
@@ -190,8 +186,7 @@ void ecxmlstream_close( EcXMLStream self )
   /* delete the readbuffer */
   if( self->readbuffer )
   {
-    ecreadbuffer_delete( &(self->readbuffer) );
-    self->readbuffer = 0;
+    ecreadbuffer_destroy (&(self->readbuffer));
   }
 
   ecstack_delete( &(self->nodes) );
@@ -400,7 +395,7 @@ void ecxmlstream_cleanLastNode( EcXMLStream self )
     }
     else
     {
-      eclogger_log(self->logger, LL_TRACE, "CORE", "can't clean up last node");
+      eclogger_msg (LL_TRACE, "ENTC", "xml", "can't clean up last node");
     }
   }
   else if( self->lastype == ENTC_XMLTYPE_VALUE )
@@ -623,24 +618,24 @@ void ecxmlstream_logError( EcXMLStream self )
   {
     if( self->observer )
     {
-      eclogger_logformat(self->logger, LL_ERROR, "CORE", "error in parsing '%s'", ecf_observer_getFileName(self->observer));        
+      eclogger_fmt (LL_ERROR, "ENTC", "xml", "error in parsing '%s'", ecf_observer_getFileName(self->observer));        
     }
     else if( self->filename )
     {
-      eclogger_logformat(self->logger, LL_ERROR, "CORE", "error in parsing '%s'", self->filename);      
+      eclogger_fmt (LL_ERROR, "ENTC", "xml", "error in parsing '%s'", self->filename);      
     }
     else
     {
-      eclogger_log(self->logger, LL_ERROR, "CORE", "error in parsing in unknown file #1");            
+      eclogger_msg (LL_ERROR, "ENTC", "xml", "error in parsing in unknown file #1");            
     }
   }
   else if( self->constbuffer )
   {
-    eclogger_log(self->logger, LL_ERROR, "CORE", "error in parsing buffer" );  
+    eclogger_msg (LL_ERROR, "ENTC", "xml", "error in parsing buffer" );  
   }
   else
   {
-    eclogger_log(self->logger, LL_ERROR, "CORE", "error in parsing in unknown file #2");    
+    eclogger_msg (LL_ERROR, "ENTC", "xml", "error in parsing in unknown file #2");    
   }
 }
 
@@ -669,7 +664,7 @@ int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
     
     if (isNotAssigned (tag))
     {
-      eclogger_logformat(self->logger, LL_ERROR, "CORE", "SYNTAX Error: start and end tag missmatch [NULL][%s]", node + 1);
+      eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [NULL][%s]", node + 1);
 
       ecxmlstream_logError (self);
       return FALSE;      
@@ -677,7 +672,7 @@ int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
 
     if (!ecstr_equal (tag->name, node + 1))
     {
-      eclogger_logformat(self->logger, LL_ERROR, "CORE", "SYNTAX Error: start and end tag missmatch [%s][%s]", tag->name, node + 1);
+      eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", tag->name, node + 1);
       
       ecxmlstream_logError (self);
       return FALSE;      
@@ -767,7 +762,7 @@ int ecxmlstream_do1( EcXMLStream self, EcStream stream_tag )
         if( c == '<' )
         {
           /* *** ERROR *** */
-          eclogger_logformat (self->logger, LL_ERROR, "CORE", "SYNTAX Error, found '<' inside node '%s'", ecstream_buffer( stream_tag ));
+          eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error, found '<' inside node '%s'", ecstream_buffer( stream_tag ));
           
           ecxmlstream_logError(self);
 

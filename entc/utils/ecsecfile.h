@@ -25,7 +25,6 @@
 
 #include "../system/ecfile.h"
 #include "../types/ecstring.h"
-#include "../utils/eclogger.h"
 
 /* opens a file and returns the success
  this is the secure access, try to use this version only
@@ -75,12 +74,12 @@ struct EcSecDopen
 
 __CPP_EXTERN______________________________________________________________________________START
     
-__LIB_EXPORT int ecsec_fopen(struct EcSecFopen*, const EcString filename, int flags, EcLogger logger, const EcString confdir);
+__LIB_EXPORT int ecsec_fopen(struct EcSecFopen*, const EcString filename, int flags, const EcString confdir);
   
-__LIB_EXPORT int ecsec_dopen(struct EcSecDopen*, const EcString path, EcLogger logger, const EcString confdir);
+__LIB_EXPORT int ecsec_dopen(struct EcSecDopen*, const EcString path, const EcString confdir);
 
   /* utility methods */
-__LIB_EXPORT void ecsec_mkdir(const EcString path, EcLogger, const EcString confdir);
+__LIB_EXPORT void ecsec_mkdir(const EcString path, const EcString confdir);
   
 __CPP_EXTERN______________________________________________________________________________END
 

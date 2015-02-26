@@ -50,8 +50,6 @@ struct EcExec_s
 
   char* arguments[11];
     
-  EcLogger logger;
-
   EcPipe stderr;
   EcPipe stdout;
 

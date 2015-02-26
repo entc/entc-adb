@@ -21,6 +21,7 @@
 
 #include <utils/ecreadbuffer.h>
 #include <utils/ecsecfile.h>
+#include <utils/ecmessages.h>
 #include <types/ecmapchar.h>
 #include <system/ectime.h>
 
@@ -171,12 +172,11 @@ int echttp_content_fillBuffer (EcHttpContent self, ulong_t size, http_content_ca
 
 //---------------------------------------------------------------------------------------
 
-EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path, EcLogger logger)
+EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path)
 {
   EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
   
   self->path = ecstr_copy (path);
-  self->logger = logger;
   
   if (size > _ENTC_MAX_BUFFERSIZE)
   {
@@ -350,7 +350,7 @@ void echttp_done (void)
 
 //---------------------------------------------------------------------------------------
 
-const EcString echttp_getMimeType (const EcString filename, EcLogger logger)
+const EcString echttp_getMimeType (const EcString filename)
 {
   /* variables */
   const EcString pos01;
@@ -361,7 +361,7 @@ const EcString echttp_getMimeType (const EcString filename, EcLogger logger)
   
   if( !pos01 )
   {
-    eclogger_logformat(logger, LL_WARN, "SERV", "{file} can't extract filename from '%s'", filename);
+    eclogger_fmt (LL_WARN, "ENTC", "mime", "can't extract filename from '%s'", filename);
     
     return "application/octet-stream";
   }
@@ -371,7 +371,7 @@ const EcString echttp_getMimeType (const EcString filename, EcLogger logger)
   
   if( !pos02 )
   {
-    eclogger_logformat(logger, LL_WARN, "SERV", "{file} can't find file extension from '%s'", filename);
+    eclogger_fmt (LL_WARN, "ENTC", "mime", "can't find file extension from '%s'", filename);
     
     return "application/octet-stream";
   }
@@ -383,7 +383,7 @@ const EcString echttp_getMimeType (const EcString filename, EcLogger logger)
   }
   else
   {
-    eclogger_logformat(logger, LL_WARN, "SERV", "{file} can't find mime type '%s' from '%s'", pos02 + 1, filename);
+    eclogger_fmt (LL_WARN, "ENTC", "mime", "can't find mime type '%s' from '%s'", pos02 + 1, filename);
     return "application/octet-stream";
   }   
 }
@@ -640,7 +640,7 @@ void echttp_send_SecureIncident (EcHttpHeader* header, EcSocket socket)
 
 //---------------------------------------------------------------------------------------
 
-void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString docroot, EcLogger logger)
+void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString docroot)
 {
   // variables
   EcString filename = ecstr_copy (header->request_url);
@@ -653,14 +653,14 @@ void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString doc
     ecstr_replaceAllChars (filename, '/', ENTC_PATH_SEPARATOR);
   }
   
-  eclogger_logformat(logger, LL_TRACE, "SERV", "try to send file '%s'", filename);
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "try to send file '%s'", filename);
 
   path = ecfs_mergeToPath(docroot, filename);
   
   //eclogger_logformat(logger, LOGMSG_INFO, "SERV", "try to access '%s'", path);
 
   // try to open filename
-  res = ecsec_fopen(&secopen, path, O_RDONLY, logger, docroot);
+  res = ecsec_fopen (&secopen, path, O_RDONLY, docroot);
   // cleanup
   ecstr_delete(&path); 
   
@@ -680,7 +680,7 @@ void echttp_send_file (EcHttpHeader* header, EcSocket socket, const EcString doc
     return;
   }
 
-  header->mime = echttp_getMimeType(filename, logger);
+  header->mime = echttp_getMimeType (filename);
   
   //eclogger_logformat(logger, LOGMSG_INFO, "SERV", "send file '%s' : '%s'", filename, hr->mime );
   
@@ -958,11 +958,16 @@ void echttp_header_validate (EcHttpHeader* header)
 
 //---------------------------------------------------------------------------------------
 
-void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
+void echttp_header_lotToService (EcHttpHeader* header)
 {
-  // generate the udc containers with all the infos we have :-)
-  EcUdc udc = ecudc_create(0, "AccessInfo");
+  EcMessageData data;
   
+  data.type = Q5_MSGTYPE_HTTP_REQUEST_INFO; data.rev = 1;
+  data.ref = 0;
+  
+  data.content = ecudc_create (ENTC_UDC_NODE, "AccessInfo");
+    
+  // generate the udc containers with all the infos we have :-)
   {
     EcUdc item = ecudc_create(1, "timestamp");
     
@@ -974,26 +979,26 @@ void echttp_header_lotToService (EcHttpHeader* header, EcLogger logger)
     ecbuf_format (buffer, 200, "%04u-%02u-%02u %02u:%02u:%02u", date.year, date.month, date.day, date.hour, date.minute, date.sec);
     
     ecudc_setS (item, ecbuf_const_str (buffer));
-    ecudc_add (udc, &item);
+    ecudc_add (data.content, &item);
     
     ecbuf_destroy (&buffer);
   }
   
-  ecudc_add_asString(udc, "request-url", header->request_url);
-  ecudc_add_asString(udc, "remote-address", header->remote_address);
-  ecudc_add_asString(udc, "user-language", header->user_lang);
-  ecudc_add_asString(udc, "user-agent", header->user_agent);
+  ecudc_add_asString(data.content, "request-url", header->request_url);
+  ecudc_add_asString(data.content, "remote-address", header->remote_address);
+  ecudc_add_asString(data.content, "user-language", header->user_lang);
+  ecudc_add_asString(data.content, "user-agent", header->user_agent);
 
   if (ecstr_valid(header->title))
   {
-    ecudc_add_asString(udc, "title", header->title);
+    ecudc_add_asString(data.content, "title", header->title);
   }
   
-  eclogger_message(logger, 10000, 1, &udc);
-  
-  if ( isAssigned (udc))
+  ecmessages_broadcast (Q5_SERVICE_HTTP_REQUEST_INFO, &data, NULL);
+    
+  if ( isAssigned (data.content))
   {
-    ecudc_destroy(&udc);
+    ecudc_destroy(&(data.content));
   }  
 }
 
@@ -1015,8 +1020,6 @@ void echttp_header_dump (EcHttpHeader* header, EcLogger logger)
 struct EcHttpRequest_s
 {
   
-  EcLogger logger;
-  
   EcString docroot;
   
   EcString tmproot;
@@ -1029,11 +1032,10 @@ struct EcHttpRequest_s
 
 //---------------------------------------------------------------------------------------
 
-EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header, EcLogger logger)
+EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header)
 {
   EcHttpRequest self = ENTC_NEW (struct EcHttpRequest_s);
   
-  self->logger = logger;
   self->docroot = ecstr_copy (docroot);
   self->tmproot = ecstr_copy (tmproot);
   self->header_on = header;
@@ -1134,7 +1136,7 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 
 //---------------------------------------------------------------------------------------
 
-int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger logger)
+int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
 {
   int error;
   EcStream stream = ecstream_new();
@@ -1211,7 +1213,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer, EcLogger l
 
 //---------------------------------------------------------------------------------------
 
-int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcLogger logger)
+int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer)
 {
   int error;
   
@@ -1227,7 +1229,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
       const EcString after_method;
       const EcString afetr_url;
 
-      eclogger_logformat(logger, LL_TRACE, "SERV", "{first line} '%s'", line);
+      eclogger_fmt (LL_TRACE, "ENTC", "http", "{first line} '%s'", line);
       // find method
       after_method = ecstr_pos (line, ' ');
       if (ecstr_empty (after_method))
@@ -1262,20 +1264,20 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
 
 //---------------------------------------------------------------------------------------
 
-int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcLogger logger)
+int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer)
 {
   int ret = TRUE;
   // parse incoming stream of 'GET/POST/...'
-  ret = ret && echttp_parse_method (header, buffer, streambuffer, logger);
+  ret = ret && echttp_parse_method (header, buffer, streambuffer);
   // parse meta informations
-  ret = ret && echttp_parse_header (header, buffer, logger);
+  ret = ret && echttp_parse_header (header, buffer);
     
   return ret;
 }
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* callback_ptr, EcLogger logger)
+void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* callback_ptr)
 {
   EcHttpHeader header;
 
@@ -1289,11 +1291,11 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
     
     if (isAssigned (self->callbacks.header))
     {
-      self->callbacks.header (callback_ptr, &header, logger);
+      self->callbacks.header (callback_ptr, &header);
     }
     else
     {
-      eclogger_log(logger, LL_WARN, "ENTC", "{http} no header callback is set"); 
+      eclogger_msg (LL_WARN, "ENTC", "http", "no header callback is set"); 
     }
 
     echttp_header_validate (&header);
@@ -1302,7 +1304,7 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
 
     if (isAssigned (self->callbacks.content))
     {
-      self->callbacks.content (callback_ptr, &header, logger, self->tmproot);
+      self->callbacks.content (callback_ptr, &header, self->tmproot);
     }
     
     if (self->callbacks.process (self->callbacks.process_ptr, &header, &object))
@@ -1312,7 +1314,7 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
         self->callbacks.render (self->callbacks.render_ptr, &header, stream, &object);
         
         // log visit
-        echttp_header_lotToService (&header, self->logger);
+        echttp_header_lotToService (&header);
       }
       else
       {
@@ -1322,7 +1324,7 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
   }
   else
   {
-    eclogger_log(logger, LL_WARN, "ENTC", "{http} no process callback is set");  
+    eclogger_msg (LL_WARN, "ENTC", "http", "no process callback is set");  
   }
   
   echttp_header_clear (&header);
@@ -1330,7 +1332,7 @@ void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* c
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSocket socket, EcLogger logger)
+void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSocket socket)
 {
   // check first if we handle this in a custom way
   if (isAssigned (self->callbacks.process))
@@ -1348,7 +1350,7 @@ void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSo
         self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
         
         // log visit
-        echttp_header_lotToService (header, self->logger);
+        echttp_header_lotToService (header);
       }
       else
       {
@@ -1360,14 +1362,14 @@ void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSo
       return;
     }
   }
-  echttp_send_file (header, socket, self->docroot, logger);  
+  echttp_send_file (header, socket, self->docroot);  
 }
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcSocket socket, EcLogger logger)
+void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcSocket socket)
 {
-  if (!echttp_request_next (header, buffer, streambuffer, logger))
+  if (!echttp_request_next (header, buffer, streambuffer))
   {
     echttp_send_408 (header, socket); 
     return;
@@ -1382,7 +1384,7 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
       echttp_content_destroy (&(header->content));
     }
     
-    header->content =  echttp_content_create (header->content_length, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot, logger);  
+    header->content =  echttp_content_create (header->content_length, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot);  
     if (isNotAssigned (header->content)) 
     {
       echttp_send_500 (header, socket);
@@ -1390,26 +1392,26 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
     }
   }
   
-  echttp_request_process_next (self, header, socket, logger);
+  echttp_request_process_next (self, header, socket);
 }
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_process (EcHttpRequest self, EcSocket socket, EcLogger logger)
+void echttp_request_process (EcHttpRequest self, EcSocket socket)
 {
   EcHttpHeader header;
   
-  EcStreamBuffer buffer = ecstreambuffer_new(logger, socket);
+  EcStreamBuffer buffer = ecstreambuffer_create (socket);
   EcStream streambuffer = ecstream_new ();
 
   // initialize the header struct
   echttp_header_init (&header, self->header_on);
 
-  echttp_request_process_check (self, &header, buffer, streambuffer, socket, logger);
+  echttp_request_process_check (self, &header, buffer, streambuffer, socket);
   
   echttp_header_clear (&header);
   
-  ecstreambuffer_delete (&buffer);
+  ecstreambuffer_destroy (&buffer);
   ecstream_delete (&streambuffer);
 }
 

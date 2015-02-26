@@ -23,6 +23,7 @@
 #include "../system/ecmutex.h"
 #include "../types/eclist.h"
 #include "../utils/ecsecfile.h"
+#include "../utils/eclogger.h"
 
 #include <fcntl.h>
 
@@ -79,7 +80,7 @@ void ecf_observer_onDelete(void* ptr)
 
   ecfh_close( &(self->fhandle) );
   
-  while ( !ecsec_fopen(&secopen, self->filename, O_RDONLY, self->logger, self->confdir) )
+  while (!ecsec_fopen(&secopen, self->filename, O_RDONLY, self->confdir))
   {
     /* fixme export this into an extra thread */
 #ifdef _WIN32
@@ -120,11 +121,11 @@ void ecf_observer_onDelete(void* ptr)
 
 /*------------------------------------------------------------------------*/
 
-EcFileObserver ecf_observer_newFromPath(const EcString path, const EcString filename, const EcString confdir, EcEventFiles events, EcLogger logger, events_callback_fct fct, void* ptr)
+EcFileObserver ecf_observer_newFromPath(const EcString path, const EcString filename, const EcString confdir, EcEventFiles events, events_callback_fct fct, void* ptr)
 {
   EcString lrealpath = ecfs_mergeToPath(path, filename);
   
-  EcFileObserver inst = ecf_observer_new(lrealpath, confdir, events, logger, fct, ptr);
+  EcFileObserver inst = ecf_observer_new (lrealpath, confdir, events, fct, ptr);
   
   ecstr_delete(&lrealpath);
   
@@ -133,7 +134,7 @@ EcFileObserver ecf_observer_newFromPath(const EcString path, const EcString file
 
 /*------------------------------------------------------------------------*/
 
-EcFileObserver ecf_observer_new(const EcString filename, const EcString confdir, EcEventFiles events, EcLogger logger, events_callback_fct fct, void* ptr)
+EcFileObserver ecf_observer_new (const EcString filename, const EcString confdir, EcEventFiles events, events_callback_fct fct, void* ptr)
 {
   EcFileObserver self = ENTC_NEW(struct EcFileObserver_s);
   /* init common part */
@@ -145,7 +146,6 @@ EcFileObserver ecf_observer_new(const EcString filename, const EcString confdir,
   self->fct = fct;
   self->ptr = ptr;
     
-  self->logger = logger;
   self->events = events;
 
 #ifdef _WIN32
@@ -196,7 +196,7 @@ EcFileHandle ecf_observer_open(EcFileObserver self)
     return 0;  
   }
   
-  if( !ecsec_fopen(&secopen, self->filename, O_RDONLY, self->logger, self->confdir) )
+  if (!ecsec_fopen(&secopen, self->filename, O_RDONLY, self->confdir))
   {
     return 0;
   }
@@ -252,8 +252,6 @@ const EcString ecf_observer_getFileName(EcFileObserver self)
     
 struct EcDirObserver_s
 {
-  /* reference to the logger */
-  EcLogger logger;
   /* reference to the event manager */  
   EcEventFiles events;
   
@@ -272,17 +270,16 @@ struct EcDirObserver_s
 
 /*------------------------------------------------------------------------*/
 
-EcDirObserver ecd_observer_new(const EcString path, EcEventFiles events, EcLogger logger)
+EcDirObserver ecd_observer_new (const EcString path, EcEventFiles events)
 {
   EcDirObserver inst = ENTC_NEW(struct EcDirObserver_s);
   /* init common part */
-  inst->logger = logger;
   inst->events = events;
   inst->dh = 0;
   inst->path = ecfs_getRealPath( path );
   if( !inst->path )
   {
-    eclogger_logerrno(inst->logger, LL_ERROR, "CORE", "DirObserver can't open path '%s'", ecstr_cstring(path));
+    eclogger_errno(LL_ERROR, "ENTC", "observer", "Can't open path '%s'", ecstr_cstring(path));
   }
   /* set the flag first to false */
   inst->event = 0;
@@ -331,10 +328,9 @@ EcDirHandle ecd_observer_open(EcDirObserver self, const EcString confdir)
     return self->dh;
   }
   
-  if( !ecsec_dopen(&secopen, self->path, self->logger, confdir) )
+  if (!ecsec_dopen (&secopen, self->path, confdir))
   {
-    eclogger_logformat(self->logger, LL_ERROR, "CORE", "DirObserver can't open path '%s'", ecstr_cstring(secopen.path) );
-    
+    eclogger_fmt (LL_ERROR, "ENTC", "observer", "Can't open path '%s'", ecstr_cstring(secopen.path));
     return 0;
   }
   

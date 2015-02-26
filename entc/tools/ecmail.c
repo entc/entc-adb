@@ -201,7 +201,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
 int ecmail_proceed(EcMail self, const EcString txtto, const EcString txtre, const EcString subject, const EcString text, EcSocket socket)
 {
   // initialize a smart streambuffer to detect lines
-  EcStreamBuffer buffer = ecstreambuffer_new(self->mLogger, socket);
+  EcStreamBuffer buffer = ecstreambuffer_create (socket);
   // initialize stream to avoid buffer overflows
   EcStream stream = ecstream_new();
 
@@ -209,7 +209,7 @@ int ecmail_proceed(EcMail self, const EcString txtto, const EcString txtre, cons
   
   // clean up
   ecstream_delete(&stream);
-  ecstreambuffer_delete(&buffer);
+  ecstreambuffer_destroy (&buffer);
   
   return res;
 }
@@ -221,7 +221,7 @@ int ecmail_send(EcMail self, const EcString txtto, const EcString txtre, const E
   EcSocket socket;
   int res = TRUE;
   
-  socket = ecsocket_new(ec, self->mLogger);
+  socket = ecsocket_new(ec);
   
   eclogger_logformat(self->mLogger, LL_DEBUG, "MAIL", "try to connect to smtp server '%s:%u'", self->mMailhost, self->mPort );
   

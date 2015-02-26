@@ -39,7 +39,7 @@ struct EcReadBuffer_s
 
 /*------------------------------------------------------------------------*/
 
-EcReadBuffer ecreadbuffer_new( EcFileHandle fhandle, int lclose )
+EcReadBuffer ecreadbuffer_create (EcFileHandle fhandle, int lclose)
 {
   EcReadBuffer self = ENTC_NEW(struct EcReadBuffer_s);
   
@@ -54,7 +54,7 @@ EcReadBuffer ecreadbuffer_new( EcFileHandle fhandle, int lclose )
 
 /*------------------------------------------------------------------------*/
 
-void ecreadbuffer_delete( EcReadBuffer* pself )
+void ecreadbuffer_destroy (EcReadBuffer* pself)
 {
   EcReadBuffer self = *pself;
   

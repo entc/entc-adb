@@ -23,15 +23,14 @@
 #include "../system/macros.h"
 
 #include "../types/ecstring.h"
-#include "../utils/eclogger.h"
 
 struct EcLibraryHandle_s; typedef struct EcLibraryHandle_s* EcLibraryHandle;
 
 __CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcLibraryHandle ecdl_new(const EcString filename, EcLogger);
+__LIB_EXPORT EcLibraryHandle ecdl_new(const EcString filename);
 
-__LIB_EXPORT EcLibraryHandle ecdl_fromName(const EcString path, const EcString name, EcLogger);
+__LIB_EXPORT EcLibraryHandle ecdl_fromName(const EcString path, const EcString name);
 
 __LIB_EXPORT void ecdl_delete(EcLibraryHandle*);
   

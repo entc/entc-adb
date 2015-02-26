@@ -25,8 +25,6 @@ typedef struct {
   
   // Owned
   
-  EcLogger logger;
-  
   EcThread thread;
   
   // Reference
@@ -38,8 +36,6 @@ typedef struct {
 
 struct EcServer_s
 {
-  // reference
-  EcLogger logger;
   
   EcEventContext mainabort;
   
@@ -72,14 +68,14 @@ int _STDCALL ecserver_accept_run (void* params)
   // check if we have a callback method
   if (isNotAssigned (self->server->callbacks.accept_thread))
   {
-    eclogger_log (self->logger, LL_ERROR, "QSRV", "{accept} no accept callback is set -> thread terminates");
+    eclogger_msg (LL_ERROR, "ENTC", "ecserver", "no accept callback is set -> thread terminates");
     return FALSE;
   }
   // accept thread callback
-  if( !self->server->callbacks.accept_thread(self->server->callbacks.accept_ptr, &object, self->logger) )
+  if (!self->server->callbacks.accept_thread(self->server->callbacks.accept_ptr, &object))
   {  
     // signaled to stop the thread
-    eclogger_log(self->logger, LL_DEBUG, "QSRV", "{accept} aborted");
+    eclogger_msg (LL_DEBUG, "ENTC", "ecserver", "accept aborted");
     return FALSE;     
   }
 
@@ -94,7 +90,7 @@ int _STDCALL ecserver_accept_run (void* params)
   
     ecmutex_unlock(self->server->mutex);
 
-    eclogger_logformat (self->logger, LL_TRACE, "QSRV", "{accept} Received object '%p' -> added to queue (pending: %u)", object, pending);
+    eclogger_fmt (LL_TRACE, "ENTC", "Received object '%p' -> added to queue (pending: %u)", object, pending);
 
     ece_list_set (self->server->equeue, self->server->worker_lock);
   }
@@ -113,14 +109,14 @@ int _STDCALL ecserver_worker_run (void* params)
     EcListNode node;
     int res;
 
-    eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} wait on queue");
+    eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait on queue");
 
-    res = ece_list_wait (self->server->equeue, ENTC_INFINTE, NULL, self->logger);
+    res = ece_list_wait (self->server->equeue, ENTC_INFINTE, NULL);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {
       // termination of the process
-      eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} aborted");
+      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait aborted");
       return FALSE;
     }
     // wait until we got something in the queue to do
@@ -130,13 +126,13 @@ int _STDCALL ecserver_worker_run (void* params)
 
     if (node == eclist_end(self->server->queue))
     {
-      eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} no items in queue");
+      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "no items in queue");
       // no items/objects available
       ecmutex_unlock(self->server->mutex);
       return TRUE;
     }
 
-    eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} Found object in queue");
+    eclogger_msg (LL_TRACE, "ENTC", "ecserver", "found object in queue");
 
     object = eclist_data(node);
 
@@ -147,9 +143,9 @@ int _STDCALL ecserver_worker_run (void* params)
     // trigger other threads to continue
     ece_list_set (self->server->equeue, self->server->worker_lock);
 
-    if( !self->server->callbacks.worker_thread (self->server->callbacks.worker_ptr, &object, self->logger) )
+    if (!self->server->callbacks.worker_thread (self->server->callbacks.worker_ptr, &object))
     {
-      eclogger_log(self->logger, LL_TRACE, "QSRV", "{worker} aborted");
+      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "process aborted");
       // signaled to stop the thread
       return FALSE;
     }    
@@ -159,11 +155,10 @@ int _STDCALL ecserver_worker_run (void* params)
 
 /*------------------------------------------------------------------------*/
 
-EcServer ecserver_new(EcLogger logger, uint_t poolSize, EcServerCallbacks* callbacks, EcEventContext ec)
+EcServer ecserver_create (uint_t poolSize, EcServerCallbacks* callbacks, EcEventContext ec)
 {
   EcServer self = ENTC_NEW(struct EcServer_s);
   // init
-  self->logger = logger;
   self->mainabort = ec;
   self->poolSize = poolSize;
   self->equeue = ece_list_create (ec, NULL);
@@ -180,7 +175,7 @@ EcServer ecserver_new(EcLogger logger, uint_t poolSize, EcServerCallbacks* callb
 
 /*------------------------------------------------------------------------*/
 
-void ecserver_delete(EcServer* ptr)
+void ecserver_destroy (EcServer* ptr)
 {
   EcServer self = *ptr;
   uint_t i;
@@ -192,15 +187,13 @@ void ecserver_delete(EcServer* ptr)
     {
       EcServerThread* st = &(self->threads[i]);
       
-      eclogger_log(self->logger, LL_TRACE, "QSRV", "{server} wait for thread to terminate");
+      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait for thread to terminate");
       
       ecthread_join(st->thread);
       
       ecthread_delete(&(st->thread));
             
-      eclogger_log(self->logger, LL_TRACE, "QSRV", "{server} thread removed");
-
-      eclogger_del (&(st->logger));
+      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "thread removed");
     }
     free(self->threads);
     self->threads = NULL;    
@@ -212,7 +205,7 @@ void ecserver_delete(EcServer* ptr)
 
     if (isAssigned (self->callbacks.clear_fct))
     {
-      self->callbacks.clear_fct (NULL, &object, self->logger);
+      self->callbacks.clear_fct (NULL, &object);
     }
   }
     
@@ -226,7 +219,7 @@ void ecserver_delete(EcServer* ptr)
 
 /*------------------------------------------------------------------------*/
 
-int ecserver_start(EcServer self)
+int ecserver_start (EcServer self)
 {
   uint_t i;
   
@@ -240,10 +233,7 @@ int ecserver_start(EcServer self)
     EcServerThread* st = &(self->threads[0]);
 
     st->thread = ecthread_new();  
-    st->logger = eclogger_new(1);
     st->server = self;
-    
-    eclogger_sync(st->logger, self->logger);
     
     ecthread_start(st->thread, ecserver_accept_run, (void*)st);
   }
@@ -253,11 +243,8 @@ int ecserver_start(EcServer self)
     EcServerThread* st = &(self->threads[i]);
     
     st->thread = ecthread_new();  
-    st->logger = eclogger_new(i + 1);
     st->server = self;
     
-    eclogger_sync(st->logger, self->logger);
-
     ecthread_start(st->thread, ecserver_worker_run, (void*)st);
   }  
   
