@@ -991,14 +991,18 @@ void eclogger_msg (EcLogLevel lvl, const char* unit, const char* method, const c
 
 void eclogger_fmt (EcLogLevel lvl, const char* unit, const char* method, const char* format, ...)
 {
-  char buffer [1001];
+  char buffer [1002];
   // variables
   va_list ptr;
 
   va_start(ptr, format);
 
-  vsnprintf(buffer, 1000, format, ptr);
-  
+#ifdef _WIN32
+  vsnprintf_s (buffer, 1001, 1000, format, ptr);
+#else
+  vsnprintf (buffer, 1000, format, ptr);
+#endif 
+
   eclogger_msg (lvl, unit, method, buffer);
   
   va_end(ptr);
@@ -1008,14 +1012,82 @@ void eclogger_fmt (EcLogLevel lvl, const char* unit, const char* method, const c
 
 void eclogger_err (EcLogLevel lvl, const char* unit, const char* method, int errcode, const char* format, ...)
 {
-  
+  char buffer1 [1002];
+  char buffer2 [1002];
+
+  va_list ptr;
+
+  va_start(ptr, format);
+
+#ifdef _WIN32
+  vsnprintf_s (buffer1, 1001, 1000, format, ptr );
+  {
+    LPSTR pBuffer = NULL;
+    // use ansi version
+    DWORD res = FormatMessageA (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, errcode, 0, (LPSTR)&pBuffer, 0, NULL);    
+    if(res != 0)
+    {
+	    _snprintf_s (buffer2, 1001, 1000, "%s : '%s'", buffer1, pBuffer);
+    }
+    else
+    {
+      _snprintf_s (buffer2, 1001, 1000, "%s : [error fetching error message]", buffer1);
+    }
+    
+    LocalFree(pBuffer);
+  }
+#elif __DOS__
+  vsprintf((char*)self->buffer02->buffer, format, ptr);
+  ecbuf_format (self->buffer01, 300, "%s : 'system error'", ecbuf_const_str (self->buffer02));
+#else  
+  vsnprintf((char*)self->buffer02->buffer, self->buffer02->size, format, ptr );
+  ecbuf_format (self->buffer01, 300, "%s : '%s'", ecbuf_const_str (self->buffer02), strerror(error));
+#endif  
+
+  eclogger_msg (lvl, unit, method, buffer2);
+
+  va_end(ptr);  
 }
 
 //----------------------------------------------------------------------------------------
 
 void eclogger_errno (EcLogLevel lvl, const char* unit, const char* method, const char* format, ...)
 {
-  
+  char buffer1 [1002];
+  char buffer2 [1002];
+
+  va_list ptr;
+
+  va_start(ptr, format);
+
+#ifdef _WIN32
+  vsnprintf_s (buffer1, 1001, 1000, format, ptr );
+  {
+    LPSTR pBuffer = NULL;
+    // use ansi version
+    DWORD res = FormatMessageA (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, GetLastError (), 0, (LPSTR)&pBuffer, 0, NULL);    
+    if(res != 0)
+    {
+	    _snprintf_s (buffer2, 1001, 1000, "%s : '%s'", buffer1, pBuffer);
+    }
+    else
+    {
+      _snprintf_s (buffer2, 1001, 1000, "%s : [error fetching error message]", buffer1);
+    }
+    
+    LocalFree(pBuffer);
+  }
+#elif __DOS__
+  vsprintf((char*)self->buffer02->buffer, format, ptr);
+  ecbuf_format (self->buffer01, 300, "%s : 'system error'", ecbuf_const_str (self->buffer02));
+#else  
+  vsnprintf((char*)self->buffer02->buffer, self->buffer02->size, format, ptr );
+  ecbuf_format (self->buffer01, 300, "%s : '%s'", ecbuf_const_str (self->buffer02), strerror(error));
+#endif  
+
+  eclogger_msg (lvl, unit, method, buffer2);
+
+  va_end(ptr);
 }
 
 //----------------------------------------------------------------------------------------
