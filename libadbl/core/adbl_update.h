@@ -40,7 +40,7 @@ __LIB_EXPORT void adbl_update_setAttributes (AdblUpdate*, AdblAttributes*);
 __LIB_EXPORT void adbl_update_setConstraint (AdblUpdate*, AdblConstraint*);
   
   // security methods 
-__LIB_EXPORT void adbl_update_sec (AdblUpdate*, AdblSecurity*, EcLogger);
+__LIB_EXPORT void adbl_update_sec (AdblUpdate*, AdblSecurity*);
   
 __CPP_EXTERN______________________________________________________________________________END
 

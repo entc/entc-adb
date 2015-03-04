@@ -22,13 +22,11 @@
 
 //----------------------------------------------------------------------------------------
 
-AdboContext adbo_context_create (EcLogger logger, EcEventFiles files, const EcString path)
+AdboContext adbo_context_create (EcEventFiles files, const EcString path)
 {
   AdboContext self = ENTC_NEW (struct AdboContext_s);
   
-  self->logger = logger;
-  
-  self->adblm = adbl_new (self->logger);
+  self->adblm = adbl_new ();
   adbl_scan (self->adblm, files, path);  
 
  // self->substitutes = adbo_subsmgr_new (path, self);  

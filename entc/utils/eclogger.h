@@ -56,7 +56,7 @@ typedef struct {
   
 } EcLoggerCallbacks;
 
-struct EcLogger_s; typedef struct EcLogger_s* EcLogger;
+// struct EcLogger_s; typedef struct EcLogger_s* EcLogger;
 
 struct EcEchoLogger_s; typedef struct EcEchoLogger_s* EcEchoLogger;
 struct EcFileLogger_s; typedef struct EcFileLogger_s* EcFileLogger;
@@ -74,6 +74,8 @@ __LIB_EXPORT void eclogger_err (EcLogLevel, const char* unit, const char* method
 
 __LIB_EXPORT void eclogger_errno (EcLogLevel, const char* unit, const char* method, const char* format, ...);
 
+
+/*
 
 // different logger instances
 
@@ -182,6 +184,8 @@ __LIB_EXPORT void eclistlogger_register (EcListLogger, EcLogger);
 __LIB_EXPORT EcListNode eclistlogger_add (EcListLogger, const EcLoggerCallbacks*);
 
 __LIB_EXPORT void eclistlogger_remove (EcListLogger, EcListNode);
+ 
+ */
  
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -63,7 +63,7 @@ typedef struct
 
 /*------------------------------------------------------------------------*/
 
-void* adblmodule_dbconnect (AdblConnectionProperties* cp, EcLogger logger )
+void* adblmodule_dbconnect (AdblConnectionProperties* cp )
 {
   struct AdblMysqlConnection* conn = ENTC_NEW(struct AdblMysqlConnection);
   
@@ -78,7 +78,7 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp, EcLogger logger )
   
   if(!mysql_real_connect(mysql, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, CLIENT_MULTI_STATEMENTS))
   {
-    eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error(mysql) );
+    eclogger_msg (LL_ERROR, "MYSQ", "connect", mysql_error(mysql) );
     
     free(conn);
     
@@ -100,14 +100,14 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp, EcLogger logger )
     mysql_autocommit(mysql, 0);
   }
   
-  eclogger_log(logger, LL_DEBUG, "MYSQ", "Successful connected to Mysql database" );
+  eclogger_msg (LL_DEBUG, "MYSQ", "connect", "Successful connected to Mysql database" );
 
   return conn;
 }
 
 /*------------------------------------------------------------------------*/
 
-void adblmodule_dbdisconnect (void* ptr, EcLogger logger)
+void adblmodule_dbdisconnect (void* ptr)
 {
   struct AdblMysqlConnection* conn = ptr;
   
@@ -117,7 +117,7 @@ void adblmodule_dbdisconnect (void* ptr, EcLogger logger)
   
   free(conn);
   
-  eclogger_log(logger, LL_DEBUG, "MYSQ", "Disconnected from Mysql database" );
+  eclogger_msg (LL_DEBUG, "MYSQ", "disconnect", "Disconnected from Mysql database" );
 }
 
 /*------------------------------------------------------------------------*/
@@ -403,7 +403,7 @@ int adblmodule_createStatement (EcStream statement, AdblQuery* query, struct Adb
 
 //--------------------------------------------------------------------------
 
-void* adblmodule_dbquery (void* ptr, AdblQuery* query, EcLogger logger)
+void* adblmodule_dbquery (void* ptr, AdblQuery* query)
 {
   struct AdblMysqlConnection* conn = ptr;
     
@@ -411,7 +411,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query, EcLogger logger)
   MYSQL_STMT* stmt = mysql_stmt_init (&(conn->handle));
   if (isNotAssigned (stmt))
   {
-    eclogger_log (logger, LL_ERROR, "__00", mysql_stmt_error(stmt));
+    eclogger_msg  (LL_ERROR, "__01", "query", mysql_stmt_error(stmt));
     return NULL;
   }
   
@@ -432,12 +432,12 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query, EcLogger logger)
   cursor->error = (my_bool*)ENTC_MALLOC (sizeof(my_bool) * 10);
   
   EcStream statement = ecstream_new();
-  int cntBinds = adblmodule_createStatement (statement, query, conn, bindParams, cursor);
+  adblmodule_createStatement (statement, query, conn, bindParams, cursor);
 
   // prepare the statement 
   if (mysql_stmt_prepare (stmt, ecstream_buffer (statement), ecstream_size(statement)))
   {
-    eclogger_log (logger, LL_ERROR, "__01", mysql_stmt_error(stmt));
+    eclogger_msg  (LL_ERROR, "__01", "query", mysql_stmt_error(stmt));
 
     // clean up
     mysql_stmt_close (stmt);
@@ -450,7 +450,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query, EcLogger logger)
     my_bool res = mysql_stmt_bind_param (stmt, bindParams);
     if (!res)
     {
-      eclogger_log (logger, LL_ERROR, "__02", mysql_stmt_error(stmt));
+      eclogger_msg (LL_ERROR, "MSQL", "query", mysql_stmt_error(stmt));
       
       // clean up
       mysql_stmt_close (stmt);
@@ -462,7 +462,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query, EcLogger logger)
   int resExec = mysql_stmt_execute (stmt);
   if (resExec != 0)
   {
-    eclogger_log (logger, LL_ERROR, "__03", mysql_stmt_error(stmt));
+    eclogger_msg  (LL_ERROR, "__03", "query", mysql_stmt_error(stmt));
     
     // clean up
     mysql_stmt_close (stmt);
@@ -472,7 +472,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query, EcLogger logger)
   // try to bind result
   if (mysql_stmt_bind_result(stmt, cursor->bindResult))
   {
-    eclogger_log (logger, LL_ERROR, "__04", mysql_stmt_error(stmt));
+    eclogger_msg  (LL_ERROR, "__04", "query", mysql_stmt_error(stmt));
     
     // clean up
     mysql_stmt_close (stmt);
@@ -487,7 +487,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-uint_t adblmodule_dbtable_size (void* ptr, const char* table, EcLogger logger)
+uint_t adblmodule_dbtable_size (void* ptr, const char* table)
 {
   struct AdblMysqlConnection* conn = ptr;
   /* use the simple count(*) method to determine the size of the table */  
@@ -510,7 +510,7 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table, EcLogger logger)
     ecstream_append( statement, table );
   }
   /* log it */
-  eclogger_log(logger, LL_TRACE, "MYSQ", ecstream_buffer( statement ) );
+  eclogger_msg (LL_TRACE, "MYSQ", "size", ecstream_buffer( statement ) );
   /* execute */
   mysql_real_query( &(conn->handle), ecstream_buffer( statement ), ecstream_size( statement ) );
   /* release the statement */  
@@ -532,9 +532,9 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table, EcLogger logger)
   else
   {
     if(mysql_errno( &(conn->handle) ))
-      eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+      eclogger_msg (LL_ERROR, "MYSQ", "size", mysql_error( &(conn->handle) ) );
     else
-      eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );    
+      eclogger_msg (LL_ERROR, "MYSQ", "size", "unknown Mysql error" );    
   }
   return 0;
 }
@@ -591,7 +591,7 @@ int adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs, i
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbupdate (void* ptr, AdblUpdate* update, EcLogger logger)
+int adblmodule_dbupdate (void* ptr, AdblUpdate* update)
 {
   /* cast */
   struct AdblMysqlConnection* conn = ptr;
@@ -632,7 +632,7 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, EcLogger logger)
   
   adbl_constructConstraint( statement, update->constraint, conn->ansi, NULL );
     
-  eclogger_log(logger, LL_TRACE, "MYSQ", ecstream_buffer( statement ) );
+  eclogger_msg (LL_TRACE, "MYSQ", "update", ecstream_buffer( statement ) );
     
   //MUTEX_LOCK(_mutex);
     
@@ -643,11 +643,11 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, EcLogger logger)
   {
     if(mysql_errno( &(conn->handle) ))
     {
-      eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+      eclogger_msg (LL_ERROR, "MYSQ", "query", mysql_error( &(conn->handle) ) );
     }
     else
     {
-      eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+      eclogger_msg (LL_ERROR, "MYSQ", "query", "unknown Mysql error" );
     }
     /* set rows to an error */
     rows = -1;
@@ -739,7 +739,7 @@ void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs, 
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbinsert (void* ptr, AdblInsert* insert, EcLogger logger)
+int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
 {
   struct AdblMysqlConnection* conn = ptr;
   
@@ -764,7 +764,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert, EcLogger logger)
   
   adbl_constructAttributesInsert(statement, insert->attrs, conn->ansi );
   
-  eclogger_log(logger, LL_TRACE, "MYSQ", ecstream_buffer( statement ) );
+  eclogger_msg (LL_TRACE, "MYSQ", "insert", ecstream_buffer( statement ) );
   
   //MUTEX_LOCK(_mutex);
   
@@ -775,9 +775,9 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert, EcLogger logger)
   if(mysql_errno( &(conn->handle) ))
   {
     if(mysql_errno( &(conn->handle) ))
-      eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+      eclogger_msg (LL_ERROR, "MYSQ", "insert", mysql_error( &(conn->handle) ) );
     else
-      eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+      eclogger_msg (LL_ERROR, "MYSQ", "insert", "unknown Mysql error" );
     
     return 0;
   }
@@ -787,7 +787,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbdelete (void* ptr, AdblDelete* del, EcLogger logger)
+int adblmodule_dbdelete (void* ptr, AdblDelete* del)
 {
   /* if we have no constraints return error ! */
   if( !del->constraint )
@@ -816,7 +816,7 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del, EcLogger logger)
   
   adbl_constructConstraint( statement, del->constraint, conn->ansi, NULL );
 
-  eclogger_log(logger, LL_TRACE, "MYSQ", ecstream_buffer( statement ) );
+  eclogger_msg (LL_TRACE, "MYSQ", "delete", ecstream_buffer( statement ) );
     
   mysql_real_query( &(conn->handle), ecstream_buffer( statement ), ecstream_size( statement ) );
   
@@ -825,9 +825,9 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del, EcLogger logger)
   if(mysql_errno( &(conn->handle) ))
   {
     if(mysql_errno( &(conn->handle) ))
-      eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+      eclogger_msg (LL_ERROR, "MYSQ", "delete", mysql_error( &(conn->handle) ) );
     else
-      eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+      eclogger_msg (LL_ERROR, "MYSQ", "delete", "unknown Mysql error" );
     
     return 0;
   }  
@@ -836,7 +836,7 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-void adblmodule_dbbegin( void* ptr, EcLogger logger )
+void adblmodule_dbbegin( void* ptr )
 {
   struct AdblMysqlConnection* conn = ptr;
   
@@ -845,7 +845,7 @@ void adblmodule_dbbegin( void* ptr, EcLogger logger )
 
 /*------------------------------------------------------------------------*/
 
-void adblmodule_dbcommit( void* ptr, EcLogger logger )
+void adblmodule_dbcommit( void* ptr )
 {
   struct AdblMysqlConnection* conn = ptr;
   
@@ -854,7 +854,7 @@ void adblmodule_dbcommit( void* ptr, EcLogger logger )
 
 /*------------------------------------------------------------------------*/
 
-void adblmodule_dbrollback( void* ptr, EcLogger logger )
+void adblmodule_dbrollback( void* ptr )
 {
   struct AdblMysqlConnection* conn = ptr;
   
@@ -883,7 +883,7 @@ int adblmodule_dbcursor_next( void* ptr )
     break;
     case 1:
     {
-      //eclogger_log (logger, LL_ERROR, "MYSQ", mysql_stmt_error(self->stmt));
+      //eclogger_msg  (LL_ERROR, "MYSQ", mysql_stmt_error(self->stmt));
       return FALSE;
     }
     break;
@@ -930,7 +930,7 @@ void adblmodule_dbcursor_release (void* ptr)
 
 /*------------------------------------------------------------------------*/
 
-void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
+void* adblmodule_dbsequence_get (void* ptr, const char* table)
 {
   struct AdblMysqlConnection* conn = ptr;
   
@@ -945,11 +945,11 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
   {
     if(mysql_errno( &(conn->handle) ))
     {
-      eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+      eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error( &(conn->handle) ) );
     }
     else
     {
-      eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+      eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error" );
     }
 
     return 0;
@@ -963,7 +963,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
     {
       if (ecstr_valid (column))
       {
-        eclogger_logformat(logger, LL_ERROR, "MYSQ", "Only one auto_increment primary key is allowed for table '%s'", table );
+        eclogger_fmt (LL_ERROR, "MYSQ", "sequence", "Only one auto_increment primary key is allowed for table '%s'", table );
         /* clean up */
         mysql_free_result(res);
         
@@ -980,7 +980,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
   
   if (!ecstr_valid (column))
   {
-    eclogger_logformat(logger, LL_ERROR, "MYSQ", "Please add primary key with auto_increment flag for table '%s'", table );
+    eclogger_fmt (LL_ERROR, "MYSQ", "sequence", "Please add primary key with auto_increment flag for table '%s'", table );
 
     return 0;
   }
@@ -997,7 +997,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-void adblmodule_dbsequence_release (void* ptr, EcLogger logger)
+void adblmodule_dbsequence_release (void* ptr)
 {
   /* casts */
   AdblMyslSequence* self = (AdblMyslSequence*)ptr;
@@ -1010,7 +1010,7 @@ void adblmodule_dbsequence_release (void* ptr, EcLogger logger)
 
 /*------------------------------------------------------------------------*/
 
-uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
+uint_t adblmodule_dbsequence_next (void* ptr)
 {
   // casts
   AdblMyslSequence* sequence = (AdblMyslSequence*)ptr;
@@ -1030,9 +1030,9 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
     if(mysql_errno( &(conn->handle) ))
     {
       if(mysql_errno( &(conn->handle) ))
-        eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error( &(conn->handle) ) );
       else
-        eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error" );
             
       return 0;
     }
@@ -1060,9 +1060,9 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
     if(mysql_errno( &(conn->handle) ))
     {
       if(mysql_errno( &(conn->handle) ))
-        eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error( &(conn->handle) ) );
       else
-        eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );      
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error" );      
     }    
   }
   /* retrieve the last inserted id */
@@ -1072,14 +1072,14 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
     if(mysql_errno( &(conn->handle) ))
     {
       if(mysql_errno( &(conn->handle) ))
-        eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error( &(conn->handle) ) );
       else
-        eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error" );
       
       return 0;
     }
     
-    eclogger_logformat(logger, LL_TRACE, "MYSQ", "got new sequence number '%llu'", unique_id );
+    eclogger_fmt (LL_TRACE, "MYSQ", "sequence", "got new sequence number '%llu'", unique_id );
   }
   /* delete the fake row */
   {
@@ -1112,9 +1112,9 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
     if(mysql_errno( &(conn->handle) ))
     {
       if(mysql_errno( &(conn->handle) ))
-        eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error( &(conn->handle) ) );
       else
-        eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error" );
       
       return 0;
     }
@@ -1126,9 +1126,9 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
   if(mysql_errno( &(conn->handle) ))
   {
     if(mysql_errno( &(conn->handle) ))
-      eclogger_log(logger, LL_ERROR, "MYSQ", mysql_error( &(conn->handle) ) );
+      eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error( &(conn->handle) ) );
     else
-      eclogger_log(logger, LL_ERROR, "MYSQ", "unknown Mysql error" );
+      eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error" );
     
     return 0;
   }
@@ -1139,14 +1139,14 @@ uint_t adblmodule_dbsequence_next (void* ptr, EcLogger logger)
 
 //----------------------------------------------------------------------------------------
 
-EcList adblmodule_dbschema (void* ptr, EcLogger logger)
+EcList adblmodule_dbschema (void* ptr)
 {
   return NULL;
 }
 
 //----------------------------------------------------------------------------------------
 
-AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger logger)
+AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename)
 {
   return NULL;
 }

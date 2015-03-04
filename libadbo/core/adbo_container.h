@@ -86,7 +86,7 @@ __LIB_EXPORT AdboContainer adbo_container_parent (AdboContainer);
 __LIB_EXPORT EcUdc adbo_container_udc (AdboContainer);
 
 // dump all elements
-__LIB_EXPORT void adbo_container_dump (AdboContainer, int tab, EcBuffer, EcLogger);
+__LIB_EXPORT void adbo_container_dump (AdboContainer, int tab, EcBuffer);
 
 __CPP_EXTERN______________________________________________________________________________END
 

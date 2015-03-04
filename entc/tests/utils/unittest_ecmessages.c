@@ -86,7 +86,7 @@ int _STDCALL th01 (void* ptr)
     d01.content = ecudc_create (ENTC_UDC_STRING, NULL);
     ecudc_setS (d01.content, "Hello Thread");
     
-    o1 = ecmessages_output_create (c01, NULL);
+    o1 = ecmessages_output_create (c01, NULL, 0, 0);
     ecmessages_broadcast (0x01, &d01, o1);
     ecmessages_output_destroy (&o1);
 
@@ -125,7 +125,7 @@ int main (int argc, char *argv[])
   
   ecudc_destroy(&(d01.content));
   
-  o1 = ecmessages_output_create (c01, NULL);
+  o1 = ecmessages_output_create (c01, NULL, 0, 0);
   ecmessages_broadcast (0x01, NULL, o1);
   ecmessages_output_destroy (&o1);
   

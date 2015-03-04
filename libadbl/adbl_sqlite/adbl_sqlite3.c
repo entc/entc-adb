@@ -16,7 +16,6 @@
 static const AdblModuleInfo ModuleInfo = { 10000, MODULE, "SQLite3" };
 
 #include "adbl_module.inc"
-
 #include "adbl_table.h"
 
 //================================================================================================
@@ -53,7 +52,7 @@ struct AdblSqliteSequence
 
 //------------------------------------------------------------------------
 
-void* adblmodule_dbconnect(AdblConnectionProperties* cp, EcLogger logger )
+void* adblmodule_dbconnect (AdblConnectionProperties* cp)
 {
   struct AdblSqlite3Connection* conn = ENTC_NEW (struct AdblSqlite3Connection);
   
@@ -93,7 +92,7 @@ void* adblmodule_dbconnect(AdblConnectionProperties* cp, EcLogger logger )
 
 //------------------------------------------------------------------------
 
-void adblmodule_dbdisconnect( void* ptr, EcLogger logger )
+void adblmodule_dbdisconnect (void* ptr)
 {
   struct AdblSqlite3Connection* conn = ptr;
   
@@ -109,7 +108,7 @@ void adblmodule_dbdisconnect( void* ptr, EcLogger logger )
 
 //------------------------------------------------------------------------
 
-int adbl_preparexec1( sqlite3* db, const char* statement, EcLogger logger )
+int adbl_preparexec1 (sqlite3* db, const char* statement)
 {
   /* variable declaration */
   int res;
@@ -133,14 +132,14 @@ int adbl_preparexec1( sqlite3* db, const char* statement, EcLogger logger )
 
 //------------------------------------------------------------------------
 
-int adbl_preparexec2( sqlite3* db, EcStream statement, EcLogger logger )
+int adbl_preparexec2 (sqlite3* db, EcStream statement)
 {
-  return adbl_preparexec1(db, ecstream_buffer( statement ), logger);
+  return adbl_preparexec1 (db, ecstream_buffer (statement));
 }
 
 /*------------------------------------------------------------------------*/
 
-void adbl_constructListWithTable_Column(EcStream statement, AdblQueryColumn* qc, const char* table, EcIntMap orders )
+void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc, const char* table, EcIntMap orders)
 {
   if( qc->table && qc->ref && qc->value )
   {
@@ -273,7 +272,7 @@ void adbl_constructConstraint( EcStream statement, AdblConstraint* constraint )
 
 //------------------------------------------------------------------------
 
-void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
+void* adblmodule_dbquery (void* ptr, AdblQuery* query)
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* variables */
@@ -390,7 +389,7 @@ void* adblmodule_dbquery( void* ptr, AdblQuery* query, EcLogger logger )
 
 //------------------------------------------------------------------------
 
-uint_t adblmodule_dbtable_size ( void* ptr, const char* table, EcLogger logger )
+uint_t adblmodule_dbtable_size (void* ptr, const char* table)
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* variables */
@@ -402,7 +401,7 @@ uint_t adblmodule_dbtable_size ( void* ptr, const char* table, EcLogger logger )
   /* check if the handle is ok */
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "size", "Not connected to database" );      
     
     return 0;
   }
@@ -412,7 +411,7 @@ uint_t adblmodule_dbtable_size ( void* ptr, const char* table, EcLogger logger )
   ecstream_append( statement, "SELECT COUNT(*) FROM " );  
   ecstream_append( statement, table );
 
-  eclogger_log(logger, LL_ERROR, "SQLT", ecstream_buffer( statement ) );
+  eclogger_msg (LL_ERROR, "SQLT", "size", ecstream_buffer (statement));
   
   res = sqlite3_prepare_v2( conn->handle,
                             ecstream_buffer( statement ),
@@ -448,7 +447,7 @@ uint_t adblmodule_dbtable_size ( void* ptr, const char* table, EcLogger logger )
 
 /*------------------------------------------------------------------------*/
 
-int adbl_constructAttributesUpdate( EcStream statement, AdblAttributes* attrs )
+int adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs)
 {
   EcMapCharNode node = ecmapchar_first(attrs->columns);
   
@@ -477,21 +476,21 @@ int adbl_constructAttributesUpdate( EcStream statement, AdblAttributes* attrs )
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbupdate( void* ptr, AdblUpdate* update, EcLogger logger )
+int adblmodule_dbupdate (void* ptr, AdblUpdate* update)
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* variables */
   EcStream statement;
 
   /* check if the handle is ok */  
-  if( !conn->handle )
+  if (!conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbupdate", "Not connected to database");      
     
     return 0;
   }  
   
-  if(!update->constraint)
+  if (!update->constraint)
   {
     return 0;
   }
@@ -503,10 +502,9 @@ int adblmodule_dbupdate( void* ptr, AdblUpdate* update, EcLogger logger )
   ecstream_append( statement, update->table );
   ecstream_append( statement, " SET " );
   
-  if( !adbl_constructAttributesUpdate(statement, update->attrs) )
+  if (!adbl_constructAttributesUpdate(statement, update->attrs) )
   {
     ecstream_delete(&statement);
-    
     return 0;
   }
     
@@ -515,7 +513,7 @@ int adblmodule_dbupdate( void* ptr, AdblUpdate* update, EcLogger logger )
   {
     int res = 0;
     
-    if( adbl_preparexec2( conn->handle, statement, logger ) )
+    if (adbl_preparexec2 (conn->handle, statement))
     {
       res = sqlite3_changes(conn->handle);
     }
@@ -534,7 +532,7 @@ int adblmodule_dbupdate( void* ptr, AdblUpdate* update, EcLogger logger )
 
 /*------------------------------------------------------------------------*/
 
-void adbl_constructAttributesInsert(EcStream statement, AdblAttributes* attrs )
+void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
 {
   EcMapCharNode node = ecmapchar_first(attrs->columns);
   
@@ -577,7 +575,7 @@ void adbl_constructAttributesInsert(EcStream statement, AdblAttributes* attrs )
 
 //------------------------------------------------------------------------
 
-int adblmodule_dbinsert( void* ptr, AdblInsert* insert, EcLogger logger )
+int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* variables */
@@ -586,7 +584,7 @@ int adblmodule_dbinsert( void* ptr, AdblInsert* insert, EcLogger logger )
   /* check if the handle is ok */  
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbinsert", "Not connected to database" );      
     
     return FALSE;
   }  
@@ -601,7 +599,7 @@ int adblmodule_dbinsert( void* ptr, AdblInsert* insert, EcLogger logger )
   {
     int res = 0;
     
-    if( adbl_preparexec2( conn->handle, statement, logger ) )
+    if (adbl_preparexec2 (conn->handle, statement))
     {
       res = sqlite3_changes(conn->handle);
     }
@@ -620,7 +618,7 @@ int adblmodule_dbinsert( void* ptr, AdblInsert* insert, EcLogger logger )
 
 //------------------------------------------------------------------------
 
-int adblmodule_dbdelete( void* ptr, AdblDelete* del, EcLogger logger )
+int adblmodule_dbdelete (void* ptr, AdblDelete* del)
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* variables */
@@ -629,7 +627,7 @@ int adblmodule_dbdelete( void* ptr, AdblDelete* del, EcLogger logger )
   /* check if the handle is ok */  
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbdelete", "Not connected to database" );      
     
     return 0;
   }  
@@ -654,7 +652,7 @@ int adblmodule_dbdelete( void* ptr, AdblDelete* del, EcLogger logger )
   {
     int res = 0;
     
-    if( adbl_preparexec2( conn->handle, statement, logger ) )
+    if (adbl_preparexec2 (conn->handle, statement))
     {
       res = sqlite3_changes(conn->handle);
     }
@@ -673,52 +671,55 @@ int adblmodule_dbdelete( void* ptr, AdblDelete* del, EcLogger logger )
 
 //------------------------------------------------------------------------
 
-void adblmodule_dbbegin( void* ptr, EcLogger logger )
+void adblmodule_dbbegin (void* ptr)
 {  
   struct AdblSqlite3Connection* conn = ptr;
   /* check if the handle is ok */  
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbbegin", "Not connected to database" );      
     
     return;
   }
-  adbl_preparexec1( conn->handle, "BEGIN", logger );
+  
+  adbl_preparexec1 (conn->handle, "BEGIN");
 }
 
 //------------------------------------------------------------------------
 
-void adblmodule_dbcommit( void* ptr, EcLogger logger )
+void adblmodule_dbcommit (void* ptr)
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* check if the handle is ok */  
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbcommit", "Not connected to database" );      
     
     return;
   }  
-  adbl_preparexec1( conn->handle, "COMMIT", logger );
+  
+  adbl_preparexec1 (conn->handle, "COMMIT");
 }
 
 //------------------------------------------------------------------------
 
-void adblmodule_dbrollback( void* ptr, EcLogger logger )
+void adblmodule_dbrollback ( void* ptr)
 {
   struct AdblSqlite3Connection* conn = ptr;
   /* check if the handle is ok */  
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbrollback", "Not connected to database" );      
     
     return;
   }
-  adbl_preparexec1( conn->handle, "ROLLBACK", logger );
+  
+  adbl_preparexec1 (conn->handle, "ROLLBACK");
 }
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbcursor_next( void* ptr )
+int adblmodule_dbcursor_next (void* ptr)
 {
   struct AdblSqlite3Cursor* cursor = ptr;
   /* reset the position */
@@ -731,7 +732,7 @@ int adblmodule_dbcursor_next( void* ptr )
 
 /*------------------------------------------------------------------------*/
 
-const char* adblmodule_dbcursor_data( void* ptr, uint_t column )
+const char* adblmodule_dbcursor_data (void* ptr, uint_t column)
 {
   struct AdblSqlite3Cursor* cursor = ptr;
 
@@ -743,7 +744,7 @@ const char* adblmodule_dbcursor_data( void* ptr, uint_t column )
 
 /*------------------------------------------------------------------------*/
 
-const char* adblmodule_dbcursor_nextdata( void* ptr )
+const char* adblmodule_dbcursor_nextdata (void* ptr)
 {
   struct AdblSqlite3Cursor* cursor = ptr;
   
@@ -759,7 +760,7 @@ const char* adblmodule_dbcursor_nextdata( void* ptr )
 
 /*------------------------------------------------------------------------*/
 
-void adblmodule_dbcursor_release( void* ptr )
+void adblmodule_dbcursor_release (void* ptr)
 {
   struct AdblSqlite3Cursor* cursor = ptr;
   
@@ -770,7 +771,7 @@ void adblmodule_dbcursor_release( void* ptr )
 
 /*------------------------------------------------------------------------*/
 
-void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
+void* adblmodule_dbsequence_get (void* ptr, const char* table)
 {
   /* cast */
   struct AdblSqlite3Connection* conn = ptr;
@@ -785,7 +786,7 @@ void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
   
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbsequence", "Not connected to database" );      
     
     return 0;
   }
@@ -797,7 +798,7 @@ void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
   ecstream_append( statement, table );
   ecstream_append( statement, ")" );
 
-  eclogger_log(logger, LL_TRACE, "SQLT", ecstream_buffer( statement ) );
+  eclogger_msg (LL_TRACE, "SQLT", "dbsequence", ecstream_buffer (statement));
   
   
   res = sqlite3_prepare_v2( conn->handle,
@@ -809,10 +810,9 @@ void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
   /* clean */
   ecstream_delete( &statement );
   
-  if( res != SQLITE_OK )
+  if (res != SQLITE_OK)
   {
-    eclogger_log(logger, LL_ERROR, "SQLT", "Error in last statement" );
-    
+    eclogger_msg (LL_ERROR, "SQLT", "dbsequence", "Error in last statement");
     return 0;  
   }
   
@@ -838,9 +838,9 @@ void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
   
   res = sqlite3_finalize(stmt);
 
-  if( res != SQLITE_OK )
+  if (res != SQLITE_OK)
   {
-    eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
+    eclogger_msg (LL_ERROR, "SQLT", "dbsequence", "Error in finalize");
 
     ecstr_delete(&column);
     
@@ -865,7 +865,7 @@ void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
   ecstream_append( statement, ") FROM " );
   ecstream_append( statement, table );
   
-  eclogger_log(logger, LL_TRACE, "SQLT", ecstream_buffer( statement ) );
+  eclogger_msg (LL_TRACE, "SQLT", "dbsequence", ecstream_buffer (statement));
   
   res = sqlite3_prepare_v2( conn->handle,
                            ecstream_buffer( statement ),
@@ -903,17 +903,17 @@ void* adblmodule_dbsequence_get( void* ptr, const char* table, EcLogger logger )
 
 /*------------------------------------------------------------------------*/
 
-void adblmodule_dbsequence_release( void* ptr, EcLogger logger )
+void adblmodule_dbsequence_release (void* ptr)
 {
   /* cast */
   struct AdblSqliteSequence* self = ptr;
 
-  free( self );
+  ENTC_DEL (&self, struct AdblSqliteSequence);
 }
 
 /*------------------------------------------------------------------------*/
 
-uint_t adblmodule_dbsequence_next( void* ptr, EcLogger logger )
+uint_t adblmodule_dbsequence_next (void* ptr)
 {
   /* cast */
   struct AdblSqliteSequence* self = ptr;
@@ -930,7 +930,7 @@ uint_t adblmodule_dbsequence_next( void* ptr, EcLogger logger )
 
 //----------------------------------------------------------------------------------------
 
-EcList adblmodule_dbschema (void* ptr, EcLogger logger)
+EcList adblmodule_dbschema (void* ptr)
 {
   // variables
   EcStream statement; 
@@ -943,7 +943,7 @@ EcList adblmodule_dbschema (void* ptr, EcLogger logger)
   
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbschema", "Not connected to database");      
     
     return 0;
   }
@@ -952,7 +952,7 @@ EcList adblmodule_dbschema (void* ptr, EcLogger logger)
   
   ecstream_append (statement, "SELECT name FROM sqlite_master WHERE type='table'");  
 
-  eclogger_log (logger, LL_TRACE, "SQLT", ecstream_buffer (statement));
+  eclogger_msg (LL_TRACE, "SQLT", "dbschema", ecstream_buffer (statement));
   
   res = sqlite3_prepare_v2 (conn->handle,
                             ecstream_buffer( statement ),
@@ -965,7 +965,7 @@ EcList adblmodule_dbschema (void* ptr, EcLogger logger)
   
   if( res != SQLITE_OK )
   {
-    eclogger_log (logger, LL_ERROR, "SQLT", "Error in last statement");
+    eclogger_msg (LL_ERROR, "SQLT", "dbschema", "Error in last statement");
     
     return 0;  
   } 
@@ -990,7 +990,7 @@ EcList adblmodule_dbschema (void* ptr, EcLogger logger)
   
   if( res != SQLITE_OK )
   {
-    eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
+    eclogger_msg (LL_ERROR, "SQLT", "dbschema", "Error in finalize" );
     
     adbl_schema_del (&ret);
     
@@ -1002,7 +1002,7 @@ EcList adblmodule_dbschema (void* ptr, EcLogger logger)
 
 //----------------------------------------------------------------------------------------
 
-void adblmodule_parseColumn (AdblTable* table, const EcString statement, EcLogger logger)
+void adblmodule_parseColumn (AdblTable* table, const EcString statement)
 {
   EcListNode node;
   EcList list = eclist_new ();
@@ -1036,7 +1036,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement, EcLogge
   node = eclist_next(node);
   if (node == eclist_end(list))
   {
-    eclogger_logformat (logger, LL_TRACE, "SQLT", "added column: %s", column);          
+    eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added column: %s", column);          
 
     eclist_append(table->columns, column);
   }
@@ -1044,7 +1044,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement, EcLogge
   {
     if (ecstr_equal(eclist_data (node), "PRIMARY"))
     {
-      eclogger_logformat (logger, LL_TRACE, "SQLT", "added primary key: %s", column);          
+      eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added primary key: %s", column);          
       
       eclist_append(table->primary_keys, column);      
     }
@@ -1060,7 +1060,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement, EcLogge
 
 //----------------------------------------------------------------------------------------
 
-void adblmodule_parseForeignKey (AdblTable* table, const EcString statement, EcLogger logger)
+void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
 {
   
   EcListNode node;
@@ -1107,7 +1107,7 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement, EcL
   tablename = ecstr_extractf (eclist_data (node), '(');
   reference = ecstr_shrink (eclist_data (node), '(', ')');
   
-  eclogger_logformat (logger, LL_TRACE, "SQLT", "add foreign key: %s with reference %s.%s", column, tablename, reference);          
+  eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "add foreign key: %s with reference %s.%s", column, tablename, reference);          
   
   {
     AdblForeignKeyConstraint* fkconstraint = ENTC_NEW (AdblForeignKeyConstraint);
@@ -1126,7 +1126,7 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement, EcL
 
 //----------------------------------------------------------------------------------------
 
-AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcString statement, EcLogger logger)
+AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcString statement)
 {
   EcListNode node;
   EcList list = eclist_new ();
@@ -1144,11 +1144,11 @@ AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcSt
     // check for foreign keys
     if (ecstr_leading(token, "FOREIGN KEY "))
     {
-      adblmodule_parseForeignKey (table, token + 12, logger);
+      adblmodule_parseForeignKey (table, token + 12);
     }
     else
     {
-      adblmodule_parseColumn (table, token, logger);
+      adblmodule_parseColumn (table, token);
     }
     ecstr_delete(&token);
     ecstr_delete(&part);
@@ -1163,7 +1163,7 @@ AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcSt
 
 //----------------------------------------------------------------------------------------
 
-AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger logger)
+AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename)
 {
   // variables
   EcStream statement; 
@@ -1176,7 +1176,7 @@ AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger log
   
   if( !conn->handle )
   {
-    eclogger_log(logger, LL_WARN, "SQLT", "Not connected to database" );      
+    eclogger_msg (LL_WARN, "SQLT", "dbtable", "Not connected to database" );      
     
     return ret;
   }
@@ -1187,7 +1187,7 @@ AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger log
   ecstream_append (statement, tablename);
   ecstream_append (statement, "'");  
   
-  eclogger_log (logger, LL_TRACE, "SQLT", ecstream_buffer (statement));
+  eclogger_msg (LL_TRACE, "SQLT", "dbtable", ecstream_buffer (statement));
   
   res = sqlite3_prepare_v2 (conn->handle,
                             ecstream_buffer( statement ),
@@ -1198,10 +1198,9 @@ AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger log
   // clean up
   ecstream_delete (&statement);
   
-  if( res != SQLITE_OK )
+  if (res != SQLITE_OK)
   {
-    eclogger_log (logger, LL_ERROR, "SQLT", "Error in last statement");
-    
+    eclogger_msg (LL_ERROR, "SQLT", "dbtable", "Error in last statement");    
     return 0;  
   } 
   
@@ -1209,16 +1208,16 @@ AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename, EcLogger log
   res = sqlite3_step(stmt);
   ecmutex_unlock(conn->mutex);
   
-  if( res == SQLITE_ROW )
+  if (res == SQLITE_ROW)
   {
-    ret = adblmodule_parseCreateStatement (tablename, (const char*)sqlite3_column_text(stmt, 0), logger);
+    ret = adblmodule_parseCreateStatement (tablename, (const char*)sqlite3_column_text(stmt, 0));
   }
   
   res = sqlite3_finalize(stmt);
   
   if( res != SQLITE_OK )
   {
-    eclogger_log(logger, LL_ERROR, "SQLT", "Error in finalize" );
+    eclogger_msg (LL_ERROR, "SQLT", "dbtable", "Error in finalize" );
     
     adbl_table_del (&ret);
     

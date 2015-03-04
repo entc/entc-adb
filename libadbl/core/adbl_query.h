@@ -46,7 +46,7 @@ __LIB_EXPORT void adbl_query_setLimit (AdblQuery*, uint_t);
 __LIB_EXPORT void adbl_query_setOffset (AdblQuery*, uint_t);
   
   // security methods
-__LIB_EXPORT void adbl_query_sec (AdblQuery*, AdblSecurity*, EcLogger);
+__LIB_EXPORT void adbl_query_sec (AdblQuery*, AdblSecurity*);
     
 __CPP_EXTERN______________________________________________________________________________END
 

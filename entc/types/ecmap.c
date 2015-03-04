@@ -159,3 +159,22 @@ uint_t ecmap_size(const EcMap self)
 }
 
 /*------------------------------------------------------------------------*/
+
+void ecmap_cursor (EcMap self, EcMapCursor* cursor)
+{
+  cursor->map = self;
+  cursor->node = eclist_first (self->list);
+}
+
+/*------------------------------------------------------------------------*/
+
+int ecmap_cnext (EcMapCursor* cursor)
+{
+  cursor->node = eclist_next(cursor->node);
+  return cursor->node != eclist_end (cursor->map->list);
+}
+
+/*------------------------------------------------------------------------*/
+
+
+

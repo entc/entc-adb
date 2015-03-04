@@ -28,12 +28,9 @@ struct EcAsyncSvc_s
 {
   
   // references
-  
   EcEventContext ec;
 
-  EcLogger logger;
-
-  // owned
+  // owned  
   
   EcThread thread;
   
@@ -59,15 +56,12 @@ void ecasyncsvc_context_destroy (void** pptr)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcAsyncSvc ecasyncsvc_create (EcEventContext ec, EcLogger logger)
+EcAsyncSvc ecasyncsvc_create (EcEventContext ec)
 {
   EcAsyncSvc self = ENTC_NEW (struct EcAsyncSvc_s);
   
-  self->ec = ec;
-  self->logger = logger;
-  
+  self->ec = ec;  
   self->thread = ecthread_new ();
-  
   self->queue = ece_list_create (self->ec, ecasyncsvc_context_destroy);
   
   return self;
@@ -151,8 +145,6 @@ void ecasyncsvc_stop (EcAsyncSvc self)
 
 struct EcAsyncServ_s
 {
-  
-  EcLogger logger;
   
   EcEventContext ec;
   
@@ -387,7 +379,7 @@ int ecaserv_accept (EcAsyncContext ctx, EcAsyncSvc svc)
         context->run = ecaworker_run;
         context->del = ecaworker_onDel;
         
-        eclogger_log(self->logger, LL_TRACE, "ASYN", "client connected" );        
+        eclogger_msg (LL_TRACE, "ENTC", "async server", "client connected" );        
       }
       else
       {
@@ -405,14 +397,12 @@ int ecaserv_accept (EcAsyncContext ctx, EcAsyncSvc svc)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcAsyncServ ecaserv_create (EcLogger logger, EcAsyncServCallbacks* callbacks)
+EcAsyncServ ecaserv_create (EcAsyncServCallbacks* callbacks)
 {
   EcAsyncServ self = ENTC_NEW (struct EcAsyncServ_s);
 
-  self->logger = logger;
-  
   self->ec = ece_context_new ();
-  self->svc = ecasyncsvc_create (self->ec, logger);
+  self->svc = ecasyncsvc_create (self->ec);
   
   // callbacks
   memcpy(&(self->callbacks), callbacks, sizeof(EcAsyncServCallbacks));

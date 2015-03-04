@@ -69,13 +69,13 @@ void adbl_delete_setConstraint (AdblDelete* self, AdblConstraint* constraint)
 
 //----------------------------------------------------------------------------------------
 
-void adbl_delete_sec (AdblDelete* self, AdblSecurity* security, EcLogger logger)
+void adbl_delete_sec (AdblDelete* self, AdblSecurity* security)
 {
   security->inicident = 0;
   
   if( self->constraint )
   {
-    adbl_constraint_sec (self->constraint, security, logger);
+    adbl_constraint_sec (self->constraint, security);
   }
   
   if( security->inicident )

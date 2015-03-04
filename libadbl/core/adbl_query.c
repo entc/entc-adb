@@ -143,13 +143,13 @@ void adbl_query_setOffset (AdblQuery* self, uint_t offset)
 
 /*------------------------------------------------------------------------*/
 
-void adbl_query_sec (AdblQuery* self, AdblSecurity* security, EcLogger logger)
+void adbl_query_sec (AdblQuery* self, AdblSecurity* security)
 {
   security->inicident = 0;
   
   if( self->constraint )
   {
-    adbl_constraint_sec (self->constraint, security, logger);
+    adbl_constraint_sec (self->constraint, security);
   }
   
   if( security->inicident )

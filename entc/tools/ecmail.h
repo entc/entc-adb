@@ -33,11 +33,11 @@ struct EcMail_s; typedef struct EcMail_s* EcMail;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcMail ecmail_new(EcLogger logger, const EcString mailhost, uint_t port);
+__LIB_EXPORT EcMail ecmail_create (const EcString mailhost, uint_t port);
   
-__LIB_EXPORT void ecmail_delete(EcMail*);
+__LIB_EXPORT void ecmail_destroy (EcMail*);
   
-__LIB_EXPORT int ecmail_send(EcMail, const EcString txtto, const EcString textre, const EcString subject, const EcString text, EcEventContext);
+__LIB_EXPORT int ecmail_send (EcMail, const EcString txtto, const EcString textre, const EcString subject, const EcString text, EcEventContext);
 
 __CPP_EXTERN______________________________________________________________________________END
 

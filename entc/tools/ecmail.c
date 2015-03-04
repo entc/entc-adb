@@ -25,33 +25,33 @@
 struct EcMail_s
 {
 
-  EcLogger mLogger;
+  EcString mailhost;
   
-  EcString mMailhost;
-  
-  uint_t mPort;
+  uint_t port;
   
 };
 
 /*------------------------------------------------------------------------*/
 
-EcMail ecmail_new(EcLogger logger, const EcString mailhost, uint_t port)
+EcMail ecmail_create (const EcString mailhost, uint_t port)
 {
   EcMail self = ENTC_NEW(struct EcMail_s);
   
-  self->mLogger = logger;
-  
-  self->mMailhost = ecstr_copy(mailhost);
-  self->mPort = port;
+  self->mailhost = ecstr_copy (mailhost);
+  self->port = port;
   
   return self;
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecmail_delete(EcMail* ptr)
+void ecmail_destroy (EcMail* pself)
 {
-  ENTC_DEL(ptr, struct EcMail_s);
+  EcMail self = *pself;
+  
+  ecstr_delete (&(self->mailhost));
+  
+  ENTC_DEL(pself, struct EcMail_s);
 }
 
 /*------------------------------------------------------------------------*/
@@ -66,87 +66,86 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   
   if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
   {
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "can't get initial handshake" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "can't get initial handshake" );
     return FALSE;
   }
     
   response = ecstream_buffer(stream);
   // TODO: remove \n at the end of the message
-  eclogger_logformat(self->mLogger, LL_TRACE, "MAIL", "handshake from '%s'", response );
+  eclogger_fmt (LL_TRACE, "ENTC", "mail", "handshake from '%s'", response );
   
   /* check if we have code 220 */
   if(!((response[0] == '2')&&(response[1] == '2')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #1 '%s'", response );
-    
+    eclogger_fmt (LL_ERROR, "ENTC", "mail", "Protocol error #1 '%s'", response );
     return FALSE;
   }
   /* now send our host */
-  ecsocket_write( socket, "HELO me\n", 8 );
+  ecsocket_write (socket, "HELO me\n", 8);
   
   if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
   {
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "timeout receiving handshake" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout receiving handshake" );
     return FALSE;
   }
   
-  response = ecstream_buffer(stream);  
+  response = ecstream_buffer (stream);  
   /* check if we have code 250 */
   if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #2 '%s'", response );    
+    eclogger_fmt (LL_ERROR, "ENTC", "mail", "Protocol error #2 '%s'", response );    
     return FALSE;
   }
   
   /* send sender */
-  ecsocket_write( socket, "MAIL FROM: ", 11 );
-  ecsocket_write( socket, txtre, ecstr_len (txtre));
-  ecsocket_write( socket, "\n", 1 );
+  ecsocket_write (socket, "MAIL FROM: ", 11);
+  ecsocket_write (socket, txtre, ecstr_len (txtre));
+  ecsocket_write (socket, "\n", 1);
   
   if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
   {
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "timeout in accepting 'mail from'" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'mail from'" );
     return FALSE;
   }
   
   response = ecstream_buffer(stream);
   /* check if we have code 250 */
-  if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
+  if (!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #3 '%s'", response );
+    eclogger_fmt (LL_ERROR, "ENTC", "mail", "Protocol error #3 '%s'", response );
     return FALSE;
   }
   ecsocket_write( socket, "RCPT TO: ", 9 );
   ecsocket_write( socket, txtto, ecstr_len (txtto) );
   ecsocket_write( socket, "\n", 1 );
   
-  if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
   {
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "timeout in accepting 'rcpt from'" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'rcpt from'" );
     return FALSE;
   }
   
   response = ecstream_buffer(stream);
   /* check if we have code 250 */
-  if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
+  if (!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #4 '%s'", response );
+    eclogger_fmt (LL_ERROR, "ENTC", "mail", "Protocol error #4 '%s'", response );
     return FALSE;
   }
   
-  ecsocket_write( socket, "DATA\n", 5 );
+  ecsocket_write (socket, "DATA\n", 5);
   
-  if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
   {
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "timeout in accepting 'data'" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'data'" );
     return FALSE;
   }
   
   response = ecstream_buffer(stream);
   /* check if we have code 354 */
-  if(!((response[0] == '3')&&(response[1] == '5')&&(response[2] == '4')))
+  if (!((response[0] == '3')&&(response[1] == '5')&&(response[2] == '4')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #5 '%s'", response );
+    eclogger_fmt (LL_ERROR, "ENTC", "mail", "Protocol error #5 '%s'", response );
     return FALSE;
   }
   
@@ -161,44 +160,45 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   ecsocket_write( socket, text, ecstr_len (text) );
   ecsocket_write( socket, "\n.\n", 3 );
   
-  if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
   {
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "timeout in accepting 'mail'" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'mail'" );
     return FALSE;
   }
   
   response = ecstream_buffer(stream);
   /* check if we have code 250 */
-  if(!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
+  if (!((response[0] == '2')&&(response[1] == '5')&&(response[2] == '0')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #6 '%s'", response );
+    eclogger_fmt (LL_ERROR, "ENTC", "mail", "Protocol error #6 '%s'", response );
     return FALSE;
   }
   
   ecsocket_write( socket, "QUIT\n", 5 );
   
-  if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
   {
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "timeout in accepting 'quit'" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'quit'" );
     return FALSE;
   }
   
   response = ecstream_buffer(stream);
   /* check if we have code 221 */
-  if(!((response[0] == '2')&&(response[1] == '2')&&(response[2] == '1')))
+  if (!((response[0] == '2')&&(response[1] == '2')&&(response[2] == '1')))
   {
-    eclogger_logformat(self->mLogger, LL_ERROR, "MAIL", "Protocol error #7 '%s'", response );
+    eclogger_fmt (LL_ERROR, "ENTC", "mail", "Protocol error #7 '%s'", response );
     return FALSE;
   }
   
-  eclogger_log(self->mLogger, LL_INFO, "MAIL", "mail sent" );
-  /* message was succesfully sent */
+  // message was succesfully sent
+  eclogger_msg (LL_DEBUG, "ENTC", "mail", "mail sent" );
+
   return TRUE;  
 }
 
 /*------------------------------------------------------------------------*/
 
-int ecmail_proceed(EcMail self, const EcString txtto, const EcString txtre, const EcString subject, const EcString text, EcSocket socket)
+int ecmail_proceed (EcMail self, const EcString txtto, const EcString txtre, const EcString subject, const EcString text, EcSocket socket)
 {
   // initialize a smart streambuffer to detect lines
   EcStreamBuffer buffer = ecstreambuffer_create (socket);
@@ -216,27 +216,27 @@ int ecmail_proceed(EcMail self, const EcString txtto, const EcString txtre, cons
 
 /*------------------------------------------------------------------------*/
 
-int ecmail_send(EcMail self, const EcString txtto, const EcString txtre, const EcString subject, const EcString text, EcEventContext ec)
+int ecmail_send (EcMail self, const EcString txtto, const EcString txtre, const EcString subject, const EcString text, EcEventContext ec)
 {
   EcSocket socket;
   int res = TRUE;
   
   socket = ecsocket_new(ec);
   
-  eclogger_logformat(self->mLogger, LL_DEBUG, "MAIL", "try to connect to smtp server '%s:%u'", self->mMailhost, self->mPort );
+  eclogger_fmt (LL_TRACE, "ENTC", "mail", "try to connect to smtp server '%s:%u'", self->mailhost, self->port );
   
-  if( !ecsocket_connect(socket, self->mMailhost, self->mPort) )
+  if (!ecsocket_connect(socket, self->mailhost, self->port))
   {
     // clean up
     ecsocket_delete(&socket);
 
-    eclogger_log(self->mLogger, LL_ERROR, "MAIL", "can't connect to mailserver" );
+    eclogger_msg (LL_ERROR, "ENTC", "mail", "can't connect to mailserver");
     return FALSE;
   }
   
   res = ecmail_proceed(self, txtto, txtre, subject, text, socket);
   
-  ecsocket_delete(&socket);
+  ecsocket_delete (&socket);
   
   return res;
 }

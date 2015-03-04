@@ -68,7 +68,7 @@ void adbl_insert_setAttributes (AdblInsert* self, AdblAttributes* attr)
 
 /*------------------------------------------------------------------------*/
 
-void adbl_insert_sec (AdblInsert* self, AdblSecurity* security, EcLogger logger)
+void adbl_insert_sec (AdblInsert* self, AdblSecurity* security)
 {
   if( !security )
   {
@@ -79,7 +79,7 @@ void adbl_insert_sec (AdblInsert* self, AdblSecurity* security, EcLogger logger)
   
   if( self->attrs )
   {
-    adbl_attrs_sec( self->attrs, security, logger );
+    adbl_attrs_sec (self->attrs, security);
   }
   
   if( security->inicident )

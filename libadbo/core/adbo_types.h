@@ -21,7 +21,6 @@
 #define ADBO_TYPES_H 1
 
 #include <tools/ecxmlstream.h>
-#include <utils/eclogger.h>
 #include <types/ecstream.h>
 
 //##########################################

@@ -39,7 +39,7 @@ __LIB_EXPORT void adbl_insert_setTable (AdblInsert*, const EcString table);
 __LIB_EXPORT void adbl_insert_setAttributes (AdblInsert*, AdblAttributes*);
   
   // security methods 
-__LIB_EXPORT void adbl_insert_sec (AdblInsert*, AdblSecurity*, EcLogger);
+__LIB_EXPORT void adbl_insert_sec (AdblInsert*, AdblSecurity*);
   
 __CPP_EXTERN______________________________________________________________________________END
 

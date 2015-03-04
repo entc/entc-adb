@@ -90,7 +90,7 @@ int _STDCALL ecserver_accept_run (void* params)
   
     ecmutex_unlock(self->server->mutex);
 
-    eclogger_fmt (LL_TRACE, "ENTC", "Received object '%p' -> added to queue (pending: %u)", object, pending);
+    eclogger_fmt (LL_TRACE, "ENTC", "server", "Received object '%p' -> added to queue (pending: %u)", object, pending);
 
     ece_list_set (self->server->equeue, self->server->worker_lock);
   }

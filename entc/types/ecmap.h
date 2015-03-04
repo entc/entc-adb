@@ -28,6 +28,14 @@
 struct EcMap_s; typedef struct EcMap_s* EcMap;  
 typedef struct EcListNode_s* EcMapNode;
 
+typedef struct {
+  
+  EcListNode node;
+  
+  EcMap map;
+  
+} EcMapCursor;
+
 __CPP_EXTERN______________________________________________________________________________START
 
 __LIB_EXPORT EcMap ecmap_new();
@@ -53,6 +61,12 @@ __LIB_EXPORT EcString ecmap_key(const EcMapNode);
 __LIB_EXPORT void* ecmap_data(const EcMapNode);
   
 __LIB_EXPORT uint_t ecmap_size(const EcMap);
+
+// cursor
+
+__LIB_EXPORT void ecmap_cursor (EcMap, EcMapCursor*);
+
+__LIB_EXPORT int ecmap_cnext (EcMapCursor* c);
 
 __CPP_EXTERN______________________________________________________________________________END
 

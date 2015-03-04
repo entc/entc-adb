@@ -87,9 +87,9 @@ __LIB_EXPORT EcUdc adbo_udc (AdboObject);
 
 // debug
 
-__LIB_EXPORT void adbo_dump (AdboObject, EcLogger logger);
+__LIB_EXPORT void adbo_dump (AdboObject);
 
-__LIB_EXPORT void adbo_dump_next (AdboObject, AdboContainer, int depth, int le, EcBuffer b2, EcLogger logger);
+__LIB_EXPORT void adbo_dump_next (AdboObject, AdboContainer, int depth, int le, EcBuffer b2);
 
 __LIB_EXPORT const EcString adbo_dump_state (uint_t state);
 

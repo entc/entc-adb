@@ -42,7 +42,7 @@ __LIB_EXPORT const EcString adbl_attrs_get (AdblAttributes*, const EcString colu
 __LIB_EXPORT int adbl_attrs_empty (AdblAttributes*);
   
   // security methods
-__LIB_EXPORT void adbl_attrs_sec (AdblAttributes*, AdblSecurity*, EcLogger);
+__LIB_EXPORT void adbl_attrs_sec (AdblAttributes*, AdblSecurity*);
   
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -27,6 +27,14 @@ struct EcList_s; typedef struct EcList_s* EcList;
 
 struct EcListNode_s; typedef struct EcListNode_s* EcListNode;
 
+typedef struct {
+  
+  EcListNode node;
+  
+  EcList list;
+  
+} EcListCursor;
+
 __CPP_EXTERN______________________________________________________________________________START
 
 __LIB_EXPORT EcList eclist_new();
@@ -57,6 +65,12 @@ __LIB_EXPORT uint_t eclist_size(const EcList);
   
 __LIB_EXPORT void eclist_remove(EcList, void*);
   
+// cursor
+
+__LIB_EXPORT void eclist_cursor (EcList, EcListCursor*);
+
+__LIB_EXPORT int eclist_cnext (EcListCursor* c);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

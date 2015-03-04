@@ -28,8 +28,6 @@
 struct AdboContext_s
 {
   
-  EcLogger logger;
-  
   AdblManager adblm;
   
   AdboSubManager substitutes;

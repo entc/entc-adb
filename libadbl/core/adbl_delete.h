@@ -41,7 +41,7 @@ __LIB_EXPORT void adbl_delete_setConstraint (AdblDelete*, AdblConstraint*);
 __LIB_EXPORT void adbl_delete_setForce (AdblDelete*, int);
   
   /* security methods */
-__LIB_EXPORT void adbl_delete_sec (AdblDelete*, AdblSecurity*, EcLogger);
+__LIB_EXPORT void adbl_delete_sec (AdblDelete*, AdblSecurity*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

@@ -59,8 +59,6 @@ struct EcFileObserver_s
   
   void* ptr;
 
-  /* reference to the logger */
-  EcLogger logger;
   /* reference to the event manager */  
   EcEventFiles events;
     
@@ -76,7 +74,7 @@ void ecf_observer_onDelete(void* ptr)
   
   EcFileObserver self = ptr;
   
-  eclogger_log(self->logger, LL_DEBUG, "CORE", "{fobserver} Received onDelete event" );
+  eclogger_msg (LL_DEBUG, "ENTC", "observer", "Received onDelete event" );
 
   ecfh_close( &(self->fhandle) );
   
@@ -191,7 +189,7 @@ EcFileHandle ecf_observer_open(EcFileObserver self)
   
   if( !self->events )
   {
-    eclogger_log(self->logger, LL_WARN, "CORE", "{fo::open} EventManager missing" );
+    eclogger_msg (LL_WARN, "ENTC", "observer", "EventManager missing" );
     
     return 0;  
   }

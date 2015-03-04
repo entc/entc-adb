@@ -81,13 +81,13 @@ void adbl_update_setConstraint (AdblUpdate* self, AdblConstraint* constraint)
 
 /*------------------------------------------------------------------------*/
 
-void adbl_update_sec (AdblUpdate* self, AdblSecurity* security, EcLogger logger)
+void adbl_update_sec (AdblUpdate* self, AdblSecurity* security)
 {
   security->inicident = 0;
   
   if( self->constraint )
   {
-    adbl_constraint_sec(self->constraint, security, logger);
+    adbl_constraint_sec (self->constraint, security);
   }
   
   if( security->inicident )
@@ -98,7 +98,7 @@ void adbl_update_sec (AdblUpdate* self, AdblSecurity* security, EcLogger logger)
 
   if( self->attrs )
   {
-    adbl_attrs_sec( self->attrs, security, logger );
+    adbl_attrs_sec (self->attrs, security);
   }
   
   if( security->inicident )

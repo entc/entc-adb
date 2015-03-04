@@ -33,7 +33,7 @@ struct EcHtmlRequest_s; typedef struct EcHtmlRequest_s* EcHtmlRequest;
 
 __CPP_EXTERN______________________________________________________________________________START 
 
-__LIB_EXPORT EcHtmlRequest echtmlreq_new(EcLogger logger);
+__LIB_EXPORT EcHtmlRequest echtmlreq_new (void);
   
 __LIB_EXPORT void echtmlreq_delete(EcHtmlRequest*);
   

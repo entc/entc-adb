@@ -89,7 +89,7 @@ int adbl_attrs_empty (AdblAttributes* self)
 
 /*------------------------------------------------------------------------*/
 
-void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security, EcLogger logger)
+void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security)
 {
   EcMapCharNode node;
   for( node = ecmapchar_first( self->columns ); node != ecmapchar_end( self->columns ); node = ecmapchar_next(node) )
@@ -98,9 +98,9 @@ void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security, EcLogger logg
     {
       security->inicident = 1;
       
-      eclogger_sec (logger, SL_RED);
+      //eclogger_sec (logger, SL_RED);
       
-      eclogger_logformat(logger, LL_DEBUG, "ADBL", "suspious content in column string '%s'", ecmapchar_key(node) );
+      eclogger_fmt (LL_DEBUG, "ADBL", "security", "suspious content in column string '%s'", ecmapchar_key(node) );
       
       return;
     }
@@ -108,9 +108,9 @@ void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security, EcLogger logg
     {
       security->inicident = 1;
       
-      eclogger_sec (logger, SL_RED);
+      // eclogger_sec (logger, SL_RED);
 
-      eclogger_logformat(logger, LL_DEBUG, "ADBL", "suspious content in value string '%s'", ecmapchar_data(node) );
+      eclogger_fmt (LL_DEBUG, "ADBL", "security", "suspious content in value string '%s'", ecmapchar_data(node) );
       
       return;
     }

@@ -27,20 +27,16 @@
 struct EcHtmlRequest_s
 {
 
-  /* reference */
-  EcLogger logger;
-  
   EcStream stream;
   
 };
 
 /*------------------------------------------------------------------------*/
 
-EcHtmlRequest echtmlreq_new(EcLogger logger)
+EcHtmlRequest echtmlreq_new (void)
 {
   EcHtmlRequest self = ENTC_NEW(struct EcHtmlRequest_s);
   
-  self->logger = logger;
   self->stream = ecstream_new();
   
   return self;
@@ -113,7 +109,7 @@ int echtmlreq_process_post (EcHtmlRequest self, EcSocket socket, const EcString 
   
   if( !ecstreambuffer_readln(sbuffer, stream, &error, &b1, &b2) )
   {
-    eclogger_log(self->logger, LL_TRACE, "HTML", "can't get new line");    
+    eclogger_msg (LL_TRACE, "ENTC", "http", "can't get new line");    
     return FALSE;
   }  
   /* get the first line */
@@ -121,7 +117,7 @@ int echtmlreq_process_post (EcHtmlRequest self, EcSocket socket, const EcString 
   /* is the first line 'HTTP/1.0 200 OK' ?? */
   if( !(line[0] == 'H' && line[9] == '2' && line[10] == '0' && line[11] == '0') )
   {
-    eclogger_logformat(self->logger, LL_TRACE, "HTML", "line : '%s'", line);    
+    eclogger_fmt (LL_TRACE, "ENTC", "http", "line : '%s'", line);    
     return FALSE;
   }
   
@@ -155,7 +151,7 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
   
   if( !ecstreambuffer_readln(sbuffer, stream, &error, &b1, &b2) )
   {
-    eclogger_log(self->logger, LL_TRACE, "HTML", "can't get new line");    
+    eclogger_msg (LL_TRACE, "ENTC", "http", "can't get new line");    
     return FALSE;
   }
   /* get the first line */
@@ -163,7 +159,7 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
   /* is the first line 'HTTP/1.0 200 OK' ?? */
   if( !(line[0] == 'H' && line[9] == '2' && line[10] == '0' && line[11] == '0') )
   {
-    eclogger_logformat(self->logger, LL_TRACE, "HTML", "line : '%s'", line);    
+    eclogger_fmt (LL_TRACE, "ENTC", "http", "line : '%s'", line);    
     return FALSE;
   }
   /* read all header lines */
@@ -213,7 +209,7 @@ int echtmlreq_get(EcHtmlRequest self, const EcString host, uint_t port, const Ec
   }
   else
   {
-    eclogger_logformat(self->logger, LL_DEBUG, "HTML", "can't connect '%s'", host );    
+    eclogger_fmt (LL_DEBUG, "ENTC", "http", "can't connect '%s'", host );    
   }
   
   ecsocket_delete(&socket);
@@ -251,7 +247,7 @@ int echtmlreq_post (EcHtmlRequest self, const EcString host, uint_t port, const 
   }
   else
   {
-    eclogger_logformat(self->logger, LL_DEBUG, "HTML", "can't connect '%s'", host );    
+    eclogger_fmt (LL_DEBUG, "ENTC", "http", "can't connect '%s'", host );    
   }
   
   ecsocket_delete(&socket);

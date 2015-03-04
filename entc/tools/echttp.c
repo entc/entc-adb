@@ -40,11 +40,6 @@ static int echhtp_counter = 0;
 
 struct EcHttpContent_s
 {
-  
-  //ref
-  EcLogger logger;
-  
-  
   // owned
   EcBuffer buffer;
   
@@ -121,7 +116,7 @@ int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_call
     {
       if (ecfh_writeConst (fh, data, res) != res)
       {
-        eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
+        eclogger_errno (LL_ERROR, "ENTC", "http", "can't write file '%s'", self->filename);
         
         ecfh_close (&fh);  
         return FALSE;            
@@ -256,7 +251,7 @@ EcString echttp_content_getFile (EcHttpContent self)
     {
       if (ecfh_writeBuffer (fh, self->buffer, self->buffer->size) != self->buffer->size)
       {
-        eclogger_logerrno (self->logger, LL_ERROR, "HTTP", "can't write file '%s'", self->filename);
+        eclogger_errno (LL_ERROR, "ENTC", "http", "can't write file '%s'", self->filename);
         
         ecfh_close (&fh);
         return NULL;        
@@ -1004,15 +999,15 @@ void echttp_header_lotToService (EcHttpHeader* header)
 
 //---------------------------------------------------------------------------------------
 
-void echttp_header_dump (EcHttpHeader* header, EcLogger logger)
+void echttp_header_dump (EcHttpHeader* header)
 {
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} method:         %s", ecstr_cstring(header->method));
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} host:           %s", ecstr_cstring(header->host));
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} remote address: %s", ecstr_cstring(header->remote_address));
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} language:       %s", ecstr_cstring(header->session_lang));
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} url:            %s", ecstr_cstring(header->url));
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} request-url:    %s", ecstr_cstring(header->request_url));          
-  eclogger_logformat(logger, LL_DEBUG, "SERV", "{request} parameters:     %s", ecstr_cstring(header->request_params));
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "method:         %s", ecstr_cstring(header->method));
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "host:           %s", ecstr_cstring(header->host));
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "remote address: %s", ecstr_cstring(header->remote_address));
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "language:       %s", ecstr_cstring(header->session_lang));
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "url:            %s", ecstr_cstring(header->url));
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "request-url:    %s", ecstr_cstring(header->request_url));          
+  eclogger_fmt (LL_TRACE, "ENTC", "http", "parameters:     %s", ecstr_cstring(header->request_params));
 }
 
 //---------------------------------------------------------------------------------------

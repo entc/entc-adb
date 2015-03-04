@@ -3,8 +3,6 @@
 
 int main (int argc, char *argv[])
 {
-  EcLogger logger = eclogger_new(0);
-
   EcDirHandle dh1 = ecdh_create (".");
 
   EcFileInfo info;
@@ -16,8 +14,5 @@ int main (int argc, char *argv[])
   
   ecdh_destroy (&dh1);
   
-
-
-
   return 0;
 }

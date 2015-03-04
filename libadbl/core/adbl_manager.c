@@ -97,8 +97,6 @@ typedef struct
 struct AdblSession_s
 {
   
-  EcLogger logger;      /* reference */
-  
   AdblCredentials* credentials; /* reference */
   
 };
@@ -107,8 +105,6 @@ struct AdblManager_s
 {
   
   EcMutex mutex;
-  
-  EcLogger logger;      /* reference */
   
   EcFileObserver observer;
   
@@ -124,8 +120,7 @@ struct AdblManager_s
 
 struct AdblCursor_p
 {
-  EcLogger logger;  //reference
-  
+
   void* ptr;
   
   ADBLModuleProperties* pp;
@@ -134,7 +129,6 @@ struct AdblCursor_p
 
 struct AdblSequence_p
 {
-  EcLogger logger;  /* reference */
   
   void* ptr;
 
@@ -182,7 +176,7 @@ void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char*
       node = ecmap_find(self->modules, dbtype);
       if (node == ecmap_end(self->modules))
       {
-        eclogger_logformat (self->logger, LL_WARN, MODULE, "{credentials} database '%s' not in the list", dbtype);
+        eclogger_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
         return;
       }
       
@@ -257,8 +251,9 @@ void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char*
         }
       }
       else
-        eclogger_logformat(self->logger, LL_WARN, "Parsing the config file: db-source already exists [%s] in current register", name );
-      
+      {
+        eclogger_fmt (LL_WARN, MODULE, "credentials", "parsing the config file: db-source already exists [%s] in current register", name );
+      }     
     }
   }  
 }
@@ -301,12 +296,11 @@ void adbl_parseConfig (AdblManager self, const char* confpath, int preread)
 
 /*------------------------------------------------------------------------*/
 
-AdblManager adbl_new (EcLogger logger)
+AdblManager adbl_new ()
 {
   AdblManager self = ENTC_NEW(struct AdblManager_s);
     
-  self->mutex = ecmutex_new();
-  self->logger = logger;
+  self->mutex = ecmutex_new ();
   self->observer = 0;
   self->modules = ecmap_new();
   self->credentials = ecmap_new();
@@ -340,11 +334,11 @@ void adbl_delete (AdblManager* ptr)
     {
       if (isAssigned(pc->pp->dbdisconnect))
       {
-        pc->pp->dbdisconnect (pc->connection, self->logger);
+        pc->pp->dbdisconnect (pc->connection);
       }
       else
       {
-        eclogger_log(self->logger, LL_WARN, "Adbl", "disconnect method in matrix is not defined" ); 
+        eclogger_msg (LL_WARN, MODULE, "delete", "disconnect method in matrix is not defined"); 
       }
     }
     /* clean */
@@ -390,7 +384,7 @@ void adbl_setCredentialsFile (AdblManager self, const EcString name, const EcStr
   node = ecmap_find(self->modules, dbtype);
   if (node == ecmap_end(self->modules))
   {
-    eclogger_logformat (self->logger, LL_WARN, MODULE, "{credentials} database '%s' not in the list", dbtype);
+    eclogger_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
 
     ecmutex_unlock(self->mutex);
     return;
@@ -422,21 +416,21 @@ void adbl_setCredentialsFile (AdblManager self, const EcString name, const EcStr
 
 void adbl_connect (AdblManager self, AdblCredentials* pc)
 {
-  eclogger_logformat(self->logger, LL_DEBUG, "Adbl", "try to connect to database [%s]", pc->type );
+  eclogger_fmt (LL_DEBUG, MODULE, "connect", "try to connect to database [%s]", pc->type);
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(self->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "connect", "credentials without database");
     return;
   }
   
   if (isAssigned (pc->pp->dbconnect))
   {
-    pc->connection = pc->pp->dbconnect (&(pc->properties), self->logger );
+    pc->connection = pc->pp->dbconnect (&(pc->properties));
   }
   else
   {
-    eclogger_log(self->logger, LL_WARN, "Adbl", "connect method in matrix is not defined" );
+    eclogger_msg (LL_WARN, MODULE, "connect", "connect method in matrix is not defined");
   }
 }
 
@@ -484,7 +478,7 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   //add to map
   ecmap_append (self->modules, name, properties);  
   
-  eclogger_logformat(self->logger, LL_DEBUG, MODULE, "adbl plugin %s successful loaded", name );    
+  eclogger_fmt (LL_DEBUG, MODULE, "init", "adbl plugin %s successful loaded", name );    
 }
 
 /*------------------------------------------------------------------------*/
@@ -533,7 +527,7 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
     ecf_observer_delete(self->observer);
   }
   
-  eclogger_logformat(self->logger, LL_TRACE, MODULE, "{scan} using configpath '%s'", configpath);        
+  eclogger_fmt (LL_TRACE, MODULE, "scan", "using configpath '%s'", configpath);        
 
   self->observer = ecf_observer_newFromPath (configpath, "adbl.xml", configpath, events, 0, 0);
   
@@ -543,12 +537,14 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
   {
     EcList engines = eclist_new ();  
 
-    eclogger_logformat(self->logger, LL_TRACE, MODULE, "{scan} scan path '%s' for adbl modules", self->path);        
+    eclogger_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);   
+    
     // fill a list with all files in that directory
     if (!ecdh_scan(self->path, engines, ENTC_FILETYPE_ISFILE))
     {
-      eclogger_logformat(self->logger, LL_ERROR, MODULE, "{scan} can't find path '%s'", ecstr_cstring(self->path) );    
+      eclogger_fmt (LL_ERROR, MODULE, "scan", "can't find path '%s'", ecstr_cstring(self->path) );    
     }  
+    
     for (node = eclist_first(engines); node != eclist_end(engines); node = eclist_next(node))
     {
       EcString filename = eclist_data(node);
@@ -564,7 +560,7 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
   }
   else
   {
-    eclogger_log(self->logger, LL_ERROR, MODULE, "{scan} no scanpath defined in config");        
+    eclogger_msg (LL_ERROR, MODULE, "scan", "no scanpath defined in config");        
   }
 }
 
@@ -579,7 +575,7 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
 
   if (isNotAssigned(dbsource))
   {
-    eclogger_log(self->logger, LL_WARN, "Adbl", "db-source was NULL" );
+    eclogger_msg (LL_WARN, MODULE, "session", "db-source was NULL" );
     return 0;  
   }
   
@@ -587,8 +583,7 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
   if( node == ecmap_end(self->credentials) )
   {
     /* not found */
-    eclogger_logformat(self->logger, LL_WARN, "Adbl", "Can't find db-source [%s] in current register", dbsource );    
-    
+    eclogger_fmt (LL_WARN, MODULE, "session", "can't find db-source [%s] in current register", dbsource);        
     return 0;
   }
 
@@ -615,8 +610,6 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
   
   session->credentials = pc;
   
-  session->logger = self->logger;
-  
   return session;
 }
 
@@ -631,7 +624,7 @@ void adbl_closeSession (AdblSession* ptr)
 
 /*------------------------------------------------------------------------*/
 
-AdblCursor* adbl_dbquery( AdblSession session, AdblQuery* query, AdblSecurity* security )
+AdblCursor* adbl_dbquery (AdblSession session, AdblQuery* query, AdblSecurity* security)
 {
   AdblCredentials* pc = session->credentials;
   void* cc;
@@ -639,31 +632,31 @@ AdblCursor* adbl_dbquery( AdblSession session, AdblQuery* query, AdblSecurity* s
 
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "dbquery", "credentials without database" );
     return NULL;
   }
   
   if (isNotAssigned(pc->connection))
   {
-    eclogger_log(session->logger, LL_WARN, "Adbl", "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "dbquery", "no active database connection" );
     return 0;
   }
   
   if (isNotAssigned (pc->pp->dbquery))
   {
-    eclogger_log(session->logger, LL_WARN, "Adbl", "query method in matrix is not defined" );
+    eclogger_msg (LL_WARN, MODULE, "dbquery", "query method in matrix is not defined" );
     return 0;
   }
   
   /* check for faulty sql */
-  adbl_query_sec (query, security, session->logger);
+  adbl_query_sec (query, security);
       
   if( security->inicident )
   {
     return 0;  
   }
 
-  cc = pc->pp->dbquery (pc->connection, query, session->logger);
+  cc = pc->pp->dbquery (pc->connection, query);
   if(!cc)
   {
     return 0;  
@@ -671,7 +664,6 @@ AdblCursor* adbl_dbquery( AdblSession session, AdblQuery* query, AdblSecurity* s
 
   cursor = ENTC_NEW(struct AdblCursor_p);
   
-  cursor->logger = session->logger;
   cursor->ptr = cc;
   cursor->pp = pc->pp;
   
@@ -686,7 +678,7 @@ uint_t adbl_table_size (AdblSession session, const EcString table)
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "size", "credentials without database" );
     return 0;
   }
   
@@ -694,7 +686,7 @@ uint_t adbl_table_size (AdblSession session, const EcString table)
   {
     if (isAssigned(pc->pp->dbtable_size))
     {
-      return pc->pp->dbtable_size (pc->connection, table, session->logger);
+      return pc->pp->dbtable_size (pc->connection, table);
     }
   }
   return 0;
@@ -708,7 +700,7 @@ AdblSequence* adbl_dbsequence_get( AdblSession session, const EcString table )
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "sequence", "credentials without database" );
     return NULL;
   }
   
@@ -716,15 +708,13 @@ AdblSequence* adbl_dbsequence_get( AdblSession session, const EcString table )
   {
     if (isAssigned(pc->pp->dbsequence_get))
     {
-      void* ptr = pc->pp->dbsequence_get (pc->connection, table, session->logger);
+      void* ptr = pc->pp->dbsequence_get (pc->connection, table);
       
       if( ptr )
       {
         AdblSequence* sequence = ENTC_NEW(AdblSequence);
         
-        sequence->logger = session->logger;
-        sequence->pp = pc->pp;
-        
+        sequence->pp = pc->pp;        
         sequence->ptr = ptr;
         
         return sequence;        
@@ -742,7 +732,7 @@ void adbl_sequence_release (AdblSequence** ptr)
   /* clean up the adbl plugin */
   if (isAssigned(self->pp->dbsequence_release))
   {
-    self->pp->dbsequence_release(self->ptr, self->logger);
+    self->pp->dbsequence_release(self->ptr);
   }
   /* release local */
   ENTC_DEL( ptr, AdblSequence );
@@ -754,7 +744,7 @@ uint_t adbl_sequence_next (AdblSequence* self)
 {
   if (isAssigned(self->pp->dbsequence_next))
   {
-      return self->pp->dbsequence_next(self->ptr, self->logger);
+      return self->pp->dbsequence_next(self->ptr);
   }
   return 0;  
 }
@@ -823,31 +813,31 @@ int adbl_dbupdate (AdblSession session, AdblUpdate* update, AdblSecurity* securi
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "update", "credentials without database" );
     return 0;
   }
   
   if (isNotAssigned(pc->connection))
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "update", "no active database connection" );
     return 0;
   }
   
   if (isNotAssigned(pc->pp->dbquery))
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "insert method in matrix is not defined" );
+    eclogger_msg (LL_WARN, MODULE, "update", "update method in matrix is not defined" );
     return 0;
   }
   
   /* check for faulty sql */
-  adbl_update_sec(update, security, session->logger );
+  adbl_update_sec (update, security);
   
   if( security->inicident )
   {
     return 0;  
   }
   
-  return pc->pp->dbupdate (pc->connection, update, session->logger);
+  return pc->pp->dbupdate (pc->connection, update);
 }
 
 /*------------------------------------------------------------------------*/
@@ -858,26 +848,26 @@ int adbl_dbinsert (AdblSession session, AdblInsert* insert, AdblSecurity* securi
  
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "insert", "credentials without database" );
     return 0;
   }
   
   if (isNotAssigned(pc->connection))
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "insert", "no active database connection" );
     return 0;
   }
   
   if (isNotAssigned(pc->pp->dbquery))
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "insert method in matrix is not defined" );
+    eclogger_msg (LL_WARN, MODULE, "insert", "insert method in matrix is not defined" );
     return 0;
   }
   
   if (security)
   {
     /* check for faulty sql */
-    adbl_insert_sec (insert, security, session->logger);
+    adbl_insert_sec (insert, security);
     
     if( security->inicident )
     {
@@ -885,7 +875,7 @@ int adbl_dbinsert (AdblSession session, AdblInsert* insert, AdblSecurity* securi
     }    
   }
     
-  return pc->pp->dbinsert (pc->connection, insert, session->logger);
+  return pc->pp->dbinsert (pc->connection, insert);
 }
 
 /*------------------------------------------------------------------------*/
@@ -896,26 +886,26 @@ int adbl_dbdelete( AdblSession session, AdblDelete* del, AdblSecurity* security 
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "delete", "credentials without database" );
     return 0;
   }
   
   if (isNotAssigned(pc->connection))
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "delete", "no active database connection" );
     return 0;
   }
   
   if (isNotAssigned (pc->pp->dbquery))
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "insert method in matrix is not defined" );
+    eclogger_msg (LL_WARN, MODULE, "delete", "delete method in matrix is not defined" );
     return 0;
   }
   
   if( security )
   {
     /* check for faulty sql */
-    adbl_delete_sec(del, security, session->logger);
+    adbl_delete_sec (del, security);
     
     if( security->inicident )
     {
@@ -923,7 +913,7 @@ int adbl_dbdelete( AdblSession session, AdblDelete* del, AdblSecurity* security 
     }    
   }
   
-  return pc->pp->dbdelete (pc->connection, del, session->logger);
+  return pc->pp->dbdelete (pc->connection, del);
 }
 
 /*------------------------------------------------------------------------*/
@@ -934,7 +924,7 @@ void adbl_dbbegin (AdblSession session)
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "begin", "credentials without database" );
     return;
   }
   
@@ -942,16 +932,16 @@ void adbl_dbbegin (AdblSession session)
   {
     if (isAssigned (pc->pp->dbbegin))
     {
-      pc->pp->dbbegin(pc->connection, session->logger);
+      pc->pp->dbbegin(pc->connection);
     }
     else
     {
-      eclogger_log(session->logger, LL_WARN, MODULE, "begin method in matrix is not defined" );
+      eclogger_msg (LL_WARN, MODULE, "begin", "begin method in matrix is not defined" );
     }
   }
   else
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "begin", "no active database connection" );
   }
 }
 
@@ -963,7 +953,7 @@ void adbl_dbcommit (AdblSession session)
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "commit", "credentials without database" );
     return;
   }
   
@@ -971,16 +961,16 @@ void adbl_dbcommit (AdblSession session)
   {
     if (isAssigned (pc->pp->dbcommit))
     {
-      pc->pp->dbcommit (pc->connection, session->logger);
+      pc->pp->dbcommit (pc->connection);
     }
     else
     {
-      eclogger_log(session->logger, LL_WARN, MODULE, "commit method in matrix is not defined" );
+      eclogger_msg (LL_WARN, MODULE, "commit", "commit method in matrix is not defined" );
     }
   }
   else
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "commit", "no active database connection" );
   }
 }
 
@@ -992,7 +982,7 @@ void adbl_dbrollback (AdblSession session)
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "rollback", "credentials without database" );
     return;
   }
   
@@ -1000,16 +990,16 @@ void adbl_dbrollback (AdblSession session)
   {
     if (isAssigned (pc->pp->dbrollback))
     {
-      pc->pp->dbrollback (pc->connection, session->logger);
+      pc->pp->dbrollback (pc->connection);
     }
     else
     {
-      eclogger_log(session->logger, LL_WARN, MODULE, "rollback method in matrix is not defined" );
+      eclogger_msg (LL_WARN, MODULE, "commit", "rollback method in matrix is not defined" );
     }
   }
   else
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "commit", "no active database connection" );
   }
 }
 
@@ -1021,7 +1011,7 @@ EcList adbl_dbschema (AdblSession session)
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "schema", "credentials without database" );
     return NULL;
   }
   
@@ -1029,16 +1019,16 @@ EcList adbl_dbschema (AdblSession session)
   {
     if (isAssigned (pc->pp->dbrollback))
     {
-      return pc->pp->dbschema (pc->connection, session->logger);
+      return pc->pp->dbschema (pc->connection);
     }
     else
     {
-      eclogger_log(session->logger, LL_WARN, MODULE, "schema method in matrix is not defined" );
+      eclogger_msg (LL_WARN, MODULE, "schema", "schema method in matrix is not defined" );
     }
   }
   else
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "schema", "no active database connection" );
   }
   return NULL;
 }
@@ -1051,7 +1041,7 @@ AdblTable* adbl_dbtable (AdblSession session, const EcString tablename)
   
   if (isNotAssigned (pc->pp))
   {
-    eclogger_log(session->logger, LL_ERROR, MODULE, "credentials without database" );
+    eclogger_msg (LL_ERROR, MODULE, "table", "credentials without database" );
     return NULL;
   }
   
@@ -1059,16 +1049,16 @@ AdblTable* adbl_dbtable (AdblSession session, const EcString tablename)
   {
     if (isAssigned (pc->pp->dbrollback))
     {
-      return pc->pp->dbtable (pc->connection, tablename, session->logger);
+      return pc->pp->dbtable (pc->connection, tablename);
     }
     else
     {
-      eclogger_log(session->logger, LL_WARN, MODULE, "table method in matrix is not defined" );
+      eclogger_msg (LL_WARN, MODULE, "table", "table method in matrix is not defined" );
     }
   }
   else
   {
-    eclogger_log(session->logger, LL_WARN, MODULE, "no active database connection" );
+    eclogger_msg (LL_WARN, MODULE, "table", "no active database connection" );
   }
   return NULL;  
 }

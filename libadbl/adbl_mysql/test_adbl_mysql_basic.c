@@ -7,7 +7,6 @@ int main (int argc, char *argv[])
   void* connptr = 0;
   AdblConnectionProperties cp;
   int res = TRUE;
-  EcLogger logger = eclogger_new(0);
 
   if( argc > 4 )
   {
@@ -28,10 +27,10 @@ int main (int argc, char *argv[])
     cp.password = "";    
   }
   
-  connptr = adblmodule_dbconnect(&cp, logger );
+  connptr = adblmodule_dbconnect (&cp);
   if( !connptr )
   {
-    eclogger_log(logger, LL_ERROR, "TEST", "Error by connecting");
+    eclogger_msg (LL_ERROR, "TEST", "basic", "Error by connecting");
     res = FALSE;
   }
   
@@ -49,32 +48,30 @@ int main (int argc, char *argv[])
   
   adbl_query_setConstraint (q1, const1);
   
-  void* c1 = adblmodule_dbquery (connptr, q1, logger);
+  void* c1 = adblmodule_dbquery (connptr, q1);
   if (c1)
   {
     while (adblmodule_dbcursor_next (c1))
     {
-      eclogger_log(logger, LL_INFO, "TEST", adblmodule_dbcursor_data (c1, 0));    
+      eclogger_msg (LL_INFO, "TEST", "basic", adblmodule_dbcursor_data (c1, 0));    
      // eclogger_log(logger, LL_INFO, "TEST", adblmodule_dbcursor_data (c1, 1));    
     }    
   }
   
   
   
-  adblmodule_dbdisconnect( connptr, logger );
+  adblmodule_dbdisconnect (connptr);
   
   
   
   if( res )
   {
-    eclogger_log(logger, LL_INFO, "TEST", "TEST SUCCEDED");    
+    eclogger_msg (LL_INFO, "TEST", "basic", "TEST SUCCEDED");    
   }
   else
   {
-    eclogger_log(logger, LL_ERROR, "TEST", "TEST FAILED");        
+    eclogger_msg (LL_ERROR, "TEST", "basic", "TEST FAILED");        
   }
-  
-  eclogger_del ( &logger );
   
   return res;
 }

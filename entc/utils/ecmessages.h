@@ -70,7 +70,7 @@ __LIB_EXPORT void ecmessages_removeAll (uint_t module);
 
 // broadcast output
 
-__LIB_EXPORT EcMessagesOutput ecmessages_output_create (ecmessages_result_fct, void* ptr);
+__LIB_EXPORT EcMessagesOutput ecmessages_output_create (ecmessages_result_fct, void* ptr, uint_t type, uint_t rev);
 
 __LIB_EXPORT void ecmessages_output_destroy (EcMessagesOutput*);
 
@@ -82,7 +82,7 @@ __LIB_EXPORT int ecmessages_send (uint_t module, uint_t method, EcMessageData* d
 
 // misc
 
-__LIB_EXPORT void ecmessages_initData (EcMessageData*);
+__LIB_EXPORT void ecmessages_initData (EcMessageData*, uint_t type, uint_t rev);
 
 __CPP_EXTERN______________________________________________________________________________END
 

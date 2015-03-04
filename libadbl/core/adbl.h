@@ -62,45 +62,45 @@ typedef struct
 
 typedef const AdblModuleInfo* (_STDCALL *adbl_info_t)         (void);
 
-typedef void*         (_STDCALL *adbl_dbconnect_t)          (AdblConnectionProperties*, EcLogger );
+typedef void*         (_STDCALL *adbl_dbconnect_t)          (AdblConnectionProperties*);
 
-typedef void          (_STDCALL *adbl_dbdisconnect_t)       ( void*, EcLogger );
+typedef void          (_STDCALL *adbl_dbdisconnect_t)       (void*);
 
-typedef void*         (_STDCALL *adbl_dbquery_t)            ( void*, AdblQuery*, EcLogger );
+typedef void*         (_STDCALL *adbl_dbquery_t)            (void*, AdblQuery*);
 
-typedef uint_t        (_STDCALL *adbl_dbtable_size_t)       ( void*, const EcString, EcLogger );
+typedef uint_t        (_STDCALL *adbl_dbtable_size_t)       (void*, const EcString);
 
-typedef int           (_STDCALL *adbl_dbupdate_t)           ( void*, AdblUpdate*, EcLogger );
+typedef int           (_STDCALL *adbl_dbupdate_t)           (void*, AdblUpdate*);
 
-typedef int           (_STDCALL *adbl_dbinsert_t)           ( void*, AdblInsert*, EcLogger );
+typedef int           (_STDCALL *adbl_dbinsert_t)           (void*, AdblInsert*);
 
-typedef int           (_STDCALL *adbl_dbdelete_t)           ( void*, AdblDelete*, EcLogger );
+typedef int           (_STDCALL *adbl_dbdelete_t)           (void*, AdblDelete*);
 
-typedef void          (_STDCALL *adbl_dbbegin_t)            ( void*, EcLogger );
+typedef void          (_STDCALL *adbl_dbbegin_t)            (void*);
 
-typedef void          (_STDCALL *adbl_dbcommit_t)           ( void*, EcLogger );
+typedef void          (_STDCALL *adbl_dbcommit_t)           (void*);
 
-typedef void          (_STDCALL *adbl_dbrollback_t)         ( void*, EcLogger );
+typedef void          (_STDCALL *adbl_dbrollback_t)         (void*);
 
-typedef int           (_STDCALL *adbl_dbcursor_next_t)      ( void* );
+typedef int           (_STDCALL *adbl_dbcursor_next_t)      (void*);
 
-typedef const char*   (_STDCALL *adbl_dbcursor_data_t)      ( void*, uint_t column );
+typedef const char*   (_STDCALL *adbl_dbcursor_data_t)      (void*, uint_t column);
 
-typedef const char*   (_STDCALL *adbl_dbcursor_nextdata_t)  ( void* );
+typedef const char*   (_STDCALL *adbl_dbcursor_nextdata_t)  (void*);
 
-typedef void          (_STDCALL *adbl_dbcursor_release_t)   ( void* );
+typedef void          (_STDCALL *adbl_dbcursor_release_t)   (void*);
 
-typedef void*         (_STDCALL *adbl_dbsequence_get_t)     ( void*, const EcString, EcLogger );
+typedef void*         (_STDCALL *adbl_dbsequence_get_t)     (void*, const EcString);
 
-typedef void          (_STDCALL *adbl_dbsequence_release_t) ( void*, EcLogger );
+typedef void          (_STDCALL *adbl_dbsequence_release_t) (void*);
 
-typedef uint_t        (_STDCALL *adbl_dbsequence_next_t)    ( void*, EcLogger );
+typedef uint_t        (_STDCALL *adbl_dbsequence_next_t)    (void*);
 
 // addition
 
-typedef EcList        (_STDCALL *adbl_dbschema_t)           ( void*, EcLogger ); 
+typedef EcList        (_STDCALL *adbl_dbschema_t)           (void*); 
 
-typedef AdblTable*    (_STDCALL *adbl_dbtable_t)            ( void*, const EcString, EcLogger );
+typedef AdblTable*    (_STDCALL *adbl_dbtable_t)            (void*, const EcString);
                                                              
 
 #ifdef __cplusplus

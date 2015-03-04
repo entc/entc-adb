@@ -138,7 +138,7 @@ void adbl_constraint_attrs (AdblConstraint* self, AdblAttributes* attrs)
 
 /*------------------------------------------------------------------------*/
 
-void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security, EcLogger logger)
+void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
 {
   EcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
@@ -149,10 +149,9 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security, EcLogger
     {
       security->inicident = 1;
       
-      eclogger_sec (logger, SL_RED);
+      //eclogger_sec (SL_RED);
       
-      eclogger_logformat(logger, LL_DEBUG, "ADBL", "suspious content in column string '%s'", element->column );
-
+      eclogger_fmt (LL_DEBUG, "ADBL", "security", "suspious content in column string '%s'", element->column );
       return;  
     }
 
@@ -160,9 +159,9 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security, EcLogger
     {
       security->inicident = 1;
 
-      eclogger_sec (logger, SL_RED);
+      //eclogger_sec (logger, SL_RED);
 
-      eclogger_logformat(logger, LL_DEBUG, "ADBL", "suspious content in value string '%s'", element->value );
+      eclogger_fmt (LL_DEBUG, "ADBL", "security", "suspious content in value string '%s'", element->value );
       
       return;  
     }

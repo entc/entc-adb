@@ -43,6 +43,10 @@ struct EcMessagesOutput_s
   
   void* ptr;
   
+  uint_t type;
+  
+  uint_t rev;
+  
 };
 
 typedef struct 
@@ -240,12 +244,15 @@ void ecmessages_deinitialize ()
 
 //----------------------------------------------------------------------------------------
 
-EcMessagesOutput ecmessages_output_create (ecmessages_result_fct fct, void* ptr)
+EcMessagesOutput ecmessages_output_create (ecmessages_result_fct fct, void* ptr, uint_t type, uint_t rev)
 {
   EcMessagesOutput self = ENTC_NEW (struct EcMessagesOutput_s);
   
   self->fct = fct;
   self->ptr = ptr;
+  
+  self->type = type;
+  self->rev = rev;
   
   return self;
 }
@@ -271,11 +278,16 @@ int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessages
     if (isAssigned (item->fct))
     {
       int errorcode;
-      EcMessageData out;
-      
-      out.type = 0;
-      out.ref = 0;
-      out.content = NULL;
+      EcMessageData out;      
+            
+      if (isAssigned (output))
+      {
+        ecmessages_initData (&out, output->type, output->rev);
+      }
+      else
+      {
+        ecmessages_initData (&out, 0, 0);        
+      }
       
       // call the callback function and maybe fill out with data
       errorcode = item->fct (item->ptr, data, &out);
@@ -371,11 +383,12 @@ int ecmessages_send (uint_t module, uint_t method, EcMessageData* dIn, EcMessage
 
 //----------------------------------------------------------------------------------------
 
-void ecmessages_initData (EcMessageData* data)
+void ecmessages_initData (EcMessageData* data, uint_t type, uint_t rev)
 {
+  data->type = type;
+  data->rev = rev;
+
   data->content = NULL;
-  data->type = 0;
-  data->rev = 0;
   data->ref = 0;
 }
 

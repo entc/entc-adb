@@ -57,6 +57,7 @@
 
 //----------------------------------------------------------------------------------------
 
+/*
 static EcEchoLogger toggleEchoLogger (int role) {  
   static int counter = 0;
   static EcEchoLogger logger = NULL;
@@ -80,9 +81,12 @@ static EcEchoLogger toggleEchoLogger (int role) {
   return logger;
 }
 
+ */
 #endif
 
 //----------------------------------------------------------------------------------------
+
+/*
 
 struct EcLogger_s
 {
@@ -92,9 +96,8 @@ struct EcLogger_s
   EcLoggerCallbacks callbacks;
   
   ubyte_t threadid;
-  /* the temp buffer maximal 300 characters */
-  /* only needed for formatted logs */
-  EcBuffer buffer01;
+
+ EcBuffer buffer01;
   EcBuffer buffer02;
   
   EcList errmsgs;
@@ -357,7 +360,7 @@ void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, co
 
   ecmutex_lock (self->mutex);  
 
-  /* convert to readable format */
+  // convert to readable format 
   for(i = 0; (i < size) && (pos02 < (self->buffer01->buffer + self->buffer01->size - 3)); i++ )
   {
     unsigned char c = *pos01;
@@ -399,7 +402,7 @@ void eclogger_logbinary (EcLogger self, EcLogLevel level, const char* module, co
     pos01++;
     
   }
-  /* terminate */
+  // terminate 
   *pos02 = 0;
   
   eclogger_logthsafe (self, level, (const EcString)module, ecbuf_const_str (self->buffer01));
@@ -921,15 +924,15 @@ void eclistlogger_register (EcListLogger self, EcLogger logger)
   
   eclogger_setCallback(logger, &tmp2);
   
-  /*
-  ecreadwritelock_lockWrite (self->rwlock);
   
-  eclist_append(self->shadow_list, tmp1);
+ // ecreadwritelock_lockWrite (self->rwlock);
   
-  self->list_changed = TRUE;
+ // eclist_append(self->shadow_list, tmp1);
   
-  ecreadwritelock_unlockWrite (self->rwlock);
-  */
+ // self->list_changed = TRUE;
+  
+ // ecreadwritelock_unlockWrite (self->rwlock);
+  
 }
 
 //----------------------------------------------------------------------------------------
@@ -961,7 +964,7 @@ void eclistlogger_remove (EcListLogger self, EcListNode node)
   
   self->list_changed = TRUE;
 }
-
+*/
 //----------------------------------------------------------------------------------------
 
 void eclogger_msg (EcLogLevel lvl, const char* unit, const char* method, const char* msg)

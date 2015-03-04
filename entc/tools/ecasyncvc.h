@@ -50,7 +50,7 @@ struct EcAsyncContext_s
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncSvc ecasyncsvc_create (EcEventContext ec, EcLogger logger);
+__LIB_EXPORT EcAsyncSvc ecasyncsvc_create (EcEventContext ec);
 
 __LIB_EXPORT void ecasyncsvc_destroy (EcAsyncSvc*);
 
@@ -91,7 +91,7 @@ typedef struct
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncServ ecaserv_create (EcLogger logger, EcAsyncServCallbacks*);
+__LIB_EXPORT EcAsyncServ ecaserv_create (EcAsyncServCallbacks*);
 
 __LIB_EXPORT void ecaserv_destroy (EcAsyncServ*);
 
