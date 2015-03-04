@@ -57,12 +57,10 @@ struct EcExec_s
 
 //-----------------------------------------------------------------------------------
 
-EcExec ecexec_new (const EcString script, EcLogger logger)
+EcExec ecexec_new (const EcString script)
 {
   int i;
   EcExec self = ENTC_NEW (struct EcExec_s);
-  
-  self->logger = logger;
   
   self->arguments[0] = ecstr_copy(script);
   
@@ -147,7 +145,7 @@ void ecexec_loop (EcExec self, HANDLE processh)
 	  c++;
 	}
 
-	eclogger_logformat (self->logger, LL_TRACE, "CORE", "{exec} wait for %i handles", c);
+	eclogger_fmt (LL_TRACE, "ENTC", "exec", "wait for %i handles", c);
 
 	dwWait = WaitForMultipleObjects(c, hds, FALSE, INFINITE);    // waits indefinitely 
     i = dwWait - WAIT_OBJECT_0;
@@ -158,7 +156,7 @@ void ecexec_loop (EcExec self, HANDLE processh)
       fSuccess = ReadFile(pipe->hr, pipe->buffer, BUFSIZE, &cbRet, NULL);
 	  if (!fSuccess) 
       {
-	    eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{exec} read IO failure");
+	    eclogger_errno (LL_ERROR, "ENTC", "exec", "read IO failure");
 		CloseHandle (pipe->hr);
 		pipe->hr = NULL;
 		if (c < 2) {
@@ -169,13 +167,13 @@ void ecexec_loop (EcExec self, HANDLE processh)
 
 	  if (cbRet == 0)
 	  {
-	    eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{exec} no data for read");
+	    eclogger_errno (LL_ERROR, "ENTC", "exec", "no data for read");
 	    return;
 	  }
 
-  	  eclogger_logformat (self->logger, LL_TRACE, "CORE", "{exec} recv data: '%i'", cbRet);
+  	  eclogger_fmt (LL_TRACE, "ENTC", "exec", "recv data: '%i'", cbRet);
 	  pipe->buffer[cbRet] = 0;
-  	  eclogger_logformat (self->logger, LL_TRACE, "CORE", "{exec} recv '%s'", pipe->buffer);
+  	  eclogger_fmt (LL_TRACE, "ENTC", "exec", "recv '%s'", pipe->buffer);
 
 	  ecstream_appendd (pipe->stream, pipe->buffer, cbRet);
 
@@ -205,7 +203,7 @@ void ecexec_createChildProcess (EcExec self)
   
   commandline = ecstr_cat4 ("cmd.exe /C ", self->arguments[0], " ", self->arguments[1]);
 
-  eclogger_logformat (self->logger, LL_TRACE, "CORE", "{exec:run} execute: '%s'", commandline);
+  eclogger_fmt (LL_TRACE, "ENTC", "exec:run", "execute: '%s'", commandline);
 
   bSuccess = CreateProcess(NULL,
 	  commandline,     // command line 
@@ -230,7 +228,7 @@ void ecexec_createChildProcess (EcExec self)
   }
   else
   {
-	eclogger_logerrno (self->logger, LL_TRACE, "CORE", "{exec:run} failed to execute");
+	eclogger_errno (LL_TRACE, "ENTC", "exec:run", "failed to execute");
   }
 }
 
@@ -247,28 +245,28 @@ int ecexec_run (EcExec self)
   // Create a pipe for the child process's STDOUT.
   if ( ! CreatePipe(&(self->stdout.hr), &(self->stdout.hw), &saAttr, 0) ) 
   {
-	eclogger_log (self->logger, LL_ERROR, "CORE", "{exec} can't create stdout pipe");
+	eclogger_msg (LL_ERROR, "ENTC", "exec", "can't create stdout pipe");
 	return 0;
   }
 
   // Ensure the read handle to the pipe for STDOUT is not inherited.
   if ( ! SetHandleInformation(self->stdout.hr, HANDLE_FLAG_INHERIT, 0) )
   {
-	eclogger_log (self->logger, LL_ERROR, "CORE", "{exec} set handle information for stdout failed");
+	eclogger_msg (LL_ERROR, "ENTC", "exec", "set handle information for stdout failed");
 	return 0;
   }
 
   // Create a pipe for the child process's STDOUT.
   if ( ! CreatePipe(&(self->stderr.hr), &(self->stderr.hw), &saAttr, 0) ) 
   {
-	eclogger_log (self->logger, LL_ERROR, "CORE", "{exec} can't create stderr pipe");
+	eclogger_msg (LL_ERROR, "ENTC", "exec", "can't create stderr pipe");
 	return 0;
   }
 
   // Ensure the read handle to the pipe for STDOUT is not inherited.
   if ( ! SetHandleInformation(self->stderr.hr, HANDLE_FLAG_INHERIT, 0) )
   {
-	eclogger_log (self->logger, LL_ERROR, "CORE", "{exec} set handle information for stderr failed");
+	eclogger_msg (LL_ERROR, "ENTC", "exec", "set handle information for stderr failed");
 	return 0;
   }
 

@@ -29,8 +29,6 @@ struct EcLibraryHandle_s
 {
   
   HMODULE handle;
-  // reference
-  EcLogger logger;
   
 };
 

@@ -23,6 +23,7 @@
 
 #include "ecfile.h"
 #include "ecthread.h"
+#include "utils/eclogger.h"
 
 #include <windows.h>
 
@@ -220,7 +221,7 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-int ece_list_wait (EcEventQueue self, uint_t timeout, void** ptr, EcLogger logger)
+int ece_list_wait (EcEventQueue self, uint_t timeout, void** ptr)
 {
   while (TRUE)
   {
@@ -301,9 +302,6 @@ struct EcEventFiles_s
   
   EcList handles;
   
-  /* reference */
-  EcLogger logger;
-  
 };
 
 /*------------------------------------------------------------------------*/
@@ -315,7 +313,7 @@ int ece_files_nextEventWait (EcEventFiles self, uint_t size, void* eventList, Ec
 
   printf("events : try to wait\n");
 
-  ident = ece_list_wait (self->equeue, INFINITE, NULL, self->logger);
+  ident = ece_list_wait (self->equeue, INFINITE, NULL);
 
   if( ident > 1 )
   {
@@ -415,13 +413,10 @@ int ecevents_thread (void* a)
 
 /*------------------------------------------------------------------------*/
  
-EcEventFiles ece_files_new (EcLogger logger)
+EcEventFiles ece_files_new (void)
 {
   EcEventFiles self = ENTC_NEW (struct EcEventFiles_s);
-  
-  self->logger = logger;
-  
-  
+ 
   //self->handles = eclist_new();
   
   //QTHREAD_CREATE( self->tid, ecevents_thread, (void*)self, 0 );
@@ -466,7 +461,7 @@ void ece_files_register (EcEventFiles self, const EcString filename, events_call
   {
     EcEventFilesData* event = ENTC_NEW (EcEventFilesData);
   
-    eclogger_logformat(self->logger, LL_TRACE, "CORE", "{events} Registered event on '%d'", notifyHandle);
+    eclogger_fmt (LL_TRACE, "ENTC", "events", "Registered event on '%d'", notifyHandle);
 
     event->handle = notifyHandle;
     event->onChange = onChange;
@@ -479,7 +474,7 @@ void ece_files_register (EcEventFiles self, const EcString filename, events_call
   }
   else
   {
-    eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{events} Can't registered event");
+    eclogger_errno (LL_ERROR, "ENTC", "events", "Can't registered event");
   }
   
   ecstr_delete( &path );

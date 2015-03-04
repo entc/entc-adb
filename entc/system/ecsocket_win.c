@@ -101,14 +101,13 @@ EcHandle ecsocket_createReadHandle (EcSocket self)
 
 //-----------------------------------------------------------------------------------
 
-EcSocket ecsocket_new (EcEventContext ec, EcLogger logger)
+EcSocket ecsocket_new (EcEventContext ec)
 {
   EcSocket self = ENTC_NEW(struct EcSocket_s);
   
   ecwsa_init();
 
   self->ec = ec;
-  self->logger = logger;
 
   self->socket = INVALID_SOCKET;
 
@@ -235,12 +234,11 @@ int ecsocket_listen (EcSocket self, const EcString host, uint_t port)
 
 //-----------------------------------------------------------------------------------
 
-EcSocket ecsocket_createReadSocket (EcEventContext ec, EcLogger logger, SOCKET sock)
+EcSocket ecsocket_createReadSocket (EcEventContext ec, SOCKET sock)
 {
   EcSocket self = ENTC_NEW(struct EcSocket_s);
   // references
   self->ec = ec;
-  self->logger = logger;
   // socket
   self->socket = sock;
   //handles
@@ -270,7 +268,7 @@ EcSocket ecsocket_accept (EcSocket self)
       }
       return NULL;
     }
-    return ecsocket_createReadSocket (self->ec, self->logger, sock);
+    return ecsocket_createReadSocket (self->ec, sock);
   }  
 }
 
@@ -387,7 +385,7 @@ EcSocket ecsocket_acceptIntr (EcSocket self)
       // error
       return NULL;
     }
-    return ecsocket_createReadSocket (self->ec, self->logger, sock);
+    return ecsocket_createReadSocket (self->ec, sock);
   }
 }
 
