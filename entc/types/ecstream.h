@@ -49,6 +49,8 @@ __LIB_EXPORT void ecstream_append( EcStream, const EcString );
 __LIB_EXPORT void ecstream_appendc( EcStream, char );
 
 __LIB_EXPORT void ecstream_appendu( EcStream, uint_t );
+
+__LIB_EXPORT void ecstream_appendt (EcStream, const time_t*);
   
 __LIB_EXPORT uint_t ecstream_size( EcStream );
 

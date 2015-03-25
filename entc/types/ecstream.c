@@ -174,6 +174,16 @@ void ecstream_appendu( EcStream self, uint_t value )
   ecstr_delete(&h);
 }
 
+//---------------------------------------------------------------------------------------
+
+void ecstream_appendt (EcStream self, const time_t* value)
+{
+  char buffer [32];
+  snprintf(buffer, 30, "%lu", (unsigned long)*value);
+  
+  ecstream_append (self, buffer);
+}
+
 /*------------------------------------------------------------------------*/
 
 uint_t ecstream_size( EcStream self )

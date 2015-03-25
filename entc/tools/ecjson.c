@@ -414,7 +414,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       
       ecstream_appendc (stream, ']');     
     }
-      break;
+    break;
     case ENTC_UDC_NODE:
     {
       void* cursor = NULL;
@@ -437,7 +437,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       
       ecstream_appendc (stream, '}');     
     }
-      break;
+    break;
     case ENTC_UDC_REF:
     {
       EcBuffer buffer = ecbuf_create (64);
@@ -449,34 +449,34 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       
       ecbuf_destroy (&buffer);
     }
-      break;
+    break;
     case ENTC_UDC_STRING:
     {
       ecstream_appendc (stream, '"');
       jsonwriter_escape (stream, ecudc_asString (node));
       ecstream_appendc (stream, '"');
     }
-      break;
+    break;
     case ENTC_UDC_BYTE:
     {
       ecstream_appendu (stream, ecudc_asB (node));
     }
-      break;
+    break;
     case ENTC_UDC_UINT32:
     {
       ecstream_appendu (stream, ecudc_asUInt32 (node));
     }
-      break;
+    break;
     case ENTC_UDC_UINT64:
     {
       ecstream_appendu (stream, ecudc_asUInt64 (node));
     }
-      break;
+    break;
     case ENTC_UDC_TIME:
     {
-      ecstream_appendu (stream, ecudc_asTime (node));
+      ecstream_appendt (stream, ecudc_asTime (node));
     }
-      break;
+    break;
   }
 }
 

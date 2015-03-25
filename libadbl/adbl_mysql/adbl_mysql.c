@@ -3,6 +3,7 @@
 #include <types/ecstream.h>
 #include <types/eclist.h>
 #include <types/ecintmap.h>
+#include <utils/eclogger.h>
 
 #include <mysql.h>
 #include "adbl.h"
