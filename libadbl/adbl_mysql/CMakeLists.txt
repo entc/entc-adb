@@ -19,17 +19,17 @@ IF( MYSQL_LIBRARIES )
   SET(MYSQL_INCLUDE_DIR
     "/usr/include/mysql"
     "/opt/local/include/mysql5/mysql/"
-	   "/usr/local/mysql/include/"
+    "/usr/local/mysql/include/"
   )
 
   ADD_LIBRARY( adbl_mysql SHARED ${CORE_SOURCES} )
 
-  INCLUDE_DIRECTORIES( "../core" ${ENTC_INCLUDE_DIRS} ${MYSQL_INCLUDE_DIR} )
+  INCLUDE_DIRECTORIES( "../core" ${MYSQL_INCLUDE_DIR} ${ENTC_INCLUDE_DIRS})
 
-  TARGET_LINK_LIBRARIES( adbl_mysql adbl ${LIBXML2_LIBRARIES} ${MYSQL_LIBRARIES} )
+  TARGET_LINK_LIBRARIES( adbl_mysql adbl ${MYSQL_LIBRARIES} ${ENTC_LIBRARIES})
   
-  ADD_EXECUTABLE( test_adbl_mysql_basic test_adbl_mysql_basic.c )
-  TARGET_LINK_LIBRARIES( test_adbl_mysql_basic adbl_mysql )
+#  ADD_EXECUTABLE( test_adbl_mysql_basic test_adbl_mysql_basic.c )
+#  TARGET_LINK_LIBRARIES( test_adbl_mysql_basic adbl_mysql ${ENTC_LIBRARIES})
 
 ELSE( MYSQL_LIBRARIES )
 
