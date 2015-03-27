@@ -196,13 +196,14 @@ void ecmessages_removeAll (uint_t module)
     
     ecmessages_removeAll_next (modules, module);
     
-    if (ecintmap_first (modules) == ecintmap_end(modules))
+    if (ecintmap_first (modules) == ecintmap_end (modules))
     {
       // the modules is empty, remove it also from first map
       ecintmap_delete (&modules);
       node = ecintmap_erase (node);
     }
   }
+  
   ecreadwritelock_unlockWrite (self->mutex);
 }
 

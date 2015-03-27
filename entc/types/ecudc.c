@@ -183,6 +183,39 @@ EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc ecudc_node_extract (EcUdcNode* self, void** cursor)
+{
+  EcMapNode node;
+  EcUdc ret = NULL;
+  
+  if (isNotAssigned (cursor))
+  {
+    return NULL;
+  }
+  
+  if (isAssigned (*cursor))
+  {
+    node = ecmap_next(*cursor);
+  }
+  else
+  {
+    node = ecmap_first (self->map);
+  }
+  
+  if (node == ecmap_end (self->map))
+  {
+    return NULL;
+  }
+  
+  ret = ecmap_data (node);
+  
+  *cursor = ecmap_erase (node);
+
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_node_protect (EcUdcNode* self, ubyte_t mode)
 {
   self->protect = mode;
@@ -269,6 +302,38 @@ EcUdc ecudc_list_next (EcUdcList* self, void** cursor)
   
   *cursor = node;
   return eclist_data(node);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc ecudc_list_extract (EcUdcList* self, void** cursor)
+{
+  EcListNode node;
+  EcUdc ret = NULL;
+  
+  if (isNotAssigned (cursor))
+  {
+    return NULL;
+  }
+  
+  if (isAssigned (*cursor))
+  {
+    node = eclist_next(*cursor);
+  }
+  else
+  {
+    node = eclist_first(self->list);
+  }
+  
+  if (node == eclist_end(self->list))
+  {
+    return NULL;
+  }
+  
+  ret = eclist_data (node);
+  
+  *cursor = eclist_erase (node);
+  return ret;
 }
 
 //----------------------------------------------------------------------------------------
@@ -463,7 +528,7 @@ void ecudc_setB (EcUdc self, ubyte_t value)
   switch (self->type) 
   {
     case ENTC_UDC_BYTE: self->extension = value; 
-      break;
+    break;
   }
 }
 
@@ -594,6 +659,18 @@ EcUdc ecudc_next (EcUdc self, void** cursor)
     case ENTC_UDC_LIST: return ecudc_list_next (self->extension, cursor); 
   }        
   return NULL;  
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc ecudc_extract (EcUdc self, void** cursor)
+{
+  switch (self->type)
+  {
+    case ENTC_UDC_NODE: return ecudc_node_extract (self->extension, cursor); 
+    case ENTC_UDC_LIST: return ecudc_list_extract (self->extension, cursor);       
+  }
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------
