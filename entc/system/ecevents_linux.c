@@ -244,6 +244,9 @@ struct EcEventQueue_s
   
   EcEventContext ec;
   
+  // make it thread safe
+  EcMutex mutex;
+  
   fd_set fdset_r;
   fd_set fdset_w;
   
@@ -263,6 +266,8 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   EcEventQueue self = ENTC_NEW(struct EcEventQueue_s);
 
   self->ec = ec;
+  self->mutex = ecmutex_new ();
+  
   self->fct = fct;
    
   FD_ZERO (&(self->fdset_r));
@@ -295,13 +300,34 @@ void ece_list_destroy (EcEventQueue* pself)
     }  
   }
     
+  ecmutex_delete (&(self->mutex));
+    
   ENTC_DEL (pself, struct EcEventQueue_s);    
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_list_set_ts (EcEventQueue self, EcHandle handle)
+{
+  if ((handle < FD_SETSIZE) && (self->userhdl [handle] == 0x42))
+  {
+    uint64_t u = 1;
+    int s = write (handle, &u, sizeof(uint64_t));
+    if (s != sizeof(uint64_t))
+    {
+      eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");  
+    }    
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------
 
 int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
 {
+  int ret = TRUE;
+  
+  ecmutex_lock (self->mutex);
+  
   if (handle < FD_SETSIZE)
   {
     if (type == ENTC_EVENTTYPE_WRITE)
@@ -322,20 +348,24 @@ int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
     
     self->ptrset [handle] = ptr;
     
-    ece_list_set (self, self->intrfd);
-    
-    return TRUE;
+    ece_list_set_ts (self, self->intrfd);
   }
   else
   {
-    return FALSE; 
+    ret = FALSE; 
   }
+  
+  ecmutex_unlock (self->mutex);
+  
+  return ret;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
 int ece_list_del (EcEventQueue self, EcHandle handle)
 {
+  ecmutex_lock (self->mutex);
+  
   FD_CLR (handle, &(self->fdset_w));
   FD_CLR (handle, &(self->fdset_r));
   
@@ -347,6 +377,8 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
     self->fct (&ptr);
     self->ptrset [handle] = NULL;
   }
+  
+  ecmutex_unlock (self->mutex);
   
   return TRUE;
 }
@@ -363,11 +395,18 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
   
   while (TRUE)
   {
+    ecmutex_lock (self->mutex);
+    
+    // make a local copy of the fdsets
     memcpy (&rfdset, &(self->fdset_r), sizeof (fd_set));
     memcpy (&wfdset, &(self->fdset_w), sizeof (fd_set));
        
+    ecmutex_unlock (self->mutex);
+    
     if (timeout == ENTC_INFINTE)
     {
+      eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select");
+      
       retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, NULL);      
     }
     else 
@@ -376,10 +415,12 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
       
-      //eclogger_logformat(logger, LOGMSG_DEBUG, "CORE", "{queue::pipe} wait for timeout sec:%lu usec:%lu maxfd:%i", tv.tv_sec, tv.tv_usec, self->maxfd);            
+      eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select (with timeout)");
       
       retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, &tv);
     }
+    
+    eclogger_fmt (LL_TRACE, "ENTC", "events", "event triggered (%i)", retval);
     
     if (retval == -1)
     {
@@ -393,15 +434,43 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
     else if (retval)
     {
       if (FD_ISSET (self->ec->efd, &rfdset))
-      { 
+      {
+	eclogger_msg (LL_TRACE, "ENTC", "events", "got event (ABORT)");
+	
+	ecmutex_lock (self->mutex);
+	
+	uint64_t s = read (self->ec->efd, &s, sizeof(uint64_t));
+        if (s != sizeof(uint64_t))
+	{
+  	  eclogger_msg (LL_ERROR, "ENTC", "events", "read of user event returned wrong data");
+	}
+	
+	uint64_t u = 1;
+	s = write(self->ec->efd, &u, sizeof(uint64_t));
+	if (s != sizeof(uint64_t))
+	{
+	  eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");        
+	}
+	
+	ecmutex_unlock (self->mutex);
+	
 	return ENTC_EVENT_ABORT;
       }
       
+      // internal interupt, is triggered by changes on the fdsets
       if (FD_ISSET (self->intrfd, &rfdset))
       { 
+	eclogger_msg (LL_TRACE, "ENTC", "events", "got event (INTR)");
+
+	ecmutex_lock (self->mutex);
+	
 	uint64_t s = read (self->intrfd, &s, sizeof(uint64_t));
+	
+	ecmutex_unlock (self->mutex);
+	
         if (s != sizeof(uint64_t))
 	{
+  	  eclogger_msg (LL_ERROR, "ENTC", "events", "read of user event returned wrong data");
 	  return ENTC_EVENT_ERROR; 
 	}
 	continue;
@@ -411,6 +480,8 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
       {
 	if (FD_ISSET (i, &rfdset) || FD_ISSET (i, &wfdset))
 	{
+	  ecmutex_lock (self->mutex);
+	  
 	  if (isAssigned (pptr))
 	  {
 	    *pptr = self->ptrset [i];
@@ -422,9 +493,12 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
 	    uint64_t s = read (i, &s, sizeof(uint64_t));
             if (s != sizeof(uint64_t))
 	    {
-	      return ENTC_EVENT_ERROR; 
+	      i = ENTC_EVENT_ERROR; 
 	    }  
 	  }
+	  
+	  ecmutex_unlock (self->mutex);
+	  
 	  return i;
 	}
       }
@@ -460,15 +534,11 @@ EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 
 void ece_list_set (EcEventQueue self, EcHandle handle)
 {
-  if ((handle < FD_SETSIZE) && (self->userhdl [handle] == 0x42))
-  {
-    uint64_t u = 1;
-    int s = write (handle, &u, sizeof(uint64_t));
-    if (s != sizeof(uint64_t))
-    {
-      eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");  
-    }    
-  }
+  ecmutex_lock (self->mutex);
+   
+  ece_list_set_ts (self, handle);
+  
+  ecmutex_unlock (self->mutex);
 }
 
 //------------------------------------------------------------------------------------------------------------
