@@ -1047,6 +1047,7 @@ void echttp_request_destroy (EcHttpRequest* pself)
   EcHttpRequest self = *pself;
 
   ecstr_delete(&(self->docroot));
+  ecstr_delete(&(self->tmproot));
   
   ENTC_DEL (pself, struct EcHttpRequest_s);
 }

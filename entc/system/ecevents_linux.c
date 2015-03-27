@@ -233,7 +233,7 @@ void ece_context_triggerTermination (EcEventContext self)
   int s = write(self->efd, &u, sizeof(uint64_t));
   if (s != sizeof(uint64_t))
   {
-    
+    eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");        
   }
 }
 
@@ -380,12 +380,15 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
       
       retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, &tv);
     }
+    
     if (retval == -1)
     {
       if (errno == EINTR)
       {
         continue;      
       }
+      
+      return ENTC_EVENT_ERROR;
     }
     else if (retval)
     {
@@ -393,6 +396,7 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
       { 
 	return ENTC_EVENT_ABORT;
       }
+      
       if (FD_ISSET (self->intrfd, &rfdset))
       { 
 	uint64_t s = read (self->intrfd, &s, sizeof(uint64_t));
@@ -402,6 +406,7 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
 	}
 	continue;
       }
+
       for (i = 0; i < FD_SETSIZE; i++)
       {
 	if (FD_ISSET (i, &rfdset) || FD_ISSET (i, &wfdset))
@@ -461,7 +466,7 @@ void ece_list_set (EcEventQueue self, EcHandle handle)
     int s = write (handle, &u, sizeof(uint64_t));
     if (s != sizeof(uint64_t))
     {
-      
+      eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");  
     }    
   }
 }

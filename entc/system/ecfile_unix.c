@@ -189,6 +189,7 @@ void ecdh_destroy (EcDirHandle* pself)
   closedir (self->dir);
   
   ecstr_delete(&(self->node.name));
+  ecstr_delete(&(self->path));
   
   ENTC_DEL (pself, struct EcDirHandle_s);
 }

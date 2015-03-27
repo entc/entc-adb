@@ -26,12 +26,13 @@ struct EcIntMap_s
   EcList list;
 };
 
-struct EcIntMapDataNode
+typedef struct
 {
   uint_t key;
   
   void* data;
-};
+  
+} EcIntMapDataNode;
 
 /*------------------------------------------------------------------------*/
 
@@ -59,23 +60,25 @@ void ecintmap_delete(EcIntMap* pself)
 
 /*------------------------------------------------------------------------*/
 
-void ecintmap_clear(EcIntMap self)
+void ecintmap_clear (EcIntMap self)
 {
   /* iterate through all list members */
   EcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    struct EcIntMapDataNode* mapnode = eclist_data(node);
-    free(mapnode);
+    EcIntMapDataNode* mapnode = eclist_data (node);
+    
+    ENTC_DEL (&mapnode, EcIntMapDataNode);
   }
-  eclist_clear(self->list);    
+  
+  eclist_clear (self->list);    
 }
 
 /*------------------------------------------------------------------------*/
 
 void ecintmap_append(EcIntMap self, uint_t key, void* data)
 {
-  struct EcIntMapDataNode* mapnode = ENTC_NEW(struct EcIntMapDataNode);
+  EcIntMapDataNode* mapnode = ENTC_NEW (EcIntMapDataNode);
   mapnode->key = key;
   mapnode->data = data;
   
@@ -84,13 +87,13 @@ void ecintmap_append(EcIntMap self, uint_t key, void* data)
 
 /*------------------------------------------------------------------------*/
 
-EcIntMapNode ecintmap_find(EcIntMap self, uint_t key)
+EcIntMapNode ecintmap_find (EcIntMap self, uint_t key)
 {
   /* iterate through all list members */
   EcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    struct EcIntMapDataNode* mapnode = eclist_data(node);
+    EcIntMapDataNode* mapnode = eclist_data(node);
     /* compare the stored name with the name we got */
     if(mapnode->key == key)
       return node;
@@ -107,8 +110,7 @@ EcIntMapNode ecintmap_first(const EcIntMap self)
 
 /*------------------------------------------------------------------------*/
 
-EcIntMapNode
-ecintmap_next(const EcIntMapNode node)
+EcIntMapNode ecintmap_next (const EcIntMapNode node)
 {
   return eclist_next((EcListNode)node);  
 }
@@ -122,8 +124,12 @@ EcIntMapNode ecintmap_end(EcIntMap self)
 
 /*------------------------------------------------------------------------*/
 
-EcIntMapNode ecintmap_erase(EcIntMapNode node)
+EcIntMapNode ecintmap_erase (EcIntMapNode node)
 {
+  EcIntMapDataNode* mapnode = eclist_data (node);
+    
+  ENTC_DEL (&mapnode, EcIntMapDataNode);
+  
   return eclist_erase(node);
 }
 
@@ -131,7 +137,7 @@ EcIntMapNode ecintmap_erase(EcIntMapNode node)
 
 void* ecintmap_data(const EcIntMapNode node)
 {
-  struct EcIntMapDataNode* mapnode = eclist_data((EcListNode)node);
+  EcIntMapDataNode* mapnode = eclist_data ((EcListNode)node);
   return mapnode->data;  
 }
 
@@ -145,13 +151,13 @@ void ecintmap_orderAll(EcIntMap self)
 
   for(node01 = eclist_first(self->list); node01 != eclist_end(self->list); node01 = eclist_next(node01))
   {
-    struct EcIntMapDataNode* mapnode01 = eclist_data(node01);
+    EcIntMapDataNode* mapnode01 = eclist_data(node01);
 
     uint_t min_key = mapnode01->key;
     
     for(node02 = eclist_next(node01); node02 != eclist_end(self->list); node02 = eclist_next(node02))
     {
-      struct EcIntMapDataNode* mapnode02 = eclist_data(node02);
+      EcIntMapDataNode* mapnode02 = eclist_data(node02);
 
       if( mapnode02->key < min_key )
       {
