@@ -504,7 +504,14 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
     case ENTC_RESCODE_NEEDS_AUTH:
     case ENTC_RESCODE_CLEAR_AUTH:
     {
-      echttp_send_status (header, stream, "401 Unauthorized");
+      //if (isAssigned (header->auth))
+      //{
+      //  echttp_send_status (header, stream, "403 Forbidden");      
+      //}
+      //else
+      {
+        echttp_send_status (header, stream, "401 Unauthorized");        
+      }
     }
     break;
     case ENTC_RESCODE_NEEDS_PERMISSION:
