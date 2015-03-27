@@ -396,7 +396,7 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_STRING: self->extension = ecudc_sitem_new (); 
       break;
-    case ENTC_UDC_BYTE: self->extension = 0;
+    case ENTC_UDC_BYTE: self->extension = ENTC_NEW (ubyte_t);
       break;
     case ENTC_UDC_UINT32: self->extension = ENTC_NEW (uint32_t); 
       break;
@@ -425,7 +425,7 @@ void ecudc_destroy (EcUdc* pself)
       break;
     case ENTC_UDC_REF: self->extension = NULL;
       break;
-    case ENTC_UDC_BYTE: self->extension = NULL; 
+    case ENTC_UDC_BYTE: ENTC_DEL (&(self->extension), ubyte_t);
       break;
     case ENTC_UDC_UINT32: ENTC_DEL (&(self->extension), uint32_t);
       break;
@@ -527,7 +527,7 @@ void ecudc_setB (EcUdc self, ubyte_t value)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_BYTE: self->extension = value; 
+    case ENTC_UDC_BYTE: memcpy(self->extension, &value, sizeof(ubyte_t)); 
     break;
   }
 }
@@ -593,7 +593,7 @@ ubyte_t ecudc_asB (EcUdc self)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_BYTE: return (ubyte_t)(self->extension); 
+    case ENTC_UDC_BYTE: return *((ubyte_t*)self->extension); 
   }        
   return 0;
 }
