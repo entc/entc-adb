@@ -120,7 +120,7 @@ int _STDCALL ecasyncsvc_run (void* params)
     return TRUE;
   }
   
-  printf("del\n");
+  eclogger_msg (LL_TRACE, "ENTC", "async", "connection removed");
   
   ece_list_del (self->queue, context->handle);
       
@@ -325,8 +325,7 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
     }
     else
     {
-      printf("fuck\n");
-      
+      // eclogger_msg (LL_WARN, "ENTC", "async", "connection reset by peer");
       return FALSE;
     }    
   }

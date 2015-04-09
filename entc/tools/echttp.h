@@ -35,7 +35,7 @@
 
 struct EcHttpContent_s; typedef struct EcHttpContent_s* EcHttpContent;
 
-typedef char* (*http_content_callback) (void* ptr, char* buffer, ulong_t inSize, int* outRes);
+typedef char* (_STDCALL *http_content_callback) (void* ptr, char* buffer, ulong_t inSize, int* outRes);
 
 __CPP_EXTERN______________________________________________________________________________START
 

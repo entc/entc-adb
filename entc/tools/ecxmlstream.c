@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2015 "Alexander Kalkhof" [email:entc@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -27,6 +27,7 @@
 #include "../types/ecstream.h"
 #include "../types/ecmapchar.h"
 #include "../types/ecstack.h"
+#include "types/ecmap.h"
 
 #include <string.h>
 #include <fcntl.h>
@@ -53,6 +54,8 @@ struct EcXMLStream_s
   EcString filename;
   
   ubyte_t lastype;
+  
+  EcMap namespaces;
   
 };
 
@@ -82,6 +85,8 @@ EcXMLStream ecxmlstream_new (void)
   self->lastype = ENTC_XMLTYPE_NONE;
   self->value = 0; 
   self->filename = 0;
+  
+  self->namespaces = ecmap_new ();
   
   return self;
 }
@@ -147,7 +152,7 @@ EcXMLStream ecxmlstream_openbuffer (const char* buffer)
 
   self->constbuffer = buffer;
   
-  //eclogger_log(self->logger, LOGMSG_XML, "CORE", "xmlstream open const buffer");
+  eclogger_msg (LL_TRACE, "ENTC", "xml", buffer);
 
   return self;
 }
@@ -200,14 +205,78 @@ void ecxmlstream_close( EcXMLStream self )
   free( self );
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------------------------------------
 
-void ecxmlstream_parseNode( EcXMLStream self, const char* node )
+void ecxmlstream_find_namespace (EcXMLStream self, EcString* tagname, EcString* nsname)
+{
+  EcString ns1 = NULL;
+  EcString ns2 = NULL;
+  
+  if (ecstr_split (*tagname, &ns1, &ns2, ':'))
+  {
+    EcMapNode nsnode = ecmap_find (self->namespaces, ns1);
+    if (nsnode != ecmap_end (self->namespaces))
+    {
+      //eclogger_fmt(LL_TRACE, "ENTC", "xml", "found namespace '%s' in tag '%s'", ns1, ns2);
+
+      ecstr_replaceTO (tagname, ns2);
+      ecstr_replaceTO (nsname, ns1);
+
+      return;
+    }
+  }
+  
+  ecstr_delete(&ns1);
+  ecstr_delete(&ns2);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+const EcString ecxmlstream_getNamespace (EcXMLStream self, const EcString namespace)
+{
+  EcMapNode node;
+  for (node = ecmap_first (self->namespaces); node != ecmap_end (self->namespaces); node = ecmap_next (node))
+  {
+    if (ecstr_equal (namespace, ecmap_data (node)))
+    {
+      return ecmap_key (node);
+    }
+  }
+  return NULL;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void ecxmlstream_mapNamespaces (EcXMLStream self, EcMapChar nsmap)
+{
+  EcMapNode node;
+  for (node = ecmap_first (self->namespaces); node != ecmap_end (self->namespaces); node = ecmap_next (node))
+  {
+    ecmapchar_append(nsmap, ecmap_data (node), ecmap_key (node));
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+EcXMLTag ecxmlstream_create_tag (EcXMLStream self, EcString tagname)
+{
+  EcXMLTag tag = ENTC_NEW (EcXMLTag_s);
+
+  tag->name = tagname;
+  tag->namespace = ecstr_init ();    
+  
+  ecxmlstream_find_namespace (self, &(tag->name), &(tag->namespace));
+
+  return tag;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void ecxmlstream_parseNode (EcXMLStream self, const char* node)
 {
   //eclogger_logformat(self->logger, LOGMSG_XML, "parse node '%s'", node);
   EcString tagname = 0;
-  EcString nsname = 0;
-
+  
   const char* pos = node;
   const char* key_pos = 0;
   EcString key_val = 0;
@@ -262,30 +331,20 @@ void ecxmlstream_parseNode( EcXMLStream self, const char* node )
           
           if (ecstr_split (key_val, &ns1, &ns2, ':'))
           {
-            EcString ts1 = NULL;
-            EcString ts2 = NULL;
-
-            if (ecstr_split (tagname, &ts1, &ts2, ':'))
-            {
-              if (ecstr_equal(ts1, ns2))
-              {
-                printf("found valid namespace '%s' for tag '%s'\n", ts1, ts2);
-                
-                ecstr_replaceTO (&tagname, ts2);
-                ts2 = NULL;
-                
-                ecstr_replaceTO (&nsname, ts1);
-                ts1 = NULL;
-              }
-            }
+            ecmap_append (self->namespaces, ns2, value);
           }
-          
+          else
+          {
+            ecstr_delete( &value ); 
+          }
+
           ecstr_delete (&ns1);
           ecstr_delete (&ns2);
-        }
+        }        
         else
         {
           ecmapchar_append(self->lastattrs, key_val, value);
+          ecstr_delete( &value );
         }
         
         /*
@@ -293,7 +352,6 @@ void ecxmlstream_parseNode( EcXMLStream self, const char* node )
         */
         ecstr_delete( &key_val );
         value_pos = 0;
-        ecstr_delete( &value );
         
       }      
     }
@@ -312,67 +370,8 @@ void ecxmlstream_parseNode( EcXMLStream self, const char* node )
   }
   // clean up
   ecstr_delete( &key_val );
-  
-  {
-    EcXMLTag tag = ENTC_NEW (EcXMLTag_s);
-        
-    if (ecstr_valid (nsname))
-    {
-      tag->name = tagname;
-      tag->namespace = nsname;
-      
-      printf("set namespace '%s'\n", nsname);
-    }
-    else
-    {
-      EcXMLTag tag_parent = ecstack_top (self->nodes);
-      
-      if (isAssigned (tag_parent))
-      {
-        EcString ts1 = NULL;
-        EcString ts2 = NULL;
-
-        if (ecstr_valid(tag_parent->namespace))
-        {
-          // derive from parent tag
-          tag->namespace = ecstr_copy (tag_parent->namespace);
-          // remove namespace from tag
-          if (ecstr_split (tagname, &ts1, &ts2, ':'))
-          {
-            if (ecstr_equal(ts1, tag->namespace))
-            {
-              printf("found tag '%s', removed namespace '%s'\n", ts2, ts1);
-
-              tag->name = ts2;
-              ts2 = NULL;
-            }
-            else
-            {
-              
-            }
-          }
-          else
-          {
-            
-          }
-          ecstr_delete (&ts1);
-          ecstr_delete (&ts2);          
-        }
-        else
-        {
-          tag->name = tagname;
-          tag->namespace = ecstr_init ();
-        }
-      }
-      else
-      {
-        tag->name = tagname;
-        tag->namespace = ecstr_init ();
-      }
-    }
-        
-    ecstack_push (self->nodes, tag);
-  }
+    
+  ecstack_push (self->nodes, ecxmlstream_create_tag (self, tagname));
 }
 
 /*------------------------------------------------------------------------*/
@@ -670,12 +669,32 @@ int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
       return FALSE;      
     }
 
-    if (!ecstr_equal (tag->name, node + 1))
+    if (tag->namespace)
     {
-      eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", tag->name, node + 1);
+      EcString fullTagName = ecstr_catc (tag->namespace, ':', tag->name);
+
+      if (!ecstr_equal (fullTagName, node + 1))
+      {
+        eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", fullTagName, node + 1);
+        
+        ecxmlstream_logError (self);
+        
+        ecstr_delete (&fullTagName);
+        
+        return FALSE;      
+      }
       
-      ecxmlstream_logError (self);
-      return FALSE;      
+      ecstr_delete (&fullTagName);      
+    }
+    else
+    {
+      if (!ecstr_equal (tag->name, node + 1))
+      {
+        eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", tag->name, node + 1);
+        
+        ecxmlstream_logError (self);
+        return FALSE;      
+      }
     }
     
     self->lastype = ENTC_XMLTYPE_NEND;
