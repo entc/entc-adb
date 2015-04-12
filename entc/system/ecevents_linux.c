@@ -664,10 +664,11 @@ int ece_files_nextEvent(EcEventFiles self)
     
   while (TRUE) 
   {
-    int len;
+    int numRead;
     uint_t i = 0;
-    char buf[EVENT_BUF_LEN];
-
+    char buf[EVENT_BUF_LEN] __attribute__ ((aligned(8)));
+    char *p;
+    
     // wait until some data received on one of the handles
     eclogger_msg (LL_TRACE, "ENTC", "inotify", "wait for events");
 
@@ -684,8 +685,8 @@ int ece_files_nextEvent(EcEventFiles self)
       break;
     }
     
-    len = read(self->notifd, buf, EVENT_BUF_LEN);
-    if (len < 0)
+    numRead = read(self->notifd, buf, EVENT_BUF_LEN);
+    if (numRead < 0)
     {
       if (errno == EINTR)
       {
@@ -701,15 +702,15 @@ int ece_files_nextEvent(EcEventFiles self)
       break;
     }
     
-    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "got %i new events", len);
+    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "got %i new events", numRead);
     
-    while (i < len)
-    {    
-      struct inotify_event* pevent = (struct inotify_event*)&buf[i];
+    for (p = buf; p < buf + numRead; )
+    {
+      struct inotify_event* pevent = (struct inotify_event *) p;
       
       ece_files_nextEvent2 (self, pevent);
-      
-      i += EVENT_SIZE + pevent->len;      
+
+      p += EVENT_SIZE + pevent->len;      
     }
     
     rt = TRUE;

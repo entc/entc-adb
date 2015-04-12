@@ -97,11 +97,14 @@ EcUdc ecnode_create_item (EcUdc node, const EcString name)
   {
     // use a seperated variable
     EcUdc h = self;    
-    // for coverity check
-    if (isAssigned (h))
+
+    // look for items
+    EcUdc n = ecudc_node (node, ECDATA_ITEMS);
+    
+    if (isAssigned (n))
     {
-      ecudc_add (ecudc_node (node, ECDATA_ITEMS), &h);
-    }
+      ecudc_add (n, &h);
+    }    
   }
   
   return self;  
@@ -124,11 +127,14 @@ EcUdc ecnode_create_node (EcUdc node, const EcString name)
   {
     // use a seperated variable
     EcUdc h = self;    
-    // for coverity check
-    if (isAssigned (h))
+    
+    // look for items
+    EcUdc n = ecudc_node (node, ECDATA_NODES);
+    
+    if (isAssigned (n))
     {
-      ecudc_add (ecudc_node (node, ECDATA_NODES), &h);
-    }
+      ecudc_add (n, &h);
+    }    
   }
   
   return self;

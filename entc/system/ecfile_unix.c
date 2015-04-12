@@ -312,19 +312,15 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
       
       EcString path = ecfs_mergeToPath (source, dentry->d_name);
       
-      res = stat (path, &st) == 0;      
-      if (res) 
+      if (S_ISDIR (st.st_mode))
       {
-        if (S_ISDIR (st.st_mode))
-        {
-          res = ecfs_rmdir (path, TRUE);
-        }
-        else
-        {
-          res = unlink(path);
-        }        
+        res = ecfs_rmdir (path, TRUE);
       }
-
+      else
+      {
+        res = unlink(path);
+      }        
+      
       ecstr_delete (&path);      
     }
   }
