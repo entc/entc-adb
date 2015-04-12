@@ -192,10 +192,11 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
 EcBuffer ecxmldom_buffer (EcUdc* pself)
 {
   EcStream stream = ecstream_new ();
+  EcUdc tag = *pself;
   
   ecstream_append (stream, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");  
   
-  ecxmldom_write (*pself, stream, NULL);
+  ecxmldom_write (tag, stream, NULL);
   
   ENTC_DEL (pself, struct EcXMLDom_s);  
   

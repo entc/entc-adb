@@ -679,8 +679,8 @@ void ecudc_protect (EcUdc self, ubyte_t mode)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_NODE: ecudc_node_protect (self->extension, mode); 
-    case ENTC_UDC_LIST: ecudc_list_protect (self->extension, mode); 
+    case ENTC_UDC_NODE: ecudc_node_protect (self->extension, mode); break;
+    case ENTC_UDC_LIST: ecudc_list_protect (self->extension, mode); break;
   }        
 }
 

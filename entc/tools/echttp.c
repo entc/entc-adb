@@ -1064,7 +1064,7 @@ void echttp_request_destroy (EcHttpRequest* pself)
 EcUdc echttp_parse_auth (const EcString source)
 {
   EcString auth_type;
-  EcUdc auth = ecudc_create (ENTC_UDC_NODE, "auth");
+  EcUdc auth = NULL;
   
   const EcString next_space = ecstr_pos (source, ' ');
   if (!ecstr_valid (next_space))
@@ -1072,6 +1072,8 @@ EcUdc echttp_parse_auth (const EcString source)
     return NULL;
   }
   
+  auth = ecudc_create (ENTC_UDC_NODE, "auth");
+
   auth_type = ecstr_part (source, next_space - source);
 
   ecudc_add_asString(auth, "type", auth_type);

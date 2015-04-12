@@ -203,7 +203,14 @@ void ecdh_seekType (const EcString path, EcFileInfo entry)
   // construct the file name 
   EcString inodename = ecfs_mergeToPath (path, entry->name);
     
-  ecfs_fileInfo (entry, inodename);
+  if (ecfs_fileInfo (entry, inodename))
+  {
+    
+  }
+  else
+  {
+    
+  }
     
   ecstr_delete (&inodename);
 }
