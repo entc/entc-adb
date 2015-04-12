@@ -696,7 +696,7 @@ int ece_files_nextEvent(EcEventFiles self)
       eclogger_errno (LL_ERROR, "ENTC", "inotify", "got error");
       break;
     }
-    if (len == 0)
+    if (numRead == 0)
     {
       /* BUF_LEN to small ? */
       break;
