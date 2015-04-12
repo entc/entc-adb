@@ -23,15 +23,6 @@
 
 //-----------------------------------------------------------------------------------------------------------
 
-struct EcXMLDom_s
-{
-  
-  int dummy;
-
-};
-
-//-----------------------------------------------------------------------------------------------------------
-
 void ecxmldom_add_tag (EcUdc parent, EcUdc child)
 {
   EcUdc tags = ecudc_node (parent, ".tags");
@@ -198,7 +189,7 @@ EcBuffer ecxmldom_buffer (EcUdc* pself)
   
   ecxmldom_write (tag, stream, NULL);
   
-  ENTC_DEL (pself, struct EcXMLDom_s);  
+  ecudc_destroy (pself);
   
   return ecstream_trans (&stream);
 }

@@ -435,16 +435,22 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
         {
           struct stat st;
           
-          
-          
-          if (S_ISDIR (st.st_mode))
+          if (stat (path, &st) == 0)
           {
-            res = ecfs_rmdir (path, TRUE);          
+            if (S_ISDIR (st.st_mode))
+            {
+              res = ecfs_rmdir (path, TRUE);          
+            }
+            else
+            {
+              res = unlink(path);            
+            }                    
           }
           else
           {
-            res = unlink(path);            
-          }        
+            res = FALSE;
+            eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't stat");            
+          }
         }
         break;
         // if directory
