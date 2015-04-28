@@ -179,8 +179,11 @@ void ecstream_appendu( EcStream self, uint_t value )
 void ecstream_appendt (EcStream self, const time_t* value)
 {
   char buffer [32];
+#ifdef _WIN32
+  _snprintf(buffer, 30, "%lu", (unsigned long)*value);
+#else
   snprintf(buffer, 30, "%lu", (unsigned long)*value);
-  
+#endif  
   ecstream_append (self, buffer);
 }
 

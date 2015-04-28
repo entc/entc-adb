@@ -64,7 +64,7 @@ void echttp_content_newRandomFile (EcHttpContent self)
 
 //---------------------------------------------------------------------------------------
 
-char* echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
@@ -80,7 +80,7 @@ char* echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* 
 
 //---------------------------------------------------------------------------------------
 
-char* echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
