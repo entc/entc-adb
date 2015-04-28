@@ -66,7 +66,7 @@ static EcMessages getGlobalMessages (void)
 
 //----------------------------------------------------------------------------------------
 
-static const char* msg_matrix[11] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
+static const char* msg_matrix[7] = { "___", "FAT", "ERR", "WRN", "INF", "DBG", "TRA" };
 #if defined _WIN64 || defined _WIN32
 #include <windows.h>
 static WORD clr_matrix[11] = {
@@ -86,7 +86,7 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
 {
   if (isAssigned (dIn) && (dIn->type == ENTC_MSGTYPE_LOG) && (dIn->rev == 1))
   {
-    if (dIn->ref < 10)
+    if (dIn->ref < 5)
     {
 #if defined _WIN64 || defined _WIN32 
       CONSOLE_SCREEN_BUFFER_INFO info;
