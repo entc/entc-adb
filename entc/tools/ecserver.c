@@ -103,7 +103,7 @@ int _STDCALL ecserver_worker_run (void* params)
 {
   EcServerThread* self = params;
   // check if we have a callback method
-  if(self->server->callbacks.worker_thread)
+  if (self->server->callbacks.worker_thread)
   {
     void* object = NULL;
     EcListNode node;
@@ -149,6 +149,10 @@ int _STDCALL ecserver_worker_run (void* params)
       // signaled to stop the thread
       return FALSE;
     }    
+  }
+  else
+  {
+    return FALSE;
   }
   return TRUE;
 }

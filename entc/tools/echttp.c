@@ -64,7 +64,7 @@ void echttp_content_newRandomFile (EcHttpContent self)
 
 //---------------------------------------------------------------------------------------
 
-char* echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
@@ -80,7 +80,7 @@ char* echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* 
 
 //---------------------------------------------------------------------------------------
 
-char* echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
@@ -504,7 +504,14 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
     case ENTC_RESCODE_NEEDS_AUTH:
     case ENTC_RESCODE_CLEAR_AUTH:
     {
-      echttp_send_status (header, stream, "401 Unauthorized");
+      //if (isAssigned (header->auth))
+      //{
+      //  echttp_send_status (header, stream, "403 Forbidden");      
+      //}
+      //else
+      {
+        echttp_send_status (header, stream, "401 Unauthorized");        
+      }
     }
     break;
     case ENTC_RESCODE_NEEDS_PERMISSION:
@@ -1047,6 +1054,7 @@ void echttp_request_destroy (EcHttpRequest* pself)
   EcHttpRequest self = *pself;
 
   ecstr_delete(&(self->docroot));
+  ecstr_delete(&(self->tmproot));
   
   ENTC_DEL (pself, struct EcHttpRequest_s);
 }
@@ -1056,7 +1064,7 @@ void echttp_request_destroy (EcHttpRequest* pself)
 EcUdc echttp_parse_auth (const EcString source)
 {
   EcString auth_type;
-  EcUdc auth = ecudc_create (ENTC_UDC_NODE, "auth");
+  EcUdc auth = NULL;
   
   const EcString next_space = ecstr_pos (source, ' ');
   if (!ecstr_valid (next_space))
@@ -1064,6 +1072,8 @@ EcUdc echttp_parse_auth (const EcString source)
     return NULL;
   }
   
+  auth = ecudc_create (ENTC_UDC_NODE, "auth");
+
   auth_type = ecstr_part (source, next_space - source);
 
   ecudc_add_asString(auth, "type", auth_type);

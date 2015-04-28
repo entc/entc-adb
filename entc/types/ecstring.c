@@ -112,7 +112,7 @@ EcString ecstr_long (uint_t value)
 
 EcString ecstr_float (double value, uint_t n)
 {
-  EcString s = ecstr_init ();
+  EcString s;
   if( n > 0 )
   {
 	  EcBuffer buffer01 = ecbuf_create (7);

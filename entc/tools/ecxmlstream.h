@@ -27,6 +27,7 @@
 
 #include "../utils/ecobserver.h"
 #include "../utils/eclogger.h"
+#include "../types/ecmapchar.h"
 
 #define ENTC_XMLTYPE_NONE    0
 #define ENTC_XMLTYPE_SINGLE  1
@@ -74,6 +75,10 @@ __LIB_EXPORT int ecxmlstream_isValue (EcXMLStream);
   /* helper functions */
   
 __LIB_EXPORT void ecxmlstream_parseNodeValue (EcXMLStream, EcString* value, const EcString node);
+
+__LIB_EXPORT const EcString ecxmlstream_getNamespace (EcXMLStream, const EcString);
+
+__LIB_EXPORT void ecxmlstream_mapNamespaces (EcXMLStream, EcMapChar);
   
 __CPP_EXTERN______________________________________________________________________________END
 

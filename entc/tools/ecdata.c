@@ -95,8 +95,16 @@ EcUdc ecnode_create_item (EcUdc node, const EcString name)
   ecnode_add_default (self);  
 
   {
+    // use a seperated variable
     EcUdc h = self;    
-    ecudc_add (ecudc_node (node, ECDATA_ITEMS), &h);
+
+    // look for items
+    EcUdc n = ecudc_node (node, ECDATA_ITEMS);
+    
+    if (isAssigned (n))
+    {
+      ecudc_add (n, &h);
+    }    
   }
   
   return self;  
@@ -117,8 +125,16 @@ EcUdc ecnode_create_node (EcUdc node, const EcString name)
   ecnode_add_default (self);  
   
   {
+    // use a seperated variable
     EcUdc h = self;    
-    ecudc_add (ecudc_node (node, ECDATA_NODES), &h);
+    
+    // look for items
+    EcUdc n = ecudc_node (node, ECDATA_NODES);
+    
+    if (isAssigned (n))
+    {
+      ecudc_add (n, &h);
+    }    
   }
   
   return self;

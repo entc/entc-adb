@@ -39,6 +39,8 @@ __LIB_EXPORT EcBuffer ecxmldom_buffer (EcUdc*);
 
 __LIB_EXPORT void ecxmldom_setNamespace (EcUdc, const EcString, const EcString definition);
 
+__LIB_EXPORT void ecxmldom_addNamespace (EcUdc, const EcString, const EcString definition);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

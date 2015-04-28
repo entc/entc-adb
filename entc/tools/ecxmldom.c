@@ -23,15 +23,6 @@
 
 //-----------------------------------------------------------------------------------------------------------
 
-struct EcXMLDom_s
-{
-  
-  int dummy;
-
-};
-
-//-----------------------------------------------------------------------------------------------------------
-
 void ecxmldom_add_tag (EcUdc parent, EcUdc child)
 {
   EcUdc tags = ecudc_node (parent, ".tags");
@@ -138,7 +129,7 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
     EcUdc tags = ecudc_node (tag, ".tags");
     if (isAssigned (tags))
     {
-      ecstream_append (stream, ">");
+      ecstream_append (stream, ">\r\n");
       
       {
         void* cursor = NULL;
@@ -158,7 +149,7 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
         ecstream_appendc (stream, ':');
       }
       ecstream_append (stream, ecudc_name (tag));
-      ecstream_appendc (stream, '>');
+      ecstream_append (stream, ">\r\n");
       
       return;
     }
@@ -178,13 +169,13 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
         ecstream_appendc (stream, ':');
       }
       ecstream_append (stream, ecudc_name (tag));
-      ecstream_appendc (stream, '>');
+      ecstream_append (stream, ">\r\n");
       
       return;
     }
   }
   
-  ecstream_append (stream, "/>");
+  ecstream_append (stream, "/>\r\n");
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -192,14 +183,29 @@ void ecxmldom_write (EcUdc tag, EcStream stream, const EcString namespace)
 EcBuffer ecxmldom_buffer (EcUdc* pself)
 {
   EcStream stream = ecstream_new ();
+  EcUdc tag = *pself;
   
   ecstream_append (stream, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");  
   
-  ecxmldom_write (*pself, stream, NULL);
+  ecxmldom_write (tag, stream, NULL);
   
-  ENTC_DEL (pself, struct EcXMLDom_s);  
+  ecudc_destroy (pself);
   
   return ecstream_trans (&stream);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void ecxmldom_addNamespace (EcUdc tag, const EcString name, const EcString definition)
+{
+  if (ecstr_valid (definition)) 
+  {
+    EcString xmlns = ecstr_cat2("xmlns:", name);
+    
+    ecxmldom_add_attribute (tag, xmlns, definition);
+    
+    ecstr_delete(&xmlns);
+  }  
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -226,13 +232,8 @@ void ecxmldom_setNamespace (EcUdc tag, const EcString name, const EcString defin
       ecudc_add_asString(options, "namespace", name);
     }
   }
-  {
-    EcString xmlns = ecstr_cat2("xmlns:", name);
-    
-    ecxmldom_add_attribute (tag, xmlns, definition);
-    
-    ecstr_delete(&xmlns);
-  }
+  
+  ecxmldom_addNamespace (tag, name, definition);  
 }
 
 //-----------------------------------------------------------------------------------------------------------

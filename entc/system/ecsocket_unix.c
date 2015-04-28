@@ -118,7 +118,7 @@ int ecsocket_create (EcSocket self, const EcString host, uint_t port, int role)
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0)
   {
-    eclogger_errno (LL_ERROR, "_SYS", "socket", "Can't create socket");
+    eclogger_errno (LL_ERROR, "ENTC", "socket", "Can't create socket");
     return -1;
   }
   
@@ -128,7 +128,7 @@ int ecsocket_create (EcSocket self, const EcString host, uint_t port, int role)
     {
       close(sock);      
       
-      eclogger_errno (LL_ERROR, "_SYS", "socket", "Can't connect to '%s:%u'", host, port);
+      eclogger_errno (LL_ERROR, "ENTC", "socket", "Can't connect to '%s:%u'", host, port);
       return -1;
     }
   }
@@ -137,7 +137,7 @@ int ecsocket_create (EcSocket self, const EcString host, uint_t port, int role)
     int opt = 1; 
     if(setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
     {
-      eclogger_errno (LL_ERROR, "_SYS", "socket", "Can't set socket option");
+      eclogger_errno (LL_ERROR, "ENTC", "socket", "Can't set socket option");
 
       close(sock);
       return -1;
@@ -147,7 +147,7 @@ int ecsocket_create (EcSocket self, const EcString host, uint_t port, int role)
     {
       close(sock);
       
-      eclogger_errno (LL_ERROR, "_SYS", "socket", "Can't bind to '%s:%u'", host, port);
+      eclogger_errno (LL_ERROR, "ENTC", "socket", "Can't bind to '%s:%u'", host, port);
       return -1;
     }
   }
@@ -208,7 +208,7 @@ EcSocket ecsocket_createReadSocket (EcEventContext ec, int sock, socklen_t addrl
     
     self->host = ecbuf_str (&ipbuffer);
     
-    eclogger_fmt (LL_TRACE, "_SYS", "socket", "connection accepted from '%s'", self->host);
+    eclogger_fmt (LL_TRACE, "ENTC", "socket", "connection accepted from '%s'", self->host);
   }
   return self;
 }
@@ -229,12 +229,12 @@ EcSocket ecsocket_accept (EcSocket self)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
-        eclogger_errno (LL_ERROR, "_SYS", "socket", "Error on accept client connection");
+        eclogger_errno (LL_ERROR, "ENTC", "socket", "Error on accept client connection");
         break;
       }
       else
       {
-        eclogger_errno (LL_TRACE, "_SYS", "socket", "Minor rrror on accept client connection");
+        eclogger_errno (LL_TRACE, "ENTC", "socket", "Minor rrror on accept client connection");
         continue;
       }
     }
@@ -254,7 +254,7 @@ int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
-        eclogger_errno (LL_ERROR, "_SYS", "socket", "Error on recv");
+        eclogger_errno (LL_ERROR, "ENTC", "socket read", "Error on recv");
         return -1;
       }
       else
@@ -264,7 +264,7 @@ int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
     }
     else if (res == 0)
     {
-      eclogger_errno (LL_WARN, "_SYS", "socket", "connection reset by host");
+      eclogger_msg (LL_WARN, "ENTC", "socket read", "connection reset by peer");
       return 0;
     }    
     // end
@@ -284,7 +284,7 @@ int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
-        eclogger_errno (LL_ERROR, "_SYS", "socket", "Error on send");
+        eclogger_errno (LL_ERROR, "ENTC", "socket", "Error on send");
         return -1;
       }
       else
@@ -294,7 +294,7 @@ int ecsocket_write (EcSocket self, const void* buffer, int nbyte)
     }
     else if (res == 0)
     {
-      eclogger_errno (LL_ERROR, "_SYS", "socket", "connection reset by host");
+      eclogger_msg (LL_ERROR, "ENTC", "socket write", "connection reset by peer");
       return 0;
     }    
     else
@@ -363,12 +363,12 @@ EcSocket ecsocket_acceptIntr (EcSocket self)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
-        eclogger_errno (LL_ERROR, "_SYS", "socket", "Error on accept client connection");
+        eclogger_errno (LL_ERROR, "ENTC", "socket", "Error on accept client connection");
         return NULL;
       }
       else
       {
-        eclogger_errno (LL_TRACE, "_SYS", "socket", "Minor rrror on accept client connection");
+        eclogger_errno (LL_TRACE, "ENTC", "socket", "Minor rrror on accept client connection");
         continue;
       }
     }
@@ -392,7 +392,7 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
-        eclogger_errno (LL_ERROR, "_SYS", "socket", "Error on recv");
+        eclogger_errno (LL_ERROR, "ENTC", "socket", "Error on recv");
         return -1;
       }
       else
@@ -402,7 +402,7 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
     }
     else if (res == 0)
     {
-      eclogger_errno (LL_WARN, "_SYS", "socket", "connection reset by host");
+      eclogger_errno (LL_WARN, "ENTC", "socket", "connection reset by peer");
       return 0;
     }    
     return res;

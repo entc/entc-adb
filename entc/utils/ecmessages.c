@@ -86,7 +86,7 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
 {
   if (isAssigned (dIn) && (dIn->type == ENTC_MSGTYPE_LOG) && (dIn->rev == 1))
   {
-    if (dIn->ref >= 0 && dIn->ref < 5)
+    if (dIn->ref < 5)
     {
 #if defined _WIN64 || defined _WIN32 
       CONSOLE_SCREEN_BUFFER_INFO info;
@@ -196,13 +196,14 @@ void ecmessages_removeAll (uint_t module)
     
     ecmessages_removeAll_next (modules, module);
     
-    if (ecintmap_first (modules) == ecintmap_end(modules))
+    if (ecintmap_first (modules) == ecintmap_end (modules))
     {
       // the modules is empty, remove it also from first map
       ecintmap_delete (&modules);
       node = ecintmap_erase (node);
     }
   }
+  
   ecreadwritelock_unlockWrite (self->mutex);
 }
 

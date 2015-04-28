@@ -9,7 +9,7 @@ int main (int argc, char *argv[])
 
   while (ecdh_next (dh1, &info, TRUE))
   {
-    printf ("item %s size %llu\n", info->name, info->size);
+    printf ("item %s size %lu\n", info->name, info->size);
   }
   
   ecdh_destroy (&dh1);

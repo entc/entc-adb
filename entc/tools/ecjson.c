@@ -115,6 +115,19 @@ EcString json_parse_string (JsonParser* parser)
 #define ENT_STATE_OBJECT_KEY_EOE  5
 #define ENT_STATE_OBJECT_EOE      6
 
+//-------------------------------------------------------------------------------------------
+
+void* json_cleanup_udc (EcUdc* pudc)
+{
+  if (isAssigned (*pudc))
+  {
+    ecudc_destroy(pudc);
+  }
+  return NULL;
+}
+
+//-------------------------------------------------------------------------------------------
+
 // implemented as state machine
 EcUdc json_parse (JsonParser* parser, const char* name)
 {
@@ -133,11 +146,9 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         {
           if (isAssigned (udc))
           {
-            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
             // error
-            ecudc_destroy(&udc);
-            
-            return NULL;
+            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
+            return json_cleanup_udc (&udc);
           }
           
           udc = ecudc_create (ENTC_UDC_LIST, name); 
@@ -145,16 +156,14 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           parser->pos = c;
           state = ENT_STATE_ARRAY;
         }
-          break;
+        break;
         case '{':
         {
           if (isAssigned (udc))
           {
-            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
             // error
-            ecudc_destroy(&udc);
-            
-            return NULL;
+            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
+            return json_cleanup_udc (&udc);
           }
           
           udc = ecudc_create (ENTC_UDC_NODE, name); 
@@ -162,9 +171,9 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           parser->pos = c;
           state = ENT_STATE_OBJECT_KEY;
         }
-          break;
-      }
         break;
+      }
+      break;
       case ENT_STATE_ARRAY: switch (*c)
       {
         case ']':
@@ -173,7 +182,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           parser->pos = c;
           return udc;
         }
-          break;
+        break;
         case '[': case '{':
         {
           parser->pos = c;
@@ -181,14 +190,14 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcUdc child = json_parse (parser, "");
             if (isNotAssigned (child))
             {
-              return NULL;
+              return json_cleanup_udc (&udc);
             }
             ecudc_add (udc, &child);
           }
           c = parser->pos;
           state = ENT_STATE_ARRAY_EOE;
         }
-          break;
+        break;
         case '\"':
         {
           parser->pos = c + 1;
@@ -196,7 +205,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcString value = json_parse_string (parser);
             if (isNotAssigned (value))
             {
-              return NULL;
+              return json_cleanup_udc (&udc);
             }
             ecudc_add_asString(udc, "", value);
             ecstr_delete(&value);
@@ -204,18 +213,18 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           c = parser->pos;
           state = ENT_STATE_ARRAY_EOE;
         }
-          break;
+        break;
         case ',':
         {
           // todo
           parser->pos = c;
         }
-          break;
-          // ignore
-        case '\t' : case '\r' : case '\n' : case ' ': 
-          break;
-      }
         break;
+        // ignore
+        case '\t' : case '\r' : case '\n' : case ' ': 
+        break;
+      }
+      break;
       case ENT_STATE_ARRAY_EOE: switch (*c)
       {
         case ']':
@@ -223,19 +232,19 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           parser->pos = c;
           return udc;
         }
-          break;
+        break;
         case ',':
         {
           parser->pos = c;
           state = ENT_STATE_ARRAY;
         }
-          break;
+        break;
           // ignore
         case '\t' : case '\r' : case '\n' : case ' ': 
-          break;
+        break;
           // error
         default:
-          return NULL;
+          return json_cleanup_udc (&udc);
       }
         break;
       case ENT_STATE_OBJECT_KEY: switch (*c)
@@ -247,7 +256,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             key = json_parse_string (parser);
             if (isNotAssigned (key))
             {
-              return NULL;
+              return json_cleanup_udc (&udc);
             }
           }
           c = parser->pos;
@@ -259,7 +268,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           break;
           // error
         default:
-          return NULL;          
+          return json_cleanup_udc (&udc);          
       }
         break;
       case ENT_STATE_OBJECT_KEY_EOE: switch (*c)
@@ -271,7 +280,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           break;
           // error
         default:
-          return NULL;
+          return json_cleanup_udc (&udc);
       }
         break;
       case ENT_STATE_OBJECT: switch (*c)
@@ -290,7 +299,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcUdc child = json_parse (parser, key);
             if (isNotAssigned (child))
             {
-              return NULL;
+              return json_cleanup_udc (&udc);
             }
             ecudc_add (udc, &child);
           }
@@ -305,7 +314,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcString value = json_parse_string (parser);
             if (isNotAssigned (value))
             {
-              return NULL;
+              return json_cleanup_udc (&udc);
             }
             ecudc_add_asString(udc, key, value);
             ecstr_delete(&value);
@@ -345,12 +354,12 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           break;
           // error
         default:
-          return NULL;
+          return json_cleanup_udc (&udc);
       }
-        break;
+      break;
     }
   }
-  return NULL;
+  return json_cleanup_udc (&udc);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -414,7 +423,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       
       ecstream_appendc (stream, ']');     
     }
-      break;
+    break;
     case ENTC_UDC_NODE:
     {
       void* cursor = NULL;
@@ -437,7 +446,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       
       ecstream_appendc (stream, '}');     
     }
-      break;
+    break;
     case ENTC_UDC_REF:
     {
       EcBuffer buffer = ecbuf_create (64);
@@ -449,34 +458,34 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       
       ecbuf_destroy (&buffer);
     }
-      break;
+    break;
     case ENTC_UDC_STRING:
     {
       ecstream_appendc (stream, '"');
       jsonwriter_escape (stream, ecudc_asString (node));
       ecstream_appendc (stream, '"');
     }
-      break;
+    break;
     case ENTC_UDC_BYTE:
     {
       ecstream_appendu (stream, ecudc_asB (node));
     }
-      break;
+    break;
     case ENTC_UDC_UINT32:
     {
       ecstream_appendu (stream, ecudc_asUInt32 (node));
     }
-      break;
+    break;
     case ENTC_UDC_UINT64:
     {
       ecstream_appendu (stream, ecudc_asUInt64 (node));
     }
-      break;
+    break;
     case ENTC_UDC_TIME:
     {
-      ecstream_appendu (stream, ecudc_asTime (node));
+      ecstream_appendt (stream, ecudc_asTime (node));
     }
-      break;
+    break;
   }
 }
 

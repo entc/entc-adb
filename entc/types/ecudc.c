@@ -183,6 +183,39 @@ EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc ecudc_node_extract (EcUdcNode* self, void** cursor)
+{
+  EcMapNode node;
+  EcUdc ret = NULL;
+  
+  if (isNotAssigned (cursor))
+  {
+    return NULL;
+  }
+  
+  if (isAssigned (*cursor))
+  {
+    node = ecmap_next(*cursor);
+  }
+  else
+  {
+    node = ecmap_first (self->map);
+  }
+  
+  if (node == ecmap_end (self->map))
+  {
+    return NULL;
+  }
+  
+  ret = ecmap_data (node);
+  
+  *cursor = ecmap_erase (node);
+
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_node_protect (EcUdcNode* self, ubyte_t mode)
 {
   self->protect = mode;
@@ -273,6 +306,38 @@ EcUdc ecudc_list_next (EcUdcList* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc ecudc_list_extract (EcUdcList* self, void** cursor)
+{
+  EcListNode node;
+  EcUdc ret = NULL;
+  
+  if (isNotAssigned (cursor))
+  {
+    return NULL;
+  }
+  
+  if (isAssigned (*cursor))
+  {
+    node = eclist_next(*cursor);
+  }
+  else
+  {
+    node = eclist_first(self->list);
+  }
+  
+  if (node == eclist_end(self->list))
+  {
+    return NULL;
+  }
+  
+  ret = eclist_data (node);
+  
+  *cursor = eclist_erase (node);
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_list_protect (EcUdcList* self, ubyte_t mode)
 {
   self->protect = mode;
@@ -331,7 +396,7 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_STRING: self->extension = ecudc_sitem_new (); 
       break;
-    case ENTC_UDC_BYTE: self->extension = 0;
+    case ENTC_UDC_BYTE: self->extension = ENTC_NEW (ubyte_t);
       break;
     case ENTC_UDC_UINT32: self->extension = ENTC_NEW (uint32_t); 
       break;
@@ -360,7 +425,7 @@ void ecudc_destroy (EcUdc* pself)
       break;
     case ENTC_UDC_REF: self->extension = NULL;
       break;
-    case ENTC_UDC_BYTE: self->extension = NULL; 
+    case ENTC_UDC_BYTE: ENTC_DEL (&(self->extension), ubyte_t);
       break;
     case ENTC_UDC_UINT32: ENTC_DEL (&(self->extension), uint32_t);
       break;
@@ -462,8 +527,8 @@ void ecudc_setB (EcUdc self, ubyte_t value)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_BYTE: self->extension = value; 
-      break;
+    case ENTC_UDC_BYTE: memcpy(self->extension, &value, sizeof(ubyte_t)); 
+    break;
   }
 }
 
@@ -528,7 +593,7 @@ ubyte_t ecudc_asB (EcUdc self)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_BYTE: return (ubyte_t)(self->extension); 
+    case ENTC_UDC_BYTE: return *((ubyte_t*)self->extension); 
   }        
   return 0;
 }
@@ -598,12 +663,24 @@ EcUdc ecudc_next (EcUdc self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc ecudc_extract (EcUdc self, void** cursor)
+{
+  switch (self->type)
+  {
+    case ENTC_UDC_NODE: return ecudc_node_extract (self->extension, cursor); 
+    case ENTC_UDC_LIST: return ecudc_list_extract (self->extension, cursor);       
+  }
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_protect (EcUdc self, ubyte_t mode)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_NODE: ecudc_node_protect (self->extension, mode); 
-    case ENTC_UDC_LIST: ecudc_list_protect (self->extension, mode); 
+    case ENTC_UDC_NODE: ecudc_node_protect (self->extension, mode); break;
+    case ENTC_UDC_LIST: ecudc_list_protect (self->extension, mode); break;
   }        
 }
 

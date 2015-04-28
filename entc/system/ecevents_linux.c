@@ -21,6 +21,8 @@
 
 #include "ecevents.h"
 
+#include <utils/eclogger.h>
+
 #include "ecthread.h"
 #include "ecfile.h"
 #include <errno.h>
@@ -231,7 +233,7 @@ void ece_context_triggerTermination (EcEventContext self)
   int s = write(self->efd, &u, sizeof(uint64_t));
   if (s != sizeof(uint64_t))
   {
-    
+    eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");        
   }
 }
 
@@ -241,6 +243,9 @@ struct EcEventQueue_s
 {
   
   EcEventContext ec;
+  
+  // make it thread safe
+  EcMutex mutex;
   
   fd_set fdset_r;
   fd_set fdset_w;
@@ -261,6 +266,8 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   EcEventQueue self = ENTC_NEW(struct EcEventQueue_s);
 
   self->ec = ec;
+  self->mutex = ecmutex_new ();
+  
   self->fct = fct;
    
   FD_ZERO (&(self->fdset_r));
@@ -293,13 +300,34 @@ void ece_list_destroy (EcEventQueue* pself)
     }  
   }
     
+  ecmutex_delete (&(self->mutex));
+    
   ENTC_DEL (pself, struct EcEventQueue_s);    
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_list_set_ts (EcEventQueue self, EcHandle handle)
+{
+  if ((handle < FD_SETSIZE) && (self->userhdl [handle] == 0x42))
+  {
+    uint64_t u = 1;
+    int s = write (handle, &u, sizeof(uint64_t));
+    if (s != sizeof(uint64_t))
+    {
+      eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");  
+    }    
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------
 
 int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
 {
+  int ret = TRUE;
+  
+  ecmutex_lock (self->mutex);
+  
   if (handle < FD_SETSIZE)
   {
     if (type == ENTC_EVENTTYPE_WRITE)
@@ -320,20 +348,24 @@ int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
     
     self->ptrset [handle] = ptr;
     
-    ece_list_set (self, self->intrfd);
-    
-    return TRUE;
+    ece_list_set_ts (self, self->intrfd);
   }
   else
   {
-    return FALSE; 
+    ret = FALSE; 
   }
+  
+  ecmutex_unlock (self->mutex);
+  
+  return ret;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
 int ece_list_del (EcEventQueue self, EcHandle handle)
 {
+  ecmutex_lock (self->mutex);
+  
   FD_CLR (handle, &(self->fdset_w));
   FD_CLR (handle, &(self->fdset_r));
   
@@ -346,12 +378,14 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
     self->ptrset [handle] = NULL;
   }
   
+  ecmutex_unlock (self->mutex);
+  
   return TRUE;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
-int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logger)
+int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
 {
   int retval, i;
   
@@ -361,11 +395,18 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
   
   while (TRUE)
   {
+    ecmutex_lock (self->mutex);
+    
+    // make a local copy of the fdsets
     memcpy (&rfdset, &(self->fdset_r), sizeof (fd_set));
     memcpy (&wfdset, &(self->fdset_w), sizeof (fd_set));
        
+    ecmutex_unlock (self->mutex);
+    
     if (timeout == ENTC_INFINTE)
     {
+      eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select");
+      
       retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, NULL);      
     }
     else 
@@ -374,36 +415,73 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
       
-      //eclogger_logformat(logger, LOGMSG_DEBUG, "CORE", "{queue::pipe} wait for timeout sec:%lu usec:%lu maxfd:%i", tv.tv_sec, tv.tv_usec, self->maxfd);            
+      eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select (with timeout)");
       
       retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, &tv);
     }
+    
+    eclogger_fmt (LL_TRACE, "ENTC", "events", "event triggered (%i)", retval);
+    
     if (retval == -1)
     {
       if (errno == EINTR)
       {
         continue;      
       }
+      
+      return ENTC_EVENT_ERROR;
     }
     else if (retval)
     {
       if (FD_ISSET (self->ec->efd, &rfdset))
-      { 
-	return ENTC_EVENT_ABORT;
-      }
-      if (FD_ISSET (self->intrfd, &rfdset))
-      { 
-	uint64_t s = read (self->intrfd, &s, sizeof(uint64_t));
+      {
+	eclogger_msg (LL_TRACE, "ENTC", "events", "got event (ABORT)");
+	
+	ecmutex_lock (self->mutex);
+	
+	uint64_t s = read (self->ec->efd, &s, sizeof(uint64_t));
         if (s != sizeof(uint64_t))
 	{
+  	  eclogger_msg (LL_ERROR, "ENTC", "events", "read of user event returned wrong data");
+	}
+	
+	uint64_t u = 1;
+	s = write(self->ec->efd, &u, sizeof(uint64_t));
+	if (s != sizeof(uint64_t))
+	{
+	  eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");        
+	}
+	
+	ecmutex_unlock (self->mutex);
+	
+	return ENTC_EVENT_ABORT;
+      }
+      
+      // internal interupt, is triggered by changes on the fdsets
+      if (FD_ISSET (self->intrfd, &rfdset))
+      { 
+	eclogger_msg (LL_TRACE, "ENTC", "events", "got event (INTR)");
+
+	ecmutex_lock (self->mutex);
+	
+	uint64_t s = read (self->intrfd, &s, sizeof(uint64_t));
+	
+	ecmutex_unlock (self->mutex);
+	
+        if (s != sizeof(uint64_t))
+	{
+  	  eclogger_msg (LL_ERROR, "ENTC", "events", "read of user event returned wrong data");
 	  return ENTC_EVENT_ERROR; 
 	}
 	continue;
       }
+
       for (i = 0; i < FD_SETSIZE; i++)
       {
 	if (FD_ISSET (i, &rfdset) || FD_ISSET (i, &wfdset))
 	{
+	  ecmutex_lock (self->mutex);
+	  
 	  if (isAssigned (pptr))
 	  {
 	    *pptr = self->ptrset [i];
@@ -415,9 +493,12 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr, EcLogger logg
 	    uint64_t s = read (i, &s, sizeof(uint64_t));
             if (s != sizeof(uint64_t))
 	    {
-	      return ENTC_EVENT_ERROR; 
+	      i = ENTC_EVENT_ERROR; 
 	    }  
 	  }
+	  
+	  ecmutex_unlock (self->mutex);
+	  
 	  return i;
 	}
       }
@@ -453,15 +534,11 @@ EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 
 void ece_list_set (EcEventQueue self, EcHandle handle)
 {
-  if ((handle < FD_SETSIZE) && (self->userhdl [handle] == 0x42))
-  {
-    uint64_t u = 1;
-    int s = write (handle, &u, sizeof(uint64_t));
-    if (s != sizeof(uint64_t))
-    {
-      
-    }    
-  }
+  ecmutex_lock (self->mutex);
+   
+  ece_list_set_ts (self, handle);
+  
+  ecmutex_unlock (self->mutex);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -501,9 +578,6 @@ struct EcEventFiles_s
   
   EcEventFilesData matrix[FD_SETSIZE];
   
-  /* reference */
-  EcLogger logger;
-  
 };
 #define EVENT_SIZE ( sizeof (struct inotify_event) )
 #define EVENT_BUF_LEN ( 1024 * (EVENT_SIZE + 16) )
@@ -517,7 +591,7 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
   
   if( (ident < 0) && (ident > self->size) )
   {
-    eclogger_logformat(self->logger, LL_ERROR, "CORE", "{ece_files} ident outside range", ident);
+    eclogger_fmt (LL_ERROR, "ENTC", "inotify", "ident outside range", ident);
     /* ignore error */
     return;
   }
@@ -526,7 +600,7 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
   
   if (pevent->mask & IN_IGNORED)
   {
-    eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} ident %i was replaced", ident);
+    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "ident %i was replaced", ident);
     
     if (ecstr_valid(data->filename))
     {
@@ -534,7 +608,7 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
       
       if( new_ident < 0 )
       {
-        eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{ece_files} Can't register event for inotify");
+        eclogger_errno (LL_ERROR, "ENTC", "inotify", "can't register event for inotify");
         return;
       }
       
@@ -542,14 +616,14 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
     }
     else
     {
-      eclogger_log(self->logger, LL_ERROR, "CORE", "{ece_files} can't reopen file: filename is empty");
+      eclogger_msg (LL_ERROR, "ENTC", "inotify", "can't reopen file: filename is empty");
     }
     return;
   }
   
   if( (pevent->mask & IN_DELETE) || (pevent->mask & IN_DELETE_SELF) || (pevent->mask & IN_MOVE_SELF) || (pevent->mask & IN_CREATE) )
   {
-    eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} remove event %i", ident);
+    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "remove event %i", ident);
     /* unregister event */
     inotify_rm_watch( self->notifd, ident );
     
@@ -568,10 +642,10 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
   || (pevent->mask & IN_MOVED_TO)
   || (pevent->mask & IN_MOVE_SELF);
   
-  eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} detect change [%u] A:%i C:%i M:%i F:%i T:%i S:%i O:%i R:%i", pevent->mask
-                     , pevent->mask & IN_ATTRIB, pevent->mask & IN_CLOSE_WRITE, pevent->mask & IN_MODIFY, pevent->mask & IN_MOVED_FROM,
-                     pevent->mask & IN_MOVED_TO, pevent->mask & IN_MOVE_SELF, pevent->mask & IN_OPEN, pevent->mask & IN_ACCESS
-                     );
+  eclogger_fmt (LL_TRACE, "ENTC", "inotify", "detect change [%u] A:%i C:%i M:%i F:%i T:%i S:%i O:%i R:%i", pevent->mask
+               , pevent->mask & IN_ATTRIB, pevent->mask & IN_CLOSE_WRITE, pevent->mask & IN_MODIFY, pevent->mask & IN_MOVED_FROM,
+                 pevent->mask & IN_MOVED_TO, pevent->mask & IN_MOVE_SELF, pevent->mask & IN_OPEN, pevent->mask & IN_ACCESS
+                );
   
   if ( changes )
   {
@@ -590,12 +664,13 @@ int ece_files_nextEvent(EcEventFiles self)
     
   while (TRUE) 
   {
-    int len;
+    int numRead;
     uint_t i = 0;
-    char buf[EVENT_BUF_LEN];
-
+    char buf[EVENT_BUF_LEN] __attribute__ ((aligned(8)));
+    char *p;
+    
     // wait until some data received on one of the handles
-    eclogger_log(self->logger, LL_TRACE, "CORE", "{ece_files} wait for events");
+    eclogger_msg (LL_TRACE, "ENTC", "inotify", "wait for events");
 
     int res = ece_context_wait (self->econtext, self->notifd, ENTC_INFINTE, ENTC_EVENTTYPE_READ);
     // check the return
@@ -610,39 +685,39 @@ int ece_files_nextEvent(EcEventFiles self)
       break;
     }
     
-    len = read(self->notifd, buf, EVENT_BUF_LEN);
-    if (len < 0)
+    numRead = read(self->notifd, buf, EVENT_BUF_LEN);
+    if (numRead < 0)
     {
       if (errno == EINTR)
       {
         /* need to reissue system call */  
         continue;
       }
-      eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{ece_files} got error");
+      eclogger_errno (LL_ERROR, "ENTC", "inotify", "got error");
       break;
     }
-    if (len == 0)
+    if (numRead == 0)
     {
       /* BUF_LEN to small ? */
       break;
     }
     
-    eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} got %i new events", len);
+    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "got %i new events", numRead);
     
-    while (i < len)
-    {    
-      struct inotify_event* pevent = (struct inotify_event*)&buf[i];
+    for (p = buf; p < buf + numRead; )
+    {
+      struct inotify_event* pevent = (struct inotify_event *) p;
       
       ece_files_nextEvent2 (self, pevent);
-      
-      i += EVENT_SIZE + pevent->len;      
+
+      p += EVENT_SIZE + pevent->len;      
     }
     
     rt = TRUE;
     break;
   }
   
-  eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} ended with %i", rt);
+  eclogger_fmt (LL_TRACE, "ENTC", "inotify", "ended with %i", rt);
   
   return rt;
 }
@@ -656,14 +731,12 @@ int ecevents_run(void* params)
 
 /*------------------------------------------------------------------------*/
 
-EcEventFiles ece_files_new (EcLogger logger)
+EcEventFiles ece_files_new ()
 {
   EcEventFiles self = ENTC_NEW( struct EcEventFiles_s );
   
   self->econtext = ece_context_new ();
-  
-  self->logger = logger;
-  
+   
   self->notifd = inotify_init();
   
   memset(self->matrix, 0, sizeof(self->matrix));
@@ -711,7 +784,7 @@ void ece_files_register (EcEventFiles self, const EcString filename, events_call
   
   if( ident < 0 )
   {
-    eclogger_logerrno(self->logger, LL_ERROR, "CORE", "{ece_files} Can't register event for inotify");    
+    eclogger_errno (LL_ERROR, "ENTC", "inotify", "can't register event for inotify");    
     return;
   }
     
@@ -723,8 +796,8 @@ void ece_files_register (EcEventFiles self, const EcString filename, events_call
   data->onDeletePtr = onDeletePtr;
   ecstr_replace(&(data->filename), filename);
   
-  eclogger_logformat(self->logger, LL_DEBUG, "CORE", "{ece_files} Registered event at inotify on %i", ident);
-  eclogger_logformat(self->logger, LL_TRACE, "CORE", "{ece_files} at '%s'", filename);
+  eclogger_fmt (LL_DEBUG, "ENTC", "inotify", "registered event at inotify on %i", ident);
+  eclogger_fmt (LL_TRACE, "ENTC", "inotify", " at '%s'", filename);
 }
 
 /*------------------------------------------------------------------------*/

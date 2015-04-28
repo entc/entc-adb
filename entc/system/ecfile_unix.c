@@ -22,8 +22,13 @@
 #include "ecfile.h"
 #include "../types/eclist.h"
 
+#include "utils/eclogger.h"
+
+#include <sys/types.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 struct EcFileHandle_s
 {
@@ -189,6 +194,7 @@ void ecdh_destroy (EcDirHandle* pself)
   closedir (self->dir);
   
   ecstr_delete(&(self->node.name));
+  ecstr_delete(&(self->path));
   
   ENTC_DEL (pself, struct EcDirHandle_s);
 }
@@ -202,7 +208,14 @@ void ecdh_seekType (const EcString path, EcFileInfo entry)
   // construct the file name 
   EcString inodename = ecfs_mergeToPath (path, entry->name);
     
-  ecfs_fileInfo (entry, inodename);
+  if (ecfs_fileInfo (entry, inodename))
+  {
+    
+  }
+  else
+  {
+    
+  }
     
   ecstr_delete (&inodename);
 }
@@ -285,6 +298,119 @@ int ecfs_mkdir (const EcString source)
 
 //--------------------------------------------------------------------------------
 
+#ifdef HAVE_FDOPENDIR
+
+int ecfs_rmdir_dir (int fd);
+
+//--------------------------------------------------------------------------------
+
+int ecfs_rmdir_loop (int fd, DIR* dir)
+{
+  int res = TRUE;
+  struct dirent* dentry;
+  
+  // iterate through all entries
+  for (dentry = readdir (dir); res && isAssigned (dentry); dentry = readdir (dir))
+  {
+    // ignore those 
+    if (ecstr_equal (dentry->d_name, ".") || ecstr_equal (dentry->d_name, ".."))
+    {
+      continue;
+    }
+    
+    {      
+      switch (dentry->d_type)
+      {
+        // if this flag is set we need to check with stat (no info about type)
+        case DT_UNKNOWN:
+        {
+          struct stat st;
+          int fd2 = openat (fd, dentry->d_name, 0);
+          if (fd2 < 0)
+          {
+            res = FALSE;
+          }
+          else
+          {
+            if (fstat (fd2, &st) == 0)
+            {
+              res = unlinkat (fd, dentry->d_name, S_ISDIR (st.st_mode) ? AT_REMOVEDIR : 0) == 0;            
+            }
+            else
+            {
+              res = FALSE;
+            }
+            close (fd2);
+          }
+        }
+        break;
+        // if directory
+        case DT_DIR:
+        {
+          res = unlinkat (fd, dentry->d_name, AT_REMOVEDIR) == 0;            
+        }
+        break;
+        default:
+        {
+          res = unlinkat (fd, dentry->d_name, 0) == 0;            
+        }
+        break;
+      }
+    }
+  }
+  return res;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecfs_rmdir_dir (int fd)
+{
+  int res;
+  DIR* dir = fdopendir (fd);
+  
+  if (isNotAssigned (dir))
+  {
+    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't open directory");
+    return FALSE;
+  }
+  
+  res = ecfs_rmdir_loop (fd, dir);
+  
+  closedir(dir); 
+  
+  return res;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
+{
+  int res = TRUE;
+  // try to remove recusively
+  if (forceOnNoneEmpty)
+  {
+    int fd = open (source, 0);
+    if (fd < 0)
+    {
+      eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't open directory");
+      return FALSE;
+    }
+    
+    res = ecfs_rmdir_dir (fd);
+    
+    // clean up
+    close (fd);
+  }
+  
+  return res && (rmdir (source) == 0);
+}
+
+//--------------------------------------------------------------------------------
+
+#else /* HAVE_FDOPENDIR */
+
+//--------------------------------------------------------------------------------
+
 int ecfs_rmdir_loop (const EcString source, DIR* dir)
 {
   int res = TRUE;
@@ -300,23 +426,46 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
     }
     
     {      
-      struct stat st;
-      
       EcString path = ecfs_mergeToPath (source, dentry->d_name);
       
-      res = stat (path, &st) == 0;      
-      if (res) 
+      switch (dentry->d_type)
       {
-        if (S_ISDIR (st.st_mode))
+          // if this flag is set we need to check with stat (no info about type)
+        case DT_UNKNOWN:
         {
-          res = ecfs_rmdir (path, TRUE);
+          struct stat st;
+          
+          if (stat (path, &st) == 0)
+          {
+            if (S_ISDIR (st.st_mode))
+            {
+              res = ecfs_rmdir (path, TRUE);          
+            }
+            else
+            {
+              res = unlink(path);            
+            }                    
+          }
+          else
+          {
+            res = FALSE;
+            eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't stat");            
+          }
         }
-        else
+        break;
+        // if directory
+        case DT_DIR:
+        {
+          res = ecfs_rmdir (path, TRUE);          
+        }
+        break;
+        default:
         {
           res = unlink(path);
-        }        
+        }
+        break;
       }
-
+      
       ecstr_delete (&path);      
     }
   }
@@ -325,30 +474,43 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
 
 //--------------------------------------------------------------------------------
 
-int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
+int ecfs_rmdir_dir (const EcString source)
 {
-  int res = TRUE;
+  int res;
+  DIR* dir = opendir (source);
   
-  if (forceOnNoneEmpty)
+  if (isNotAssigned (dir))
   {
-    DIR* dir = opendir (source);
-    if (isNotAssigned (dir))
-    {
-      return FALSE;
-    }
-    
-    res = ecfs_rmdir_loop (source, dir);
-    
-    closedir(dir);
+    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't open directory");
+    return FALSE;
   }
-
-  if (res)
-  {
-    res = rmdir (source) == 0;
-  }
+  
+  res = ecfs_rmdir_loop (source, dir);
+  
+  closedir(dir);  
   
   return res;
 }
+
+//--------------------------------------------------------------------------------
+
+int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
+{
+  // try to remove recusively
+  if (forceOnNoneEmpty)
+  {
+    if (!ecfs_rmdir_dir (source))
+    {
+      return FALSE;
+    }
+  }
+  
+  return (rmdir (source) == 0);
+}
+
+//--------------------------------------------------------------------------------
+
+#endif /* HAVE_FDOPENDIR */
 
 /*------------------------------------------------------------------------*/
 

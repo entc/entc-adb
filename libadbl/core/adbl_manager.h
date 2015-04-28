@@ -33,7 +33,7 @@ struct AdblManager_s; typedef struct AdblManager_s* AdblManager;
 
 __CPP_EXTERN______________________________________________________________________________START  
 
-__LIB_EXPORT AdblManager adbl_new (EcLogger);
+__LIB_EXPORT AdblManager adbl_new ();
   
 __LIB_EXPORT void adbl_scan (AdblManager, EcEventFiles events, const EcString configpath);
   
