@@ -216,6 +216,7 @@ void eclist_cursor (EcList self, EcListCursor* cursor)
 {
   cursor->list = self;
   cursor->node = self->node->next;
+  cursor->value = NULL;
 }
 
 /*------------------------------------------------------------------------*/
@@ -223,6 +224,7 @@ void eclist_cursor (EcList self, EcListCursor* cursor)
 int eclist_cnext (EcListCursor* cursor)
 {
   cursor->node = cursor->node->next;
+  cursor->value = cursor->node->data;
   return cursor->node != cursor->list->node;
 }
 

@@ -101,7 +101,7 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
 
       SetConsoleTextAttribute (hStdout, info.wAttributes);
 #else
-      printf("\033[%sm%-12s %s|%s] %s\033[0m\n", clr_matrix[dIn->ref], ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+      printf("\033[%sm%-12s %s|%-6s] %s\033[0m\n", clr_matrix[dIn->ref], ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
 #endif
       
     }    

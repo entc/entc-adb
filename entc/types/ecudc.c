@@ -237,12 +237,11 @@ void* ecudc_list_new ()
 
 void ecudc_list_clear (EcUdcList* self)
 {
-  EcListNode node;
+  EcListCursor cursor; eclist_cursor(self->list, &cursor);
   
-  for (node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node)) 
+  while (eclist_cnext (&cursor))
   {
-    EcUdc item = eclist_data(node);
-    ecudc_destroy (&item);
+    ecudc_destroy ((EcUdc*)&(cursor.value));    
   }
   
   eclist_clear(self->list);

@@ -33,6 +33,8 @@ typedef struct {
   
   EcList list;
   
+  void* value;
+  
 } EcListCursor;
 
 __CPP_EXTERN______________________________________________________________________________START
