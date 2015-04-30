@@ -908,6 +908,31 @@ void echttp_header_title (EcHttpHeader* header)
     header->title = ecbuf_str (&buffer);
   }
 }
+
+//---------------------------------------------------------------------------------------
+
+void echttp_header_trimurl (EcHttpHeader* header)
+{
+  if ((header->request_url[0] == '/')) 
+  {
+    if ((header->request_url[1] == '/')) 
+    {
+      // we do have a complete url, remove the first part
+      const EcString pos = strchr (header->request_url + 2, '/');  
+      if( pos )
+      {
+        ecstr_replace (&(header->request_url), pos);        
+      }
+    }
+  }
+  
+  // check url again if the last character is '/'
+  if (header->request_url[strlen(header->request_url)] == '/')
+  {
+    header->request_url[strlen(header->request_url)] = 0;
+  }  
+}
+
 //---------------------------------------------------------------------------------------
 
 void echttp_header_validate (EcHttpHeader* header)
@@ -929,11 +954,8 @@ void echttp_header_validate (EcHttpHeader* header)
     {
       ecstr_replace(&(header->request_url), header->url); 
     }    
-  }
-  // check url again if the last character is '/'
-  if (header->request_url[strlen(header->request_url)] == '/')
-  {
-    header->request_url[strlen(header->request_url)] = 0;
+    
+    echttp_header_trimurl (header);
   }
   // set correct language
   if (ecstr_empty(header->session_lang)) 

@@ -79,14 +79,14 @@ static WORD clr_matrix[11] = {
   FOREGROUND_GREEN | FOREGROUND_BLUE
 };
 #else
-static const char* clr_matrix[11] = { "0", "0;31", "1;31", "1;33", "0;32", "0;34", "0;30" };
+static const char* clr_matrix[7] = { "0", "0;31", "1;31", "1;33", "0;32", "0;34", "0;30" };
 #endif
 
 int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
 {
   if (isAssigned (dIn) && (dIn->type == ENTC_MSGTYPE_LOG) && (dIn->rev == 1))
   {
-    if (dIn->ref < 5)
+    if (dIn->ref < 7)
     {
 #if defined _WIN64 || defined _WIN32 
       CONSOLE_SCREEN_BUFFER_INFO info;
