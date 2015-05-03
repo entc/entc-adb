@@ -46,6 +46,7 @@ EcList eclist_new()
   /* do the loop */
   self->node->next = self->node;
   self->node->forw = self->node;
+  self->node->data = NULL;
   
   return self;
 }

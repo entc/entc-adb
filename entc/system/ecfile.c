@@ -102,7 +102,7 @@ EcString ecfs_getDirectory(const EcString filename)
   return ecstr_part(filename, pos - filename);
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------------
 
 const EcString ecfs_extractFileExtension(const EcString path)
 {
@@ -127,7 +127,7 @@ const EcString ecfs_extractFileExtension(const EcString path)
   return 0;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------------
 
 EcString ecfs_extractFileName(const EcString path)
 {
@@ -152,5 +152,5 @@ EcString ecfs_extractFileName(const EcString path)
   return 0;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------------
 

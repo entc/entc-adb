@@ -653,6 +653,14 @@ EcString ecfs_getExecutablePath (int argc, char *argv[])
   return ecfs_getDirectory (execPath);
 }
 
+//-----------------------------------------------------------------------------------
+
+int ecfs_createDirIfNotExists (const EcString path)
+{
+  int res = mkdir (path, 0770);  
+  return res == 0 || res == EEXIST;
+}
+
 //-------------------------------------------------------------------------
 
 #endif

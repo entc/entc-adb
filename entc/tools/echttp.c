@@ -102,6 +102,7 @@ int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_call
   fh = ecfh_open (self->filename, O_WRONLY | O_CREAT); 
   if (isNotAssigned (fh))
   {
+    eclogger_errno (LL_ERROR, "ENTC", "http", "can't open file '%s'", self->filename);
     return FALSE;
   }
   
@@ -133,6 +134,8 @@ int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_call
   ecfh_close (&fh);  
   
   ecbuf_destroy (&(self->buffer));
+  
+  eclogger_fmt(LL_TRACE, "ENTC", "content", "created new temporary file '%s' with size %i", self->filename, size);
   
   return TRUE;
 }
@@ -167,14 +170,27 @@ int echttp_content_fillBuffer (EcHttpContent self, ulong_t size, http_content_ca
 
 //---------------------------------------------------------------------------------------
 
+void echttp_setPath (EcHttpContent self, const EcString path)
+{
+  self->path = ecstr_copy (path);
+  
+  ecfs_createDirIfNotExists (self->path);
+}
+
+//---------------------------------------------------------------------------------------
+
 EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path)
 {
   EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
   
-  self->path = ecstr_copy (path);
+  self->path = ecstr_init ();
   
   if (size > _ENTC_MAX_BUFFERSIZE)
   {
+    eclogger_fmt(LL_TRACE, "ENTC", "content", "read using temporary file");
+
+    echttp_setPath (self, path);
+
     if (!echttp_content_fillFile (self, size, bf, ptr))
     {
       echttp_content_destroy (&self);
@@ -183,6 +199,8 @@ EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, htt
   }
   else
   {
+    eclogger_fmt(LL_TRACE, "ENTC", "content", "read using buffer");
+
     if (!echttp_content_fillBuffer (self, size, mm, ptr))
     {
       echttp_content_destroy (&self);
@@ -926,6 +944,8 @@ void echttp_header_trimurl (EcHttpHeader* header)
     }
   }
   
+  echttp_unescape (header->request_url);
+  
   // check url again if the last character is '/'
   if (header->request_url[strlen(header->request_url)] == '/')
   {
@@ -1176,7 +1196,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
     const char* line = ecstream_buffer(stream);
     if( *line )
     {
-      //printf("{recv line} '%s'\n", line);
+      eclogger_msg(LL_TRACE, "ENTC", "http header", line);
       
       /* Host: 127.0.0.1:8080 */
       if( line[0] == 'H' && line[1] == 'o' && line[5] == ' ' )        
@@ -1406,6 +1426,8 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
     
   if (header->content_length > 0)
   {
+    eclogger_fmt (LL_TRACE, "ENTC", "http process", "request has content: %i", header->content_length);
+    
     if (isAssigned (header->content))
     {
       echttp_content_destroy (&(header->content));
@@ -1417,6 +1439,10 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
       echttp_send_500 (header, socket);
       return;
     }
+  }
+  else
+  {
+    eclogger_msg (LL_TRACE, "ENTC", "http process", "no content");    
   }
   
   echttp_request_process_next (self, header, socket);

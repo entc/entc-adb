@@ -79,6 +79,7 @@ typedef struct EcDirHandle_s* EcDirHandle;
 #include <stdio.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define ENTC_PATH_SEPARATOR '/'
 
@@ -133,6 +134,8 @@ __LIB_EXPORT int ecfs_rmdir (const EcString source, int forceOnNoneEmpty);
 __LIB_EXPORT int ecfs_rmfile (const EcString source);
 
 __LIB_EXPORT int ecfs_fileInfo (EcFileInfo, const EcString path);
+
+__LIB_EXPORT int ecfs_createDirIfNotExists (const EcString path);
 
 /* **** path string operations **** */
 
