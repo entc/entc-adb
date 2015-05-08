@@ -54,19 +54,19 @@ __LIB_EXPORT EcString ecstr_replacePos( EcString*, const EcString, const EcStrin
   
   /* **** merge methods **** */
   
-__LIB_EXPORT EcString ecstr_cat2(const EcString, const EcString);
+__LIB_EXPORT EcString ecstr_cat2 (const EcString, const EcString);
 
-__LIB_EXPORT EcString ecstr_catc(const EcString, char c, const EcString);
+__LIB_EXPORT EcString ecstr_catc (const EcString, char c, const EcString);
 
-__LIB_EXPORT EcString ecstr_cat3(const EcString, const EcString, const EcString);
+__LIB_EXPORT EcString ecstr_cat3 (const EcString, const EcString, const EcString);
 
-__LIB_EXPORT EcString ecstr_cat4(const EcString, const EcString, const EcString, const EcString);
+__LIB_EXPORT EcString ecstr_cat4 (const EcString, const EcString, const EcString, const EcString);
   
   /* **** const methods **** */
   
-__LIB_EXPORT uint_t ecstr_len( const EcString );
+__LIB_EXPORT uint_t ecstr_len ( const EcString );
 
-__LIB_EXPORT const char* ecstr_cstring( const EcString );
+__LIB_EXPORT const char* ecstr_cstring ( const EcString );
   
 __LIB_EXPORT int ecstr_equal( const EcString, const EcString );
 
@@ -74,7 +74,9 @@ __LIB_EXPORT int ecstr_equaln( const EcString, const EcString, uint_t size );
 
 __LIB_EXPORT int ecstr_equalUnsensitive (const EcString, const EcString);
   
-__LIB_EXPORT int ecstr_leading( const EcString, const EcString leading);
+__LIB_EXPORT int ecstr_leading ( const EcString, const EcString leading);
+
+__LIB_EXPORT int ecstr_ending ( const EcString, const EcString ending);
 
 __LIB_EXPORT int ecstr_has (const EcString, char c);
 
@@ -89,6 +91,10 @@ __LIB_EXPORT EcString ecstr_extractf( const EcString source, char c );
 __LIB_EXPORT EcString ecstr_shrink (const EcString source, char from, char to);
 
 __LIB_EXPORT int ecstr_split (const EcString source, EcString*, EcString*, char c);
+
+__LIB_EXPORT int ecstr_leadingPart (const EcString source, const EcString leading, EcString*);
+
+__LIB_EXPORT int ecstr_endingPart (const EcString source, const EcString ending, EcString*);
 
   /* **** transform methods **** */
   

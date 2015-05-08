@@ -432,7 +432,7 @@ int ecstr_equaln (const EcString s1, const EcString s2, uint_t size)
 
 /*------------------------------------------------------------------------*/
 
-int ecstr_leading( const EcString s, const EcString leading)
+int ecstr_leading (const EcString s, const EcString leading)
 {
   if( !s )
   {
@@ -449,6 +449,84 @@ int ecstr_leading( const EcString s, const EcString leading)
     
     return strncmp(s, leading, len) == 0;
   }
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecstr_leadingPart (const EcString source, const EcString leading, EcString* result)
+{
+  int len;
+  
+  if( !source )
+  {
+    return FALSE;  
+  }
+  
+  if( !leading )
+  {
+    return FALSE;  
+  }
+  
+  len = strlen(leading);
+  
+  if (strncmp(source, leading, len) != 0)
+  {
+    return FALSE;
+  }
+  
+  ecstr_replaceTO(result, ecstr_part(source + len, strlen(source) - len));  
+  return TRUE;
+}
+
+/*------------------------------------------------------------------------*/
+
+int ecstr_ending (const EcString s, const EcString ending)
+{
+  if( !s )
+  {
+    return FALSE;  
+  }
+  
+  if( !ending )
+  {
+    return FALSE;  
+  }
+
+  {
+    int lenEnding = strlen (ending);
+    int lenSource = strlen (s);
+    
+    return strncmp(s + (lenSource - lenEnding), ending, lenEnding) == 0;    
+  }
+}
+
+/*------------------------------------------------------------------------*/
+
+int ecstr_endingPart (const EcString source, const EcString ending, EcString* result)
+{
+  int lenEnding;
+  int lenSource;
+
+  if( !source )
+  {
+    return FALSE;  
+  }
+  
+  if( !ending )
+  {
+    return FALSE;  
+  }
+  
+  lenEnding = strlen (ending);
+  lenSource = strlen (source);
+  
+  if (strncmp(source + (lenSource - lenEnding), ending, lenEnding) != 0)
+  {
+    return FALSE;
+  }
+  
+  ecstr_replaceTO(result, ecstr_part(source, lenSource - lenEnding));  
+  return TRUE;
 }
 
 /*------------------------------------------------------------------------*/

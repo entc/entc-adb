@@ -26,6 +26,7 @@
 #include "../types/ecudc.h"
 #include "../types/ecstring.h"
 
+#define ECDATE_TYPE    ".t"
 #define ECDATA_ROOT    ".root"
 #define ECDATA_NODES   ".nodes"
 #define ECDATA_ITEMS   ".items"
@@ -41,6 +42,7 @@
 
 // additional generics
 #define ECDATA_OBJECT  ".obj"
+#define ECDATA_TARGET  ".target"
 #define ECDATA_AUTH    ".auth"
 
 __CPP_EXTERN______________________________________________________________________________START
