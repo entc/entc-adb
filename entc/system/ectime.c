@@ -19,6 +19,9 @@
 
 #include "ectime.h"
 
+#include "utils/eclogger.h"
+#include <errno.h>
+
 #if defined _WIN64 || defined _WIN32
 
 #include <windows.h>
@@ -149,9 +152,12 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
   
   memset (&timeinfo, 0, sizeof(struct tm));
   
-  strptime (stime, "%FT%T%z", &timeinfo);
+  if (strptime (stime, "%FT%T%z", &timeinfo) == NULL || strptime (stime, "%FT%T%zZ", &timeinfo) == NULL)
+  {
+    eclogger_fmt (LL_ERROR, "ENTC", "parse iso8601", "can't parse time string '%s'", stime);
+  }
   
-  printf("y", timeinfo.year);
+  printf("year %i month %i\n", timeinfo.tm_year, timeinfo.tm_mon);
   
   *t = mktime (&timeinfo);
 }
