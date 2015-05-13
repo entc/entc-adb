@@ -18,6 +18,7 @@
  */
 
 #include "ecbuffer.h"
+#include "ecstream.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -428,6 +429,184 @@ EcBuffer ecbuf_md5 (EcBuffer self)
   }
    
   return ret;    
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecbuf_iterator (EcBuffer self, EcBufferIterator* bufit)
+{
+  bufit->buf = self;
+  bufit->line = ecstr_init ();
+
+  ecbufit_reset (bufit);
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecbufit_readln_2breaks (EcBufferIterator* bufit, EcStream stream)
+{
+  int hasBreak1 = FALSE;
+  
+  while (*(bufit->pos))
+  {
+    char c = *(bufit->pos);
+    
+    if (hasBreak1)
+    {
+      if (c == bufit->b2)
+      {
+        bufit->pos++;
+        return TRUE;
+      }
+      else
+      {        
+        bufit->pos++;
+        return TRUE;
+      }
+    }
+    else
+    {
+      if (c == bufit->b1)
+      {
+        hasBreak1 = TRUE;
+      }
+      else if (c == '\r' || c == '\n')
+      {
+        bufit->pos++;
+        // error, but we count it as line break
+        return TRUE;
+      }
+      else
+      {
+        ecstream_appendc (stream, c);      
+      }                  
+    }
+    
+    bufit->pos++;
+  }
+  
+  return FALSE;  
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecbufit_readln_1breaks (EcBufferIterator* bufit, EcStream stream)
+{
+  while (*(bufit->pos))
+  {
+    char c = *(bufit->pos);
+    
+    if (c == bufit->b1)
+    {
+      bufit->pos++;
+      return TRUE;
+    }
+    else if (c == '\r' || c == '\n')
+    {
+      bufit->pos++;
+      // error, but we count it as line break
+      return TRUE;
+    }
+    else
+    {
+      ecstream_appendc (stream, c);      
+    } 
+    
+    bufit->pos++;
+  }
+  
+  return FALSE;    
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecbufit_readln_getbreaks (EcBufferIterator* bufit, EcStream stream)
+{
+  int hasBreak1 = FALSE;
+  
+  while (*(bufit->pos))
+  {
+    char c = *(bufit->pos);
+    
+    if (hasBreak1)
+    {
+      if (c == bufit->b1)
+      {
+        bufit->pos++;
+        return TRUE;
+      }
+      else if (c == '\r' || c == '\n')
+      {
+        bufit->b2 = c;
+        bufit->pos++;
+        return TRUE;
+      }
+      else
+      {
+        bufit->pos++;
+        return TRUE;
+      }
+    }
+    else
+    {
+      if (c == '\r' || c == '\n')
+      {
+        bufit->b1 = c;
+        hasBreak1 = TRUE;
+
+        bufit->pos++;
+        
+        continue;
+      }
+      else
+      {
+        ecstream_appendc (stream, c);      
+      }                  
+    }
+    
+    bufit->pos++;
+  }
+  
+  return FALSE;      
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecbufit_readln (EcBufferIterator* bufit)
+{
+  EcStream stream = ecstream_new ();
+  int res;
+  
+  if (bufit->b1 && bufit->b2)
+  {
+    res = ecbufit_readln_2breaks (bufit, stream);
+  }
+  else if (bufit->b1 && (bufit->b2 == 0))
+  {
+    res = ecbufit_readln_1breaks (bufit, stream);
+  }
+  else
+  {
+    res = ecbufit_readln_getbreaks (bufit, stream);
+  } 
+  
+  EcBuffer buf = ecstream_trans (&stream);
+
+  ecbuf_replace (&(bufit->line), &buf);
+  
+  return res;
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecbufit_reset (EcBufferIterator* bufit)
+{
+  ecstr_delete (&(bufit->line));
+  
+  bufit->b1 = 0;
+  bufit->b2 = 0;
+  
+  bufit->pos = bufit->buf->buffer;  
 }
 
 //----------------------------------------------------------------------------------------

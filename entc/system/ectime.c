@@ -142,3 +142,18 @@ void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size)
 }
 
 //-----------------------------------------------------------------------------------
+
+void ectime_parseISO8601 (time_t* t, const char* stime)
+{
+  struct tm timeinfo;
+  
+  memset (&timeinfo, 0, sizeof(struct tm));
+  
+  strptime (stime, "%FT%T%z", &timeinfo);
+  
+  printf("y", timeinfo.year);
+  
+  *t = mktime (&timeinfo);
+}
+
+//-----------------------------------------------------------------------------------

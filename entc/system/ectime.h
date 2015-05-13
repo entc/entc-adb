@@ -60,6 +60,8 @@ __LIB_EXPORT void ectime_toGmtString (const time_t*, char* buffer, ulong_t size)
 
 __LIB_EXPORT void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size);
 
+__LIB_EXPORT void ectime_parseISO8601 (time_t* t, const char* stime);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

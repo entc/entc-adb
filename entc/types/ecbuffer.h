@@ -64,7 +64,30 @@ __LIB_EXPORT const EcString ecbuf_const_str (const EcBuffer);
 __LIB_EXPORT EcString ecbuf_str (EcBuffer*);
 
 __LIB_EXPORT void ecbuf_replace (EcString*, EcBuffer*);
+
+// iterators ----------------------------------------------------------------------------
+
+typedef struct 
+{
   
+  EcString line;
+  
+  char b1;
+  
+  char b2;
+  
+  EcBuffer buf;
+  
+  const unsigned char* pos;
+  
+} EcBufferIterator;
+
+__LIB_EXPORT void ecbuf_iterator (EcBuffer, EcBufferIterator*);
+
+__LIB_EXPORT int ecbufit_readln (EcBufferIterator*);
+
+__LIB_EXPORT void ecbufit_reset (EcBufferIterator*);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif
