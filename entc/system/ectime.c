@@ -21,6 +21,7 @@
 
 #include "utils/eclogger.h"
 #include <errno.h>
+#include <stdio.h>
 
 #if defined _WIN64 || defined _WIN32
 
@@ -148,14 +149,26 @@ void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size)
 
 void ectime_parseISO8601 (time_t* t, const char* stime)
 {
-  struct tm timeinfo;
-  
-  memset (&timeinfo, 0, sizeof(struct tm));
-  
-  if (strptime (stime, "%FT%T%z", &timeinfo) == NULL || strptime (stime, "%FT%T%zZ", &timeinfo) == NULL)
+  struct tm timeinfo;  
+  int year, month, day, hour, minute, second;
+  int res = sscanf (stime, "%d%d%dT%d%d%d", year, month, day, hour, minute, second);
+
+  if (res != 6)
   {
     eclogger_fmt (LL_ERROR, "ENTC", "parse iso8601", "can't parse time string '%s'", stime);
+    return;
   }
+
+  timeinfo.tm_year = year - 1900;
+  timeinfo.tm_mon = month - 1;
+  timeinfo.tm_wday = day;
+
+  timeinfo.tm_hour = hour;
+  timeinfo.tm_min = minute;
+  timeinfo.tm_sec = second;
+
+  timeinfo.tm_isdst = 1;
+
   
   printf("year %i month %i\n", timeinfo.tm_year, timeinfo.tm_mon);
   

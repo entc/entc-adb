@@ -589,11 +589,11 @@ int ecbufit_readln (EcBufferIterator* bufit)
   {
     res = ecbufit_readln_getbreaks (bufit, stream);
   } 
-  
-  EcBuffer buf = ecstream_trans (&stream);
 
-  ecbuf_replace (&(bufit->line), &buf);
-  
+  {  
+    EcBuffer buf = ecstream_trans (&stream);
+    ecbuf_replace (&(bufit->line), &buf);
+  } 
   return res;
 }
 

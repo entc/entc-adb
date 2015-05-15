@@ -414,4 +414,12 @@ EcString ecfs_getExecutablePath (int argc, char *argv[])
 
 //------------------------------------------------------------------------------------------------------------
 
+int ecfs_createDirIfNotExists (const EcString path)
+{
+  int res = CreateDirectory (path, NULL);  
+  return res == 0 || res == ERROR_ALREADY_EXISTS;
+}
+
+//------------------------------------------------------------------------------------------------------------
+
 #endif
