@@ -41,9 +41,10 @@
 #define ECDATA_FILE    ".file"
 
 // additional generics
-#define ECDATA_OBJECT  ".obj"
-#define ECDATA_TARGET  ".target"
-#define ECDATA_AUTH    ".auth"
+#define ECDATA_OBJECT        ".obj"
+#define ECDATA_MULTIOBJECT   ".mos"
+#define ECDATA_TARGET        ".target"
+#define ECDATA_AUTH          ".auth"
 
 __CPP_EXTERN______________________________________________________________________________START
 

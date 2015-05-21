@@ -109,7 +109,7 @@ int _STDCALL ecserver_worker_run (void* params)
     EcListNode node;
     int res;
 
-    eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait on queue");
+    //eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait on queue");
 
     res = ece_list_wait (self->server->equeue, ENTC_INFINTE, NULL);
     // check the return
@@ -126,13 +126,13 @@ int _STDCALL ecserver_worker_run (void* params)
 
     if (node == eclist_end(self->server->queue))
     {
-      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "no items in queue");
+      //eclogger_msg (LL_TRACE, "ENTC", "ecserver", "no items in queue");
       // no items/objects available
       ecmutex_unlock(self->server->mutex);
       return TRUE;
     }
 
-    eclogger_msg (LL_TRACE, "ENTC", "ecserver", "found object in queue");
+    //eclogger_msg (LL_TRACE, "ENTC", "ecserver", "found object in queue");
 
     object = eclist_data(node);
 

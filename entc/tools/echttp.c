@@ -187,7 +187,7 @@ EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, htt
   
   if (size > _ENTC_MAX_BUFFERSIZE)
   {
-    eclogger_fmt(LL_TRACE, "ENTC", "content", "read using temporary file");
+    //eclogger_fmt(LL_TRACE, "ENTC", "content", "read using temporary file");
 
     echttp_setPath (self, path);
 
@@ -199,7 +199,7 @@ EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, htt
   }
   else
   {
-    eclogger_fmt(LL_TRACE, "ENTC", "content", "read using buffer");
+    //eclogger_fmt(LL_TRACE, "ENTC", "content", "read using buffer");
 
     if (!echttp_content_fillBuffer (self, size, mm, ptr))
     {
@@ -1196,7 +1196,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
     const char* line = ecstream_buffer(stream);
     if( *line )
     {
-      eclogger_msg(LL_TRACE, "ENTC", "http header", line);
+      //eclogger_msg(LL_TRACE, "ENTC", "http header", line);
       
       /* Host: 127.0.0.1:8080 */
       if( line[0] == 'H' && line[1] == 'o' && line[5] == ' ' )        
@@ -1276,7 +1276,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
       const EcString after_method;
       const EcString afetr_url;
 
-      eclogger_fmt (LL_TRACE, "ENTC", "http", "{first line} '%s'", line);
+      // eclogger_fmt (LL_TRACE, "ENTC", "http", "{first line} '%s'", line);
       // find method
       after_method = ecstr_pos (line, ' ');
       if (ecstr_empty (after_method))
@@ -1426,7 +1426,7 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
     
   if (header->content_length > 0)
   {
-    eclogger_fmt (LL_TRACE, "ENTC", "http process", "request has content: %i", header->content_length);
+    // eclogger_fmt (LL_TRACE, "ENTC", "http process", "request has content: %i", header->content_length);
     
     if (isAssigned (header->content))
     {
@@ -1442,7 +1442,7 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
   }
   else
   {
-    eclogger_msg (LL_TRACE, "ENTC", "http process", "no content");    
+    // eclogger_msg (LL_TRACE, "ENTC", "http process", "no content");    
   }
   
   echttp_request_process_next (self, header, socket);

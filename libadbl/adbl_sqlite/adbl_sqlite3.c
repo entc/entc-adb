@@ -216,13 +216,19 @@ void adbl_constructListWithTable( EcStream statement, EcList columns, const EcSt
 
 /*------------------------------------------------------------------------*/
 
+void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint );
+
 void adbl_constructConstraintElement( EcStream statement, AdblConstraintElement* element )
 {
   if( element->type == QUOMADBL_CONSTRAINT_EQUAL )
   {
-    if( element->constraint )
+    AdblConstraint* subelement = element->constraint;  
+    
+    if (isAssigned (subelement))
     {
-      
+      ecstream_append( statement, "(" );
+      adbl_constructContraintNode (statement, subelement);
+      ecstream_append( statement, ")" );
     }
     else
     {
@@ -238,21 +244,56 @@ void adbl_constructConstraintElement( EcStream statement, AdblConstraintElement*
 
 void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint )
 {
-  EcListNode node = eclist_first(constraint->list);
-  
-  if( node != eclist_end(constraint->list) )
+  switch (constraint->type)
   {
-    adbl_constructConstraintElement( statement, eclist_data(node) );
-    
-    node = eclist_next(node);
-    
-    for(; node != eclist_end(constraint->list); node = eclist_next(node) )
+    case QUOMADBL_CONSTRAINT_AND:
     {
-      if( constraint->type == QUOMADBL_CONSTRAINT_AND )
-        ecstream_append( statement, " AND " );
+      EcListNode node = eclist_first(constraint->list);
       
-      adbl_constructConstraintElement( statement, eclist_data(node) );
+      if( node != eclist_end(constraint->list) )
+      {
+        adbl_constructConstraintElement( statement, eclist_data(node) );
+        
+        node = eclist_next(node);
+        
+        for(; node != eclist_end(constraint->list); node = eclist_next(node) )
+        {
+          ecstream_append( statement, " AND " );          
+          adbl_constructConstraintElement( statement, eclist_data(node) );
+        }
+      }      
     }
+    break;
+    case QUOMADBL_CONSTRAINT_IN:
+    {
+      EcListNode node = eclist_first (constraint->list);      
+      if( node != eclist_end(constraint->list) )
+      {
+        AdblConstraintElement* element = eclist_data (node);
+        
+        // TODO
+        if( element->type == QUOMADBL_CONSTRAINT_EQUAL )
+        {
+          ecstream_append( statement, element->column );
+          ecstream_append( statement, " IN (\'" );
+          ecstream_append( statement, element->value );
+          ecstream_append( statement, "\'" );
+
+          node = eclist_next(node);
+          
+          for(; node != eclist_end(constraint->list); node = eclist_next(node) )
+          {
+            element = eclist_data (node);
+            ecstream_append( statement, ",\'");
+            ecstream_append( statement, element->value );
+            ecstream_append( statement, "\'" );
+          }
+
+          ecstream_append( statement, ")" );
+        }
+      }            
+    }
+    break;
   }
 }
 

@@ -152,7 +152,7 @@ EcXMLStream ecxmlstream_openbuffer (const char* buffer)
 
   self->constbuffer = buffer;
   
-  eclogger_msg (LL_TRACE, "ENTC", "xml", buffer);
+  //eclogger_msg (LL_TRACE, "ENTC", "xml", buffer);
 
   return self;
 }

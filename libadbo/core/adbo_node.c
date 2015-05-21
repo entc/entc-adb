@@ -145,10 +145,92 @@ void adbo_node_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstre
 
 //----------------------------------------------------------------------------------------
 
+int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const EcString dbcolumn, int first);
+
+int adbo_dbkeys_set_constraint_list (EcUdc item, AdblConstraint* constraint, const EcString dbcolumn)
+{
+  EcUdc var; void* cursor = NULL;
+  for (var = ecudc_next (item, &cursor); isAssigned (var); var = ecudc_next (item, &cursor))
+  {
+    if (!adbo_dbkeys_set_constraint (var, constraint, dbcolumn, FALSE))
+    {
+      return FALSE;
+    }
+  }  
+  return TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const EcString dbcolumn, int first)
+{
+  switch (ecudc_type (item))
+  {
+    case ENTC_UDC_LIST:
+    {
+      if (first)
+      {
+        AdblConstraint* h = adbl_constraint_new (QUOMADBL_CONSTRAINT_IN);
+
+        if (!adbo_dbkeys_set_constraint_list (item, h, dbcolumn))
+        {
+          adbl_constraint_delete(&h);
+          return FALSE;
+        }
+        else
+        {
+          adbl_constraint_addConstraint (constraint, h);
+          h = NULL;          
+        }
+      }
+      else
+      {
+        return adbo_dbkeys_set_constraint_list (item, constraint, dbcolumn);
+      }
+    }
+    break;
+    case ENTC_UDC_STRING:
+    {
+      const EcString h = ecudc_asString (item);        
+      if (ecstr_empty(h))
+      {
+        eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' has empty value", dbcolumn); 
+        return FALSE;          
+      }
+      adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, h);            
+    }
+    break;
+    case ENTC_UDC_BYTE:
+    {
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asB (item));
+    }
+    break;
+    case ENTC_UDC_UINT32:
+    {
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asUInt32 (item));
+    }
+    break;
+    case ENTC_UDC_UINT64:
+    {
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asUInt64 (item));
+    }
+    break;
+    default:
+    {
+      eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' has not supported type", dbcolumn); 
+      return FALSE;        
+    }
+    break;
+  }  
+  
+  return TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+
 int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* constraint, AdblQuery* query)
 {
   // variables
-  const EcString data_value;
   const EcString dbcolumn = ecudc_name (value);
   if (isNotAssigned (dbcolumn))
   {
@@ -167,17 +249,17 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     return FALSE;
   }  
   
-  data_value = ecudc_get_asString(data, dbcolumn, NULL);
-  if (isNotAssigned (data_value))
   {
-    eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' no value found", dbcolumn); 
-    return FALSE;
-  }
+    EcUdc dataConstraint = ecudc_node (data, dbcolumn); 
+    if (isNotAssigned (dataConstraint))
+    {
+      eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' no value found", dbcolumn); 
+      return FALSE;
+    }
     
-  if (isAssigned(constraint))
-  {
-    adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, data_value);    
+    return adbo_dbkeys_set_constraint (dataConstraint, constraint, dbcolumn, TRUE);
   }
+      
   return TRUE;
 }
 
@@ -217,6 +299,12 @@ AdblConstraint* adbo_node_constraints (EcUdc node, EcUdc data, AdboContext conte
     {
       adbo_dbkeys_constraints (fkeys, data, constraint, query);
     }
+    
+    EcUdc cols = ecudc_node (node, ECDATA_COLS);
+    if (isAssigned (cols))
+    {
+      adbo_dbkeys_constraints (cols, data, constraint, NULL);
+    }    
   }
   // clean up
   if (adbl_constraint_empty (constraint))

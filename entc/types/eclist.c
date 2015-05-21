@@ -216,7 +216,7 @@ void eclist_remove(EcList self, void* data)
 void eclist_cursor (EcList self, EcListCursor* cursor)
 {
   cursor->list = self;
-  cursor->node = self->node->next;
+  cursor->node = NULL;
   cursor->value = NULL;
 }
 
@@ -224,8 +224,17 @@ void eclist_cursor (EcList self, EcListCursor* cursor)
 
 int eclist_cnext (EcListCursor* cursor)
 {
-  cursor->node = cursor->node->next;
+  if (cursor->node == NULL)
+  {
+    cursor->node = cursor->list->node->next;
+  }
+  else
+  {
+    cursor->node = cursor->node->next;
+  }
+
   cursor->value = cursor->node->data;
+  
   return cursor->node != cursor->list->node;
 }
 

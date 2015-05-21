@@ -151,26 +151,23 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
 {
   struct tm timeinfo;  
   int year, month, day, hour, minute, second;
-  int res = sscanf (stime, "%d%d%dT%d%d%d", year, month, day, hour, minute, second);
+  int res = sscanf (stime, "%4d%2d%2dT%2d%2d%2d", &year, &month, &day, &hour, &minute, &second);
 
   if (res != 6)
   {
-    eclogger_fmt (LL_ERROR, "ENTC", "parse iso8601", "can't parse time string '%s'", stime);
+    eclogger_fmt (LL_ERROR, "ENTC", "parse iso8601", "can't parse time string '%s', %i", stime, res);
     return;
   }
 
   timeinfo.tm_year = year - 1900;
   timeinfo.tm_mon = month - 1;
-  timeinfo.tm_wday = day;
+  timeinfo.tm_mday = day;
 
   timeinfo.tm_hour = hour;
   timeinfo.tm_min = minute;
   timeinfo.tm_sec = second;
 
   timeinfo.tm_isdst = 1;
-
-  
-  printf("year %i month %i\n", timeinfo.tm_year, timeinfo.tm_mon);
   
   *t = mktime (&timeinfo);
 }
