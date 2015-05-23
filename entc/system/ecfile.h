@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <io.h>
 #include <direct.h>
+#include <fcntl.h>
 
 #define ENTC_PATH_SEPARATOR '\\'
 
