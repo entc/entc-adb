@@ -294,13 +294,15 @@ AdblConstraint* adbo_node_constraints (EcUdc node, EcUdc data, AdboContext conte
   }  
   if (adbl_constraint_empty (constraint))
   {
-    EcUdc fkeys = ecudc_node (node, ECDATA_REFS);
+    EcUdc fkeys, cols;
+    
+    fkeys = ecudc_node (node, ECDATA_REFS);
     if (isAssigned (fkeys))
     {
       adbo_dbkeys_constraints (fkeys, data, constraint, query);
     }
     
-    EcUdc cols = ecudc_node (node, ECDATA_COLS);
+    cols = ecudc_node (node, ECDATA_COLS);
     if (isAssigned (cols))
     {
       adbo_dbkeys_constraints (cols, data, constraint, NULL);
