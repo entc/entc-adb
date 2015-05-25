@@ -30,6 +30,10 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#ifdef __APPLE_CC__
+#include <copyfile.h>
+#endif
+
 struct EcFileHandle_s
 {
   int fd; 
@@ -287,6 +291,29 @@ int ecdh_next (EcDirHandle self, EcFileInfo* pinfo, int fullInfo)
 int ecfs_move (const EcString source, const EcString dest)
 {
   return rename (source, dest) == 0;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecfs_copy (const EcString source, const EcString dest)
+{
+#ifdef __APPLE_CC__
+  return copyfile (source, dest, 0, COPYFILE_ACL | COPYFILE_XATTR | COPYFILE_DATA);
+#else
+  int sfd = open (source, O_RDONLY, 0);
+  int dfd = open (dest, O_WRONLY | O_CREAT /*| O_TRUNC/*/, 0644);
+  
+  // struct required, rationale: function stat() exists also
+  struct stat stat_source;
+  fstat(sfd, &stat_source);
+  
+  sendfile (dfd, source, 0, stat_source.st_size);
+  
+  close (sfd);
+  close (dfd);
+  
+  return 0;
+#endif
 }
 
 //--------------------------------------------------------------------------------

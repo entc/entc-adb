@@ -128,6 +128,8 @@ __CPP_EXTERN____________________________________________________________________
 
 __LIB_EXPORT int ecfs_move (const EcString source, const EcString dest);
 
+__LIB_EXPORT int ecfs_copy (const EcString source, const EcString dest);
+
 __LIB_EXPORT int ecfs_mkdir (const EcString source);
 
 __LIB_EXPORT int ecfs_rmdir (const EcString source, int forceOnNoneEmpty);
