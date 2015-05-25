@@ -807,7 +807,7 @@ void adbl_dbcursor_release (AdblCursor** ptr)
 
 /*------------------------------------------------------------------------*/
 
-int adbl_dbupdate (AdblSession session, AdblUpdate* update, AdblSecurity* security)
+int adbl_dbupdate (AdblSession session, AdblUpdate* update, int isInsert, AdblSecurity* security)
 {
   AdblCredentials* pc = session->credentials;
   
@@ -837,7 +837,7 @@ int adbl_dbupdate (AdblSession session, AdblUpdate* update, AdblSecurity* securi
     return 0;  
   }
   
-  return pc->pp->dbupdate (pc->connection, update);
+  return pc->pp->dbupdate (pc->connection, update, isInsert);
 }
 
 /*------------------------------------------------------------------------*/

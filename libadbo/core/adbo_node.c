@@ -30,6 +30,7 @@
 #include "adbo_types.h"
 
 #include <tools/ecdata.h>
+#include <tools/ecjson.h>
 
 struct AdboNodePart_s {
   
@@ -197,6 +198,9 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
         eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' has empty value", dbcolumn); 
         return FALSE;          
       }
+      
+      eclogger_fmt (LL_TRACE, "ADBO", "dbkey", "add key '%s' with value '%s'", dbcolumn, h);
+      
       adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, h);            
     }
     break;
@@ -633,41 +637,56 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
   int ret = TRUE;
   EcUdc column;
   void* cursor = NULL;
+  void* cursor_value = NULL;
+  void* cursor_update = NULL;
+      
+  {
+    EcString jsontext = ecjson_write (cols);    
+    eclogger_fmt (LL_DEBUG, "ADBO", "update", "cols: %s", ecstr_cstring(jsontext));
+    ecstr_delete(&jsontext);
+  }
+  
+  {
+    EcString jsontext = ecjson_write (values);    
+    eclogger_fmt (LL_DEBUG, "ADBO", "update", "values: %s", ecstr_cstring(jsontext));
+    ecstr_delete(&jsontext);
+  }
+  
+  {
+    EcString jsontext = ecjson_write (update_data);    
+    eclogger_fmt (LL_DEBUG, "ADBO", "update", "updates: %s", ecstr_cstring(jsontext));
+    ecstr_delete(&jsontext);
+  }
+  
+  
+  EcUdc item_update = ecudc_next (update_data, &cursor_update);  
+  if (isNotAssigned (item_update))
+  {
+    eclogger_msg (LL_ERROR, "ADBO", "update", "update array is empty");
+    return FALSE;
+  }  
   
   AdblAttributes* attrs = adbl_attrs_new ();
-    
-  for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
-  {
-    const EcString dbcolumn = ecudc_name (column);
-    if (isNotAssigned (dbcolumn))
-    {
-      eclogger_msg (LL_WARN, "ADBO", "update", "column with empty name");
-      continue;
-    }
-    
-    {
-      // we grab just the first item from the array
-      void* cursor_value = NULL;
-      void* cursor_update = NULL;
-      const EcString update_value;
-      
-      EcUdc item_value = ecudc_next (values, &cursor_value);
-      EcUdc item_update = ecudc_next (update_data, &cursor_update);
-      
-      if (isNotAssigned (item_value))
-      {
-        eclogger_msg (LL_WARN, "ADBO", "update", "array has no fetched values");
-        continue;
-      }
 
-      if (isNotAssigned (item_update))
+  int isInsert = FALSE;
+  
+  EcUdc item_value = ecudc_next (values, &cursor_value);
+  //if (isNotAssigned (item_value))
+  {
+    isInsert = TRUE;
+    
+    
+    for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
+    {
+      const EcString dbcolumn = ecudc_name (column);
+      if (isNotAssigned (dbcolumn))
       {
-        eclogger_msg (LL_WARN, "ADBO", "update", "update array is empty");
+        eclogger_msg (LL_WARN, "ADBO", "update", "column with empty name");
         continue;
       }
       
-      // now we retrieve the item from original fetched and want to update
-      update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
+      // we grab just the first item from the array
+      const EcString update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
       if (isNotAssigned (update_value))
       {
         eclogger_fmt (LL_TRACE, "ADBO", "update", "item '%s' has no value and will not be updated", dbcolumn);    
@@ -682,10 +701,42 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
         //continue;
       }
       
-      adbl_attrs_addChar(attrs, dbcolumn, update_value);      
-    }    
-  }  
-
+      adbl_attrs_addChar (attrs, dbcolumn, update_value);            
+    }
+  }
+  /*
+  else
+  {
+    for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
+    {
+      const EcString dbcolumn = ecudc_name (column);
+      if (isNotAssigned (dbcolumn))
+      {
+        eclogger_msg (LL_WARN, "ADBO", "update", "column with empty name");
+        continue;
+      }
+      
+      // now we retrieve the item from original fetched and want to update
+      const EcString update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
+      if (isNotAssigned (update_value))
+      {
+        eclogger_fmt (LL_TRACE, "ADBO", "update", "item '%s' has no value and will not be updated", dbcolumn);    
+        continue;
+      }
+      
+      //const EcString fetched_value = ecudc_get_asString(item_value, dbcolumn, NULL);
+      
+      //if (ecstr_equal(fetched_value, update_value))
+      {
+        // ignore if they are anyway the same
+        //continue;
+      }
+      
+      adbl_attrs_addChar (attrs, dbcolumn, update_value);            
+    }      
+  }
+   */
+  
   // do we have something to update?
   if (!adbl_attrs_empty(attrs))
   {
@@ -696,7 +747,7 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
     adbl_update_setConstraint(update, constraint);
     adbl_update_setAttributes(update, attrs);
     
-    ret = adbl_dbupdate (dbsession, update, &adblsec);
+    ret = adbl_dbupdate (dbsession, update, isInsert, &adblsec);
     
     adbl_update_delete(&update);
   }
@@ -720,6 +771,12 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
 
   if (adbo_node_primary (node, filter, context, constraint))
   {
+    if (adbo_node_foreign (node, filter, context, constraint))
+    {
+      
+    }
+    
+    
     // explicitely check the values
     if (isAssigned (values) && isAssigned (cols))
     {
@@ -734,11 +791,12 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
   }
   else if (adbo_node_foreign (node, filter, context, constraint))
   {
-    // there is a primary key given: good it makes things easier
+    // no primary key but foreign key, lets try to insert
     ret = adbo_node_insert (node, context, dbsession, dbtable, update_data, cols, constraint);            
   }
   else
   {
+    // no primary key nor foreign key, lets try to insert
     ret = adbo_node_insert (node, context, dbsession, dbtable, update_data, cols, NULL);            
   }
   

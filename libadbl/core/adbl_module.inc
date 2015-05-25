@@ -6,7 +6,7 @@ void*        adblmodule_dbconnect (AdblConnectionProperties* properties);
 void         adblmodule_dbdisconnect (void* ptr);
 void*        adblmodule_dbquery (void* ptr, AdblQuery* query);
 uint_t       adblmodule_dbtable_size (void* ptr, const EcString name);
-int          adblmodule_dbupdate (void* ptr, AdblUpdate* update);
+int          adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert);
 int          adblmodule_dbinsert (void* ptr, AdblInsert* insert);
 int          adblmodule_dbdelete (void* ptr, AdblDelete* delete);
 void         adblmodule_dbbegin (void* ptr);
@@ -78,9 +78,9 @@ uint_t _STDCALL dbtable_size (void* ptr, const EcString name)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbupdate=_dbupdate@8")
 #endif
-int _STDCALL dbupdate (void* ptr, AdblUpdate* update)
+int _STDCALL dbupdate (void* ptr, AdblUpdate* update, int insert)
 {
-  return adblmodule_dbupdate (ptr, update);
+  return adblmodule_dbupdate (ptr, update, insert);
 }
 
 //________________________________________________________________________________________

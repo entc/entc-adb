@@ -517,62 +517,6 @@ int adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs)
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbupdate (void* ptr, AdblUpdate* update)
-{
-  struct AdblSqlite3Connection* conn = ptr;
-  /* variables */
-  EcStream statement;
-
-  /* check if the handle is ok */  
-  if (!conn->handle )
-  {
-    eclogger_msg (LL_WARN, "SQLT", "dbupdate", "Not connected to database");      
-    
-    return 0;
-  }  
-  
-  if (!update->constraint)
-  {
-    return 0;
-  }
-    
-  /* create the stream */
-  statement = ecstream_new();
-  /* construct the stream */
-  ecstream_append( statement, "UPDATE " );
-  ecstream_append( statement, update->table );
-  ecstream_append( statement, " SET " );
-  
-  if (!adbl_constructAttributesUpdate(statement, update->attrs) )
-  {
-    ecstream_delete(&statement);
-    return 0;
-  }
-    
-  adbl_constructConstraint( statement, update->constraint );
-    
-  {
-    int res = 0;
-    
-    if (adbl_preparexec2 (conn->handle, statement))
-    {
-      res = sqlite3_changes(conn->handle);
-    }
-    else
-    {
-      res = -1;
-    }
-    /* clean up */
-    ecstream_delete( &statement );
-
-    return res;
-  }
-  
-  return 0;
-}
-
-/*------------------------------------------------------------------------*/
-
 void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
 {
   EcMapCharNode node = ecmapchar_first(attrs->columns);
@@ -612,6 +556,176 @@ void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
   {
     ecstream_append( statement, " VALUES( NULL )" );
   }  
+}
+
+//----------------------------------------------------------------------------------
+
+void adbl_constructAttributesInsertOrReplace (EcStream statement, AdblConstraint* constraint, AdblAttributes* attrs)
+{
+  EcStream cols = ecstream_new();
+  EcStream values = ecstream_new();
+
+  int cnt = 0;
+  
+  {
+    EcListNode node;
+    for (node = eclist_first (constraint->list); node != eclist_end(constraint->list); node = eclist_next(node))
+    {
+      AdblConstraintElement* element = eclist_data (node); 
+      
+      if( element->type == QUOMADBL_CONSTRAINT_EQUAL )
+      {
+        AdblConstraint* subelement = element->constraint;  
+        if (isNotAssigned (subelement))
+        {
+          if (cnt > 0)
+          {
+            ecstream_append( cols, ", " );
+            ecstream_append( values, ", " );
+          }
+          
+          ecstream_append (cols, element->column);
+          ecstream_append( values, "\"" );
+          ecstream_append( values, element->value);
+          ecstream_append( values, "\"" );  
+          
+          cnt++;
+        }
+      }
+    }
+  }
+  {
+    EcMapCharNode node;
+    for (node = ecmapchar_first (attrs->columns); node != ecmapchar_end(attrs->columns); node = ecmapchar_next(node))
+    {
+      if (cnt > 0)
+      {
+        ecstream_append( cols, ", " );
+        ecstream_append( values, ", " );
+      }
+
+      ecstream_append( cols, ecmapchar_key(node) );
+      
+      ecstream_append( values, "\"" );
+      ecstream_append( values, ecmapchar_data(node) );
+      ecstream_append( values, "\"" );      
+    }
+  }
+  
+  ecstream_append( statement, " (" );
+  ecstream_append( statement, ecstream_buffer( cols ) );
+  ecstream_append( statement, ") VALUES (" );
+  ecstream_append( statement, ecstream_buffer( values ) );
+  ecstream_append( statement, ")" );
+  
+  ecstream_delete( &cols );
+  ecstream_delete( &values );
+}
+
+/*------------------------------------------------------------------------*/
+
+int adblmodule_dbupdate_insert (struct AdblSqlite3Connection* conn, AdblUpdate* update)
+{
+  // create the stream
+  EcStream statement = ecstream_new();
+  // construct the stream 
+  ecstream_append( statement, "INSERT OR REPLACE INTO " );
+  ecstream_append( statement, update->table );
+  
+  adbl_constructAttributesInsertOrReplace (statement, update->constraint, update->attrs );
+  
+  {
+    int res = 0;
+    
+    if (adbl_preparexec2 (conn->handle, statement))
+    {
+      res = sqlite3_changes(conn->handle);
+    }
+    else
+    {
+      res = -1;
+    }
+    /* clean up */
+    ecstream_delete( &statement );
+    
+    return res;
+  }
+  
+  return 0;
+}
+
+//----------------------------------------------------------------------------------
+
+int adblmodule_dbupdate_update (struct AdblSqlite3Connection* conn, AdblUpdate* update)
+{
+  EcStream statement;
+  /* create the stream */
+  statement = ecstream_new();
+  /* construct the stream */
+  ecstream_append( statement, "UPDATE " );
+  ecstream_append( statement, update->table );
+  ecstream_append( statement, " SET " );
+  
+  if (!adbl_constructAttributesUpdate(statement, update->attrs) )
+  {
+    ecstream_delete(&statement);
+    return 0;
+  }
+  
+  adbl_constructConstraint( statement, update->constraint );
+  
+  {
+    int res = 0;
+    
+    if (adbl_preparexec2 (conn->handle, statement))
+    {
+      res = sqlite3_changes(conn->handle);
+    }
+    else
+    {
+      res = -1;
+    }
+    /* clean up */
+    ecstream_delete( &statement );
+    
+    return res;
+  }
+  
+  return 0;
+}
+
+//----------------------------------------------------------------------------------
+
+int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
+{
+  struct AdblSqlite3Connection* conn = ptr;
+  /* variables */
+
+  /* check if the handle is ok */  
+  if (!conn->handle )
+  {
+    eclogger_msg (LL_WARN, "SQLT", "dbupdate", "Not connected to database");      
+    
+    return 0;
+  }  
+  
+  if (!update->constraint)
+  {
+    return 0;
+  }
+
+  if (insert)
+  {
+    eclogger_msg (LL_DEBUG, "SQLT", "dbupdate", "try insert or update");      
+
+    return adblmodule_dbupdate_insert (conn, update);
+  }
+  else
+  {
+    eclogger_msg (LL_DEBUG, "SQLT", "dbupdate", "try pure update");      
+    
+    return adblmodule_dbupdate_update (conn, update);
+  }
 }
 
 //------------------------------------------------------------------------

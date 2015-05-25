@@ -593,7 +593,7 @@ int adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs, i
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbupdate (void* ptr, AdblUpdate* update)
+int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
 {
   /* cast */
   struct AdblMysqlConnection* conn = ptr;

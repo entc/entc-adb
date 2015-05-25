@@ -70,7 +70,7 @@ typedef void*         (_STDCALL *adbl_dbquery_t)            (void*, AdblQuery*);
 
 typedef uint_t        (_STDCALL *adbl_dbtable_size_t)       (void*, const EcString);
 
-typedef int           (_STDCALL *adbl_dbupdate_t)           (void*, AdblUpdate*);
+typedef int           (_STDCALL *adbl_dbupdate_t)           (void*, AdblUpdate*, int);
 
 typedef int           (_STDCALL *adbl_dbinsert_t)           (void*, AdblInsert*);
 
@@ -131,7 +131,7 @@ __LIB_EXPORT const char* adbl_dbcursor_nextdata( AdblCursor* );
   
 __LIB_EXPORT void adbl_dbcursor_release( AdblCursor** );
   
-__LIB_EXPORT int adbl_dbupdate( AdblSession, AdblUpdate*, AdblSecurity* );
+__LIB_EXPORT int adbl_dbupdate( AdblSession, AdblUpdate*, int isInsert, AdblSecurity* );
   
 __LIB_EXPORT int adbl_dbinsert( AdblSession, AdblInsert*, AdblSecurity* );
   
