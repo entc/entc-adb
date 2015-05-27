@@ -40,6 +40,13 @@
 
 //------------------------------------------------------------------------------------------------------------
 
+void ece_sleep (unsigned long milliseconds)
+{
+  usleep (milliseconds * 1000);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
 void ece_kevent_addHandle (int kq, EcHandle handle, int flag, void* ptr, int clear)
 {
   struct kevent kev;
