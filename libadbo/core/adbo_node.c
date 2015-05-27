@@ -636,9 +636,15 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
 {
   int ret = TRUE;
   EcUdc column;
+  EcUdc item_update;
   void* cursor = NULL;
   void* cursor_value = NULL;
   void* cursor_update = NULL;
+
+  AdblAttributes* attrs;
+  int isInsert = FALSE;
+
+  EcUdc item_value;
       
   {
     EcString jsontext = ecjson_write (cols);    
@@ -658,47 +664,37 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
     ecstr_delete(&jsontext);
   }
   
-  
-  EcUdc item_update = ecudc_next (update_data, &cursor_update);  
+  item_update = ecudc_next (update_data, &cursor_update);  
   if (isNotAssigned (item_update))
   {
     eclogger_msg (LL_ERROR, "ADBO", "update", "update array is empty");
     return FALSE;
   }  
   
-  AdblAttributes* attrs = adbl_attrs_new ();
+  attrs = adbl_attrs_new ();
 
-  int isInsert = FALSE;
-  
-  EcUdc item_value = ecudc_next (values, &cursor_value);
+  item_value = ecudc_next (values, &cursor_value);
   //if (isNotAssigned (item_value))
   {
     isInsert = TRUE;
-    
-    
+       
     for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
     {
-      const EcString dbcolumn = ecudc_name (column);
+      const EcString dbcolumn;
+      const EcString update_value;
+
+      dbcolumn = ecudc_name (column);
       if (isNotAssigned (dbcolumn))
       {
         eclogger_msg (LL_WARN, "ADBO", "update", "column with empty name");
         continue;
       }
       
-      // we grab just the first item from the array
-      const EcString update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
+      update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
       if (isNotAssigned (update_value))
       {
         eclogger_fmt (LL_TRACE, "ADBO", "update", "item '%s' has no value and will not be updated", dbcolumn);    
         continue;
-      }
-      
-      //const EcString fetched_value = ecudc_get_asString(item_value, dbcolumn, NULL);
-      
-      //if (ecstr_equal(fetched_value, update_value))
-      {
-        // ignore if they are anyway the same
-        //continue;
       }
       
       adbl_attrs_addChar (attrs, dbcolumn, update_value);            

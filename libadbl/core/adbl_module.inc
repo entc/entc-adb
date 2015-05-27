@@ -76,7 +76,7 @@ uint_t _STDCALL dbtable_size (void* ptr, const EcString name)
 //________________________________________________________________________________________
 
 #if defined _WIN64 || defined _WIN32
-#pragma comment(linker, "/EXPORT:dbupdate=_dbupdate@8")
+#pragma comment(linker, "/EXPORT:dbupdate=_dbupdate@12")
 #endif
 int _STDCALL dbupdate (void* ptr, AdblUpdate* update, int insert)
 {

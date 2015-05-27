@@ -48,6 +48,13 @@ EcEventContext ece_context_new (void)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+void ece_sleep (unsigned long milliseconds)
+{
+  Sleep (milliseconds);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 void ece_context_delete (EcEventContext* pself)
 {
   EcEventContext self = *pself;

@@ -62,6 +62,10 @@ __LIB_EXPORT int ece_context_waitforTermination (EcEventContext, uint_t timeout)
 
 __LIB_EXPORT void ece_context_triggerTermination (EcEventContext);
 
+// misc
+
+__LIB_EXPORT void ece_sleep (unsigned long milliseconds);
+
 __CPP_EXTERN______________________________________________________________________________END
  
 struct EcEventQueue_s; typedef struct EcEventQueue_s* EcEventQueue;
