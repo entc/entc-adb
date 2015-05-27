@@ -73,16 +73,13 @@ void ece_kevent_delHandle (int kq, EcHandle handle)
   memset(&kev, 0x0, sizeof(struct kevent));
   memset(&res, 0x0, sizeof(struct kevent));
   
-  printf("start del handle %p\n", res.udata);
-
   EV_SET (&kev, handle, EVFILT_READ | EVFILT_WRITE | EVFILT_USER, EV_DISPATCH | EV_RECEIPT, 0, 0, NULL);
-  kevent (kq, &kev, 1, &res, 1, NULL);
+  kevent (kq, &kev, 1, &res, 1, NULL);  
   
-  printf("rdata %p\n", kev.udata);
-  printf("rdata %p\n", res.udata);
-  
-  // be sure that the handle is closed force to do it here
-  close (handle);
+  if (handle > 0)
+  {
+    close (handle);
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -184,6 +181,7 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 //------------------------------------------------------------------------------------------------------------
 
 #define ECELIST_ABORT_HANDLENO -1
+#define ECELIST_MAX_USEREVENTS 200
 
 void ece_context_triggerTermination (EcEventContext self)
 {
@@ -203,6 +201,15 @@ void ece_context_triggerTermination (EcEventContext self)
 
 //------------------------------------------------------------------------------------------------------------
 
+typedef struct
+{
+
+  int handle;
+  
+  void* ptr;
+
+} EcEventData;
+
 struct EcEventQueue_s
 {
 
@@ -214,6 +221,10 @@ struct EcEventQueue_s
   EcMutex ecmutex;
   
   ece_list_ondel_fct fct;
+
+  char data [ECELIST_MAX_USEREVENTS];
+  
+  EcList ptrs;
 
 };
 
@@ -236,8 +247,41 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   ecmutex_unlock (self->ecmutex);
 
   ece_kevent_addHandle (self->kq, ECELIST_ABORT_HANDLENO, EVFILT_USER, NULL, FALSE);
+    
+  memset (self->data, 0x0, sizeof(char) * 200);
+  
+  self->ptrs = eclist_new ();
   
   return self;
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_list_clear (EcEventQueue self)
+{
+  EcListCursor cursor; eclist_cursor (self->ptrs, &cursor);
+  
+  while (eclist_cnext (&cursor))
+  {
+    EcEventData* pdata = cursor.value;
+
+    ece_kevent_delHandle (self->kq, pdata->handle);
+    
+    if (self->fct)
+    {
+      // call callback
+      self->fct (&(pdata->ptr));
+    }
+    
+    if (pdata->handle < ECELIST_ABORT_HANDLENO)
+    {
+      self->data [ECELIST_ABORT_HANDLENO - pdata->handle - 1] = 0;
+    }
+    
+    ENTC_DEL (&pdata, EcEventData);
+  }
+  
+  eclist_clear (self->ptrs);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -251,10 +295,60 @@ void ece_list_destroy (EcEventQueue* sptr)
   eclist_erase (self->ecnode);
   
   ecmutex_unlock (self->ecmutex);
+  
+  // cleanup
+  ece_list_clear (self);
+  eclist_delete(&(self->ptrs));
       
   close (self->kq);
   
   ENTC_DEL(sptr, struct EcEventQueue_s);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_list_data_add (EcEventQueue self, EcHandle handle, void* ptr)
+{
+  if (isAssigned (ptr))
+  {
+    EcEventData* pdata = ENTC_NEW (EcEventData);
+    
+    pdata->handle = handle;
+    pdata->ptr = ptr;
+    
+    eclist_append(self->ptrs, pdata);  
+  }
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void* ece_list_data_get (EcEventQueue self, EcHandle handle, int remove)
+{
+  EcListCursor cursor; eclist_cursor (self->ptrs, &cursor);
+  
+  while (eclist_cnext (&cursor))
+  {
+    EcEventData* pdata = cursor.value;
+    
+    if (pdata->handle == handle)
+    {
+      if (remove)
+      {
+        void* ptr = pdata->ptr;
+        
+        eclist_erase (cursor.node);
+        
+        ENTC_DEL (&pdata, EcEventData);
+        
+        return ptr;
+      }
+      else
+      {
+        return pdata->ptr;        
+      }
+    }
+  }
+  return NULL;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -284,6 +378,8 @@ int ece_list_add (EcEventQueue self, EcHandle handle, int type, void* ptr)
   }
 
   ece_kevent_addHandle (self->kq, handle, flag, ptr, clr); 
+  ece_list_data_add (self, handle, ptr);
+  
   return TRUE;
 }
 
@@ -294,7 +390,8 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
   while (TRUE)
   {
     struct kevent kev_ret;
-    
+    memset (&kev_ret, 0x0, sizeof(struct kevent));
+
     int res = ece_kevent_wait (self->kq, &kev_ret, timeout);
     if( res == -1 )
     {
@@ -304,6 +401,10 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
       }
       else
       {
+        if (isAssigned (pptr))
+        { 
+          *pptr = NULL;
+        }
         //eclogger_logerrno(logger, LOGMSG_ERROR, "CORE", "error on kevent");
         // some error    
         return ENTC_EVENT_ERROR;
@@ -311,15 +412,27 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
     }
     else if (kev_ret.flags & EV_ERROR)
     {
+      if (isAssigned (pptr))
+      { 
+        *pptr = NULL;
+      }
       return ENTC_EVENT_ERROR;
     }
     else if( res == 0 )
     {
+      if (isAssigned (pptr))
+      { 
+        *pptr = NULL;
+      }
       //eclogger_log (logger, LL_TRACE, "CORE", "timeout on kevent");
       return ENTC_EVENT_TIMEOUT;
     }
     else if( (kev_ret.ident == ECELIST_ABORT_HANDLENO) && (kev_ret.filter == EVFILT_USER) )
     {
+      if (isAssigned (pptr))
+      { 
+        *pptr = NULL;
+      }
       //eclogger_log (logger, LL_TRACE, "CORE", "abort in eventcontext");      
       return ENTC_EVENT_ABORT;
     } 
@@ -329,8 +442,7 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
       
       if (isAssigned (pptr))
       {
-        *pptr = kev_ret.udata;
-        printf("udata %p\n", kev_ret.udata);
+        *pptr = ece_list_data_get (self, kev_ret.ident, FALSE);
       }
       
       return kev_ret.ident;
@@ -342,21 +454,57 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** pptr)
 
 int ece_list_del (EcEventQueue self, EcHandle handle)
 {
+  ece_kevent_delHandle (self->kq, handle);
+
   if (self->fct)
   {
-
+    void* ptr = ece_list_data_get (self, handle, TRUE);    
+    
+    // call callback
+    self->fct (&ptr);
+    
+    ptr = NULL;
   }
-  ece_kevent_delHandle (self->kq, handle);
+  
+  if (handle < ECELIST_ABORT_HANDLENO)
+  {
+    self->data [ECELIST_ABORT_HANDLENO - handle - 1] = 0;
+  }
+  
   return TRUE;
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_getNextHandle (EcEventQueue self)
+{
+  // find next free handle slot
+  int i;
+  for (i = 0; i < ECELIST_MAX_USEREVENTS; i++)
+  {
+    if (self->data [i] == 0)
+    {
+      return ECELIST_ABORT_HANDLENO - i - 1;
+    }
+  }
+  return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------
 
 EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 {
-  ece_kevent_addHandle (self->kq, -9, EVFILT_USER, ptr, TRUE);
+  int handle = ece_list_getNextHandle (self);
   
-  return -9;
+  if (handle < 0)
+  {
+    self->data [ECELIST_ABORT_HANDLENO - handle - 1] = 1;
+    ece_kevent_addHandle (self->kq, handle, EVFILT_USER, ptr, TRUE);
+    
+    ece_list_data_add (self, handle, ptr);
+  }
+  
+  return handle;
 }
 
 //------------------------------------------------------------------------------------------------------------

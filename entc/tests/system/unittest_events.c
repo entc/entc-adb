@@ -52,13 +52,7 @@ int _STDCALL callback2 (void* ptr)
   ece_sleep(100);
 
   ece_list_set (props->queue, props->handle);
-  
-  ece_sleep (200);
-
-  res = ece_list_wait (props->queue, ENTC_INFINTE, &ptr2);
-  
-  printf("waited type %i with pointer %p\n", res == ENTC_EVENT_ABORT, ptr2);
-  
+    
   return FALSE;
 }
 
@@ -67,18 +61,33 @@ int _STDCALL callback2 (void* ptr)
 int _STDCALL callback3 (void* ptr)
 {
   HandleProps* props = ptr;
-  void* ptr2;
+  void* ptr2 = NULL;
   int res;
 
   ece_sleep (100);
   
   ece_list_set (props->queue, props->handle);
   
-  ece_sleep (200);
+  ece_sleep (100);
   
   res = ece_list_wait (props->queue, ENTC_INFINTE, &ptr2);
   
-  printf("waited type %i with pointer %p\n", res == ENTC_EVENT_ABORT, ptr2);
+  printf("waited3 type %i with pointer %p\n", res == ENTC_EVENT_ABORT, ptr2);
+  
+  return FALSE;
+}
+
+//--------------------------------------------------------------------------
+
+int _STDCALL callback4 (void* ptr)
+{
+  HandleProps* props = ptr;
+  void* ptr2 = NULL;
+  int res;
+  
+  res = ece_list_wait (props->queue, ENTC_INFINTE, &ptr2);
+  
+  printf("waited4 type %i with pointer %p\n", res == ENTC_EVENT_ABORT, ptr2);
   
   return FALSE;
 }
@@ -124,9 +133,11 @@ int main (int argc, char *argv[])
     void* ptr;
     HandleProps p1;  
     HandleProps p2;  
+    HandleProps p3;  
 
     EcThread th2 = ecthread_new ();  
     EcThread th3 = ecthread_new ();  
+    EcThread th4 = ecthread_new ();  
 
     EcEventQueue equeue = ece_list_create (econtext, onDelete);
     
@@ -152,6 +163,9 @@ int main (int argc, char *argv[])
     p2.queue = equeue;
     p2.handle = ece_list_handle (equeue, &p2);
     
+    p3.queue = equeue;
+    p3.handle = ece_list_handle (equeue, &p3);
+
     ecthread_start (th3, callback3, &p2);
     
     t1 = time(0);
@@ -166,6 +180,8 @@ int main (int argc, char *argv[])
     
     printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
 
+    ecthread_start (th4, callback4, &p3);
+
     ece_sleep(200);
     
     ece_context_triggerTermination (econtext);
@@ -176,6 +192,10 @@ int main (int argc, char *argv[])
     ecthread_join(th3);
     ecthread_delete(&th3);
     
+    ecthread_join(th4);
+    ecthread_delete(&th4);
+
+    ece_list_destroy(&equeue); 
     ece_context_delete (&econtext);
   }
   
