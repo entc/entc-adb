@@ -272,6 +272,13 @@ int ecfs_move(const EcString source, const EcString dest)
 
 /*------------------------------------------------------------------------*/
 
+int ecfs_copy (const EcString source, const EcString dest)
+{
+  return CopyFile (source, dest, TRUE);
+}
+
+/*------------------------------------------------------------------------*/
+
 int ecfs_mkdir(const EcString source)
 {
   return CreateDirectory(source, NULL);

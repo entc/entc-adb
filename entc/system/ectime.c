@@ -129,7 +129,7 @@ void ectime_toGmtString (const time_t* t, char* buffer, ulong_t size)
   ectime_toTimeInfo (&timeinfo, t);
 
   // create buffer with timeinfo as string
-  strftime (buffer, size, "%a, %d %b %Y %T GMT", &timeinfo);
+  strftime (buffer, size, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
 }
 
 //-----------------------------------------------------------------------------------
