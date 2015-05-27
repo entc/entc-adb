@@ -20,3 +20,6 @@ TARGET_LINK_LIBRARIES( unittest_server entc )
 
 ADD_EXECUTABLE( unittest_messages utils/unittest_ecmessages.c )
 TARGET_LINK_LIBRARIES( unittest_messages entc ) 
+
+ADD_EXECUTABLE( unittest_events system/unittest_events.c )
+TARGET_LINK_LIBRARIES( unittest_events entc ) 
