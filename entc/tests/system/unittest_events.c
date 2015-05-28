@@ -105,12 +105,13 @@ void onDelete (void** pptr)
 
 int main (int argc, char *argv[])
 {
+  time_t t1;
   int res;
   EcEventContext econtext = ece_context_new ();
  
   ecmessages_initialize ();
   
-  time_t t1 = time(0);
+  t1 = time(0);
     
   res = ece_context_waitforAbort (econtext, 200);
   

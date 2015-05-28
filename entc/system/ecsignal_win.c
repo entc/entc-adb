@@ -32,19 +32,19 @@ static BOOL myCtrlHandler( DWORD fdwCtrlType )
   { 
     /* handle the CTRL-C signal */
     case CTRL_C_EVENT:
-      ece_context_triggerTermination (globalEventHandle);
+      ece_context_setAbort (globalEventHandle);
       Sleep(5000);
 
       return( TRUE );
       
     case CTRL_SHUTDOWN_EVENT: 
-      ece_context_triggerTermination (globalEventHandle);
+      ece_context_setAbort (globalEventHandle);
       Sleep(5000);
 
       return( TRUE );
       
     case CTRL_CLOSE_EVENT: 
-      ece_context_triggerTermination (globalEventHandle);
+      ece_context_setAbort (globalEventHandle);
       Sleep(5000);
 
       return( TRUE );

@@ -94,7 +94,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
+int ece_context_waitforAbort (EcEventContext self, uint_t timeout)
 {
   DWORD res = WaitForSingleObject(self->abort, (timeout == ENTC_INFINTE) ? INFINITE : timeout);
 
@@ -103,9 +103,16 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void ece_context_triggerTermination (EcEventContext self)
+void ece_context_setAbort (EcEventContext self)
 {
   SetEvent (self->abort);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void ece_context_resetAbort (EcEventContext self)
+{
+  ResetEvent (self->abort);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
