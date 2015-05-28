@@ -28,7 +28,7 @@ static EcEventContext globalEventContext = 0;
 
 void mySignalHandler(int signum)
 {
-  ece_context_triggerTermination (globalEventContext);
+  ece_context_setAbort (globalEventContext);
 }
 
 /*------------------------------------------------------------------------*/

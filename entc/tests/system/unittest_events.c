@@ -1,5 +1,6 @@
 #include "system/ecevents.h"
 
+#include "utils/ecmessages.h"
 #include "system/ecthread.h"
 #include <stdio.h>
 
@@ -9,7 +10,7 @@ int _STDCALL callback1 (void* ptr)
 {
   ece_sleep (100);
   
-  ece_context_triggerTermination (ptr);
+  ece_context_setAbort (ptr);
   
   return FALSE;
 }
@@ -107,9 +108,11 @@ int main (int argc, char *argv[])
   int res;
   EcEventContext econtext = ece_context_new ();
  
+  ecmessages_initialize ();
+  
   time_t t1 = time(0);
     
-  res = ece_context_waitforTermination (econtext, 200);
+  res = ece_context_waitforAbort (econtext, 200);
   
   printf("waited for %u ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_TIMEOUT);
   
@@ -120,13 +123,15 @@ int main (int argc, char *argv[])
     
     t1 = time(0);
     
-    res = ece_context_waitforTermination (econtext, ENTC_INFINTE);
+    res = ece_context_waitforAbort (econtext, ENTC_INFINTE);
 
     printf("waited for %u ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_ABORT);
       
     ecthread_join(th1);
     ecthread_delete(&th1);
   }
+  
+  ece_context_resetAbort (econtext);
 
   // event queues
   {
@@ -184,7 +189,7 @@ int main (int argc, char *argv[])
 
     ece_sleep(200);
     
-    ece_context_triggerTermination (econtext);
+    ece_context_setAbort (econtext);
     
     ecthread_join(th2);
     ecthread_delete(&th2);
@@ -198,6 +203,8 @@ int main (int argc, char *argv[])
     ece_list_destroy(&equeue); 
     ece_context_delete (&econtext);
   }
+  
+  ecmessages_deinitialize ();
   
   return 0;
 }

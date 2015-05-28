@@ -172,7 +172,7 @@ int _STDCALL ectimedthread_run (void* params)
     return FALSE;
   }
     
-  if (ece_context_waitforTermination (self->ec, self->timeout) == ENTC_EVENT_TIMEOUT)
+  if (ece_context_waitforAbort (self->ec, self->timeout) == ENTC_EVENT_TIMEOUT)
   {
     self->fct (self->ptr);
     return TRUE;
@@ -198,9 +198,11 @@ void ectimedthread_start(EcTimedThread self, ecthread_callback_fct fct, void* pt
 void ectimedthread_stop(EcTimedThread self)
 {
   // signal to stop thread
-  ece_context_triggerTermination (self->ec);
+  ece_context_setAbort (self->ec);
   // wait until thread stopped
   ecthread_join (self->thread);
+  // reset the signal
+  ece_context_resetAbort (self->ec);
 }
 
 //-----------------------------------------------------------------------------------

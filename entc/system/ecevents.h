@@ -32,6 +32,7 @@
 
 #define ENTC_EVENT_TIMEOUT    -2
 #define ENTC_EVENT_ABORT      -4
+#define ENTC_EVENT_INTERNAL   -5
 
 #define ENTC_EVENT_UNKNOWN    -3
 #define ENTC_EVENT_ERROR      -1
@@ -58,9 +59,11 @@ __LIB_EXPORT void ece_context_delete (EcEventContext*);
 
 __LIB_EXPORT int ece_context_wait (EcEventContext, EcHandle handle, uint_t timeout, int type);
 
-__LIB_EXPORT int ece_context_waitforTermination (EcEventContext, uint_t timeout);
+__LIB_EXPORT int ece_context_waitforAbort (EcEventContext, uint_t timeout);
 
-__LIB_EXPORT void ece_context_triggerTermination (EcEventContext);
+__LIB_EXPORT void ece_context_setAbort (EcEventContext);
+
+__LIB_EXPORT void ece_context_resetAbort (EcEventContext);
 
 // misc
 

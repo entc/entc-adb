@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2015 "Alexander Kalkhof" [email:entc@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -454,18 +454,20 @@ int ecaserv_start (EcAsyncServ self, const EcString host, ulong_t port)
 
 void ecaserv_stop (EcAsyncServ self)
 {
-  ece_context_triggerTermination (self->ec);
+  ece_context_setAbort (self->ec);
   
   ecasyncsvc_stop (self->svc);
   // close listen socket
   ecsocket_delete(&(self->socket));
+  
+  ece_context_resetAbort (self->ec);
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
 void ecaserv_run (EcAsyncServ self)
 {
-  ece_context_waitforTermination (self->ec, ENTC_INFINTE);
+  ece_context_waitforAbort (self->ec, ENTC_INFINTE);
 }
 
 //-----------------------------------------------------------------------------------------------------------
