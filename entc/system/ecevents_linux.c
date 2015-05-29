@@ -25,7 +25,6 @@
 
 #include "ecthread.h"
 #include "ecfile.h"
-#include <../../q5pack_basic/modules/q5data_lua/lua/llex.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
