@@ -167,7 +167,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
 
 //------------------------------------------------------------------------------------------------------------
 
-int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
+int ece_context_waitforAbort (EcEventContext self, uint_t timeout)
 {
   EcEventQueue list = ece_list_create (self, NULL);
   
@@ -183,7 +183,7 @@ int ece_context_waitforTermination (EcEventContext self, uint_t timeout)
 #define ECELIST_ABORT_HANDLENO -1
 #define ECELIST_MAX_USEREVENTS 200
 
-void ece_context_triggerTermination (EcEventContext self)
+void ece_context_setAbort (EcEventContext self)
 {
   EcListNode node;
     
@@ -197,6 +197,23 @@ void ece_context_triggerTermination (EcEventContext self)
   }
 
   ecmutex_unlock (self->mutex);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_context_resetAbort (EcEventContext self)
+{
+  EcListNode node;
+  
+  ecmutex_lock (self->mutex);
+  
+  for (node = eclist_first(self->lists); node != eclist_end(self->lists); node = eclist_next(node))
+  {
+    EcEventQueue list = eclist_data (node);
+
+  }
+  
+  ecmutex_unlock (self->mutex);  
 }
 
 //------------------------------------------------------------------------------------------------------------

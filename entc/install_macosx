@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BCONFIG=Debug
-VERSION=1.0.1
+VERSION=1.2.0
 
 INSTALLDIR="/usr/local/lib"
 
@@ -12,6 +12,7 @@ cp $PWD/$BCONFIG/libentc.dylib $INSTALLDIR/libentc.$VERSION.dylib
 install_name_tool -id $INSTALLDIR/libentc.$VERSION.dylib $INSTALLDIR/libentc.$VERSION.dylib
 cp -R $PWD/$BCONFIG/libentc.dylib.dSYM $INSTALLDIR/libentc.$VERSION.dylib.dSYM
 
+rm $INSTALLDIR/libentc.dylib
 ln -s $INSTALLDIR/libentc.$VERSION.dylib $INSTALLDIR/libentc.dylib
 
 mkdir $INCLUDEDIR/utils

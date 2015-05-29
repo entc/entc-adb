@@ -7,7 +7,7 @@
 
 #=============================================================================
 #
-# Copyright (c) 2010-2013 "Alexander Kalkhof" [email:alex@kalkhof.org]
+# Copyright (c) 2010-2015 "Alexander Kalkhof" [email:alex@kalkhof.org]
 #
 # This file is part of the extension n' tools (entc-base) framework for C.
 #
@@ -28,7 +28,7 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-SET(ENTC_VERSION "1.0.1")
+SET(ENTC_VERSION "1.2.0")
 
 # Look for the header file.
 FIND_LIBRARY( ENTC_LIBRARY NAMES entc      
