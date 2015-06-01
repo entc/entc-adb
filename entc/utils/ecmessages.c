@@ -21,6 +21,7 @@
 
 // include system
 #include "system/ecmutex.h"
+#include "system/ecfile.h"
 
 // include type
 #include "types/ecintmap.h"
@@ -33,6 +34,12 @@ struct EcMessages_s
   EcReadWriteLock mutex;
   
   EcIntMap functions;
+  
+  // for logging
+  
+  EcFileHandle fh;
+  
+  EcMutex fhmutex;
   
 };
 
@@ -88,6 +95,14 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
   {
     if (dIn->ref < 7)
     {
+      EcMessages self = ptr;
+
+      ecmutex_lock (self->fhmutex);
+      
+      static char buffer [2050];
+      
+      snprintf (buffer, 2048, "%-12s %s|%-6s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+      
 #if defined _WIN64 || defined _WIN32 
       CONSOLE_SCREEN_BUFFER_INFO info;
       // get the console handle
@@ -97,13 +112,21 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
       // do some fancy stuff
       SetConsoleTextAttribute (hStdout, clr_matrix[dIn->ref]);
 
-      printf("%-12s %s|%s] %s\n", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+      printf("%s\n", buffer);
 
       SetConsoleTextAttribute (hStdout, info.wAttributes);
 #else
-      printf("\033[%sm%-12s %s|%-6s] %s\033[0m\n", clr_matrix[dIn->ref], ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+      printf("\033[%sm%s\033[0m\n", clr_matrix[dIn->ref], buffer);
 #endif
+      {
+        if (self->fh)
+        {
+          ecfh_writeString (self->fh, buffer);
+          ecfh_writeString (self->fh, "\n");
+        }
+      }
       
+      ecmutex_unlock (self->fhmutex);
     }    
   }
   
@@ -119,7 +142,19 @@ void ecmessages_initialize ()
   self->mutex = ecreadwritelock_new ();
   self->functions = ecintmap_new ();
   
-  ecmessages_add (ENTC_MSGMODD_LOG, ENTC_MSGSRVC_LOG, ecmessages_logger_callback, NULL);
+  {
+    EcString currentDir = ecfs_getCurrentDirectory ();
+    
+    EcString defaultLogFile = ecfs_mergeToPath (currentDir, "out.log");
+    
+    self->fh = ecfh_open (defaultLogFile, O_WRONLY | O_APPEND | O_CREAT);
+    self->fhmutex = ecmutex_new ();
+    
+    ecstr_delete (&defaultLogFile);
+    ecstr_delete (&currentDir);
+  }
+  
+  ecmessages_add (ENTC_MSGMODD_LOG, ENTC_MSGSRVC_LOG, ecmessages_logger_callback, self);
 }
 
 //----------------------------------------------------------------------------------------
@@ -246,6 +281,9 @@ void ecmessages_deinitialize ()
   EcMessages self = getGlobalMessages ();
 
   ecmessages_clear ();
+  
+  ecfh_close (&(self->fh));
+  ecmutex_delete (&(self->fhmutex));
   
   ecintmap_delete (&(self->functions));
   ecreadwritelock_delete (&(self->mutex));
