@@ -1239,6 +1239,8 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
           ecstr_replaceTO (&key, ecstr_trim (key));
           ecstr_replaceTO (&val, ecstr_trim (val));
           
+          ecstr_toUpper(key);
+          
           ecmapchar_append(header->values, key, val);
         }
 
