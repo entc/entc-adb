@@ -30,12 +30,13 @@
 
 SET( ADBL_VERSION 1.0.5 )
 
-FIND_LIBRARY(ADBL_LIBRARY NAMES adbl      
+FIND_LIBRARY(ADBL_LIBRARY NAMES adbl
   HINTS
   "/usr/lib/"
   "/usr/local/lib/"
   "/opt/local/lib/"
   "C:/Program Files/DevCommon/lib/"
+  VERSION_EQUAL ${ADBL_VERSION}
 )
 MARK_AS_ADVANCED(ADBL_LIBRARY)
 
