@@ -158,7 +158,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
 
     if (timeout == ENTC_INFINTE)
     {
-      retval = select (max(handle + 1, self->efd + 1), &fdset, NULL, NULL, NULL);      
+      retval = select (ENTC_MAX(handle + 1, self->efd + 1), &fdset, NULL, NULL, NULL);      
     }
     else
     {
@@ -166,7 +166,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
       
-      retval = select (max(handle + 1, self->efd + 1), &fdset, NULL, NULL, &tv);
+      retval = select (ENTC_MAX(handle + 1, self->efd + 1), &fdset, NULL, NULL, &tv);
     }
 
     if (retval == -1)

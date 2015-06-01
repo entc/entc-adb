@@ -61,4 +61,7 @@ typedef signed int int_t;
 #define isAssigned(pointer) (pointer != NULL)
 #define isNotAssigned(pointer) (pointer == NULL)
 
+#define ENTC_MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define ENTC_MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 #endif
