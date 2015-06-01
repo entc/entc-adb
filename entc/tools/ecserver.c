@@ -191,13 +191,13 @@ void ecserver_destroy (EcServer* ptr)
     {
       EcServerThread* st = &(self->threads[i]);
       
-      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait for thread to terminate");
+      eclogger_fmt (LL_TRACE, "ENTC", "ecserver", "wait for thread to terminate [%i]", i);
       
       ecthread_join(st->thread);
       
       ecthread_delete(&(st->thread));
             
-      eclogger_msg (LL_TRACE, "ENTC", "ecserver", "thread removed");
+      eclogger_fmt (LL_TRACE, "ENTC", "ecserver", "thread removed [%i]", i);
     }
     free(self->threads);
     self->threads = NULL;    
