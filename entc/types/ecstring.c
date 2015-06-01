@@ -617,6 +617,57 @@ EcString ecstr_trimNonePrintable( const EcString s )
   return copy;
 }
 
+//-------------------------------------------------------------------------------
+
+EcString ecstr_trimc (const EcString s, char c)
+{
+  /* variables */
+  EcString copy;
+  char* pos01;
+  char* pos02;
+  
+  if( !s )
+  {
+    return 0;  
+  }
+  
+  copy = ecstr_copy (s);
+  
+  /* source position */
+  pos01 = copy;
+  pos02 = 0;
+  /* trim from begin */
+  while(*pos01)
+  {
+    if (*pos01 != c) break;
+    
+    pos01++;
+  }
+  pos02 = copy;
+  /* copy rest */
+  while(*pos01)
+  {
+    *pos02 = *pos01;
+    
+    pos01++;
+    pos02++;
+  }
+  /* set here 0 not to run in undefined situation */
+  *pos02 = 0;
+  /* trim from the end */
+  while( pos02 != copy )
+  {
+    /* decrease */
+    pos02--;
+    /* check if readable */
+    if (*pos02 != c) break;
+    /* set to zero */
+    *pos02 = 0;
+  }  
+  
+  return copy;
+}
+
 /*------------------------------------------------------------------------*/
 
 EcString ecstr_trimKeepDefault( const EcString s )

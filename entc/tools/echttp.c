@@ -931,6 +931,7 @@ void echttp_header_title (EcHttpHeader* header)
 
 void echttp_header_trimurl (EcHttpHeader* header)
 {
+  // extract host part
   if ((header->request_url[0] == '/')) 
   {
     if ((header->request_url[1] == '/')) 
@@ -946,11 +947,7 @@ void echttp_header_trimurl (EcHttpHeader* header)
   
   echttp_unescape (header->request_url);
   
-  // check url again if the last character is '/'
-  if (header->request_url[strlen(header->request_url)] == '/')
-  {
-    header->request_url[strlen(header->request_url)] = 0;
-  }  
+  ecstr_replaceTO(&(header->request_url), ecstr_trimc (header->request_url, '/'));  
 }
 
 //---------------------------------------------------------------------------------------
@@ -977,6 +974,10 @@ void echttp_header_validate (EcHttpHeader* header)
     
     echttp_header_trimurl (header);
   }
+  
+  eclogger_fmt(LL_TRACE, "ENTC", "http header", "request host: '%s'", header->host);
+  eclogger_fmt(LL_TRACE, "ENTC", "http header", "request url: '%s'", header->request_url);
+  
   // set correct language
   if (ecstr_empty(header->session_lang)) 
   {
