@@ -290,7 +290,13 @@ int ecdh_next (EcDirHandle self, EcFileInfo* pinfo, int fullInfo)
 
 int ecfs_move (const EcString source, const EcString dest)
 {
-  return rename (source, dest) == 0;
+  if (rename (source, dest) == 0)
+  {
+    return TRUE;
+  }
+  
+  eclogger_err (LL_ERROR, "ENTC", "move", errno, "can't move");
+  return FALSE;
 }
 
 //--------------------------------------------------------------------------------
