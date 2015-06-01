@@ -295,7 +295,7 @@ int ecfs_move (const EcString source, const EcString dest)
     return TRUE;
   }
   
-  eclogger_err (LL_ERROR, "ENTC", "move", errno, "can't move");
+  eclogger_err (LL_ERROR, "ENTC", "move", errno, "can't move '%s' to '%s'", source, dest);
   return FALSE;
 }
 
