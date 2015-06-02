@@ -95,27 +95,30 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
   {
     if (dIn->ref < 7)
     {
+      static char buffer [2050];
       EcMessages self = ptr;
 
       ecmutex_lock (self->fhmutex);
-      
-      static char buffer [2050];
-      
-      snprintf (buffer, 2048, "%-12s %s|%-6s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
-      
+                 
 #if defined _WIN64 || defined _WIN32 
-      CONSOLE_SCREEN_BUFFER_INFO info;
-      // get the console handle
-      HANDLE hStdout = GetStdHandle (STD_OUTPUT_HANDLE);      
-      // remember the original background color
-      GetConsoleScreenBufferInfo (hStdout, &info);
-      // do some fancy stuff
-      SetConsoleTextAttribute (hStdout, clr_matrix[dIn->ref]);
 
-      printf("%s\n", buffer);
+      _snprintf_s (buffer, 2048, _TRUNCATE, "%-12s %s|%-6s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+      {
+        CONSOLE_SCREEN_BUFFER_INFO info;
+        // get the console handle
+        HANDLE hStdout = GetStdHandle (STD_OUTPUT_HANDLE);      
+        // remember the original background color
+        GetConsoleScreenBufferInfo (hStdout, &info);
+        // do some fancy stuff
+        SetConsoleTextAttribute (hStdout, clr_matrix[dIn->ref]);
 
-      SetConsoleTextAttribute (hStdout, info.wAttributes);
+        printf("%s\n", buffer);
+
+        SetConsoleTextAttribute (hStdout, info.wAttributes);
+      }
 #else
+      snprintf (buffer, 2048, "%-12s %s|%-6s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+
       printf("\033[%sm%s\033[0m\n", clr_matrix[dIn->ref], buffer);
 #endif
       {
