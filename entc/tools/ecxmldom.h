@@ -31,7 +31,11 @@ __CPP_EXTERN____________________________________________________________________
 
 __LIB_EXPORT EcUdc ecxmldom_create_tag (EcUdc parent, const EcString name);
 
-__LIB_EXPORT void ecxmldom_set_value (EcUdc, const EcString name);
+__LIB_EXPORT const EcString ecxmldom_get_name (EcUdc tag);
+
+__LIB_EXPORT void ecxmldom_set_name (EcUdc, const EcString name);
+
+__LIB_EXPORT void ecxmldom_set_value (EcUdc, const EcString value);
 
 __LIB_EXPORT void ecxmldom_add_attribute (EcUdc tag, const EcString name, const EcString value);
 

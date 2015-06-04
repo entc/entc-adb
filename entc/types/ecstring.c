@@ -621,6 +621,13 @@ EcString ecstr_trimNonePrintable( const EcString s )
 
 EcString ecstr_trimc (const EcString s, char c)
 {
+  return ecstr_trimlr (s, c, c);
+}
+
+//-------------------------------------------------------------------------------
+
+EcString ecstr_trimlr (const EcString s, char l, char r)
+{
   /* variables */
   EcString copy;
   char* pos01;
@@ -639,7 +646,7 @@ EcString ecstr_trimc (const EcString s, char c)
   /* trim from begin */
   while(*pos01)
   {
-    if (*pos01 != c) break;
+    if (*pos01 != l) break;
     
     pos01++;
   }
@@ -660,7 +667,7 @@ EcString ecstr_trimc (const EcString s, char c)
     /* decrease */
     pos02--;
     /* check if readable */
-    if (*pos02 != c) break;
+    if (*pos02 != r) break;
     /* set to zero */
     *pos02 = 0;
   }  

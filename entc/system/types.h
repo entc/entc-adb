@@ -38,9 +38,10 @@ typedef unsigned int uint_t;
 typedef signed int int_t;
 
 
-#define ENTC_RESCODE_OK                  1
 #define ENTC_RESCODE_UNKNOWN_ERROR       0
+#define ENTC_RESCODE_OK                  1
 #define ENTC_RESCODE_IGNORE              2
+#define ENTC_RESCODE_INPUT_ERROR         3
 
 #define ENTC_RESCODE_NOT_FOUND           10
 #define ENTC_RESCODE_NOT_AVAILABLE       11

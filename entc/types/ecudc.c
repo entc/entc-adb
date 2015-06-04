@@ -489,6 +489,13 @@ const EcString ecudc_name (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+void ecudc_setName (EcUdc self, const EcString name)
+{
+  ecstr_replace(&(self->name), name);
+}
+
+//----------------------------------------------------------------------------------------
+
 uint_t ecudc_type (EcUdc self)
 {
   if (isAssigned (self))

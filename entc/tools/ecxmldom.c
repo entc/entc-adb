@@ -57,6 +57,20 @@ EcUdc ecxmldom_create_tag (EcUdc parent, const EcString name)
 
 //-----------------------------------------------------------------------------------------------------------
 
+const EcString ecxmldom_get_name (EcUdc tag)
+{
+  return ecudc_name(tag);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void ecxmldom_set_name (EcUdc tag, const EcString name)
+{
+  ecudc_setName (tag, name);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 void ecxmldom_set_value (EcUdc tag, const EcString content)
 {
   EcUdc value = ecudc_node (tag, ".value");

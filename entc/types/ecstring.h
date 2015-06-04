@@ -109,6 +109,9 @@ __LIB_EXPORT EcString ecstr_trimEndLine( const EcString );
 // trim the string only by a certain character
 __LIB_EXPORT EcString ecstr_trimc (const EcString, char c);
 
+// trim the string only by a certain character
+__LIB_EXPORT EcString ecstr_trimlr (const EcString, char l, char r);
+
 __LIB_EXPORT EcString ecstr_toVersion( uint_t version );
 
 __LIB_EXPORT EcString ecstr_wrappedl (const EcString, char c);
