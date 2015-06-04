@@ -36,7 +36,7 @@ FIND_LIBRARY( ENTC_LIBRARY NAMES entc
   "/usr/lib/"
   "/usr/local/lib/"
   "/opt/local/lib/"
-  "C:/Program Files/DevCommon/lib/"
+  "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/lib/"
 )
 MARK_AS_ADVANCED(ENTC_LIBRARY)
 
@@ -48,7 +48,7 @@ FIND_PATH(ENTC_INCLUDE_DIR
   # macosx
   "/usr/local/include/entc-${ENTC_VERSION}/"
   # windows
-  "C:/Program Files/DevCommon/include/entc-${ENTC_VERSION}/"
+  "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/include/"
 )
 MARK_AS_ADVANCED(ENTC_INCLUDE_DIR)
 

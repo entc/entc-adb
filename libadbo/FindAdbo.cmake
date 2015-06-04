@@ -35,7 +35,7 @@ FIND_LIBRARY(ADBO_LIBRARY NAMES adbo
   "/usr/lib/"
   "/usr/local/lib/"
   "/opt/local/lib/"
-  "C:/Program Files/DevCommon/lib/"
+  "$ENV{PROGRAMFILES}/quom/adbo/${ADBO_VERSION}/lib/"
 )
 MARK_AS_ADVANCED(ADBO_LIBRARY)
 
@@ -47,7 +47,7 @@ FIND_PATH(ADBO_INCLUDE_DIR NAMES adbo_types.h
   # on Mac OSX
   "/usr/local/include/libadbo-${ADBO_VERSION}/"
   # on windows
-  "C:/Program Files/DevCommon/include/adbo-${ADBO_VERSION}/"
+  "$ENV{PROGRAMFILES}/quom/adbo/${ADBO_VERSION}/include/"
 )
 MARK_AS_ADVANCED(ADBO_INCLUDE_DIR)
 

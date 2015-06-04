@@ -35,7 +35,7 @@ FIND_LIBRARY(ADBL_LIBRARY NAMES adbl
   "/usr/lib/"
   "/usr/local/lib/"
   "/opt/local/lib/"
-  "C:/Program Files/DevCommon/lib/"
+  "$ENV{PROGRAMFILES}/quom/adbl/${ADBL_VERSION}/lib/"
   VERSION_EQUAL ${ADBL_VERSION}
 )
 MARK_AS_ADVANCED(ADBL_LIBRARY)
@@ -48,7 +48,7 @@ FIND_PATH(ADBL_INCLUDE_DIR NAMES adbl.h
   # on Mac OSX
   "/usr/local/include/libadbl-${ADBL_VERSION}/"
   # on windows
-  "C:/Program Files/DevCommon/include/adbl-${ADBL_VERSION}/"
+  "$ENV{PROGRAMFILES}/quom/adbl/${ADBL_VERSION}/include/"
 )
 MARK_AS_ADVANCED(ADBL_INCLUDE_DIR)
 
