@@ -26,6 +26,10 @@
 
 #include "md5.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 //----------------------------------------------------------------------------------------
 
 EcBuffer ecbuf_create (uint_t size)
@@ -63,6 +67,65 @@ EcBuffer ecbuf_create_str (EcString* ps)
   *ps = NULL;
   
   return self;  
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_create_uuid (const EcString prefix)
+{
+  EcBuffer self;
+  int len = 0;
+  
+  if (!ecstr_empty(prefix))
+  {
+    len = strlen (prefix);    
+    self = ecbuf_create (40);
+    strncpy ((char*)self->buffer, prefix, len);
+  }
+  else
+  {
+    self = ecbuf_create (40);
+  }
+  
+#ifdef _WIN32
+  /*
+  if (CryptAcquireContext (
+                                  _Out_ HCRYPTPROV *phProv,
+                                  _In_  LPCTSTR    pszContainer,
+                                  _In_  LPCTSTR    pszProvider,
+                                  _In_  DWORD      dwProvType,
+                                  _In_  DWORD      dwFlags
+                                  );
+   */
+#else
+      
+  srand (clock());
+  int t = 0;
+
+  char *szTemp = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+  char *szHex = "0123456789ABCDEF-";
+  int nLen = strlen (szTemp);
+  unsigned char* pos = self->buffer + len;
+  
+  for (t = 0; t < nLen + 1; t++, pos++)
+  {
+    int r = rand () % 16;
+    char c = ' ';   
+    
+    switch (szTemp[t])
+    {
+      case 'x' : { c = szHex [r]; } break;
+      case 'y' : { c = szHex [r & 0x03 | 0x08]; } break;
+      case '-' : { c = '-'; } break;
+      case '4' : { c = '4'; } break;
+    }
+    
+    *pos = ( t < nLen ) ? c : 0x00;
+  }
+      
+      
+#endif
+  return self;
 }
 
 //----------------------------------------------------------------------------------------
