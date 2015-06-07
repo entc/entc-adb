@@ -71,21 +71,9 @@ EcBuffer ecbuf_create_str (EcString* ps)
 
 //----------------------------------------------------------------------------------------
 
-EcBuffer ecbuf_create_uuid (const EcString prefix)
+EcBuffer ecbuf_create_uuid ()
 {
-  EcBuffer self;
-  int len = 0;
-  
-  if (!ecstr_empty(prefix))
-  {
-    len = strlen (prefix);    
-    self = ecbuf_create (40);
-    strncpy ((char*)self->buffer, prefix, len);
-  }
-  else
-  {
-    self = ecbuf_create (40);
-  }
+  EcBuffer self = ecbuf_create (40);
   
 #ifdef _WIN32
   /*
@@ -105,7 +93,7 @@ EcBuffer ecbuf_create_uuid (const EcString prefix)
   char *szTemp = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
   char *szHex = "0123456789ABCDEF-";
   int nLen = strlen (szTemp);
-  unsigned char* pos = self->buffer + len;
+  unsigned char* pos = self->buffer;
   
   for (t = 0; t < nLen + 1; t++, pos++)
   {

@@ -37,7 +37,7 @@ __LIB_EXPORT EcBuffer ecbuf_create_filled (uint_t size, char fillupwith);
 
 __LIB_EXPORT EcBuffer ecbuf_create_str (EcString* s);
 
-__LIB_EXPORT EcBuffer ecbuf_create_uuid (const EcString prefix);
+__LIB_EXPORT EcBuffer ecbuf_create_uuid ();
 
 __LIB_EXPORT void ecbuf_destroy (EcBuffer*);
 
