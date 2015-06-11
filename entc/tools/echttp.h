@@ -57,6 +57,8 @@ typedef struct {
 
   int header_on;
   
+  int header_only;
+  
   EcString method;
     
   EcString host;

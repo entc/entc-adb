@@ -38,7 +38,10 @@
 #define ECDATA_REFS    ".refs"
 #define ECDATA_COLS    ".cols"
 #define ECDATA_ROWS    ".rows"
-#define ECDATA_FILE    ".file"
+#define ECDATA_FILE    ".f"
+#define ECDATA_BUFFER  ".b"
+#define ECDATA_MIME    ".m"
+#define ECDATA_PARAMS  ".p"
 
 // additional generics
 #define ECDATA_OBJECT        ".obj"

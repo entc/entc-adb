@@ -344,6 +344,9 @@ void echttp_init (void)
     ecmapchar_append( mime_types, "eot",      "application/vnd.ms-fontobject");
     ecmapchar_append( mime_types, "otf",      "application/font-otf");
 
+    ecmapchar_append( mime_types, "csv",      "text/csv");
+    ecmapchar_append( mime_types, "xls",      "application/vnd.ms-excel");
+
     ecmapchar_append( mime_types, "exe",      "application/octet-stream" );     
   }
   echhtp_counter++;
@@ -566,7 +569,7 @@ void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream, EcUdc 
 
 void q4http_callback(void* ptr, const void* buffer, uint_t nbyte)
 {
-  ecsocket_write(ptr, buffer, nbyte);
+  ecsocket_write (ptr, buffer, nbyte);
 }
 
 //---------------------------------------------------------------------------------------
@@ -581,6 +584,36 @@ void echttp_send_408 (EcHttpHeader* header, EcSocket socket)
     ecdevstream_appends( stream, "\r\n\r\n" );
 
     ecdevstream_delete( &stream );  
+  }
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_send_417 (EcHttpHeader* header, EcSocket socket)
+{  
+  if (header->header_on)
+  {
+    EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
+    // send back that the file doesn't exists
+    ecdevstream_appends( stream, "HTTP/1.1 417 Expectation Failed\r\n" );
+    ecdevstream_appends( stream, "\r\n\r\n" );
+    
+    ecdevstream_delete( &stream );  
+  }
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_send_100 (EcHttpHeader* header, EcSocket socket)
+{  
+  if (header->header_on)
+  {
+    EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
+    // send back that the file doesn't exists
+    ecdevstream_appends ( stream, "HTTP/1.1 100 Continue\r\n" );
+    ecdevstream_appends ( stream, "\r\n\r\n" );
+    
+    ecdevstream_delete ( &stream );  
   }
 }
 
@@ -727,6 +760,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
 {
   header->method = ecstr_init();
   header->header_on = header_on;
+  header->header_only = 0;
   header->host = ecstr_init();
   header->remote_address = ecstr_init();
   header->user_lang = ecstr_init();
@@ -1197,7 +1231,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
     const char* line = ecstream_buffer(stream);
     if( *line )
     {
-      //eclogger_msg(LL_TRACE, "ENTC", "http header", line);
+      eclogger_msg(LL_TRACE, "ENTC", "http header", line);
       
       /* Host: 127.0.0.1:8080 */
       if( line[0] == 'H' && line[1] == 'o' && line[5] == ' ' )        
@@ -1228,6 +1262,11 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
       else if ((line[0] == 'A')&&(line[7] == 'z')&&(line[14] == ' '))
       {
         header->auth = echttp_parse_auth (line + 15);
+      }
+      // Expect: 100-continue
+      else if ((line[0] == 'E')&&(line[6] == ':'))
+      {
+        header->header_only = 100;
       }
       else
       {
@@ -1426,7 +1465,22 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
   }
   
   echttp_header_validate (header);
-    
+
+  if (header->header_only > 0)
+  {
+    if (header->header_only == 100)
+    {
+      // just send this header
+      eclogger_msg (LL_TRACE, "ENTC", "http process", "seen 100-continue, response sent");
+      echttp_send_100 (header, socket);
+    }
+    else
+    {
+      echttp_send_417 (header, socket);
+      return;      
+    }
+  }
+  
   if (header->content_length > 0)
   {
     // eclogger_fmt (LL_TRACE, "ENTC", "http process", "request has content: %i", header->content_length);
@@ -1436,7 +1490,7 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
       echttp_content_destroy (&(header->content));
     }
     
-    header->content =  echttp_content_create (header->content_length, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot);  
+    header->content = echttp_content_create (header->content_length, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot);  
     if (isNotAssigned (header->content)) 
     {
       echttp_send_500 (header, socket);

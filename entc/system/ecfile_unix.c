@@ -304,7 +304,7 @@ int ecfs_move (const EcString source, const EcString dest)
 int ecfs_copy (const EcString source, const EcString dest)
 {
 #ifdef __APPLE_CC__
-  return copyfile (source, dest, 0, COPYFILE_ACL | COPYFILE_XATTR | COPYFILE_DATA);
+  return copyfile (source, dest, 0, COPYFILE_ACL | COPYFILE_XATTR | COPYFILE_DATA) == 0;
 #else
   int sfd = open (source, O_RDONLY, 0);
   int dfd = open (dest, O_WRONLY | O_CREAT /*| O_TRUNC/*/, 0644);
@@ -318,7 +318,7 @@ int ecfs_copy (const EcString source, const EcString dest)
   close (sfd);
   close (dfd);
   
-  return 0;
+  return TRUE;
 #endif
 }
 

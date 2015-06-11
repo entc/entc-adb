@@ -373,6 +373,14 @@ void ecudc_sitem_setS (EcUdcSItem* self, const EcString value)
 
 //----------------------------------------------------------------------------------------
 
+void ecudc_sitem_setS_o (EcUdcSItem* self, EcString* ptr)
+{
+  ecstr_replaceTO (&(self->value), *ptr);
+  *ptr = NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
 const EcString ecudc_sitem_asString (EcUdcSItem* self)
 {
   return self->value;
@@ -511,9 +519,18 @@ void ecudc_setS (EcUdc self, const EcString value)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_STRING: ecudc_sitem_setS (self->extension, value); 
-      break;
+    case ENTC_UDC_STRING: ecudc_sitem_setS (self->extension, value); break;
   }    
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_setS_o (EcUdc self, EcString* ptr)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_STRING: ecudc_sitem_setS_o (self->extension, ptr); break;
+  }  
 }
 
 //----------------------------------------------------------------------------------------
@@ -826,6 +843,18 @@ void ecudc_add_asString (EcUdc node, const EcString name, const EcString value)
   ecudc_setS(item, value);
   // add item to node 
   ecudc_add(node, &item);  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asS_o (EcUdc node, const EcString name, EcString* ptr)
+{
+  // create new item as string
+  EcUdc item = ecudc_create (ENTC_UDC_STRING, name);
+  // set new value to item
+  ecudc_setS_o(item, ptr);
+  // add item to node 
+  ecudc_add (node, &item);    
 }
 
 //----------------------------------------------------------------------------------------

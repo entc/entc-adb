@@ -56,6 +56,8 @@ __LIB_EXPORT uint_t ecudc_type (EcUdc);
 
 __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
 
+__LIB_EXPORT void ecudc_setS_o (EcUdc, EcString*);
+
 __LIB_EXPORT void ecudc_setP (EcUdc, void*);
 
 __LIB_EXPORT void ecudc_setB (EcUdc, ubyte_t);
@@ -101,6 +103,8 @@ __LIB_EXPORT const time_t* ecudc_get_asTime (const EcUdc, const EcString name, c
 __LIB_EXPORT void ecudc_add_asP (EcUdc, const EcString name, void* value);
 
 __LIB_EXPORT void ecudc_add_asString (EcUdc, const EcString name, const EcString value);
+
+__LIB_EXPORT void ecudc_add_asS_o (EcUdc, const EcString name, EcString*);
 
 __LIB_EXPORT void ecudc_add_asB (EcUdc, const EcString name, ubyte_t value);
 

@@ -203,12 +203,31 @@ EcSocket ecsocket_createReadSocket (EcEventContext ec, int sock, socklen_t addrl
   self->socket = sock;
   {
     EcBuffer ipbuffer = ecbuf_create (INET6_ADDRSTRLEN);    
-    // convert address information into string
-    inet_ntop(AF_INET, addr, (char*)ipbuffer->buffer, addrlen);
+    // convert address information into string    
+    const char* address = inet_ntop (AF_INET, (const struct sockaddr_in *)addr, (char*)ipbuffer->buffer, INET_ADDRSTRLEN);
+    if (isAssigned (address))
+    {
+      self->host = ecbuf_str (&ipbuffer);
+      eclogger_fmt (LL_TRACE, "ENTC", "read socket", "connection accepted from '%s'", self->host);
+    }
+    else
+    {
+      address = inet_ntop (AF_INET6, addr, (char*)ipbuffer->buffer, INET6_ADDRSTRLEN);
+      if (isAssigned (address))
+      {
+        self->host = ecbuf_str (&ipbuffer);
+        eclogger_fmt (LL_TRACE, "ENTC", "read socket", "connection accepted from '%s'", self->host);
+      }
+      else
+      {        
+        ecbuf_destroy(&ipbuffer);
+        self->host = ecstr_init ();
+        
+        eclogger_errno(LL_ERROR, "ENTC", "read socket", "can't get address string");
+        eclogger_fmt (LL_TRACE, "ENTC", "read socket", "connection accepted");
+      }
+    }
     
-    self->host = ecbuf_str (&ipbuffer);
-    
-    eclogger_fmt (LL_TRACE, "ENTC", "socket", "connection accepted from '%s'", self->host);
   }
   return self;
 }
