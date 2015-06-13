@@ -154,6 +154,25 @@ EcUdc ecudc_node_get (EcUdcNode* self, const EcString name)
 
 //----------------------------------------------------------------------------------------
 
+EcUdc ecudc_node_ext (EcUdcNode* self, const EcString name)
+{
+  EcMapNode node = ecmap_find (self->map, name);
+  EcUdc ret = NULL;
+  
+  if (node == ecmap_end(self->map))
+  {
+    return NULL;
+  }
+  
+  ret = ecmap_data (node);
+  
+  ecmap_erase (node);
+  
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
 {
   EcMapNode node;
@@ -486,6 +505,20 @@ EcUdc ecudc_node (EcUdc self, const EcString name)
     }        
   }
   return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc ecudc_node_e (EcUdc self, const EcString name)
+{
+  if (isAssigned (self))
+  {
+    switch (self->type) 
+    {
+      case ENTC_UDC_NODE: return ecudc_node_ext (self->extension, name); 
+    }        
+  }
+  return NULL;  
 }
 
 //----------------------------------------------------------------------------------------

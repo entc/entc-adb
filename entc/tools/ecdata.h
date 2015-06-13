@@ -43,6 +43,7 @@
 #define ECDATA_MIME      ".m"
 #define ECDATA_PARAMS    ".p"
 #define ECDATA_USERINFO  ".u"
+#define ECDATA_PAYLOAD   ".d"
 
 // additional generics
 #define ECDATA_OBJECT        ".obj"
