@@ -101,24 +101,27 @@ typedef struct {
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 
-typedef int (_STDCALL *http_process_fct)(void* ptr, EcHttpHeader*, void** object);
+typedef int (_STDCALL *http_route_fct)(void* ptr, EcHttpHeader*, void** object);
+typedef int (_STDCALL *http_validate_header_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
 typedef int (_STDCALL *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
 typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*);
 typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, const EcString tmproot);
 
 typedef struct {
   
-  http_process_fct process;
+  http_route_fct cb_route;
   
-  void* process_ptr;
+  http_validate_header_fct cb_validate;
   
   http_render_fct render;
+
+  void* process_ptr;
   
   void* render_ptr; 
   
   // needed for custom-dev processing
   
-  http_header_fct header;
+  http_header_fct custom_header;
   
   http_content_fct content;
   

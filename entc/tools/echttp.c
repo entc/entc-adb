@@ -1366,106 +1366,22 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* callback_ptr)
+void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcDevStream stream, EcSocket socket)
 {
-  EcHttpHeader header;
+  void* object = NULL;
 
-  // initialize the header struct
-  echttp_header_init (&header, self->header_on);
-
-  // check first if we handle this in a custom way
-  if (isAssigned (self->callbacks.process))
+  // get a route
+  if (!self->callbacks.cb_route (self->callbacks.process_ptr, header, &object))
   {
-    void* object = NULL;
-    
-    if (isAssigned (self->callbacks.header))
-    {
-      self->callbacks.header (callback_ptr, &header);
-    }
-    else
-    {
-      eclogger_msg (LL_WARN, "ENTC", "http", "no header callback is set"); 
-    }
-
-    echttp_header_validate (&header);
-    
-    echttp_header_title (&header);
-
-    if (isAssigned (self->callbacks.content))
-    {
-      self->callbacks.content (callback_ptr, &header, self->tmproot);
-    }
-    
-    if (self->callbacks.process (self->callbacks.process_ptr, &header, &object))
-    {
-      if (isAssigned (self->callbacks.render))
-      {
-        self->callbacks.render (self->callbacks.render_ptr, &header, stream, &object);
-        
-        // log visit
-        echttp_header_lotToService (&header);
-      }
-      else
-      {
-        ecdevstream_appends(stream, "no render");
-      }      
-    }
-  }
-  else
-  {
-    eclogger_msg (LL_WARN, "ENTC", "http", "no process callback is set");  
-  }
-  
-  echttp_header_clear (&header);
-}
-
-//---------------------------------------------------------------------------------------
-
-void echttp_request_process_next (EcHttpRequest self, EcHttpHeader* header, EcSocket socket)
-{
-  // check first if we handle this in a custom way
-  if (isAssigned (self->callbacks.process))
-  {
-    void* object = NULL;
-    
-    echttp_header_title (header);
-    
-    if (self->callbacks.process (self->callbacks.process_ptr, header, &object))
-    {
-      EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
-            
-      if (isAssigned (self->callbacks.render))
-      {
-        self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
-        
-        // log visit
-        echttp_header_lotToService (header);
-      }
-      else
-      {
-        ecdevstream_appends(stream, "no render");
-      }
-      
-      ecdevstream_delete(&stream);
-      
-      return;
-    }
-  }
-  echttp_send_file (header, socket, self->docroot);  
-}
-
-//---------------------------------------------------------------------------------------
-
-void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcSocket socket)
-{
-  if (!echttp_request_next (header, buffer, streambuffer))
-  {
-    echttp_send_408 (header, socket); 
+    echttp_send_file (header, socket, self->docroot);
     return;
   }
   
-  echttp_header_validate (header);
-
+  if (!self->callbacks.cb_validate (self->callbacks.process_ptr, header, stream, &object))
+  {
+    return;
+  }
+  
   if (header->header_only > 0)
   {
     if (header->header_only == 100)
@@ -1481,6 +1397,7 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
     }
   }
   
+  // get POST content
   if (header->content_length > 0)
   {
     // eclogger_fmt (LL_TRACE, "ENTC", "http process", "request has content: %i", header->content_length);
@@ -1502,7 +1419,118 @@ void echttp_request_process_check (EcHttpRequest self, EcHttpHeader* header, EcS
     // eclogger_msg (LL_TRACE, "ENTC", "http process", "no content");    
   }
   
-  echttp_request_process_next (self, header, socket);
+  // render
+  self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
+  
+  // log visit
+  echttp_header_lotToService (header);  
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_request_flow (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcSocket socket)
+{
+  // check first if we handle this in a custom way
+  if (isNotAssigned (self->callbacks.cb_route))
+  {
+    echttp_send_file (header, socket, self->docroot);
+    return;
+  }
+  
+  if (isNotAssigned (self->callbacks.cb_validate))
+  {
+    echttp_send_file (header, socket, self->docroot);  
+    return;    
+  }  
+  
+  if (isNotAssigned (self->callbacks.render))
+  {
+    echttp_send_file (header, socket, self->docroot);  
+    return;    
+  }  
+
+  // fill header
+  if (!echttp_request_next (header, buffer, streambuffer))
+  {
+    echttp_send_408 (header, socket); 
+    return;
+  }
+  
+  echttp_header_validate (header);
+  
+  echttp_header_title (header);
+    
+  EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
+
+  echttp_request_flow_stream (self, header, buffer, stream, socket);
+  
+  ecdevstream_delete (&stream);  
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_request_dev_flow (EcHttpRequest self, EcHttpHeader* header, EcDevStream stream, void* callback_ptr)
+{
+  void* object = NULL;
+
+  // check first if we handle this in a custom way
+  if (isNotAssigned (self->callbacks.cb_route))
+  {
+    eclogger_msg (LL_WARN, "ENTC", "http", "no process callback is set");      
+    return;
+  }
+  
+  if (isAssigned (self->callbacks.custom_header))
+  {
+    self->callbacks.custom_header (callback_ptr, header);
+  }
+  else
+  {
+    eclogger_msg (LL_WARN, "ENTC", "http", "no header callback is set"); 
+  }
+  
+  echttp_header_validate (header);
+  
+  echttp_header_title (header);
+
+  // get a route
+  if (!self->callbacks.cb_route (self->callbacks.process_ptr, header, &object))
+  {
+    return;
+  }
+
+  // retrieve POST content
+  if (isAssigned (self->callbacks.content))
+  {
+    self->callbacks.content (callback_ptr, header, self->tmproot);
+  }
+  
+  // finally render it
+  if (isAssigned (self->callbacks.render))
+  {
+    self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
+    
+    // log visit
+    echttp_header_lotToService (header);
+  }
+  else
+  {
+    ecdevstream_appends(stream, "no render");
+  }      
+}
+
+//---------------------------------------------------------------------------------------
+
+void echttp_request_process_dev (EcHttpRequest self, EcDevStream stream, void* callback_ptr)
+{
+  EcHttpHeader header;
+
+  // initialize the header struct
+  echttp_header_init (&header, self->header_on);
+
+  echttp_request_dev_flow (self, &header, stream, callback_ptr);
+  
+  echttp_header_clear (&header);
 }
 
 //---------------------------------------------------------------------------------------
@@ -1517,7 +1545,7 @@ void echttp_request_process (EcHttpRequest self, EcSocket socket)
   // initialize the header struct
   echttp_header_init (&header, self->header_on);
 
-  echttp_request_process_check (self, &header, buffer, streambuffer, socket);
+  echttp_request_flow (self, &header, buffer, streambuffer, socket);
   
   echttp_header_clear (&header);
   
