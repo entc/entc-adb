@@ -347,7 +347,8 @@ void echttp_init (void)
     ecmapchar_append( mime_types, "csv",      "text/csv");
     ecmapchar_append( mime_types, "xls",      "application/vnd.ms-excel");
 
-    ecmapchar_append( mime_types, "exe",      "application/octet-stream" );     
+    ecmapchar_append( mime_types, "exe",      "application/octet-stream" );
+    ecmapchar_append( mime_types, "dll",      "application/x-msdownload" );
   }
   echhtp_counter++;
 }
@@ -361,6 +362,21 @@ void echttp_done (void)
   {
     ecmapchar_delete(&mime_types);
     ecbuf_destroy (&session_name);
+  }
+}
+
+//---------------------------------------------------------------------------------------
+
+const EcString echttp_url_lastPart (const EcString url)
+{
+  const char* pos = strrchr (url, '/');
+  if (pos)
+  {
+    return pos + 1;
+  }
+  else
+  {
+    return url;
   }
 }
 
@@ -581,7 +597,7 @@ void echttp_send_408 (EcHttpHeader* header, EcSocket socket)
     EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
     // send back that the file doesn't exists
     ecdevstream_appends( stream, "HTTP/1.1 408 Request Timeout\r\n" );
-    ecdevstream_appends( stream, "\r\n\r\n" );
+    ecdevstream_appends( stream, "\r\n" );
 
     ecdevstream_delete( &stream );  
   }
@@ -596,7 +612,7 @@ void echttp_send_417 (EcHttpHeader* header, EcSocket socket)
     EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
     // send back that the file doesn't exists
     ecdevstream_appends( stream, "HTTP/1.1 417 Expectation Failed\r\n" );
-    ecdevstream_appends( stream, "\r\n\r\n" );
+    ecdevstream_appends( stream, "\r\n" );
     
     ecdevstream_delete( &stream );  
   }
@@ -611,7 +627,7 @@ void echttp_send_100 (EcHttpHeader* header, EcSocket socket)
     EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
     // send back that the file doesn't exists
     ecdevstream_appends ( stream, "HTTP/1.1 100 Continue\r\n" );
-    ecdevstream_appends ( stream, "\r\n\r\n" );
+    ecdevstream_appends ( stream, "\r\n" );
     
     ecdevstream_delete ( &stream );  
   }
@@ -626,7 +642,7 @@ void echttp_send_500 (EcHttpHeader* header, EcSocket socket)
     EcDevStream stream = ecdevstream_new(1024, q4http_callback, socket); // output stream
     // send back that the file doesn't exists
     ecdevstream_appends( stream, "HTTP/1.1 500 Internal Server Error\r\n" );
-    ecdevstream_appends( stream, "\r\n\r\n" );
+    ecdevstream_appends( stream, "\r\n" );
     
     ecdevstream_delete( &stream );  
   }

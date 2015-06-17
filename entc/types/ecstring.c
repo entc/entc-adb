@@ -669,7 +669,7 @@ EcString ecstr_trimlr (const EcString s, char l, char r)
     /* check if readable */
     if (*pos02 != r) break;
     /* set to zero */
-    *pos02 = 0;
+    *pos02 = 0;    
   }  
   
   return copy;
