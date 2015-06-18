@@ -176,6 +176,15 @@ void ecxmlstream_clean (EcXMLStream self)
     /* get next char* */
     tag = ecstack_top (self->nodes);
   }
+
+  {
+    EcMapNode node;
+    for (node = ecmap_first (self->namespaces); node != ecmap_end (self->namespaces); node = ecmap_next (node))
+    {
+      EcString val = ecmap_data (node);
+      ecstr_delete (&val);
+    }  
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -201,8 +210,10 @@ void ecxmlstream_close( EcXMLStream self )
   ecstr_delete( &(self->value) );
   
   ecstr_delete( &(self->filename) );
+  
+  ecmap_delete (&(self->namespaces));
 
-  free( self );
+  ENTC_DEL(&self, struct EcXMLStream_s);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -252,7 +263,7 @@ void ecxmlstream_mapNamespaces (EcXMLStream self, EcMapChar nsmap)
   EcMapNode node;
   for (node = ecmap_first (self->namespaces); node != ecmap_end (self->namespaces); node = ecmap_next (node))
   {
-    ecmapchar_append(nsmap, ecmap_data (node), ecmap_key (node));
+    ecmapchar_append (nsmap, ecmap_data (node), ecmap_key (node));
   }
 }
 
