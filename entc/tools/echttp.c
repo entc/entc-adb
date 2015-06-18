@@ -811,6 +811,7 @@ void echttp_header_clear (EcHttpHeader* header)
   ecstr_delete(&(header->request_params));
   ecstr_delete(&(header->request_url));
   ecstr_delete(&(header->title));
+  ecstr_delete(&(header->url));
   
   if (isAssigned (header->tokens))
   {
@@ -1354,7 +1355,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
         return FALSE;
       }
       
-      header->url = ecstr_part(after_method, afetr_url - after_method);         
+      header->url = ecstr_part (after_method, afetr_url - after_method);         
     }
   }
   else

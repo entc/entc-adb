@@ -67,7 +67,7 @@ typedef struct {
   
   const EcString mime;
   
-  const EcString url;
+  EcString url;
   
   EcString user_lang;
   
