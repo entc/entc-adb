@@ -572,6 +572,8 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
   
   // finish
   ecdevstream_append( stream, "\r\n", 2 );
+  
+  eclogger_fmt (LL_TRACE, "ENTC", "send http", "send error http message [%i]", errcode);
 }
 
 //---------------------------------------------------------------------------------------
@@ -1472,6 +1474,7 @@ void echttp_request_flow (EcHttpRequest self, EcHttpHeader* header, EcStreamBuff
     return;
   }
   
+  // **** validate header ****
   echttp_header_validate (header);
   
   echttp_header_title (header);
@@ -1485,16 +1488,56 @@ void echttp_request_flow (EcHttpRequest self, EcHttpHeader* header, EcStreamBuff
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_dev_flow (EcHttpRequest self, EcHttpHeader* header, EcDevStream stream, void* callback_ptr)
+void echttp_request_dev_stream (EcHttpRequest self, EcHttpHeader* header, EcDevStream stream, void* callback_ptr)
 {
   void* object = NULL;
+  
+  // get a route
+  if (!self->callbacks.cb_route (self->callbacks.process_ptr, header, &object))
+  {
+    return;
+  }
+  
+  if (!self->callbacks.cb_validate (self->callbacks.process_ptr, header, stream, &object))
+  {
+    return;
+  }  
+  
+  // retrieve POST content
+  if (isAssigned (self->callbacks.content))
+  {
+    self->callbacks.content (callback_ptr, header, self->tmproot);
+  }
+  
+  // render
+  self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
+  
+  // log visit
+  echttp_header_lotToService (header);  
+}
 
+//---------------------------------------------------------------------------------------
+
+void echttp_request_dev_flow (EcHttpRequest self, EcHttpHeader* header, EcDevStream stream, void* callback_ptr)
+{
   // check first if we handle this in a custom way
   if (isNotAssigned (self->callbacks.cb_route))
   {
-    eclogger_msg (LL_WARN, "ENTC", "http", "no process callback is set");      
+    eclogger_msg (LL_WARN, "ENTC", "http", "no route callback is set");      
     return;
   }
+  
+  if (isNotAssigned (self->callbacks.cb_validate))
+  {
+    eclogger_msg (LL_WARN, "ENTC", "http", "no validate callback is set");      
+    return;    
+  }  
+  
+  if (isNotAssigned (self->callbacks.render))
+  {
+    eclogger_msg (LL_WARN, "ENTC", "http", "no render callback is set");      
+    return;    
+  }  
   
   if (isAssigned (self->callbacks.custom_header))
   {
@@ -1504,35 +1547,13 @@ void echttp_request_dev_flow (EcHttpRequest self, EcHttpHeader* header, EcDevStr
   {
     eclogger_msg (LL_WARN, "ENTC", "http", "no header callback is set"); 
   }
-  
+
+  // **** validate header ****
   echttp_header_validate (header);
   
   echttp_header_title (header);
 
-  // get a route
-  if (!self->callbacks.cb_route (self->callbacks.process_ptr, header, &object))
-  {
-    return;
-  }
-
-  // retrieve POST content
-  if (isAssigned (self->callbacks.content))
-  {
-    self->callbacks.content (callback_ptr, header, self->tmproot);
-  }
-  
-  // finally render it
-  if (isAssigned (self->callbacks.render))
-  {
-    self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
-    
-    // log visit
-    echttp_header_lotToService (header);
-  }
-  else
-  {
-    ecdevstream_appends(stream, "no render");
-  }      
+  echttp_request_dev_stream (self, header, stream, callback_ptr);  
 }
 
 //---------------------------------------------------------------------------------------
