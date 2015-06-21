@@ -1385,19 +1385,30 @@ int echttp_request_next (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
 
 //---------------------------------------------------------------------------------------
 
+void echttp_request_clear (EcHttpRequest self, void* ptr, void** pobject)
+{
+  if (isAssigned (self->callbacks.clear))
+  {
+    self->callbacks.clear (ptr, pobject);
+  }
+}
+
+//---------------------------------------------------------------------------------------
+
 void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcDevStream stream, EcSocket socket)
 {
   void* object = NULL;
 
   // get a route
-  if (!self->callbacks.cb_route (self->callbacks.process_ptr, header, &object))
+  if (!self->callbacks.route (self->callbacks.ptr, header, &object))
   {
     echttp_send_file (header, socket, self->docroot);
     return;
   }
   
-  if (!self->callbacks.cb_validate (self->callbacks.process_ptr, header, stream, &object))
+  if (!self->callbacks.validate (self->callbacks.ptr, header, stream, &object))
   {
+    echttp_request_clear (self, self->callbacks.ptr, &object);
     return;
   }
   
@@ -1411,6 +1422,7 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
     }
     else
     {
+      echttp_request_clear (self, self->callbacks.ptr, &object);
       echttp_send_417 (header, socket);
       return;      
     }
@@ -1430,6 +1442,7 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
     if (isNotAssigned (header->content)) 
     {
       echttp_send_500 (header, socket);
+      echttp_request_clear (self, self->callbacks.ptr, &object);
       return;
     }
   }
@@ -1439,10 +1452,12 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
   }
   
   // render
-  self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
+  self->callbacks.render (self->callbacks.ptr, header, stream, &object);
   
   // log visit
-  echttp_header_lotToService (header);  
+  echttp_header_lotToService (header); 
+  
+  echttp_request_clear (self, self->callbacks.ptr, &object);
 }
 
 //---------------------------------------------------------------------------------------
@@ -1450,13 +1465,13 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
 void echttp_request_flow (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer, EcSocket socket)
 {
   // check first if we handle this in a custom way
-  if (isNotAssigned (self->callbacks.cb_route))
+  if (isNotAssigned (self->callbacks.route))
   {
     echttp_send_file (header, socket, self->docroot);
     return;
   }
   
-  if (isNotAssigned (self->callbacks.cb_validate))
+  if (isNotAssigned (self->callbacks.validate))
   {
     echttp_send_file (header, socket, self->docroot);  
     return;    
@@ -1494,13 +1509,14 @@ void echttp_request_dev_stream (EcHttpRequest self, EcHttpHeader* header, EcDevS
   void* object = NULL;
   
   // get a route
-  if (!self->callbacks.cb_route (self->callbacks.process_ptr, header, &object))
+  if (!self->callbacks.route (callback_ptr, header, &object))
   {
     return;
   }
   
-  if (!self->callbacks.cb_validate (self->callbacks.process_ptr, header, stream, &object))
+  if (!self->callbacks.validate (callback_ptr, header, stream, &object))
   {
+    echttp_request_clear (self, self->callbacks.ptr, &object);
     return;
   }  
   
@@ -1511,10 +1527,12 @@ void echttp_request_dev_stream (EcHttpRequest self, EcHttpHeader* header, EcDevS
   }
   
   // render
-  self->callbacks.render (self->callbacks.render_ptr, header, stream, &object);
+  self->callbacks.render (callback_ptr, header, stream, &object);
   
   // log visit
-  echttp_header_lotToService (header);  
+  echttp_header_lotToService (header);
+  
+  echttp_request_clear (self, self->callbacks.ptr, &object);
 }
 
 //---------------------------------------------------------------------------------------
@@ -1522,13 +1540,13 @@ void echttp_request_dev_stream (EcHttpRequest self, EcHttpHeader* header, EcDevS
 void echttp_request_dev_flow (EcHttpRequest self, EcHttpHeader* header, EcDevStream stream, void* callback_ptr)
 {
   // check first if we handle this in a custom way
-  if (isNotAssigned (self->callbacks.cb_route))
+  if (isNotAssigned (self->callbacks.route))
   {
     eclogger_msg (LL_WARN, "ENTC", "http", "no route callback is set");      
     return;
   }
   
-  if (isNotAssigned (self->callbacks.cb_validate))
+  if (isNotAssigned (self->callbacks.validate))
   {
     eclogger_msg (LL_WARN, "ENTC", "http", "no validate callback is set");      
     return;    

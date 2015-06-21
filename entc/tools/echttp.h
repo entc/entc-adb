@@ -106,25 +106,24 @@ typedef int (_STDCALL *http_validate_header_fct)(void* ptr, EcHttpHeader*, EcDev
 typedef int (_STDCALL *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
 typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*);
 typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, const EcString tmproot);
+typedef int (_STDCALL *http_clear_fct)(void* ptr, void** object);
 
 typedef struct {
   
-  http_route_fct cb_route;
+  http_route_fct route;
   
-  http_validate_header_fct cb_validate;
+  http_validate_header_fct validate;
   
   http_render_fct render;
-
-  void* process_ptr;
-  
-  void* render_ptr; 
-  
-  // needed for custom-dev processing
   
   http_header_fct custom_header;
   
   http_content_fct content;
   
+  http_clear_fct clear;
+  
+  void* ptr;
+
 } EcHttpCallbacks;
 
 /*
