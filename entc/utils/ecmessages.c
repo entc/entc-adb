@@ -443,3 +443,19 @@ void ecmessages_initData (EcMessageData* data, uint_t type, uint_t rev)
 }
 
 //----------------------------------------------------------------------------------------
+
+void ecmessages_clearData (EcMessageData* data)
+{
+  data->type = 0;
+  data->rev = 0;
+  
+  if (isAssigned (data->content))
+  {
+    ecudc_destroy(&(data->content));
+  }
+
+  data->content = NULL;
+  data->ref = 0;
+}
+
+//----------------------------------------------------------------------------------------
