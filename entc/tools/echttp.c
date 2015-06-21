@@ -1395,7 +1395,7 @@ void echttp_request_clear (EcHttpRequest self, void* ptr, void** pobject)
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcDevStream stream, EcSocket socket)
+void* echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStreamBuffer buffer, EcDevStream stream, EcSocket socket)
 {
   void* object = NULL;
 
@@ -1403,13 +1403,12 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
   if (!self->callbacks.route (self->callbacks.ptr, header, &object))
   {
     echttp_send_file (header, socket, self->docroot);
-    return;
+    return object;
   }
   
   if (!self->callbacks.validate (self->callbacks.ptr, header, stream, &object))
   {
-    echttp_request_clear (self, self->callbacks.ptr, &object);
-    return;
+    return object;
   }
   
   if (header->header_only > 0)
@@ -1422,9 +1421,8 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
     }
     else
     {
-      echttp_request_clear (self, self->callbacks.ptr, &object);
       echttp_send_417 (header, socket);
-      return;      
+      return object;      
     }
   }
   
@@ -1442,8 +1440,7 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
     if (isNotAssigned (header->content)) 
     {
       echttp_send_500 (header, socket);
-      echttp_request_clear (self, self->callbacks.ptr, &object);
-      return;
+      return object;
     }
   }
   else
@@ -1457,7 +1454,7 @@ void echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcStr
   // log visit
   echttp_header_lotToService (header); 
   
-  echttp_request_clear (self, self->callbacks.ptr, &object);
+  return object;
 }
 
 //---------------------------------------------------------------------------------------
@@ -1497,7 +1494,9 @@ void echttp_request_flow (EcHttpRequest self, EcHttpHeader* header, EcStreamBuff
     
   EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
 
-  echttp_request_flow_stream (self, header, buffer, stream, socket);
+  void* object = echttp_request_flow_stream (self, header, buffer, stream, socket);
+  
+  echttp_request_clear (self, self->callbacks.ptr, &object);
   
   ecdevstream_delete (&stream);  
 }
