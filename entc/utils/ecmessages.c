@@ -444,6 +444,30 @@ void ecmessages_initData (EcMessageData* data, uint_t type, uint_t rev)
 
 //----------------------------------------------------------------------------------------
 
+void ecmessages_initDataN (EcMessageData* data, uint_t type, uint_t rev, uint_t ref, const EcString nodeName)
+{
+  data->type = type;
+  data->rev = rev;
+  data->ref = ref;  
+  data->content = ecudc_create (ENTC_UDC_NODE, nodeName);
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecmessages_resetData_KOCN (EcMessageData* data, uint_t type, uint_t rev, uint_t ref, const EcString nodeName)
+{
+  data->type = type;
+  data->rev = rev;
+  data->ref = ref;  
+  
+  if (isNotAssigned (data->content))
+  {
+    data->content = ecudc_create (ENTC_UDC_NODE, nodeName);  
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecmessages_clearData (EcMessageData* data)
 {
   data->type = 0;

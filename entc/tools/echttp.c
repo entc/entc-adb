@@ -1503,20 +1503,19 @@ void echttp_request_flow (EcHttpRequest self, EcHttpHeader* header, EcStreamBuff
 
 //---------------------------------------------------------------------------------------
 
-void echttp_request_dev_stream (EcHttpRequest self, EcHttpHeader* header, EcDevStream stream, void* callback_ptr)
+void* echttp_request_dev_stream (EcHttpRequest self, EcHttpHeader* header, EcDevStream stream, void* callback_ptr)
 {
   void* object = NULL;
   
   // get a route
   if (!self->callbacks.route (callback_ptr, header, &object))
   {
-    return;
+    return object;
   }
   
   if (!self->callbacks.validate (callback_ptr, header, stream, &object))
   {
-    echttp_request_clear (self, self->callbacks.ptr, &object);
-    return;
+    return object;
   }  
   
   // retrieve POST content
@@ -1531,7 +1530,7 @@ void echttp_request_dev_stream (EcHttpRequest self, EcHttpHeader* header, EcDevS
   // log visit
   echttp_header_lotToService (header);
   
-  echttp_request_clear (self, self->callbacks.ptr, &object);
+  return object;
 }
 
 //---------------------------------------------------------------------------------------
@@ -1571,7 +1570,9 @@ void echttp_request_dev_flow (EcHttpRequest self, EcHttpHeader* header, EcDevStr
   
   echttp_header_title (header);
 
-  echttp_request_dev_stream (self, header, stream, callback_ptr);  
+  void* object = echttp_request_dev_stream (self, header, stream, callback_ptr);  
+  
+  echttp_request_clear (self, self->callbacks.ptr, &object);
 }
 
 //---------------------------------------------------------------------------------------

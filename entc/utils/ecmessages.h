@@ -84,7 +84,11 @@ __LIB_EXPORT int ecmessages_send (uint_t module, uint_t method, EcMessageData* d
 
 __LIB_EXPORT void ecmessages_initData (EcMessageData*, uint_t type, uint_t rev);
 
+__LIB_EXPORT void ecmessages_initDataN (EcMessageData*, uint_t type, uint_t rev, uint_t ref, const EcString nodeName);
+
 __LIB_EXPORT void ecmessages_clearData (EcMessageData*);
+
+__LIB_EXPORT void ecmessages_resetData_KOCN (EcMessageData*, uint_t type, uint_t rev, uint_t ref, const EcString nodeName);
 
 __CPP_EXTERN______________________________________________________________________________END
 
