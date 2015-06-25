@@ -195,7 +195,7 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
       const EcString h = ecudc_asString (item);        
       if (ecstr_empty(h))
       {
-        eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' has empty value", dbcolumn); 
+        //eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' has empty value", dbcolumn); 
         return FALSE;          
       }
       
@@ -257,7 +257,7 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     EcUdc dataConstraint = ecudc_node (data, dbcolumn); 
     if (isNotAssigned (dataConstraint))
     {
-      eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' no value found", dbcolumn); 
+      //eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' no value found", dbcolumn); 
       return FALSE;
     }
     

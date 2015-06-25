@@ -102,7 +102,7 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
                  
 #if defined _WIN64 || defined _WIN32 
 
-      _snprintf_s (buffer, 2048, _TRUNCATE, "%-12s %s|%-6s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+      _snprintf_s (buffer, 2048, _TRUNCATE, "%-12s %s|%-8s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
       {
         CONSOLE_SCREEN_BUFFER_INFO info;
         // get the console handle
@@ -117,7 +117,7 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
         SetConsoleTextAttribute (hStdout, info.wAttributes);
       }
 #else
-      snprintf (buffer, 2048, "%-12s %s|%-6s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
+      snprintf (buffer, 2048, "%-12s %s|%-8s] %s", ecudc_get_asString(dIn->content, "method", ""), msg_matrix[dIn->ref], ecudc_get_asString(dIn->content, "unit", "____"), ecudc_get_asString(dIn->content, "msg", ""));
 
       printf("\033[%sm%s\033[0m\n", clr_matrix[dIn->ref], buffer);
 #endif
