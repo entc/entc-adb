@@ -50,6 +50,8 @@
 #define ECDATA_MULTIOBJECT   ".mos"
 #define ECDATA_TARGET        ".target"
 #define ECDATA_AUTH          ".auth"
+#define ECDATA_OPTIONS_MAP   ".om"
+#define ECDATA_OPTIONS_LIST  ".ol"
 
 __CPP_EXTERN______________________________________________________________________________START
 
