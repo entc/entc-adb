@@ -1491,14 +1491,16 @@ void echttp_request_flow (EcHttpRequest self, EcHttpHeader* header, EcStreamBuff
   echttp_header_validate (header);
   
   echttp_header_title (header);
-    
-  EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
 
-  void* object = echttp_request_flow_stream (self, header, buffer, stream, socket);
+  {    
+    EcDevStream stream = ecdevstream_new (1024, q4http_callback, socket); // output stream
+
+    void* object = echttp_request_flow_stream (self, header, buffer, stream, socket);
   
-  echttp_request_clear (self, self->callbacks.ptr, &object);
+    echttp_request_clear (self, self->callbacks.ptr, &object);
   
-  ecdevstream_delete (&stream);  
+    ecdevstream_delete (&stream);  
+  }
 }
 
 //---------------------------------------------------------------------------------------
@@ -1570,9 +1572,11 @@ void echttp_request_dev_flow (EcHttpRequest self, EcHttpHeader* header, EcDevStr
   
   echttp_header_title (header);
 
-  void* object = echttp_request_dev_stream (self, header, stream, callback_ptr);  
+  {
+    void* object = echttp_request_dev_stream (self, header, stream, callback_ptr);  
   
-  echttp_request_clear (self, self->callbacks.ptr, &object);
+    echttp_request_clear (self, self->callbacks.ptr, &object);
+  }
 }
 
 //---------------------------------------------------------------------------------------
