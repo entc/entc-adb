@@ -180,7 +180,7 @@ void ecstream_appendt (EcStream self, const time_t* value)
 {
   char buffer [32];
 #ifdef _WIN32
-  _snprintf(buffer, 30, "%lu", (unsigned long)*value);
+  _snprintf_s (buffer, 30, _TRUNCATE, "%lu", (unsigned long)*value);
 #else
   snprintf(buffer, 30, "%lu", (unsigned long)*value);
 #endif  

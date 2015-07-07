@@ -151,7 +151,12 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
 {
   struct tm timeinfo;  
   int year, month, day, hour, minute, second;
+
+#ifdef _WIN32
+  int res = sscanf_s (stime, "%4d%2d%2dT%2d%2d%2d", &year, &month, &day, &hour, &minute, &second);
+#else
   int res = sscanf (stime, "%4d%2d%2dT%2d%2d%2d", &year, &month, &day, &hour, &minute, &second);
+#endif
 
   if (res != 6)
   {
