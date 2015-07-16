@@ -46,6 +46,8 @@ __LIB_EXPORT EcUdc adbo_get_table (EcUdc, const EcString tablename);
 // fills the structure with the current content from the database
 __LIB_EXPORT int adbo_item_fetch (EcUdc item, EcUdc filter, AdboContext);
 
+__LIB_EXPORT int adbo_item_cursor (AdboContext, EcCursor, EcUdc item, EcUdc filter);
+
 // gets back the structure with its first items result array
 __LIB_EXPORT EcUdc adbo_item_values (EcUdc item);
 

@@ -18,6 +18,7 @@
  */
 
 #include "adbo.h"
+#include "adbo_node.h"
 #include "adbo_context_intern.h"
 #include <tools/ecdata.h>
 #include <tools/ecjson.h>
@@ -120,6 +121,13 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context);
 int adbo_item_fetch (EcUdc item, EcUdc data, AdboContext context)
 {
   return adbo_node_fetch (item, data, context);
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_item_cursor (AdboContext context, EcCursor cursor, EcUdc item, EcUdc filter)
+{
+  return adbo_node_cursor (context, cursor, item, filter);
 }
 
 //----------------------------------------------------------------------------------------

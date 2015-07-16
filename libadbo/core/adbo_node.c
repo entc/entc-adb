@@ -435,6 +435,170 @@ int adbo_node_dbquery_cursor (EcUdc node, EcUdc values, ulong_t dbmin, AdboConte
 
 //----------------------------------------------------------------------------------------
 
+#define PREFETCHED_CACHE 20
+
+typedef struct 
+{
+  
+  AdblSession session;
+  
+  AdblCursor* dbcursor;
+  
+  AdblQuery* dbquery;
+  
+  int columns;
+  
+  int done;
+  
+  EcTable data;
+  
+} AdboCursorData; 
+
+//----------------------------------------------------------------------------------------
+
+int _STDCALL adbo_cursor_fill (void* ptr, EcTable* table)
+{
+  int row = 0;
+  int col;
+  AdboCursorData* self = ptr;
+
+  *table = NULL;
+
+  if (self->done)
+  {
+    return 0; // this means no data anymore
+  }
+    
+  while (adbl_dbcursor_next (self->dbcursor))
+  {
+    row++;  // starts by row 1 to ignore header
+
+    for (col = 0; col < self->columns; col++)
+    {
+      EcString current = ectable_get (self->data, row, col);
+      
+      ecstr_replace (&current, adbl_dbcursor_data (self->dbcursor, col));
+      
+      ectable_set (self->data, row, col, current);
+    }
+    
+    if (row >= PREFETCHED_CACHE)
+    {
+      *table = self->data;
+
+      eclogger_fmt (LL_TRACE, "ADBO", "cursor", "fetched %i rows", row);
+      return row;
+    }
+  }
+
+  if (row > 0)
+  {
+    *table = self->data;
+  }
+  
+  self->done = TRUE;
+  
+  eclogger_fmt (LL_TRACE, "ADBO", "cursor", "fetched %i rows", row);
+  return row;
+}
+
+//----------------------------------------------------------------------------------------
+
+AdboCursorData* adbo_cursordata_create (AdblSession* dbsession, AdblQuery** dbquery, AdblCursor** dbcursor)
+{  
+  AdboCursorData* self = ENTC_NEW (AdboCursorData);
+  
+  self->session = *dbsession;
+  *dbsession = NULL;
+  
+  self->dbquery = *dbquery;
+  *dbquery = NULL;
+
+  self->dbcursor = *dbcursor;
+  *dbcursor = NULL;
+  
+  // create table
+  self->columns = eclist_size (self->dbquery->columns);
+  
+  self->data = ectable_new (self->columns, PREFETCHED_CACHE + 1);
+  self->done = FALSE;
+  
+  // fill header of the table
+  {
+    int n = 0;
+    EcListNode c;
+    
+    for (c = eclist_first (self->dbquery->columns); c != eclist_end (self->dbquery->columns); c = eclist_next(c), n++)
+    {
+      AdblQueryColumn* qc = eclist_data(c);      
+      ectable_set (self->data, 0, n, qc->column);
+    }    
+  }
+  
+  eclogger_fmt (LL_TRACE, "ADBO", "cursor", "created with %i columns", self->columns);
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+int _STDCALL adbo_cursor_destroy (void* ptr, EcTable table)
+{
+  AdboCursorData* self = ptr;
+  
+  eclogger_msg (LL_TRACE, "ADBO", "cursor", "destroy and clean cursor");
+  
+  adbl_query_delete (&(self->dbquery));
+  
+  adbl_dbcursor_release (&(self->dbcursor));
+
+  adbl_closeSession (&(self->session));
+  
+  // clean table
+  {
+    EcTableNode node;
+    
+    for (node = ectable_first(self->data); node != ectable_end(self->data); node = ectable_next(self->data, node))
+    {
+      int c;
+      
+      for (c = 0; c < self->columns; c++)
+      {
+        EcString current = ectable_data (self->data, node, c);
+        ecstr_delete (&current);
+      }
+    }
+    
+    ectable_delete (&(self->data));
+  }
+  
+  ENTC_DEL (&self, AdboCursorData);
+  
+  return TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_dbquery2 (AdboContext context, EcCursor cursor, ulong_t dbmin, AdblSession* session, AdblQuery** query)
+{
+  AdblSecurity adblsec;
+  AdblCursor* dbcursor;
+
+  dbcursor = adbl_dbquery (*session, *query, &adblsec);
+  if (isAssigned (dbcursor))
+  {
+    AdboCursorData* cdata = adbo_cursordata_create (session, query, &dbcursor);
+    
+    eccursor_callbacks(cursor, cdata, adbo_cursor_fill, adbo_cursor_destroy);
+    
+    return TRUE;
+  }
+  
+  return FALSE;
+}
+
+//----------------------------------------------------------------------------------------
+
 int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext context, AdblSession session, AdblQuery* query)
 {
   AdblSecurity adblsec;
@@ -461,6 +625,75 @@ int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext conte
 EcUdc adbo_node_values (EcUdc node)
 {
   return ecudc_node (node, ECDATA_ROWS);
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc data)
+{
+  int ret;
+  // strings
+  const EcString dbsource;
+  const EcString dbtable;
+  uint32_t dbmin;
+  
+  // adbl variables
+  AdblSession dbsession;
+  AdblQuery* query;
+  AdblConstraint* constraints;
+
+  if (isNotAssigned (cursor))
+  {
+    eclogger_msg (LL_ERROR, "ADBO", "cursor", "cursor is NULL");
+    return FALSE;
+  }
+  
+  dbtable = ecudc_name (node);
+  if (isNotAssigned (dbtable))
+  {
+    eclogger_msg (LL_WARN, "ADBO", "cursor", "table name not defined");
+    return FALSE;
+  }
+
+  dbmin = ecudc_get_asUInt32(node, ".dbmin", 1);
+
+  dbsource = ecudc_get_asString(node, ".dbsource", "default");  
+  dbsession = adbl_openSession (context->adblm, dbsource);
+  // delete all previous entries
+  if (isNotAssigned (dbsession))
+  {
+    eclogger_fmt (LL_ERROR, "ADBO", "cursor", "can't connect to database '%s'", dbsource);
+    return FALSE;
+  }
+  
+  eclogger_msg (LL_TRACE, "ADBO", "request", "prepare query");
+
+  query = adbl_query_new ();
+
+  // add some default stuff
+  adbl_query_setTable (query, dbtable);
+  
+  // ***** check constraints *****
+  // we can use spart here, because constrainst are the same for all parts
+  constraints = adbo_node_constraints (node, data, context, query);
+
+  if (isAssigned (constraints))
+  {
+    adbl_query_setConstraint (query, constraints);
+  }
+    
+  adbo_node_dbquery_columns (node, query);
+  
+  ret = adbo_node_dbquery2 (context, cursor, dbmin, &dbsession, &query);
+  
+  if (isAssigned (constraints))
+  {
+    adbl_constraint_delete (&constraints);
+  }
+
+  eclogger_msg (LL_TRACE, "ADBO", "request", "query done");
+  
+  return ret;
 }
 
 //----------------------------------------------------------------------------------------
