@@ -430,6 +430,10 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_TIME: self->extension = ENTC_NEW (time_t); 
       break;
+    case ENTC_UDC_CURSOR: self->extension = eccursor_create(); 
+      break;
+    case ENTC_UDC_FILEINFO: self->extension = ENTC_NEW (EcFileInfo_s); 
+      break;
   }
   
   return self;
@@ -458,6 +462,10 @@ void ecudc_destroy (EcUdc* pself)
     case ENTC_UDC_UINT64: ENTC_DEL (&(self->extension), uint64_t);
       break;
     case ENTC_UDC_TIME: ENTC_DEL (&(self->extension), time_t);
+      break;
+    case ENTC_UDC_CURSOR: eccursor_destroy ((EcCursor*)&(self->extension)); 
+      break;
+    case ENTC_UDC_FILEINFO: ENTC_DEL (&(self->extension), EcFileInfo_s);
       break;
   }
   // delete only if the content was deleted
@@ -564,6 +572,28 @@ void ecudc_setS_o (EcUdc self, EcString* ptr)
   {
     case ENTC_UDC_STRING: ecudc_sitem_setS_o (self->extension, ptr); break;
   }  
+}
+
+//----------------------------------------------------------------------------------------
+
+EcFileInfo ecudc_asFileInfo (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_FILEINFO: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcCursor ecudc_asCursor (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_CURSOR: return self->extension;
+  }    
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------

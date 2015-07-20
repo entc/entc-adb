@@ -22,17 +22,32 @@
 
 #include "../system/macros.h"
 #include "../system/types.h"
+#include "../system/ecfile.h"
 
 #include "ecstring.h"
+#include "eccursor.h"
 
-#define ENTC_UDC_NODE    0
-#define ENTC_UDC_LIST    1
-#define ENTC_UDC_STRING  2
-#define ENTC_UDC_BYTE    4
-#define ENTC_UDC_UINT32  5
-#define ENTC_UDC_UINT64  6
-#define ENTC_UDC_REF     7
-#define ENTC_UDC_TIME    8
+// structure types
+
+#define ENTC_UDC_NODE        0x0000
+#define ENTC_UDC_LIST        0x0001
+
+// entc types
+
+#define ENTC_UDC_STRING      0x1000
+#define ENTC_UDC_BYTE        0x1001
+#define ENTC_UDC_UINT32      0x1002
+#define ENTC_UDC_UINT64      0x1003
+#define ENTC_UDC_REF         0x1004
+#define ENTC_UDC_TIME        0x1005
+#define ENTC_UDC_CURSOR      0x1006
+#define ENTC_UDC_FILEINFO    0x1007
+
+// complex types (structs)
+
+#define ENTC_UDC_FILE        0x2000
+#define ENTC_UDC_FOLDER      0x2001
+#define ENTC_UDC_USERINFO    0x2003
 
 struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 
@@ -55,6 +70,14 @@ __LIB_EXPORT const EcString ecudc_name (EcUdc);
 __LIB_EXPORT void ecudc_setName (EcUdc, const EcString);
 
 __LIB_EXPORT uint_t ecudc_type (EcUdc);
+
+__LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
+
+__LIB_EXPORT EcUdc ecudc_extract (EcUdc, void** cursor);
+
+__LIB_EXPORT void ecudc_protect (EcUdc, ubyte_t mode);
+
+// getter setter
 
 __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
 
@@ -82,11 +105,9 @@ __LIB_EXPORT uint64_t ecudc_asUInt64 (EcUdc);
 
 __LIB_EXPORT const time_t* ecudc_asTime (EcUdc);
 
-__LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
+__LIB_EXPORT EcCursor ecudc_asCursor (EcUdc);
 
-__LIB_EXPORT EcUdc ecudc_extract (EcUdc, void** cursor);
-
-__LIB_EXPORT void ecudc_protect (EcUdc, ubyte_t mode);
+__LIB_EXPORT EcFileInfo ecudc_asFileInfo (EcUdc);
 
 // helper
 
