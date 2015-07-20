@@ -533,6 +533,19 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
   
   adbl_parseConfig (self, configpath, TRUE);  
   
+  // check some things
+  if (ecstr_empty(self->path))
+  {
+    EcString execpath = ecfs_getExecutablePath (0, NULL);
+    if (ecstr_valid (execpath))
+    {
+      EcString path = ecfs_mergeToPath (execpath, "../adbl");
+      ecstr_replaceTO(&(self->path), path);
+
+      ecstr_delete(&execpath);
+    }
+  }
+
   if (ecstr_valid(self->path))
   {
     EcList engines = eclist_new ();  

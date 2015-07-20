@@ -43,6 +43,10 @@ __LIB_EXPORT EcString ecstr_part( const EcString, uint_t length );
 __LIB_EXPORT EcString ecstr_long( uint_t value );
 
 __LIB_EXPORT EcString ecstr_float (double, uint_t n);
+
+__LIB_EXPORT EcString ecstr_format (const EcString format, ...);
+
+__LIB_EXPORT EcString ecstr_format_list (const EcString format, va_list ptr);
   
 __LIB_EXPORT void ecstr_delete( EcString* );
 

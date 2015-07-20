@@ -22,12 +22,12 @@
 
 //----------------------------------------------------------------------------------------
 
-AdboContext adbo_context_create (EcEventFiles files, const EcString path)
+AdboContext adbo_context_create (EcEventFiles files, const EcString configpath)
 {
   AdboContext self = ENTC_NEW (struct AdboContext_s);
   
   self->adblm = adbl_new ();
-  adbl_scan (self->adblm, files, path);  
+  adbl_scan (self->adblm, files, configpath);  
 
  // self->substitutes = adbo_subsmgr_new (path, self);  
   

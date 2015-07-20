@@ -98,6 +98,42 @@ EcString ecstr_part( const EcString source, uint_t length )
 
 //----------------------------------------------------------------------------------------
 
+EcString ecstr_format_list (const EcString format, va_list ptr)
+{
+  char* ret = NULL;
+
+#ifdef _WIN32
+  {
+    int len = 1024;
+    ret = (char*)ENTC_MALLOC(len);
+
+    vsnprintf_s (ret, len, len, format, ptr);
+  }
+#else
+  vasprintf (&ret, format, ptr);
+#endif
+
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcString ecstr_format (const EcString format, ...)
+{
+  EcString ret = NULL;
+
+  va_list ptr;  
+  va_start(ptr, format);
+
+  ret = ecstr_format_list (format, ptr);
+
+  va_end(ptr); 
+
+  return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcString ecstr_long (uint_t value)
 {
   /* create buffer with size 12 */
