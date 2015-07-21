@@ -42,6 +42,16 @@
 #define ENTC_UDC_TIME        0x1005
 #define ENTC_UDC_CURSOR      0x1006
 #define ENTC_UDC_FILEINFO    0x1007
+#define ENTC_UDC_TABLEINFO   0x1008
+
+typedef struct
+{
+  
+  EcString name;
+  
+  uint64_t size;
+  
+} EcTableInfo_s; typedef EcTableInfo_s* EcTableInfo;
 
 // complex types (structs)
 
@@ -108,6 +118,8 @@ __LIB_EXPORT const time_t* ecudc_asTime (EcUdc);
 __LIB_EXPORT EcCursor ecudc_asCursor (EcUdc);
 
 __LIB_EXPORT EcFileInfo ecudc_asFileInfo (EcUdc);
+
+__LIB_EXPORT EcTableInfo ecudc_asTableInfo (EcUdc);
 
 // helper
 

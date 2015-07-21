@@ -203,6 +203,8 @@ __LIB_EXPORT int ecdh_scan (const EcString path, EcList entries, int filetype);
   
 __LIB_EXPORT void ecdh_seekType (const EcString path, EcFileInfo entry);
 
+__LIB_EXPORT void ecfi_clone (const EcFileInfo, EcFileInfo);
+
 __CPP_EXTERN______________________________________________________________________________END
   
 #endif

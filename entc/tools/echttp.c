@@ -340,6 +340,7 @@ void echttp_init (void)
     ecmapchar_append( mime_types, "map",      "application/json");
 
     ecmapchar_append( mime_types, "woff",     "application/font-woff");
+    ecmapchar_append( mime_types, "woff2",    "application/font-woff2");
     ecmapchar_append( mime_types, "ttf",      "application/font-ttf");
     ecmapchar_append( mime_types, "eot",      "application/vnd.ms-fontobject");
     ecmapchar_append( mime_types, "otf",      "application/font-otf");

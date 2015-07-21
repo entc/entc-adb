@@ -434,6 +434,8 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_FILEINFO: self->extension = ENTC_NEW (EcFileInfo_s); 
       break;
+    case ENTC_UDC_TABLEINFO: self->extension = ENTC_NEW (EcTableInfo_s); 
+      break;
   }
   
   return self;
@@ -466,6 +468,8 @@ void ecudc_destroy (EcUdc* pself)
     case ENTC_UDC_CURSOR: eccursor_destroy ((EcCursor*)&(self->extension)); 
       break;
     case ENTC_UDC_FILEINFO: ENTC_DEL (&(self->extension), EcFileInfo_s);
+      break;
+    case ENTC_UDC_TABLEINFO: ENTC_DEL (&(self->extension), EcTableInfo_s);
       break;
   }
   // delete only if the content was deleted
@@ -592,6 +596,17 @@ EcCursor ecudc_asCursor (EcUdc self)
   switch (self->type) 
   {
     case ENTC_UDC_CURSOR: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcTableInfo ecudc_asTableInfo (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_TABLEINFO: return self->extension;
   }    
   return NULL;
 }

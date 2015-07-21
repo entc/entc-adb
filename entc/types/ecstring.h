@@ -26,6 +26,10 @@
 #include "../types/eclist.h"
 #include <time.h>
 
+#ifdef __GNUC__
+#include <stdarg.h>
+#endif
+
 #define EcString char*
 
 __CPP_EXTERN______________________________________________________________________________START
