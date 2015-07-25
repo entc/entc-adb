@@ -436,6 +436,8 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_TABLEINFO: self->extension = ENTC_NEW (EcTableInfo_s); 
       break;
+    case ENTC_UDC_SET: self->extension = ENTC_NEW (EcSet_s);
+      break;
   }
   
   return self;
@@ -467,10 +469,28 @@ void ecudc_destroy (EcUdc* pself)
       break;
     case ENTC_UDC_CURSOR: eccursor_destroy ((EcCursor*)&(self->extension)); 
       break;
-    case ENTC_UDC_FILEINFO: ENTC_DEL (&(self->extension), EcFileInfo_s);
+    case ENTC_UDC_FILEINFO:
+    {
+      EcFileInfo h = self->extension;
+      
+      ecstr_delete(&(h->name));
+      
+      ENTC_DEL (&h, EcFileInfo_s);
+      self->extension = NULL;
+    }
       break;
     case ENTC_UDC_TABLEINFO: ENTC_DEL (&(self->extension), EcTableInfo_s);
       break;
+    case ENTC_UDC_SET:
+    {
+      EcSet h = self->extension;
+      ecudc_destroy (&(h->content));
+                     
+      ENTC_DEL (&h, EcTableInfo_s);
+      self->extension = NULL;
+    }
+      break;
+
   }
   // delete only if the content was deleted
   if (isNotAssigned (self->extension))
@@ -585,6 +605,17 @@ EcFileInfo ecudc_asFileInfo (EcUdc self)
   switch (self->type) 
   {
     case ENTC_UDC_FILEINFO: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcSet ecudc_asSet (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_SET: return self->extension;
   }    
   return NULL;
 }
