@@ -93,7 +93,7 @@ __LIB_EXPORT uint_t ecudc_type (EcUdc);
 
 __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
-__LIB_EXPORT EcUdc ecudc_extract (EcUdc, void** cursor);
+__LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);
 
 __LIB_EXPORT void ecudc_protect (EcUdc, ubyte_t mode);
 

@@ -202,7 +202,7 @@ EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_node_extract (EcUdcNode* self, void** cursor)
+EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
 {
   EcMapNode node;
   EcUdc ret = NULL;
@@ -212,14 +212,7 @@ EcUdc ecudc_node_extract (EcUdcNode* self, void** cursor)
     return NULL;
   }
   
-  if (isAssigned (*cursor))
-  {
-    node = ecmap_next(*cursor);
-  }
-  else
-  {
-    node = ecmap_first (self->map);
-  }
+  node = *cursor;
   
   if (node == ecmap_end (self->map))
   {
@@ -324,7 +317,7 @@ EcUdc ecudc_list_next (EcUdcList* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_list_extract (EcUdcList* self, void** cursor)
+EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
 {
   EcListNode node;
   EcUdc ret = NULL;
@@ -334,14 +327,7 @@ EcUdc ecudc_list_extract (EcUdcList* self, void** cursor)
     return NULL;
   }
   
-  if (isAssigned (*cursor))
-  {
-    node = eclist_next(*cursor);
-  }
-  else
-  {
-    node = eclist_first(self->list);
-  }
+  node = *cursor;
   
   if (node == eclist_end(self->list))
   {
@@ -484,7 +470,11 @@ void ecudc_destroy (EcUdc* pself)
     case ENTC_UDC_SET:
     {
       EcSet h = self->extension;
-      ecudc_destroy (&(h->content));
+      
+      if (isAssigned (h->content))
+      {
+        ecudc_destroy (&(h->content));
+      }
                      
       ENTC_DEL (&h, EcTableInfo_s);
       self->extension = NULL;
@@ -795,12 +785,12 @@ EcUdc ecudc_next (EcUdc self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_extract (EcUdc self, void** cursor)
+EcUdc ecudc_cursor_e (EcUdc self, void** cursor)
 {
   switch (self->type)
   {
-    case ENTC_UDC_NODE: return ecudc_node_extract (self->extension, cursor); 
-    case ENTC_UDC_LIST: return ecudc_list_extract (self->extension, cursor);       
+    case ENTC_UDC_NODE: return ecudc_map_e (self->extension, cursor); 
+    case ENTC_UDC_LIST: return ecudc_list_e (self->extension, cursor);       
   }
   return NULL;
 }
