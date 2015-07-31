@@ -46,6 +46,7 @@ struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 #define ENTC_UDC_FILEINFO    0x1007
 #define ENTC_UDC_TABLEINFO   0x1008
 #define ENTC_UDC_SET         0x1009
+#define ENTC_UDC_USERINFO    0x100a
 
 typedef struct
 {
@@ -65,11 +66,19 @@ typedef struct
   
 } EcSet_s; typedef EcSet_s* EcSet;
 
+typedef struct
+{
+  
+  EcString name;
+  
+  uint64_t uid;
+  
+} EcUserInfo_s; typedef EcUserInfo_s* EcUserInfo;
+
 // complex types (structs)
 
 #define ENTC_UDC_FILE        0x2000
 #define ENTC_UDC_FOLDER      0x2001
-#define ENTC_UDC_USERINFO    0x2003
 
 __CPP_EXTERN______________________________________________________________________________START
 
@@ -132,6 +141,8 @@ __LIB_EXPORT EcFileInfo ecudc_asFileInfo (EcUdc);
 __LIB_EXPORT EcTableInfo ecudc_asTableInfo (EcUdc);
 
 __LIB_EXPORT EcSet ecudc_asSet (EcUdc);
+
+__LIB_EXPORT EcUserInfo ecudc_asUserInfo (EcUdc);
 
 // helper
 
