@@ -418,14 +418,43 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_CURSOR: self->extension = eccursor_create(); 
       break;
-    case ENTC_UDC_FILEINFO: self->extension = ENTC_NEW (EcFileInfo_s); 
-      break;
-    case ENTC_UDC_TABLEINFO: self->extension = ENTC_NEW (EcTableInfo_s); 
-      break;
-    case ENTC_UDC_SET: self->extension = ENTC_NEW (EcSet_s);
-      break;
-    case ENTC_UDC_USERINFO: self->extension = ENTC_NEW (EcUserInfo_s); 
-      break;
+    case ENTC_UDC_FILEINFO:
+    {
+      EcFileInfo h = ENTC_NEW (EcFileInfo_s);
+      
+      h->name = ecstr_init ();
+      
+      self->extension = h;
+    }
+    break;
+    case ENTC_UDC_TABLEINFO:
+    {
+      EcTableInfo h = ENTC_NEW (EcTableInfo_s); 
+      
+      h->name = ecstr_init ();
+      
+      self->extension = h;
+    }
+    break;
+    case ENTC_UDC_SET:
+    {
+      EcSet h = ENTC_NEW (EcSet_s);
+      
+      h->setid = NULL;
+      h->content = NULL;
+      
+      self->extension = h;
+    }
+    break;
+    case ENTC_UDC_USERINFO:
+    {
+      EcUserInfo h = ENTC_NEW (EcUserInfo_s);
+      
+      h->name = ecstr_init ();
+      
+      self->extension = h; 
+    }
+    break;
   }
   
   return self;
