@@ -510,6 +510,11 @@ void ecudc_destroy (EcUdc* pself)
     {
       EcSet h = self->extension;
       
+      if (isAssigned (h->setid))
+      {
+        ecudc_destroy (&(h->setid));
+      }
+
       if (isAssigned (h->content))
       {
         ecudc_destroy (&(h->content));
