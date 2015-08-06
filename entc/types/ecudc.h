@@ -60,7 +60,7 @@ typedef struct
 typedef struct
 {
   
-  uint64_t setid;
+  EcUdc setid;
   
   EcUdc content;
   
