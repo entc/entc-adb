@@ -176,7 +176,7 @@ void ecdl_delete(EcLibraryHandle* pself)
 #ifdef _WIN32
   FreeLibrary(self->handle);
 #else
- // dlclose(self->handle);
+  dlclose(self->handle);
 #endif
   
   ENTC_DEL(pself, struct EcLibraryHandle_s);
