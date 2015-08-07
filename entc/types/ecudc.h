@@ -104,8 +104,6 @@ __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
 __LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);
 
-__LIB_EXPORT void ecudc_protect (EcUdc, ubyte_t mode);
-
 // getter setter
 
 __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);

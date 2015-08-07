@@ -40,15 +40,11 @@ typedef struct {
   
   EcMap map;
   
-  ubyte_t protect;
-  
 } EcUdcNode;
 
 typedef struct {
   
   EcList list;
-  
-  ubyte_t protect;
   
 } EcUdcList;
 
@@ -65,7 +61,6 @@ void* ecudc_node_new ()
   EcUdcNode* self = ENTC_NEW (EcUdcNode);
 
   self->map = ecmap_new ();
-  self->protect = FALSE;
   
   return self;
 }
@@ -91,14 +86,11 @@ void ecudc_node_destroy (void** pself)
 {
   EcUdcNode* self = *pself;
   // if protected dont delete
-  if (self->protect == FALSE)
-  {
-    ecudc_node_clear (self);
-    
-    ecmap_delete(&(self->map));
-    
-    ENTC_DEL (pself, EcUdcNode);    
-  }
+  ecudc_node_clear (self);
+  
+  ecmap_delete(&(self->map));
+  
+  ENTC_DEL (pself, EcUdcNode);    
 }
 
 //----------------------------------------------------------------------------------------
@@ -228,19 +220,11 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_node_protect (EcUdcNode* self, ubyte_t mode)
-{
-  self->protect = mode;
-}
-
-//----------------------------------------------------------------------------------------
-
 void* ecudc_list_new ()
 {
   EcUdcList* self = ENTC_NEW (EcUdcList);
 
   self->list = eclist_new ();
-  self->protect = FALSE;
   
   return self;
 }
@@ -265,14 +249,11 @@ void ecudc_list_destroy (void** pself)
 {
   EcUdcList* self = *pself;
   // if protected dont delete
-  if (self->protect == FALSE)
-  {
-    ecudc_list_clear (self);
-    
-    eclist_delete (&(self->list));
-    
-    ENTC_DEL (pself, EcUdcList);    
-  }
+  ecudc_list_clear (self);
+  
+  eclist_delete (&(self->list));
+  
+  ENTC_DEL (pself, EcUdcList);    
 }
 
 //----------------------------------------------------------------------------------------
@@ -338,13 +319,6 @@ EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
   
   *cursor = eclist_erase (node);
   return ret;
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_list_protect (EcUdcList* self, ubyte_t mode)
-{
-  self->protect = mode;
 }
 
 //----------------------------------------------------------------------------------------
@@ -857,17 +831,6 @@ EcUdc ecudc_cursor_e (EcUdc self, void** cursor)
     case ENTC_UDC_LIST: return ecudc_list_e (self->extension, cursor);       
   }
   return NULL;
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_protect (EcUdc self, ubyte_t mode)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_NODE: ecudc_node_protect (self->extension, mode); break;
-    case ENTC_UDC_LIST: ecudc_list_protect (self->extension, mode); break;
-  }        
 }
 
 //----------------------------------------------------------------------------------------
