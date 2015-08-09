@@ -134,7 +134,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
   int state = ENT_STATE_NONE;
   const unsigned char* c;  
   EcUdc udc = NULL;
-  EcString key = NULL;
+  EcString key = ecstr_init();
   
   for (c = parser->pos; *c; c++)
   {
@@ -148,6 +148,8 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           {
             // error
             eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
+            
+            ecstr_delete(&key);            
             return json_cleanup_udc (&udc);
           }
           
@@ -161,6 +163,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         {
           if (isAssigned (udc))
           {
+            ecstr_delete(&key);            
             // error
             eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
             return json_cleanup_udc (&udc);
@@ -178,6 +181,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
       {
         case ']':
         {
+          ecstr_delete(&key);            
           // todo
           parser->pos = c;
           return udc;
@@ -190,6 +194,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcUdc child = json_parse (parser, "");
             if (isNotAssigned (child))
             {
+              ecstr_delete(&key);            
               return json_cleanup_udc (&udc);
             }
             ecudc_add (udc, &child);
@@ -205,6 +210,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcString value = json_parse_string (parser);
             if (isNotAssigned (value))
             {
+              ecstr_delete(&key);            
               return json_cleanup_udc (&udc);
             }
             ecudc_add_asString(udc, "", value);
@@ -229,6 +235,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
       {
         case ']':
         {
+          ecstr_delete(&key);            
           parser->pos = c;
           return udc;
         }
@@ -244,7 +251,10 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         break;
           // error
         default:
+        {
+          ecstr_delete(&key);            
           return json_cleanup_udc (&udc);
+        }
       }
         break;
       case ENT_STATE_OBJECT_KEY: switch (*c)
@@ -253,9 +263,10 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         {
           parser->pos = c + 1;
           {
-            key = json_parse_string (parser);
-            if (isNotAssigned (key))
+            ecstr_replaceTO (&key, json_parse_string (parser));
+            if (ecstr_empty (key))
             {
+              ecstr_delete(&key);            
               return json_cleanup_udc (&udc);
             }
           }
@@ -268,7 +279,10 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           break;
           // error
         default:
+        {
+          ecstr_delete(&key);            
           return json_cleanup_udc (&udc);          
+        }
       }
         break;
       case ENT_STATE_OBJECT_KEY_EOE: switch (*c)
@@ -280,13 +294,17 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           break;
           // error
         default:
+        {
+          ecstr_delete(&key);            
           return json_cleanup_udc (&udc);
+        }
       }
         break;
       case ENT_STATE_OBJECT: switch (*c)
       {
         case '}':
         {
+          ecstr_delete(&key);            
           // todo
           parser->pos = c;
           return udc;
@@ -299,6 +317,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcUdc child = json_parse (parser, key);
             if (isNotAssigned (child))
             {
+              ecstr_delete(&key);            
               return json_cleanup_udc (&udc);
             }
             ecudc_add (udc, &child);
@@ -314,6 +333,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             EcString value = json_parse_string (parser);
             if (isNotAssigned (value))
             {
+              ecstr_delete(&key);            
               return json_cleanup_udc (&udc);
             }
             ecudc_add_asString(udc, key, value);
@@ -339,6 +359,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
       {
         case '}':
         {
+          ecstr_delete(&key);            
           parser->pos = c;
           return udc;
         }
@@ -354,11 +375,15 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           break;
           // error
         default:
+        {
+          ecstr_delete(&key);            
           return json_cleanup_udc (&udc);
+        }
       }
       break;
     }
   }
+  ecstr_delete(&key);            
   return json_cleanup_udc (&udc);
 }
 

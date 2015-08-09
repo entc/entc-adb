@@ -444,12 +444,12 @@ void ecmessages_initData (EcMessageData* data, uint_t type, uint_t rev)
 
 //----------------------------------------------------------------------------------------
 
-void ecmessages_initDataN (EcMessageData* data, uint_t type, uint_t rev, uint_t ref, const EcString nodeName)
+void ecmessages_initDataN (EcMessageData* data, uint_t type, uint_t rev, uint_t ref, uint_t udctype, const EcString nodeName)
 {
   data->type = type;
   data->rev = rev;
   data->ref = ref;  
-  data->content = ecudc_create (ENTC_UDC_NODE, nodeName);
+  data->content = ecudc_create (udctype, nodeName);
 }
 
 //----------------------------------------------------------------------------------------

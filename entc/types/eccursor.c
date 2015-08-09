@@ -51,6 +51,7 @@ EcCursor eccursor_create (void)
   self->ptr = NULL;
   self->fill = NULL;
   self->dest = NULL;
+  self->data = NULL;
   
   return self;
 }
@@ -66,7 +67,10 @@ void eccursor_destroy (EcCursor* pself)
     self->dest (self->ptr, self->data);
   }
   
-  ectable_delete (&(self->data));
+  if (isAssigned (self->data))
+  {
+    ectable_delete (&(self->data));
+  }
   
   ENTC_DEL (pself, struct EcCursor_s);
 }

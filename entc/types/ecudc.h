@@ -32,6 +32,8 @@
 #define ENTC_UDC_NODE        0x0000
 #define ENTC_UDC_LIST        0x0001
 
+struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
+
 // entc types
 
 #define ENTC_UDC_STRING      0x1000
@@ -42,14 +44,41 @@
 #define ENTC_UDC_TIME        0x1005
 #define ENTC_UDC_CURSOR      0x1006
 #define ENTC_UDC_FILEINFO    0x1007
+#define ENTC_UDC_TABLEINFO   0x1008
+#define ENTC_UDC_SET         0x1009
+#define ENTC_UDC_USERINFO    0x100a
+
+typedef struct
+{
+  
+  EcString name;
+  
+  uint64_t size;
+  
+} EcTableInfo_s; typedef EcTableInfo_s* EcTableInfo;
+
+typedef struct
+{
+  
+  EcUdc setid;
+  
+  EcUdc content;
+  
+} EcSet_s; typedef EcSet_s* EcSet;
+
+typedef struct
+{
+  
+  EcString name;
+  
+  uint64_t uid;
+  
+} EcUserInfo_s; typedef EcUserInfo_s* EcUserInfo;
 
 // complex types (structs)
 
 #define ENTC_UDC_FILE        0x2000
 #define ENTC_UDC_FOLDER      0x2001
-#define ENTC_UDC_USERINFO    0x2003
-
-struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 
 __CPP_EXTERN______________________________________________________________________________START
 
@@ -73,9 +102,7 @@ __LIB_EXPORT uint_t ecudc_type (EcUdc);
 
 __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
-__LIB_EXPORT EcUdc ecudc_extract (EcUdc, void** cursor);
-
-__LIB_EXPORT void ecudc_protect (EcUdc, ubyte_t mode);
+__LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);
 
 // getter setter
 
@@ -108,6 +135,12 @@ __LIB_EXPORT const time_t* ecudc_asTime (EcUdc);
 __LIB_EXPORT EcCursor ecudc_asCursor (EcUdc);
 
 __LIB_EXPORT EcFileInfo ecudc_asFileInfo (EcUdc);
+
+__LIB_EXPORT EcTableInfo ecudc_asTableInfo (EcUdc);
+
+__LIB_EXPORT EcSet ecudc_asSet (EcUdc);
+
+__LIB_EXPORT EcUserInfo ecudc_asUserInfo (EcUdc);
 
 // helper
 

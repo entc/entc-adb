@@ -154,3 +154,10 @@ EcString ecfs_extractFileName(const EcString path)
 
 //-----------------------------------------------------------------------------------
 
+void ecfi_clone (const EcFileInfo source, EcFileInfo dest)
+{
+  memcpy (dest, source, sizeof(EcFileInfo_s));  
+  dest->name = ecstr_copy (source->name);  
+}
+
+//-----------------------------------------------------------------------------------

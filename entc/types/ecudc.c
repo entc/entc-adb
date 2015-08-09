@@ -40,15 +40,11 @@ typedef struct {
   
   EcMap map;
   
-  ubyte_t protect;
-  
 } EcUdcNode;
 
 typedef struct {
   
   EcList list;
-  
-  ubyte_t protect;
   
 } EcUdcList;
 
@@ -65,7 +61,6 @@ void* ecudc_node_new ()
   EcUdcNode* self = ENTC_NEW (EcUdcNode);
 
   self->map = ecmap_new ();
-  self->protect = FALSE;
   
   return self;
 }
@@ -91,14 +86,11 @@ void ecudc_node_destroy (void** pself)
 {
   EcUdcNode* self = *pself;
   // if protected dont delete
-  if (self->protect == FALSE)
-  {
-    ecudc_node_clear (self);
-    
-    ecmap_delete(&(self->map));
-    
-    ENTC_DEL (pself, EcUdcNode);    
-  }
+  ecudc_node_clear (self);
+  
+  ecmap_delete(&(self->map));
+  
+  ENTC_DEL (pself, EcUdcNode);    
 }
 
 //----------------------------------------------------------------------------------------
@@ -202,7 +194,7 @@ EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_node_extract (EcUdcNode* self, void** cursor)
+EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
 {
   EcMapNode node;
   EcUdc ret = NULL;
@@ -212,14 +204,7 @@ EcUdc ecudc_node_extract (EcUdcNode* self, void** cursor)
     return NULL;
   }
   
-  if (isAssigned (*cursor))
-  {
-    node = ecmap_next(*cursor);
-  }
-  else
-  {
-    node = ecmap_first (self->map);
-  }
+  node = *cursor;
   
   if (node == ecmap_end (self->map))
   {
@@ -235,19 +220,11 @@ EcUdc ecudc_node_extract (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_node_protect (EcUdcNode* self, ubyte_t mode)
-{
-  self->protect = mode;
-}
-
-//----------------------------------------------------------------------------------------
-
 void* ecudc_list_new ()
 {
   EcUdcList* self = ENTC_NEW (EcUdcList);
 
   self->list = eclist_new ();
-  self->protect = FALSE;
   
   return self;
 }
@@ -272,14 +249,11 @@ void ecudc_list_destroy (void** pself)
 {
   EcUdcList* self = *pself;
   // if protected dont delete
-  if (self->protect == FALSE)
-  {
-    ecudc_list_clear (self);
-    
-    eclist_delete (&(self->list));
-    
-    ENTC_DEL (pself, EcUdcList);    
-  }
+  ecudc_list_clear (self);
+  
+  eclist_delete (&(self->list));
+  
+  ENTC_DEL (pself, EcUdcList);    
 }
 
 //----------------------------------------------------------------------------------------
@@ -324,7 +298,7 @@ EcUdc ecudc_list_next (EcUdcList* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_list_extract (EcUdcList* self, void** cursor)
+EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
 {
   EcListNode node;
   EcUdc ret = NULL;
@@ -334,14 +308,7 @@ EcUdc ecudc_list_extract (EcUdcList* self, void** cursor)
     return NULL;
   }
   
-  if (isAssigned (*cursor))
-  {
-    node = eclist_next(*cursor);
-  }
-  else
-  {
-    node = eclist_first(self->list);
-  }
+  node = *cursor;
   
   if (node == eclist_end(self->list))
   {
@@ -352,13 +319,6 @@ EcUdc ecudc_list_extract (EcUdcList* self, void** cursor)
   
   *cursor = eclist_erase (node);
   return ret;
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_list_protect (EcUdcList* self, ubyte_t mode)
-{
-  self->protect = mode;
 }
 
 //----------------------------------------------------------------------------------------
@@ -432,8 +392,43 @@ EcUdc ecudc_create (uint_t type, const EcString name)
       break;
     case ENTC_UDC_CURSOR: self->extension = eccursor_create(); 
       break;
-    case ENTC_UDC_FILEINFO: self->extension = ENTC_NEW (EcFileInfo_s); 
-      break;
+    case ENTC_UDC_FILEINFO:
+    {
+      EcFileInfo h = ENTC_NEW (EcFileInfo_s);
+      
+      h->name = ecstr_init ();
+      
+      self->extension = h;
+    }
+    break;
+    case ENTC_UDC_TABLEINFO:
+    {
+      EcTableInfo h = ENTC_NEW (EcTableInfo_s); 
+      
+      h->name = ecstr_init ();
+      
+      self->extension = h;
+    }
+    break;
+    case ENTC_UDC_SET:
+    {
+      EcSet h = ENTC_NEW (EcSet_s);
+      
+      h->setid = NULL;
+      h->content = NULL;
+      
+      self->extension = h;
+    }
+    break;
+    case ENTC_UDC_USERINFO:
+    {
+      EcUserInfo h = ENTC_NEW (EcUserInfo_s);
+      
+      h->name = ecstr_init ();
+      
+      self->extension = h; 
+    }
+    break;
   }
   
   return self;
@@ -465,8 +460,54 @@ void ecudc_destroy (EcUdc* pself)
       break;
     case ENTC_UDC_CURSOR: eccursor_destroy ((EcCursor*)&(self->extension)); 
       break;
-    case ENTC_UDC_FILEINFO: ENTC_DEL (&(self->extension), EcFileInfo_s);
+    case ENTC_UDC_FILEINFO:
+    {
+      EcFileInfo h = self->extension;
+      
+      ecstr_delete (&(h->name));
+      
+      ENTC_DEL (&h, EcFileInfo_s);
+      self->extension = NULL;
+    }
       break;
+    case ENTC_UDC_TABLEINFO: 
+    {
+      EcTableInfo h = self->extension;
+      
+      ecstr_delete (&(h->name));
+      
+      ENTC_DEL (&h, EcTableInfo_s);
+      self->extension = NULL;
+    }
+    break;
+    case ENTC_UDC_SET:
+    {
+      EcSet h = self->extension;
+      
+      if (isAssigned (h->setid))
+      {
+        ecudc_destroy (&(h->setid));
+      }
+
+      if (isAssigned (h->content))
+      {
+        ecudc_destroy (&(h->content));
+      }
+                     
+      ENTC_DEL (&h, EcTableInfo_s);
+      self->extension = NULL;
+    }
+    break;
+    case ENTC_UDC_USERINFO: 
+    {
+      EcUserInfo h = self->extension;
+      
+      ecstr_delete (&(h->name));
+      
+      ENTC_DEL (&h, EcUserInfo_s);
+      self->extension = NULL;
+    }
+    break;      
   }
   // delete only if the content was deleted
   if (isNotAssigned (self->extension))
@@ -587,11 +628,44 @@ EcFileInfo ecudc_asFileInfo (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+EcSet ecudc_asSet (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_SET: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUserInfo ecudc_asUserInfo (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_USERINFO: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcCursor ecudc_asCursor (EcUdc self)
 {
   switch (self->type) 
   {
     case ENTC_UDC_CURSOR: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcTableInfo ecudc_asTableInfo (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_TABLEINFO: return self->extension;
   }    
   return NULL;
 }
@@ -749,25 +823,14 @@ EcUdc ecudc_next (EcUdc self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_extract (EcUdc self, void** cursor)
+EcUdc ecudc_cursor_e (EcUdc self, void** cursor)
 {
   switch (self->type)
   {
-    case ENTC_UDC_NODE: return ecudc_node_extract (self->extension, cursor); 
-    case ENTC_UDC_LIST: return ecudc_list_extract (self->extension, cursor);       
+    case ENTC_UDC_NODE: return ecudc_map_e (self->extension, cursor); 
+    case ENTC_UDC_LIST: return ecudc_list_e (self->extension, cursor);       
   }
   return NULL;
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_protect (EcUdc self, ubyte_t mode)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_NODE: ecudc_node_protect (self->extension, mode); break;
-    case ENTC_UDC_LIST: ecudc_list_protect (self->extension, mode); break;
-  }        
 }
 
 //----------------------------------------------------------------------------------------

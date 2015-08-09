@@ -518,7 +518,7 @@ void adbl_scanPlugin (AdblManager self, const EcString filename)
 
 /*------------------------------------------------------------------------*/
 
-void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath)
+void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath, const EcString execpath)
 {
   EcListNode node;
   
@@ -536,13 +536,15 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
   // check some things
   if (ecstr_empty(self->path))
   {
-    EcString execpath = ecfs_getExecutablePath (0, NULL);
     if (ecstr_valid (execpath))
     {
-      EcString path = ecfs_mergeToPath (execpath, "../adbl");
-      ecstr_replaceTO(&(self->path), path);
+      EcString path1 = ecfs_mergeToPath (execpath, "../adbl");
+      
+      EcString path2 = ecfs_getRealPath (path1);
+      
+      ecstr_replaceTO (&(self->path), path2);
 
-      ecstr_delete(&execpath);
+      ecstr_delete (&path1);
     }
   }
 

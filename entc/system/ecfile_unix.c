@@ -31,7 +31,9 @@
 #include <errno.h>
 
 #ifdef __APPLE_CC__
+#include <limits.h>
 #include <copyfile.h>
+#include <mach-o/dyld.h>
 #endif
 
 struct EcFileHandle_s
@@ -682,8 +684,17 @@ void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_res
 
 EcString ecfs_getExecutablePath (int argc, char *argv[])
 {
+#ifdef __APPLE__
+  char pathbuf[PATH_MAX + 1];
+  unsigned int bufsize = sizeof(pathbuf);
+  
+  _NSGetExecutablePath (pathbuf, &bufsize);
+  
+  return ecfs_getDirectory (pathbuf);
+#else
   const EcString execPath = argv[0];
-  return ecfs_getDirectory (execPath);
+  return ecfs_getDirectory (execPath);  
+#endif
 }
 
 //-----------------------------------------------------------------------------------

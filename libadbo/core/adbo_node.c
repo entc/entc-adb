@@ -531,7 +531,7 @@ AdboCursorData* adbo_cursordata_create (AdblSession* dbsession, AdblQuery** dbqu
     for (c = eclist_first (self->dbquery->columns); c != eclist_end (self->dbquery->columns); c = eclist_next(c), n++)
     {
       AdblQueryColumn* qc = eclist_data(c);      
-      ectable_set (self->data, 0, n, qc->column);
+      ectable_set (self->data, 0, n, ecstr_copy(qc->column));
     }    
   }
   
@@ -645,6 +645,12 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
   if (isNotAssigned (cursor))
   {
     eclogger_msg (LL_ERROR, "ADBO", "cursor", "cursor is NULL");
+    return FALSE;
+  }
+  
+  if (isNotAssigned (node))
+  {
+    eclogger_msg (LL_ERROR, "ADBO", "cursor", "node is NULL");
     return FALSE;
   }
   
