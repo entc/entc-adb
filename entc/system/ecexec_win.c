@@ -50,8 +50,8 @@ struct EcExec_s
 
   char* arguments[11];
     
-  EcPipe stderr;
-  EcPipe stdout;
+  EcPipe errPipe;
+  EcPipe outPipe;
 
 };
 
@@ -68,13 +68,13 @@ EcExec ecexec_new (const EcString script)
     self->arguments[i] = NULL;
   }
 
-  self->stderr.hr = NULL;
-  self->stderr.hw = NULL;
-  self->stdout.hr = NULL;
-  self->stdout.hw = NULL;
+  self->errPipe.hr = NULL;
+  self->errPipe.hw = NULL;
+  self->outPipe.hr = NULL;
+  self->outPipe.hw = NULL;
 
-  self->stdout.stream = ecstream_new();
-  self->stderr.stream = ecstream_new();
+  self->outPipe.stream = ecstream_new();
+  self->errPipe.stream = ecstream_new();
   
   return self;
 }
@@ -131,17 +131,17 @@ void ecexec_loop (EcExec self, HANDLE processh)
 	}
 	*/
 
-	if (self->stdout.hr != NULL)
+	if (self->outPipe.hr != NULL)
 	{
-	  hds[c] = self->stdout.hr;
-	  pipes[c] = &(self->stdout);
+	  hds[c] = self->outPipe.hr;
+	  pipes[c] = &(self->outPipe);
 	  c++;
 	}
 
-	if (self->stderr.hr != NULL)
+	if (self->errPipe.hr != NULL)
 	{
-	  hds[c] = self->stderr.hr;
-	  pipes[c] = &(self->stderr);
+	  hds[c] = self->errPipe.hr;
+	  pipes[c] = &(self->errPipe);
 	  c++;
 	}
 
@@ -197,8 +197,8 @@ void ecexec_createChildProcess (EcExec self)
   // This structure specifies the STDIN and STDOUT handles for redirection.
   ZeroMemory( &siStartInfo, sizeof(STARTUPINFO) );
   siStartInfo.cb = sizeof(STARTUPINFO); 
-  siStartInfo.hStdError = self->stderr.hw;
-  siStartInfo.hStdOutput = self->stdout.hw;
+  siStartInfo.hStdError = self->errPipe.hw;
+  siStartInfo.hStdOutput = self->outPipe.hw;
   siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
   
   commandline = ecstr_cat4 ("cmd.exe /C ", self->arguments[0], " ", self->arguments[1]);
@@ -218,8 +218,8 @@ void ecexec_createChildProcess (EcExec self)
 
   if (bSuccess) 
   {
-	CloseHandle(self->stdout.hw);
-	CloseHandle(self->stderr.hw);
+	CloseHandle(self->outPipe.hw);
+	CloseHandle(self->errPipe.hw);
 
 	ecexec_loop (self, piProcInfo.hProcess);
 
@@ -243,28 +243,28 @@ int ecexec_run (EcExec self)
   saAttr.lpSecurityDescriptor = NULL; 
 
   // Create a pipe for the child process's STDOUT.
-  if ( ! CreatePipe(&(self->stdout.hr), &(self->stdout.hw), &saAttr, 0) ) 
+  if ( ! CreatePipe(&(self->outPipe.hr), &(self->outPipe.hw), &saAttr, 0) ) 
   {
 	eclogger_msg (LL_ERROR, "ENTC", "exec", "can't create stdout pipe");
 	return 0;
   }
 
   // Ensure the read handle to the pipe for STDOUT is not inherited.
-  if ( ! SetHandleInformation(self->stdout.hr, HANDLE_FLAG_INHERIT, 0) )
+  if ( ! SetHandleInformation(self->outPipe.hr, HANDLE_FLAG_INHERIT, 0) )
   {
 	eclogger_msg (LL_ERROR, "ENTC", "exec", "set handle information for stdout failed");
 	return 0;
   }
 
   // Create a pipe for the child process's STDOUT.
-  if ( ! CreatePipe(&(self->stderr.hr), &(self->stderr.hw), &saAttr, 0) ) 
+  if ( ! CreatePipe(&(self->errPipe.hr), &(self->errPipe.hw), &saAttr, 0) ) 
   {
 	eclogger_msg (LL_ERROR, "ENTC", "exec", "can't create stderr pipe");
 	return 0;
   }
 
   // Ensure the read handle to the pipe for STDOUT is not inherited.
-  if ( ! SetHandleInformation(self->stderr.hr, HANDLE_FLAG_INHERIT, 0) )
+  if ( ! SetHandleInformation(self->errPipe.hr, HANDLE_FLAG_INHERIT, 0) )
   {
 	eclogger_msg (LL_ERROR, "ENTC", "exec", "set handle information for stderr failed");
 	return 0;
@@ -280,14 +280,14 @@ int ecexec_run (EcExec self)
 
 const EcString ecexec_stdout (EcExec self)
 {
-  return ecstream_buffer(self->stdout.stream);
+  return ecstream_buffer(self->outPipe.stream);
 }
 
 //-----------------------------------------------------------------------------------
 
 const EcString ecexec_stderr (EcExec self)
 {
-  return ecstream_buffer(self->stderr.stream);
+  return ecstream_buffer(self->errPipe.stream);
 }
 
 //-----------------------------------------------------------------------------------
