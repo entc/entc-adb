@@ -648,6 +648,12 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
     return FALSE;
   }
   
+  if (isNotAssigned (node))
+  {
+    eclogger_msg (LL_ERROR, "ADBO", "cursor", "node is NULL");
+    return FALSE;
+  }
+  
   dbtable = ecudc_name (node);
   if (isNotAssigned (dbtable))
   {
