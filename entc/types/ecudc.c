@@ -494,7 +494,7 @@ void ecudc_destroy (EcUdc* pself)
         ecudc_destroy (&(h->content));
       }
                      
-      ENTC_DEL (&h, EcTableInfo_s);
+      ENTC_DEL (&h, EcSet_s);
       self->extension = NULL;
     }
     break;
