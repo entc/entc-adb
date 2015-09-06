@@ -25,7 +25,6 @@
 
 #include "ecmutex.h"
 
-#define ENTC_INFINTE           1000000
 #define ENTC_EVENTTYPE_READ    0
 #define ENTC_EVENTTYPE_WRITE   1
 #define ENTC_EVENTTYPE_USER    2
@@ -75,6 +74,8 @@ struct EcEventQueue_s; typedef struct EcEventQueue_s* EcEventQueue;
 
 typedef void (*ece_list_ondel_fct) (void**);
 
+typedef int (_STDCALL *ece_list_sort_out_fct) (void*, void*);
+
 __CPP_EXTERN______________________________________________________________________________START
 
 __LIB_EXPORT EcEventQueue ece_list_create (EcEventContext, ece_list_ondel_fct);
@@ -88,6 +89,10 @@ __LIB_EXPORT int ece_list_add (EcEventQueue, EcHandle, int type, void* ptr);
 __LIB_EXPORT int ece_list_del (EcEventQueue, EcHandle);
 
 __LIB_EXPORT int ece_list_wait (EcEventQueue, uint_t timeout, void** ptr);
+
+__LIB_EXPORT int ece_list_size (EcEventQueue);
+
+__LIB_EXPORT void ece_list_sortout (EcEventQueue, ece_list_sort_out_fct, void*);
 
 // misc methods
 

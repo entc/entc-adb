@@ -115,6 +115,8 @@ SET (CORE_SOURCES_SYS
   system/ecexec_win.c
   system/ecrefcnt.h
   system/ecrefcnt.c
+  system/ecasyncio.h
+  system/ecasyncio.c
 )
 
 SET (CORE_SOURCES_TYPES

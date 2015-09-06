@@ -111,7 +111,7 @@ int _STDCALL ecserver_worker_run (void* params)
 
     //eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait on queue");
 
-    res = ece_list_wait (self->server->equeue, ENTC_INFINTE, NULL);
+    res = ece_list_wait (self->server->equeue, ENTC_INFINITE, NULL);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {

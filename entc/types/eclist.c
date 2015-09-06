@@ -211,7 +211,7 @@ void eclist_remove(EcList self, void* data)
   }
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 void eclist_cursor (EcList self, EcListCursor* cursor)
 {
@@ -220,7 +220,7 @@ void eclist_cursor (EcList self, EcListCursor* cursor)
   cursor->value = NULL;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
 int eclist_cnext (EcListCursor* cursor)
 {
@@ -238,6 +238,17 @@ int eclist_cnext (EcListCursor* cursor)
   return cursor->node != cursor->list->node;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
 
+void eclist_cerase (EcListCursor* cursor)
+{
+  if (cursor->node == NULL)
+  { 
+    return;
+  }
+  
+  cursor->node = eclist_erase (cursor->node);
+  cursor->value = cursor->node->data;
+}
 
+//----------------------------------------------------------------------------

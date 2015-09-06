@@ -49,7 +49,6 @@ void ectime_getTime (EcTime* ectime)
   
   ectime->sec = time.wSecond;
   ectime->msec = time.wMilliseconds;
-  ectime->usec = 0;
 
 #else
 
@@ -57,8 +56,7 @@ void ectime_getTime (EcTime* ectime)
   gettimeofday (&time, NULL);
   
   ectime->sec = time.tv_sec;
-  ectime->msec = time.tv_usec / 1000;
-  ectime->usec = time.tv_usec;
+  ectime->msec = time.tv_usec;
   
 #endif
   
@@ -176,5 +174,92 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
   
   *t = mktime (&timeinfo);
 }
+
+//-----------------------------------------------------------------------------------
+
+struct EcStopWatch_s
+{
+  
+  struct timeval start;
+  
+  ulong_t timeout;
+  
+};
+
+//-----------------------------------------------------------------------------------
+
+EcStopWatch ecstopwatch_create (ulong_t timeout)
+{
+  EcStopWatch self = ENTC_NEW (struct EcStopWatch_s);
+  
+  self->timeout = timeout;
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecstopwatch_destroy (EcStopWatch* pself)
+{
+  ENTC_DEL (pself, struct EcStopWatch_s);
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecstopwatch_start (EcStopWatch self)
+{
+  gettimeofday (&(self->start), NULL);
+}
+
+//-----------------------------------------------------------------------------------
+
+ulong_t ecstopwatch_stop (EcStopWatch self)
+{
+  struct timeval end;
+  double elapsedTime;
+
+  gettimeofday (&end, NULL);
+
+  elapsedTime  = (end.tv_sec - self->start.tv_sec) * 1000.0;      // sec to ms
+  elapsedTime += (end.tv_usec - self->start.tv_usec) / 1000.0;    // us to ms
+  
+  return elapsedTime;
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecstopwatch_timedOut (EcStopWatch self)
+{
+  if (self->timeout == ENTC_INFINITE)
+  {
+    return FALSE;
+  }
+
+  return ecstopwatch_stop (self) > self->timeout;
+}
+
+//-----------------------------------------------------------------------------------
+
+int ecstopwatch_timedOutRef (EcStopWatch self, EcStopWatch ref)
+{
+  double elapsedTime;
+
+  if (self->timeout == ENTC_INFINITE)
+  {
+    return FALSE;
+  }
+  
+  elapsedTime  = (ref->start.tv_sec - self->start.tv_sec) * 1000.0;      // sec to ms
+  elapsedTime += (ref->start.tv_usec - self->start.tv_usec) / 1000.0;    // us to ms
+  
+  return elapsedTime > self->timeout;
+}
+
+//-----------------------------------------------------------------------------------
+
+ulong_t ecstopwatch_timeout (EcStopWatch self)
+{
+  return self->timeout;
+} 
 
 //-----------------------------------------------------------------------------------

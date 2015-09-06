@@ -63,6 +63,8 @@ typedef signed int int_t;
 #define ENTC_RESOURCE_NEEDS_PERMISSION   4
 #define ENTC_RESOURCE_ALREADY_EXISTS     5
 
+#define ENTC_INFINITE           1000000
+
 #define isAssigned(pointer) (pointer != NULL)
 #define isNotAssigned(pointer) (pointer == NULL)
 

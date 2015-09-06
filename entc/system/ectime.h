@@ -27,7 +27,6 @@
 
 typedef struct {
   
-  uint_t usec;
   uint_t msec;
   uint_t sec;
   
@@ -48,6 +47,8 @@ typedef struct {
   
 } EcDate;
 
+struct EcStopWatch_s; typedef struct EcStopWatch_s* EcStopWatch;
+
 __CPP_EXTERN______________________________________________________________________________START
 
 __LIB_EXPORT void ectime_getTime (EcTime*);
@@ -61,6 +62,24 @@ __LIB_EXPORT void ectime_toGmtString (const time_t*, char* buffer, ulong_t size)
 __LIB_EXPORT void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size);
 
 __LIB_EXPORT void ectime_parseISO8601 (time_t* t, const char* stime);
+
+// stop watch
+
+__LIB_EXPORT EcStopWatch ecstopwatch_create (ulong_t timeout);
+
+__LIB_EXPORT void ecstopwatch_destroy (EcStopWatch*);
+
+__LIB_EXPORT void ecstopwatch_start (EcStopWatch);
+
+__LIB_EXPORT ulong_t ecstopwatch_stop (EcStopWatch);
+
+__LIB_EXPORT int ecstopwatch_timedOut (EcStopWatch);
+
+__LIB_EXPORT int ecstopwatch_timedOutRef (EcStopWatch, EcStopWatch ref);
+
+__LIB_EXPORT void ecstopwatch_destroy (EcStopWatch*);
+
+__LIB_EXPORT ulong_t ecstopwatch_timeout (EcStopWatch);
 
 __CPP_EXTERN______________________________________________________________________________END
 

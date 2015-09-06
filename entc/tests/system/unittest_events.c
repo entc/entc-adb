@@ -38,7 +38,7 @@ int _STDCALL callback2 (void* ptr)
   
   ece_sleep(100);
   
-  res = ece_list_wait (props->queue, ENTC_INFINTE, &ptr2);
+  res = ece_list_wait (props->queue, ENTC_INFINITE, &ptr2);
 
   printf("waited type %i with pointer %p\n", res, ptr2);
   
@@ -71,7 +71,7 @@ int _STDCALL callback3 (void* ptr)
   
   ece_sleep (100);
   
-  res = ece_list_wait (props->queue, ENTC_INFINTE, &ptr2);
+  res = ece_list_wait (props->queue, ENTC_INFINITE, &ptr2);
   
   printf("waited3 type %i with pointer %p\n", res == ENTC_EVENT_ABORT, ptr2);
   
@@ -86,7 +86,7 @@ int _STDCALL callback4 (void* ptr)
   void* ptr2 = NULL;
   int res;
   
-  res = ece_list_wait (props->queue, ENTC_INFINTE, &ptr2);
+  res = ece_list_wait (props->queue, ENTC_INFINITE, &ptr2);
   
   printf("waited4 type %i with pointer %p\n", res == ENTC_EVENT_ABORT, ptr2);
   
@@ -124,7 +124,7 @@ int main (int argc, char *argv[])
     
     t1 = time(0);
     
-    res = ece_context_waitforAbort (econtext, ENTC_INFINTE);
+    res = ece_context_waitforAbort (econtext, ENTC_INFINITE);
 
     printf("waited for %u ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_ABORT);
       
@@ -158,7 +158,7 @@ int main (int argc, char *argv[])
     
     ecthread_start (th2, callback2, &p1);
 
-    res = ece_list_wait (equeue, ENTC_INFINTE, &ptr);
+    res = ece_list_wait (equeue, ENTC_INFINITE, &ptr);
 
     printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
     
@@ -176,13 +176,13 @@ int main (int argc, char *argv[])
     
     t1 = time(0);
 
-    res = ece_list_wait (equeue, ENTC_INFINTE, &ptr);
+    res = ece_list_wait (equeue, ENTC_INFINITE, &ptr);
 
     printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
     
     t1 = time(0);
     
-    res = ece_list_wait (equeue, ENTC_INFINTE, &ptr);
+    res = ece_list_wait (equeue, ENTC_INFINITE, &ptr);
     
     printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
 
