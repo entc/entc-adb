@@ -242,6 +242,8 @@ EcAsyncContext _STDCALL ecasync_strict_worker_create (EcSocket sock, ulong_t tim
   self->pos = 0;
   self->len = 0;
   
+  ecasync_strict_worker_onIdle (self);
+  
   return ecasync_context_create (timeout, &callbacks, self);  
 }
 
@@ -256,6 +258,8 @@ typedef struct {
   EcAsync async;
   
   ecasync_accept_worker_cb cb;
+  
+  void* ptr;
   
 } EcAsyncAcceptContext;
 
@@ -294,7 +298,7 @@ static int _STDCALL ecasync_accept_run (void* ptr)
   {  
     if (isAssigned (self->cb))
     {
-      EcAsyncContext context = self->cb (clientSocket);
+      EcAsyncContext context = self->cb (self->ptr, clientSocket);
       ecasync_addSingle (self->async, &context);
     }
     else
@@ -308,7 +312,7 @@ static int _STDCALL ecasync_accept_run (void* ptr)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb)
+EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb, void* ptr)
 {
   static const EcAsyncContextCallbacks callbacks = {ecasync_accept_destroy, ecasync_accept_handle, ecasync_accept_run};
   
@@ -329,6 +333,7 @@ EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEvent
   
   self->async = async;
   self->cb = cb;
+  self->ptr = ptr;
   
   return ecasync_context_create (ENTC_INFINITE, &callbacks, self);  
 }

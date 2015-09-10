@@ -50,11 +50,11 @@ __CPP_EXTERN____________________________________________________________________
 
 // **** accept context ****
 
-typedef EcAsyncContext (_STDCALL *ecasync_accept_worker_cb)(EcSocket sock);
+typedef EcAsyncContext (_STDCALL *ecasync_accept_worker_cb)(void*, EcSocket sock);
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb);
+__LIB_EXPORT EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb, void*);
 
 __CPP_EXTERN______________________________________________________________________________END
 
