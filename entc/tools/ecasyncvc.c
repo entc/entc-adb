@@ -226,9 +226,9 @@ static int _STDCALL ecasync_strict_worker_run (void* ptr)
 //-----------------------------------------------------------------------------------------------------------
 
 EcAsyncContext _STDCALL ecasync_strict_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_idle_cb idlecb, ecasync_worker_recv_cb recvcb, void* ptr)
-{
+{  
   static const EcAsyncContextCallbacks callbacks = {ecasync_strict_worker_destroy, ecasync_strict_worker_handle, ecasync_strict_worker_run};
-  
+
   EcAsyncStrictWorkerContext* self = ENTC_NEW (EcAsyncStrictWorkerContext);
   
   self->socket = sock;
@@ -314,6 +314,8 @@ static int _STDCALL ecasync_accept_run (void* ptr)
 
 EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb, void* ptr)
 {
+  EcAsyncAcceptContext* self;
+
   static const EcAsyncContextCallbacks callbacks = {ecasync_accept_destroy, ecasync_accept_handle, ecasync_accept_run};
   
   // try to bind socket
@@ -326,7 +328,7 @@ EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEvent
     return NULL;
   }
   
-  EcAsyncAcceptContext* self = ENTC_NEW (EcAsyncAcceptContext);
+  self = ENTC_NEW (EcAsyncAcceptContext);
     
   self->socket = sock;
   self->handle = ecsocket_getAcceptHandle (sock);

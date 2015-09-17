@@ -373,13 +373,16 @@ static int _STDCALL ecasync_smartcontext_run (void* ptr)
 
 EcAsyncContext ecasync_smartcontext_create (EcAsyncContext* pcontext)
 {
+  EcAsyncSmartContext* self;
+  EcAsyncContext derive;
+
   static const EcAsyncContextCallbacks callbacks = {ecasync_smartcontext_destroy, ecasync_smartcontext_handle, ecasync_smartcontext_run};
 
-  EcAsyncSmartContext* self = ENTC_NEW (EcAsyncSmartContext);
+  self = ENTC_NEW (EcAsyncSmartContext);
 
   self->ref = ecrefcnt_new (*pcontext);
     
-  EcAsyncContext derive = ecasync_context_create (ecstopwatch_timeout((*pcontext)->stopwatch), &callbacks, self);
+  derive = ecasync_context_create (ecstopwatch_timeout((*pcontext)->stopwatch), &callbacks, self);
   
   *pcontext = NULL;
   

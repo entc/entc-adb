@@ -44,7 +44,7 @@ typedef ulong_t (_STDCALL *ecasync_worker_idle_cb)(void* ptr);
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncContext ecasync_strict_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_idle_cb, ecasync_worker_recv_cb, void*);
+__LIB_EXPORT EcAsyncContext _STDCALL ecasync_strict_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_idle_cb, ecasync_worker_recv_cb, void*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

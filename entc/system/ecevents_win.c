@@ -70,7 +70,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
 {
   HANDLE hs[2] = {self->abort, handle};
 
-  DWORD res = WaitForMultipleObjects (2, hs, FALSE, (timeout == ENTC_INFINTE) ? INFINITE : timeout);
+  DWORD res = WaitForMultipleObjects (2, hs, FALSE, (timeout == ENTC_INFINITE) ? INFINITE : timeout);
 
   if(res == WAIT_ABANDONED_0)
   {
@@ -96,7 +96,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
 
 int ece_context_waitforAbort (EcEventContext self, uint_t timeout)
 {
-  DWORD res = WaitForSingleObject(self->abort, (timeout == ENTC_INFINTE) ? INFINITE : timeout);
+  DWORD res = WaitForSingleObject(self->abort, (timeout == ENTC_INFINITE) ? INFINITE : timeout);
 
   return (res == WAIT_TIMEOUT) ? ENTC_EVENT_TIMEOUT : ENTC_EVENT_ABORT;
 }
@@ -221,8 +221,11 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
       // just override the current position with the last one
       // so we don't need any memory shifting
       self->hsn--;
-      self->hs [i] = self->hs [self->hsn];
-      self->ps [i] = self->ps [self->hsn];
+      if (self->hsn > 2)
+      {
+        self->hs [i] = self->hs [self->hsn];
+        self->ps [i] = self->ps [self->hsn];
+      }
 
       ecmutex_unlock (self->mutex);
       return TRUE;      
@@ -233,6 +236,44 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
   return FALSE;
 }
 
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_size (EcEventQueue self)
+{
+  return self->hsn - 2;  // should be atomic enough
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* ptr)
+{
+  uint_t i;
+  
+  ecmutex_lock (self->mutex);
+
+  for (i = 2; i < self->hsn; i++)
+  {
+    void* obj = self->ps [i];
+    if (isAssigned (obj) && callback (obj, ptr))
+    {
+      if (isAssigned (self->fct))
+      {
+        self->fct (&obj);
+      }
+      // just override the current position with the last one
+      // so we don't need any memory shifting
+      self->hsn--;
+      if (self->hsn > 2)
+      {
+        self->hs [i] = self->hs [self->hsn];
+        self->ps [i] = self->ps [self->hsn];
+      }
+    }
+  }
+
+  ecmutex_unlock (self->mutex);
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 
 int ece_list_wait (EcEventQueue self, uint_t timeout, void** ptr)
@@ -240,7 +281,7 @@ int ece_list_wait (EcEventQueue self, uint_t timeout, void** ptr)
   while (TRUE)
   {
     DWORD ind;
-    DWORD res = WaitForMultipleObjects (self->hsn, self->hs, FALSE, (timeout == ENTC_INFINTE) ? INFINITE : timeout);
+    DWORD res = WaitForMultipleObjects (self->hsn, self->hs, FALSE, (timeout == ENTC_INFINITE) ? INFINITE : timeout);
     if(res == WAIT_ABANDONED_0)
     {
       return ENTC_EVENT_ERROR;

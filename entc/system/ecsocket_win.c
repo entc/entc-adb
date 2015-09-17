@@ -395,7 +395,7 @@ int ecsocket_readTimeout (EcSocket self, void* buffer, int nbyte, int timeout)
 {
   while (TRUE) 
   {
-    int res = ece_context_wait (self->ec, self->hread, timeout == ENTC_INFINTE ? INFINITE : timeout, ENTC_EVENTTYPE_READ);
+    int res = ece_context_wait (self->ec, self->hread, timeout == ENTC_INFINITE ? INFINITE : timeout, ENTC_EVENTTYPE_READ);
     if (res == ENTC_EVENT_ABORT || res == ENTC_EVENT_TIMEOUT)
     {
       return res;

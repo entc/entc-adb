@@ -179,9 +179,12 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
 
 struct EcStopWatch_s
 {
-  
+#ifdef _WIN32
+  DWORD start;
+#else
   struct timeval start;
-  
+#endif  
+
   ulong_t timeout;
   
 };
@@ -208,13 +211,22 @@ void ecstopwatch_destroy (EcStopWatch* pself)
 
 void ecstopwatch_start (EcStopWatch self)
 {
+#ifdef _WIN32
+  self->start = GetTickCount();
+#else
   gettimeofday (&(self->start), NULL);
+#endif
 }
 
 //-----------------------------------------------------------------------------------
 
 ulong_t ecstopwatch_stop (EcStopWatch self)
 {
+#ifdef _WIN32
+  DWORD end = GetTickCount();
+
+  return end - self->start;
+#else
   struct timeval end;
   double elapsedTime;
 
@@ -224,6 +236,7 @@ ulong_t ecstopwatch_stop (EcStopWatch self)
   elapsedTime += (end.tv_usec - self->start.tv_usec) / 1000.0;    // us to ms
   
   return elapsedTime;
+#endif
 }
 
 //-----------------------------------------------------------------------------------
@@ -242,6 +255,11 @@ int ecstopwatch_timedOut (EcStopWatch self)
 
 int ecstopwatch_timedOutRef (EcStopWatch self, EcStopWatch ref)
 {
+#ifdef _WIN32
+  DWORD end = GetTickCount();
+
+  return (end - self->start) > self->timeout;
+#else
   double elapsedTime;
 
   if (self->timeout == ENTC_INFINITE)
@@ -253,6 +271,7 @@ int ecstopwatch_timedOutRef (EcStopWatch self, EcStopWatch ref)
   elapsedTime += (ref->start.tv_usec - self->start.tv_usec) / 1000.0;    // us to ms
   
   return elapsedTime > self->timeout;
+#endif
 }
 
 //-----------------------------------------------------------------------------------
