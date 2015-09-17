@@ -93,7 +93,7 @@ int _STDCALL ecmessages_logger_callback (void* ptr, EcMessageData* dIn, EcMessag
 {
   if (isAssigned (dIn) && (dIn->type == ENTC_MSGTYPE_LOG) && (dIn->rev == 1))
   {
-    if (dIn->ref < 5)
+    if (dIn->ref < 7)
     {
       static char buffer [2050];
       EcMessages self = ptr;
