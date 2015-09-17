@@ -59,6 +59,12 @@ __LIB_EXPORT EcBuffer ecbuf_decode_base64 (EcBuffer);
 
 __LIB_EXPORT EcBuffer ecbuf_md5 (EcBuffer);
 
+__LIB_EXPORT EcBuffer ecbuf_sha1 (EcBuffer);
+
+__LIB_EXPORT EcBuffer ecbuf_xor (EcBuffer, EcBuffer);  // uses always the smallest one
+
+__LIB_EXPORT EcBuffer ecbuf_concat (EcBuffer, EcBuffer);
+
 // getters
 
 __LIB_EXPORT const EcString ecbuf_const_str (const EcBuffer);
