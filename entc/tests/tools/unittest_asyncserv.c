@@ -1,25 +1,38 @@
 #include "tools/ecasyncvc.h"
 #include "system/ecsignal.h"
+#include "utils/ecmessages.h"
+
+//-------------------------------------------------------------------------------------------
+
+void _STDCALL ecasync_onData (void* ptr, const unsigned char* buffer, ulong_t len)
+{
+  printf ("data: '%s'", buffer);
+}
+
+//-------------------------------------------------------------------------------------------
+
+EcAsyncContext _STDCALL ecasync_onAccept (void* ptr, EcSocket sock)
+{
+  return ecasync_worker_create (sock, 30000, ecasync_onData, NULL);
+}
+
+//-------------------------------------------------------------------------------------------
 
 int main (int argc, char *argv[])
 {
-  EcAsyncServ serv;
-
-  EcAsyncServCallbacks callbacks;
-  callbacks.onCreate = NULL;
-  callbacks.onDestroy = NULL;
-  callbacks.onIdle = NULL;
-  callbacks.onRecvAll = NULL;
+  ecmessages_initialize ();
   
-  serv = ecaserv_create (&callbacks);
+  EcEventContext ec = ece_context_new ();
   
-  ecaserv_start (serv, "127.0.0.1", 8080);
+  EcAsync async = ecasync_create (10);
   
-  ecsignal_init ( ecaserv_getEventContext (serv));
+  EcAsyncContext accept_ctx = ecasync_accept_create ("127.0.0.1", 8080, ec, async, ecasync_onAccept, NULL);
   
-  ecaserv_run (serv);
+  ecasync_addToAll (async, &accept_ctx);
   
-  ecaserv_destroy (&serv);
+  ece_context_waitforAbort (ec, ENTC_INFINITE);
+  
+  ecasync_destroy (&async);
   
   return 0;
 }

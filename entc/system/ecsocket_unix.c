@@ -366,7 +366,7 @@ EcSocket ecsocket_acceptIntr (EcSocket self)
     
     memset (&addr, 0x00, sizeof(addr));
     // wait for either data on the handle or terminate signal
-    int res = ece_context_wait (self->ec, self->socket, ENTC_INFINTE, ENTC_EVENTTYPE_READ);
+    int res = ece_context_wait (self->ec, self->socket, ENTC_INFINITE, ENTC_EVENTTYPE_READ);
     if (res == ENTC_EVENT_ABORT)
     {
       // termination of the process

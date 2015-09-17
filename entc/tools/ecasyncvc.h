@@ -26,72 +26,46 @@
 
 #include "system/ecsocket.h"
 #include "system/ecevents.h"
+#include "system/ecasyncio.h"
 
-struct EcAsyncSvc_s; typedef struct EcAsyncSvc_s* EcAsyncSvc;
+// **** worker context ****
 
-struct EcAsyncContext_s; typedef struct EcAsyncContext_s* EcAsyncContext;
-
-typedef int (*async_context_run_fct)(EcAsyncContext, EcAsyncSvc);
-
-typedef void (*async_context_destroy_fct) (void**);
-
-struct EcAsyncContext_s
-{
-    
-  EcHandle handle;
-
-  async_context_run_fct run;
-  
-  async_context_destroy_fct del;
-  
-  void* ptr;
-  
-};
+typedef void (_STDCALL *ecasync_worker_rawdata_cb)(void* ptr, const unsigned char* buffer, ulong_t len);
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncSvc ecasyncsvc_create (EcEventContext ec);
-
-__LIB_EXPORT void ecasyncsvc_destroy (EcAsyncSvc*);
-
-__LIB_EXPORT void ecasyncsvc_start (EcAsyncSvc);
-
-__LIB_EXPORT void ecasyncsvc_stop (EcAsyncSvc);
-
-__LIB_EXPORT int ecasyncsvc_add (EcAsyncSvc, EcAsyncContext);
+__LIB_EXPORT EcAsyncContext ecasync_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_rawdata_cb, void*);
 
 __CPP_EXTERN______________________________________________________________________________END
 
-struct EcAsyncServ_s; typedef struct EcAsyncServ_s* EcAsyncServ;
+typedef int (_STDCALL *ecasync_worker_recv_cb)(void* ptr, const unsigned char* buffer, ulong_t len);
 
-typedef void* (*serv_context_onCreate_fct) (EcSocket, void*);
-
-typedef void (*serv_context_onDestroy_fct) (void**);
-
-typedef int (*serv_context_onRecv_fct) (void*, char* buffer, int len);
-
-typedef int (*serv_context_onIdle_fct) (void*);
-
-typedef struct 
-{
-  
-  serv_context_onCreate_fct onCreate;
-  
-  serv_context_onDestroy_fct onDestroy;
-  
-  serv_context_onRecv_fct onRecvAll;
-  
-  serv_context_onRecv_fct onRecvPart;
-
-  serv_context_onIdle_fct onIdle;
-  
-  void* ptr;
-  
-} EcAsyncServCallbacks;
+typedef ulong_t (_STDCALL *ecasync_worker_idle_cb)(void* ptr);
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncServ ecaserv_create (EcAsyncServCallbacks*);
+__LIB_EXPORT EcAsyncContext ecasync_strict_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_idle_cb, ecasync_worker_recv_cb, void*);
+
+__CPP_EXTERN______________________________________________________________________________END
+
+// **** accept context ****
+
+typedef EcAsyncContext (_STDCALL *ecasync_accept_worker_cb)(void*, EcSocket sock);
+
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb, void*);
+
+__CPP_EXTERN______________________________________________________________________________END
+
+/*
+// **** server ****
+
+struct EcAsyncServ_s; typedef struct EcAsyncServ_s* EcAsyncServ;
+
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT EcAsyncServ ecaserv_create ();
 
 __LIB_EXPORT void ecaserv_destroy (EcAsyncServ*);
 
@@ -103,16 +77,8 @@ __LIB_EXPORT void ecaserv_stop (EcAsyncServ);
 
 __LIB_EXPORT void ecaserv_run (EcAsyncServ);
 
-__LIB_EXPORT EcEventContext ecaserv_getEventContext (EcAsyncServ);
-
 __CPP_EXTERN______________________________________________________________________________END
-
-struct EcAsyncServContext_s; typedef struct EcAsyncServContext_s* EcAsyncServContext;
-
-__CPP_EXTERN______________________________________________________________________________START
-
-__LIB_EXPORT void ecaserv_context_recv (EcAsyncServContext, ulong_t len);
-
-__CPP_EXTERN______________________________________________________________________________END
+ 
+ */
 
 #endif

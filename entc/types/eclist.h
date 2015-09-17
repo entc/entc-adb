@@ -73,6 +73,8 @@ __LIB_EXPORT void eclist_cursor (EcList, EcListCursor*);
 
 __LIB_EXPORT int eclist_cnext (EcListCursor* c);
 
+__LIB_EXPORT void eclist_cerase (EcListCursor* c);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

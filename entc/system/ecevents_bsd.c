@@ -99,7 +99,7 @@ int ece_kevent_wait (int kq, struct kevent* event, uint_t timeout)
 {
   int res;
   // blocks until we got something
-  if (timeout == ENTC_INFINTE)
+  if (timeout == ENTC_INFINITE)
   {
     res = kevent (kq, NULL, 0, event, 1, NULL);
   }
@@ -299,6 +299,38 @@ void ece_list_clear (EcEventQueue self)
   }
   
   eclist_clear (self->ptrs);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* ptr)
+{
+  EcListCursor cursor;
+  
+  ecmutex_lock (self->ecmutex);
+
+  eclist_cursor (self->ptrs, &cursor);
+  
+  while (eclist_cnext (&cursor))
+  {
+    EcEventData* pdata = cursor.value;
+
+    // if true this entry must be removed
+    if (isAssigned (pdata->ptr) && callback (pdata->ptr, ptr))
+    {
+      ece_kevent_delHandle (self->kq, pdata->handle); 
+      
+      if (self->fct)
+      {
+        // call callback
+        self->fct (&(pdata->ptr));
+      }
+      
+      eclist_cerase (&cursor);
+    }
+  }
+
+  ecmutex_unlock (self->ecmutex);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -529,6 +561,13 @@ EcHandle ece_list_handle (EcEventQueue self, void* ptr)
 void ece_list_set (EcEventQueue self, EcHandle handle)
 {
   ece_kevent_setHandle (self->kq, handle, EVFILT_USER);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_size (EcEventQueue self)
+{
+  
 }
 
 //------------------------------------------------------------------------------------------------------------

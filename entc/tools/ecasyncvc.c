@@ -24,304 +24,190 @@
 
 //-----------------------------------------------------------------------------------------------------------
 
-struct EcAsyncSvc_s
-{
-  
-  // references
-  EcEventContext ec;
-
-  // owned  
-  
-  EcThread thread;
-  
-  EcEventQueue queue;
-  
-  EcHandle interupt;
-  
-};
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecasyncsvc_context_destroy (void** pptr)
-{
-  EcAsyncContext self = *pptr;
-  
-  if (isAssigned (self->del))
-  {
-    self->del (&(self->ptr));
-  }
-  
-  ENTC_DEL (pptr, struct EcAsyncContext_s); 
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-EcAsyncSvc ecasyncsvc_create (EcEventContext ec)
-{
-  EcAsyncSvc self = ENTC_NEW (struct EcAsyncSvc_s);
-  
-  self->ec = ec;  
-  self->thread = ecthread_new ();
-  self->queue = ece_list_create (self->ec, ecasyncsvc_context_destroy);
-  
-  return self;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecasyncsvc_destroy (EcAsyncSvc* pself)
-{
-  EcAsyncSvc self = *pself;
-  
-  ecasyncsvc_stop (self);
-  
-  ecthread_delete (&(self->thread));
-  
-  ece_list_destroy (&(self->queue));
-  
-  ENTC_DEL (pself, struct EcAsyncSvc_s);
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-int ecasyncsvc_add (EcAsyncSvc self, EcAsyncContext context)
-{
-  return ece_list_add (self->queue, context->handle, ENTC_EVENTTYPE_READ, context);  
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-int _STDCALL ecasyncsvc_run (void* params)
-{
-  int ret = TRUE;
-  
-  EcAsyncSvc self = params;
-  
-  EcAsyncContext context;
-    
-  int res = ece_list_wait (self->queue, ENTC_INFINTE, (void**)&context);  
-  if ((res == ENTC_EVENT_TIMEOUT)) // timeout or interupt
-  {
-    return TRUE;
-  }
-
-  if (res < 0) // termination of the process
-  {
-    return FALSE;  // tell the thread to terminate
-  }
-  
-  if (isNotAssigned (context))
-  {
-    return FALSE;
-  }
-  
-  if (context->run (context, self))
-  {
-    return TRUE;
-  }
-  
-  eclogger_msg (LL_TRACE, "ENTC", "async", "connection removed");
-  
-  ece_list_del (self->queue, context->handle);
-      
-  return ret;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecasyncsvc_start (EcAsyncSvc self)
-{
-  ecthread_start (self->thread, ecasyncsvc_run, (void*)self);
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecasyncsvc_stop (EcAsyncSvc self)
-{
-  ecthread_join (self->thread); 
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-struct EcAsyncServ_s
-{
-  
-  EcEventContext ec;
-  
-  EcAsyncSvc svc;
+typedef struct {
   
   EcSocket socket;
   
-  EcAsyncServCallbacks callbacks;
+  EcHandle handle;
   
-  void* ptr;  
-  
-};
-
-//-----------------------------------------------------------------------------------------------------------
-
-struct EcAsyncServContext_s
-{
-
-  EcSocket socket;
-  
-  char* buffer;
-  
-  uint_t pos;
-  
-  uint_t bpos;
-  
-  uint_t len;
-  
-  EcAsyncServCallbacks* callbacks;
+  ecasync_worker_rawdata_cb callback;
   
   void* ptr;
   
-};
+  EcBuffer buffer;
+  
+} EcAsyncWorkerContext;
 
 //-----------------------------------------------------------------------------------------------------------
 
-int ecaworker_onIdle (EcAsyncServContext self)
+static void _STDCALL ecasync_worker_destroy (void** ptr)
+{
+  EcAsyncWorkerContext* self = *ptr;
+  
+  ecsocket_delete (&(self->socket));
+  
+  ecbuf_destroy (&(self->buffer));
+  
+  ENTC_DEL (ptr, EcAsyncWorkerContext);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static EcHandle _STDCALL ecasync_worker_handle (void* ptr)
+{
+  EcAsyncWorkerContext* self = ptr;
+  
+  return self->handle;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static int _STDCALL ecasync_worker_run (void* ptr)
+{
+  EcAsyncWorkerContext* self = ptr;
+
+  ulong_t res = ecsocket_readBunch (self->socket, self->buffer->buffer, self->buffer->size);
+  if (res > 0)
+  {
+    if (isAssigned (self->callback))
+    {
+      self->callback (self->ptr, self->buffer->buffer, res);
+    }
+    
+    return TRUE;
+  }
+
+  // eclogger_msg (LL_WARN, "ENTC", "async", "connection reset by peer");
+  return FALSE;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+EcAsyncContext ecasync_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_rawdata_cb callback, void* ptr)
+{
+  static const EcAsyncContextCallbacks callbacks = {ecasync_worker_destroy, ecasync_worker_handle, ecasync_worker_run};
+  
+  EcAsyncWorkerContext* self = ENTC_NEW (EcAsyncWorkerContext);
+  
+  self->socket = sock;
+  self->handle = ecsocket_getReadHandle (sock);
+  
+  self->callback = callback;
+  self->ptr = ptr;
+  
+  self->buffer = ecbuf_create (1024);  // good
+  
+  return ecasync_context_create (timeout, &callbacks, self);  
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+typedef struct {
+  
+  EcSocket socket;
+  
+  EcHandle handle;
+  
+  ecasync_worker_idle_cb idle;
+  
+  ecasync_worker_recv_cb recv;
+  
+  void* ptr;
+  
+  unsigned char* buffer;
+  
+  ulong_t pos;
+  
+  ulong_t len;
+  
+} EcAsyncStrictWorkerContext;
+
+//-----------------------------------------------------------------------------------------------------------
+
+static void _STDCALL ecasync_strict_worker_destroy (void** ptr)
+{
+  EcAsyncStrictWorkerContext* self = *ptr;
+  
+  ecsocket_delete (&(self->socket));
+  
+  
+  ENTC_DEL (ptr, EcAsyncStrictWorkerContext);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static EcHandle _STDCALL ecasync_strict_worker_handle (void* ptr)
+{
+  EcAsyncStrictWorkerContext* self = ptr;
+  
+  return self->handle;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+int ecasync_strict_worker_onIdle (EcAsyncStrictWorkerContext* self)
 {
   int bytesToRecv = 0;
   
-  if (isAssigned (self->callbacks->onIdle))
+  if (isAssigned (self->idle))
   {
-    bytesToRecv = self->callbacks->onIdle (self->ptr);
+    bytesToRecv = self->idle (self->ptr);
   }
   
   if (bytesToRecv > 0)
   {
-    ecaserv_context_recv (self, bytesToRecv);
+    self->pos = 0;
+    self->len = bytesToRecv;
+    
+    if (isAssigned (self->buffer))
+    {
+      self->buffer = realloc (self->buffer, bytesToRecv + 1);
+    }
+    else
+    {
+      self->buffer = ENTC_MALLOC (bytesToRecv + 1);
+    }
     return TRUE;
   }
   else
   {
     return FALSE;
-  }  
+  }    
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
-int ecaworker_onRecvAll (EcAsyncServContext self)
+int ecasync_strict_worker_onRecv (EcAsyncStrictWorkerContext* self)
 {
-  int ret = FALSE;
-  
-  if (isAssigned (self->callbacks->onRecvAll))
+  if (isAssigned (self->recv))
   {
-    ret = self->callbacks->onRecvAll (self->ptr, self->buffer, self->len);
-  }
-  
-  return ret;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-int ecaworker_onRecvPart (EcAsyncServContext self)
-{
-  // this means continue on collecting data
-  int ret = TRUE;
-  
-  if (isAssigned (self->callbacks->onRecvPart))
-  {
-    ret = self->callbacks->onRecvPart (self->ptr, self->buffer, self->pos);
-    
-    // if continue, assume that all data was read out of the buffer
-    // set the buffer to start pos
-    if (ret)
-    {
-      self->pos = 0;
-    }
-  }
-  
-  return ret;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-EcAsyncServContext ecaworker_create (EcSocket socket, EcAsyncServCallbacks* callbacks, void* ptr)
-{
-  EcAsyncServContext self = ENTC_NEW (struct EcAsyncServContext_s);
-  
-  self->socket = socket;
-  self->pos = 0;
-  self->buffer = NULL;
-
-  self->callbacks = callbacks;
-  self->ptr = ptr;
-  
-  ecaworker_onIdle (self);
-  
-  return self;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecaworker_destroy (EcAsyncServContext* pself)
-{
-  EcAsyncServContext self = *pself;
-
-  if (isAssigned (self->callbacks->onDestroy))
-  {
-    self->callbacks->onDestroy (&(self->ptr));
+    return self->recv (self->ptr, self->buffer, self->len);
   }  
   
-  ecsocket_delete (&(self->socket));
-
-  if (isAssigned (self->buffer))
-  {
-    ENTC_FREE (self->buffer);
-  }
-  
-  ENTC_DEL (pself, struct EcAsyncServContext_s);
+  return FALSE;
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecaserv_context_recv (EcAsyncServContext self, ulong_t len)
+static int _STDCALL ecasync_strict_worker_run (void* ptr)
 {
-  self->pos = 0;
-  self->len = len;
+  EcAsyncStrictWorkerContext* self = ptr;
   
-  if (isAssigned (self->buffer))
-  {
-    self->buffer = realloc (self->buffer, len + 1);
-  }
-  else
-  {
-    self->buffer = ENTC_MALLOC (len + 1);
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
-{
-  EcAsyncServContext self = ctx->ptr;
-    
   if (self->pos < self->len)
   {
     ulong_t res;
     
-    ecsocket_resetHandle (ctx->handle);
-
+    ecsocket_resetHandle (self->handle);
+    
     res = ecsocket_readBunch (self->socket, self->buffer + self->pos, self->len - self->pos);
     if (res > 0)
     {
       self->pos += res;     
       
-      // true: continue with data collecting, false: abort
-      if (ecaworker_onRecvPart (self))
+      if (self->pos == self->len)
       {
-        if (self->pos == self->len)
-        {
-          return ecaworker_onRecvAll (self) && ecaworker_onIdle (self);
-        }        
-      }
-      else 
-      {
-        return FALSE;
-      }
+        return ecasync_strict_worker_onRecv (self) && ecasync_strict_worker_onIdle (self);
+      }        
     }
     else
     {
@@ -331,150 +217,125 @@ int ecaworker_run (EcAsyncContext ctx, EcAsyncSvc svc)
   }
   else
   {
-    return ecaworker_onIdle (self) && ecaworker_run (ctx, svc);
+    return ecasync_strict_worker_onIdle (self) && ecasync_strict_worker_run (self);
   }
-
-  return TRUE;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecaworker_onDel (void** pptr)
-{
-  ecaworker_destroy ((EcAsyncServContext*)pptr);
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-int ecaserv_accept (EcAsyncContext ctx, EcAsyncSvc svc)
-{
-  EcSocket clientSocket;
-
-  EcAsyncServ self = ctx->ptr;
   
-  ecsocket_resetHandle (ctx->handle);
+  return TRUE;  
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+EcAsyncContext _STDCALL ecasync_strict_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_idle_cb idlecb, ecasync_worker_recv_cb recvcb, void* ptr)
+{
+  static const EcAsyncContextCallbacks callbacks = {ecasync_strict_worker_destroy, ecasync_strict_worker_handle, ecasync_strict_worker_run};
+  
+  EcAsyncStrictWorkerContext* self = ENTC_NEW (EcAsyncStrictWorkerContext);
+  
+  self->socket = sock;
+  self->handle = ecsocket_getReadHandle (sock);
+  
+  self->idle = idlecb;
+  self->recv = recvcb;
+  self->ptr = ptr;
+  
+  self->buffer = NULL;  // dynamic allocation
+  self->pos = 0;
+  self->len = 0;
+  
+  ecasync_strict_worker_onIdle (self);
+  
+  return ecasync_context_create (timeout, &callbacks, self);  
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+typedef struct {
+  
+  EcSocket socket;
+  
+  EcHandle handle;
+  
+  EcAsync async;
+  
+  ecasync_accept_worker_cb cb;
+  
+  void* ptr;
+  
+} EcAsyncAcceptContext;
+
+//-----------------------------------------------------------------------------------------------------------
+
+static void _STDCALL ecasync_accept_destroy (void** ptr)
+{
+  EcAsyncAcceptContext* self = *ptr;
+  
+  ecsocket_delete (&(self->socket));
+  
+  ENTC_DEL (ptr, EcAsyncAcceptContext);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static EcHandle _STDCALL ecasync_accept_handle (void* ptr)
+{
+  EcAsyncAcceptContext* self = ptr;
+
+  return self->handle;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static int _STDCALL ecasync_accept_run (void* ptr)
+{
+  EcAsyncAcceptContext* self = ptr;
+  
+  EcSocket clientSocket;
+  
+  ecsocket_resetHandle (self->handle);
   
   clientSocket = ecsocket_accept (self->socket);
   if (isAssigned (clientSocket))
   {  
-    EcAsyncContext context = ENTC_NEW (struct EcAsyncContext_s);
-    
-    context->handle = ecsocket_getReadHandle (clientSocket);
-
-    if (ecasyncsvc_add (self->svc, context))
+    if (isAssigned (self->cb))
     {
-      void* ptr = NULL;
-      
-      if ( isAssigned (self->callbacks.onCreate))
-      {
-        ptr = self->callbacks.onCreate (clientSocket, self->callbacks.ptr);
-      }
-      
-      if (isAssigned (ptr))
-      {
-        EcAsyncServContext sc = ecaworker_create (clientSocket, &(self->callbacks), ptr);
-        
-        context->ptr = sc;
-        context->run = ecaworker_run;
-        context->del = ecaworker_onDel;
-        
-        eclogger_msg (LL_TRACE, "ENTC", "async server", "client connected" );        
-      }
-      else
-      {
-        ecsocket_delete (&clientSocket);        
-      }
+      EcAsyncContext context = self->cb (self->ptr, clientSocket);
+      ecasync_addSingle (self->async, &context);
     }
     else
     {
       ecsocket_delete (&clientSocket);
-      //eclogger_log(self->logger, LL_TRACE, "ASYN", "connection refused, maximum reached" );
     }
   }
-  return TRUE;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-EcAsyncServ ecaserv_create (EcAsyncServCallbacks* callbacks)
-{
-  EcAsyncServ self = ENTC_NEW (struct EcAsyncServ_s);
-
-  self->ec = ece_context_new ();
-  self->svc = ecasyncsvc_create (self->ec);
-  
-  // callbacks
-  memcpy(&(self->callbacks), callbacks, sizeof(EcAsyncServCallbacks));
-    
-  return self;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecaserv_destroy (EcAsyncServ* pself)
-{
-  EcAsyncServ self = *pself;
-  
-  ecasyncsvc_destroy(&(self->svc));
-  
-  ece_context_delete(&(self->ec));
-
-  ENTC_DEL (pself, struct EcAsyncServ_s);
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-int ecaserv_start (EcAsyncServ self, const EcString host, ulong_t port)
-{
-  self->socket = ecsocket_new (self->ec);
-  if( !ecsocket_listen (self->socket, host, port) )
-  {
-    ecsocket_delete(&(self->socket));
-    return FALSE;
-  }
-  
-  {
-    EcAsyncContext context = ENTC_NEW (struct EcAsyncContext_s);
-    
-    context->handle = ecsocket_getAcceptHandle (self->socket);
-
-    context->ptr = self;
-    context->run = ecaserv_accept;
-    context->del = NULL;
-    
-    ecasyncsvc_add (self->svc, context);
-  }
-  
-  ecasyncsvc_start (self->svc);
   
   return TRUE;
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecaserv_stop (EcAsyncServ self)
+EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb, void* ptr)
 {
-  ece_context_setAbort (self->ec);
+  static const EcAsyncContextCallbacks callbacks = {ecasync_accept_destroy, ecasync_accept_handle, ecasync_accept_run};
   
-  ecasyncsvc_stop (self->svc);
-  // close listen socket
-  ecsocket_delete(&(self->socket));
+  // try to bind socket
+  EcSocket sock = ecsocket_new (ec);
+
+  if( !ecsocket_listen (sock, host, port) )
+  {
+    ecsocket_delete (&sock);
+    
+    return NULL;
+  }
   
-  ece_context_resetAbort (self->ec);
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-void ecaserv_run (EcAsyncServ self)
-{
-  ece_context_waitforAbort (self->ec, ENTC_INFINTE);
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-EcEventContext ecaserv_getEventContext (EcAsyncServ self)
-{
-  return self->ec;
+  EcAsyncAcceptContext* self = ENTC_NEW (EcAsyncAcceptContext);
+    
+  self->socket = sock;
+  self->handle = ecsocket_getAcceptHandle (sock);
+  
+  self->async = async;
+  self->cb = cb;
+  self->ptr = ptr;
+  
+  return ecasync_context_create (ENTC_INFINITE, &callbacks, self);  
 }
 
 //-----------------------------------------------------------------------------------------------------------
