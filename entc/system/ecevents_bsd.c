@@ -567,7 +567,15 @@ void ece_list_set (EcEventQueue self, EcHandle handle)
 
 int ece_list_size (EcEventQueue self)
 {
+  int ret;
   
+  ecmutex_lock (self->ecmutex);
+
+  ret = eclist_size (self->ptrs);  // this call might be too expensive
+    
+  ecmutex_unlock (self->ecmutex);
+  
+  return ret;
 }
 
 //------------------------------------------------------------------------------------------------------------
