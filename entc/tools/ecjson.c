@@ -107,6 +107,21 @@ EcString json_parse_string (JsonParser* parser)
 
 //-------------------------------------------------------------------------------------------
 
+EcUdc json_parse_type (JsonParser* parser, const EcString key, int len)
+{
+  EcString h = ecstr_part ((const char*)parser->pos + 2, len);
+  
+  EcUdc udc = ecudc_create(ENTC_UDC_UINT32, key);
+  
+  ecudc_setUInt32(udc, atoi(h));
+  
+  ecstr_delete(&h);
+  
+  return udc;
+}
+
+//-------------------------------------------------------------------------------------------
+
 #define ENT_STATE_NONE            0
 #define ENT_STATE_ARRAY           1
 #define ENT_STATE_ARRAY_EOE       2
@@ -299,11 +314,17 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           return json_cleanup_udc (&udc);
         }
       }
-        break;
+      break;
       case ENT_STATE_OBJECT: switch (*c)
       {
         case '}':
         {
+          EcUdc h = json_parse_type (parser, key, c - parser->pos - 2);
+          if (h)
+          {
+            ecudc_add (udc, &h);
+          }
+          
           ecstr_delete(&key);            
           // todo
           parser->pos = c;
@@ -342,19 +363,23 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           c = parser->pos;
           state = ENT_STATE_OBJECT_EOE;
         }
-          break;
+        break;
         case ',':
         {
-          // todo
+          EcUdc h = json_parse_type (parser, key, c - parser->pos - 2);
+          if (h)
+          {
+            ecudc_add (udc, &h);
+          }
+
           state = ENT_STATE_OBJECT_KEY;
           parser->pos = c;
         }
-          break;
-          // ignore
-        case '\t' : case '\r' : case '\n' : case ' ': 
-          break;
-      }
         break;
+        // ignore
+        case '\t' : case '\r' : case '\n' : case ' ': break;
+      }
+      break;
       case ENT_STATE_OBJECT_EOE: switch (*c)
       {
         case '}':

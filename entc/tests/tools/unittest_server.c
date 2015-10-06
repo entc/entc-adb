@@ -62,7 +62,7 @@ int main (int argc, char *argv[])
 
   EcEventContext ec = ece_context_new ();
   
-  EcSocket socket = ecsocket_new (ec);
+  EcSocket socket = ecsocket_new (ec, ENTC_SOCKET_PROTOCOL_TCP);
   if (!ecsocket_listen (socket, "127.0.0.1", 8080))
   {
     ecsocket_delete(&socket);

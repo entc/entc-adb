@@ -186,7 +186,7 @@ int echtmlreq_get(EcHtmlRequest self, const EcString host, uint_t port, const Ec
   
   EcSocket socket;
   
-  socket = ecsocket_new(ec);
+  socket = ecsocket_new (ec, ENTC_SOCKET_PROTOCOL_TCP);
   
   if( ecsocket_connect( socket, host, port ) )
   {
@@ -225,7 +225,7 @@ int echtmlreq_post (EcHtmlRequest self, const EcString host, uint_t port, const 
   
   EcSocket socket;
   
-  socket = ecsocket_new(ec);
+  socket = ecsocket_new (ec, ENTC_SOCKET_PROTOCOL_TCP);
   
   if( ecsocket_connect( socket, host, port ) )
   {

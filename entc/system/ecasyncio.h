@@ -40,13 +40,15 @@ typedef struct
   
   ecasync_context_run_cb run;
   
+  ece_list_sort_out_fct timeout;
+  
 } EcAsyncContextCallbacks;
 
 struct EcAsyncContext_s; typedef struct EcAsyncContext_s* EcAsyncContext;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncContext ecasync_context_create (ulong_t timeout, const EcAsyncContextCallbacks*, void* ptr);
+__LIB_EXPORT EcAsyncContext ecasync_context_create (const EcAsyncContextCallbacks*, void* ptr);
 
 __LIB_EXPORT void ecasync_context_destroy (EcAsyncContext*);
 

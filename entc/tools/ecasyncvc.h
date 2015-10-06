@@ -32,6 +32,8 @@
 
 typedef void (_STDCALL *ecasync_worker_rawdata_cb)(void* ptr, const unsigned char* buffer, ulong_t len);
 
+typedef void (_STDCALL *ecasync_worker_destroy_cb)(void** ptr);
+
 __CPP_EXTERN______________________________________________________________________________START
 
 __LIB_EXPORT EcAsyncContext ecasync_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_rawdata_cb, void*);
@@ -58,27 +60,32 @@ __LIB_EXPORT EcAsyncContext ecasync_accept_create (const EcString host, ulong_t 
 
 __CPP_EXTERN______________________________________________________________________________END
 
-/*
-// **** server ****
+// **** udp worker and context ****
 
-struct EcAsyncServ_s; typedef struct EcAsyncServ_s* EcAsyncServ;
+struct EcAsyncUdpContext_s; typedef struct EcAsyncUdpContext_s* EcAsyncUdpContext;
+
+typedef EcAsyncUdpContext (_STDCALL *ecasync_dispatcher_cb)(void*);
+
+typedef int (_STDCALL *ecasync_worker_udp_cb)(void* ptr, EcAsyncUdpContext, EcDatagram, ulong_t len);
+
+struct EcAsynUdpDispatcher_s; typedef struct EcAsynUdpDispatcher_s* EcAsynUdpDispatcher;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcAsyncServ ecaserv_create ();
+// special context only for UDP protocol and UDP dispatcher
+__LIB_EXPORT EcAsyncUdpContext ecasync_udpcontext_create (ulong_t timeout, ecasync_worker_udp_cb, ecasync_worker_destroy_cb, void*);
 
-__LIB_EXPORT void ecaserv_destroy (EcAsyncServ*);
+// create a UDP dispatcher, whcih must be converted to a context later
+// but can be kept as reference to call special methods of this object
+__LIB_EXPORT EcAsynUdpDispatcher ecasync_udpdisp_create (const EcString host, ulong_t port, EcEventContext ec, ecasync_dispatcher_cb cb, void*);
 
-__LIB_EXPORT int ecaserv_start (EcAsyncServ, const EcString host, ulong_t port);
+// convert dispatcher to default async context
+__LIB_EXPORT EcAsyncContext ecasync_udpdisp_context (EcAsynUdpDispatcher*);
 
-__LIB_EXPORT void ecaserv_stop (EcAsyncServ);
+// **** dispatcher methods ****
 
-// misc / debug
-
-__LIB_EXPORT void ecaserv_run (EcAsyncServ);
+__LIB_EXPORT void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher, EcBuffer, ssize_t len, EcAsyncUdpContext ctx);
 
 __CPP_EXTERN______________________________________________________________________________END
- 
- */
 
 #endif

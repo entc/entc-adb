@@ -48,17 +48,20 @@ struct EcSocket_s
     
   EcString host;
   
+  int protocol;
+  
 };
 
 //-----------------------------------------------------------------------------------
 
-EcSocket ecsocket_new (EcEventContext ec)
+EcSocket ecsocket_new (EcEventContext ec, int protocol)
 {
   EcSocket self = ENTC_NEW(struct EcSocket_s);
   
   self->ec = ec;
   self->socket = 0;
   self->host = ecstr_init();
+  self->protocol = protocol;
   
   return self;
 }
@@ -115,7 +118,15 @@ int ecsocket_create (EcSocket self, const EcString host, uint_t port, int role)
     }
   }
   
-  sock = socket(AF_INET, SOCK_STREAM, 0);
+  if (self->protocol == ENTC_SOCKET_PROTOCOL_TCP)
+  {
+    sock = socket (AF_INET, SOCK_STREAM, 0);
+  }
+  else
+  {
+    sock = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  }
+  
   if (sock < 0)
   {
     eclogger_errno (LL_ERROR, "ENTC", "socket", "Can't create socket");
@@ -289,6 +300,112 @@ int ecsocket_readBunch (EcSocket self, void* buffer, int nbyte)
     // end
     return res;
   }    
+}
+
+//-----------------------------------------------------------------------------------
+
+struct EcDatagram_s
+{
+  
+  EcBuffer buffer;
+  
+  EcSocket socket;
+  
+  struct sockaddr_in senderAddr;
+  
+  unsigned int senderAddrSize;
+  
+  EcBuffer ident;
+  
+};
+
+//-----------------------------------------------------------------------------------
+
+EcDatagram ecdatagram_create (EcSocket socket)
+{
+  EcDatagram self = ENTC_NEW (struct EcDatagram_s);
+  
+  self->buffer = ecbuf_create (1472);
+  self->socket = socket;
+  
+  self->senderAddrSize = sizeof(struct sockaddr_in);
+  self->ident = ecbuf_create (INET_ADDRSTRLEN + 6);
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecdatagram_destroy (EcDatagram* pself)
+{
+  EcDatagram self = *pself;
+  
+  ecbuf_destroy(&(self->buffer));
+  ecbuf_destroy(&(self->ident));
+  
+  ENTC_DEL (pself, struct EcDatagram_s);
+}
+
+//-----------------------------------------------------------------------------------
+
+ssize_t ecdatagram_read (EcDatagram self)
+{
+  memset (&(self->senderAddr), 0, self->senderAddrSize);
+  
+  ssize_t count = recvfrom (self->socket->socket, self->buffer->buffer, self->buffer->size, 0, (struct sockaddr*)&(self->senderAddr), &(self->senderAddrSize));
+  
+  if (count == -1)
+  {
+    eclogger_errno (LL_ERROR, "ENTC", "datagram", "Error on recv");
+    return 0;
+  }
+  else if (count == self->buffer->size)
+  {
+    eclogger_errno (LL_WARN, "ENTC", "datagram", "datagram too large for buffer: truncated");
+  }  
+
+  // convert address information into string    
+  inet_ntop (AF_INET, &(self->senderAddr), (char*)self->ident->buffer, INET_ADDRSTRLEN);
+  
+  ecbuf_format(self->ident, self->ident->size, "%s:%i", self->ident->buffer, self->senderAddr.sin_port);
+  
+  //eclogger_fmt (LL_TRACE, "ENTC", "datagram", "message from '%s'", self->ident->buffer);
+   
+  return count;
+}
+
+//-----------------------------------------------------------------------------------
+
+ssize_t ecdatagram_write (EcDatagram self, ssize_t len)
+{
+  ssize_t count = sendto (self->socket->socket, self->buffer->buffer, len, 0,
+                 (struct sockaddr*)&(self->senderAddr), self->senderAddrSize);
+  
+  return count;
+}
+
+//-----------------------------------------------------------------------------------
+
+ssize_t ecdatagram_writeBuf (EcDatagram self, EcBuffer buf, ssize_t len)
+{
+  ssize_t count = sendto (self->socket->socket, buf->buffer, len, 0,
+                          (struct sockaddr*)&(self->senderAddr), self->senderAddrSize);
+  
+  return count;  
+}
+
+//-----------------------------------------------------------------------------------
+
+EcBuffer ecdatagram_buffer (EcDatagram self)
+{
+  return self->buffer;
+}
+
+//-----------------------------------------------------------------------------------
+
+const EcString ecdatagram_ident (EcDatagram self)
+{
+  return ecbuf_const_str(self->ident);
 }
 
 //-----------------------------------------------------------------------------------

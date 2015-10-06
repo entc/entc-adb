@@ -36,9 +36,14 @@ struct EcSocket_s; typedef struct EcSocket_s* EcSocket;
 #define ENTC_SOCKET_RETSTATE_ERROR -2
 #define ENTC_SOCKET_RETSTATE_TIMEOUT -3
 
+#define ENTC_SOCKET_PROTOCOL_TCP 1
+#define ENTC_SOCKET_PROTOCOL_UDP 2
+
+struct EcDatagram_s; typedef struct EcDatagram_s* EcDatagram;
+
 __CPP_EXTERN______________________________________________________________________________START 
 
-__LIB_EXPORT EcSocket ecsocket_new (EcEventContext);
+__LIB_EXPORT EcSocket ecsocket_new (EcEventContext, int protocol);
   
 __LIB_EXPORT void ecsocket_delete (EcSocket*);
 
@@ -57,6 +62,22 @@ __LIB_EXPORT int ecsocket_write (EcSocket, const void* buffer, int nbyte);
 __LIB_EXPORT int ecsocket_writeStream (EcSocket, EcStream);
 
 __LIB_EXPORT int ecsocket_writeFile (EcSocket, EcFileHandle);
+
+// udp datagrams
+
+__LIB_EXPORT EcDatagram ecdatagram_create (EcSocket);
+
+__LIB_EXPORT void ecdatagram_destroy (EcDatagram*);
+
+__LIB_EXPORT ssize_t ecdatagram_read (EcDatagram);
+
+__LIB_EXPORT ssize_t ecdatagram_write (EcDatagram, ssize_t len);
+
+__LIB_EXPORT ssize_t ecdatagram_writeBuf (EcDatagram, EcBuffer buf, ssize_t len);
+
+__LIB_EXPORT EcBuffer ecdatagram_buffer (EcDatagram);
+
+__LIB_EXPORT const EcString ecdatagram_ident (EcDatagram);
 
 // interuptable data methods
 
