@@ -427,7 +427,7 @@ void ecasync_udpcontext_destroy (EcAsyncUdpContext* pself)
 
   if (self->destCb)
   {
-    self->destCb (self->ptr);
+    self->destCb (&(self->ptr));
   }
   
   if (self->dg)
