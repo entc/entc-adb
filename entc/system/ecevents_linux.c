@@ -418,6 +418,37 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
 
 //------------------------------------------------------------------------------------------------------------
 
+void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* ptr)
+{
+  ecmutex_lock (self->mutex);
+
+  int i;
+  for (i = 0; i < FD_SETSIZE; i++)
+  {
+    void* obj = self->ptrset [i];
+    
+    // if true this entry must be removed
+    if (isAssigned (obj) && callback (obj, ptr))
+    {
+      if (self->fct)
+      {
+        // call callback
+        self->fct (&ptr);
+      }
+
+      self->ptrset [i] = NULL;
+      
+      FD_CLR (i, &(self->fdset_w));
+      FD_CLR (i, &(self->fdset_r));  
+    }
+    
+  }
+  
+  ecmutex_unlock (self->mutex);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
 int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
 {
   fd_set rfdset;
@@ -569,6 +600,30 @@ void ece_list_set (EcEventQueue self, EcHandle handle)
   ece_list_set_ts (self, handle);
   
   //ecmutex_unlock (self->mutex);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_size (EcEventQueue self)
+{
+  int i;
+  int cnt = 0;
+  
+  ecmutex_lock (self->mutex);
+  
+  for (i = 0; i < FD_SETSIZE; i++)
+  {
+    void* obj = self->ptrset [i];
+
+    if (obj)
+    {
+      cnt++;
+    }
+  }
+  
+  ecmutex_unlock (self->mutex); 
+  
+  return cnt;
 }
 
 //------------------------------------------------------------------------------------------------------------
