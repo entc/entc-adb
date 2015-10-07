@@ -156,7 +156,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
     FD_SET(self->efd, &fdset);
     FD_SET(handle, &fdset);      
 
-    if (timeout == ENTC_INFINTE)
+    if (timeout == ENTC_INFINITE)
     {
       retval = select (ENTC_MAX(handle + 1, self->efd + 1), &fdset, NULL, NULL, NULL);      
     }
@@ -210,7 +210,7 @@ int ece_context_waitforAbort (EcEventContext self, uint_t timeout)
     FD_ZERO(&fdset);
     FD_SET(self->efd, &fdset);     
 
-    if (timeout == ENTC_INFINTE)
+    if (timeout == ENTC_INFINITE)
     {
       retval = select (self->efd + 1, &fdset, NULL, NULL, NULL);      
     }
@@ -418,6 +418,37 @@ int ece_list_del (EcEventQueue self, EcHandle handle)
 
 //------------------------------------------------------------------------------------------------------------
 
+void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* ptr)
+{
+  ecmutex_lock (self->mutex);
+
+  int i;
+  for (i = 0; i < FD_SETSIZE; i++)
+  {
+    void* obj = self->ptrset [i];
+    
+    // if true this entry must be removed
+    if (isAssigned (obj) && callback (obj, ptr))
+    {
+      if (self->fct)
+      {
+        // call callback
+        self->fct (&ptr);
+      }
+
+      self->ptrset [i] = NULL;
+      
+      FD_CLR (i, &(self->fdset_w));
+      FD_CLR (i, &(self->fdset_r));  
+    }
+    
+  }
+  
+  ecmutex_unlock (self->mutex);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
 int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
 {
   fd_set rfdset;
@@ -429,9 +460,9 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
   memcpy (&rfdset, &(self->fdset_r), sizeof (fd_set));
   memcpy (&wfdset, &(self->fdset_w), sizeof (fd_set));
            
-  if (timeout == ENTC_INFINTE)
+  if (timeout == ENTC_INFINITE)
   {
-    eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select");
+    // eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select");
     
     retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, NULL);      
   }
@@ -441,12 +472,12 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
     tv.tv_sec = timeout / 1000;
     tv.tv_usec = (timeout % 1000) * 1000;
     
-    eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select (with timeout)");
+    // eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select (with timeout)");
     
     retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, &tv);
   }
     
-  eclogger_fmt (LL_TRACE, "ENTC", "events", "event triggered (%i)", retval);
+  // eclogger_fmt (LL_TRACE, "ENTC", "events", "event triggered (%i)", retval);
   
   if (retval == -1)
   {
@@ -569,6 +600,30 @@ void ece_list_set (EcEventQueue self, EcHandle handle)
   ece_list_set_ts (self, handle);
   
   //ecmutex_unlock (self->mutex);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ece_list_size (EcEventQueue self)
+{
+  int i;
+  int cnt = 0;
+  
+  ecmutex_lock (self->mutex);
+  
+  for (i = 0; i < FD_SETSIZE; i++)
+  {
+    void* obj = self->ptrset [i];
+
+    if (obj)
+    {
+      cnt++;
+    }
+  }
+  
+  ecmutex_unlock (self->mutex); 
+  
+  return cnt;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -702,7 +757,7 @@ int ece_files_nextEvent(EcEventFiles self)
     // wait until some data received on one of the handles
     eclogger_msg (LL_TRACE, "ENTC", "inotify", "wait for events");
 
-    int res = ece_context_wait (self->econtext, self->notifd, ENTC_INFINTE, ENTC_EVENTTYPE_READ);
+    int res = ece_context_wait (self->econtext, self->notifd, ENTC_INFINITE, ENTC_EVENTTYPE_READ);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {

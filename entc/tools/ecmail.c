@@ -221,7 +221,7 @@ int ecmail_send (EcMail self, const EcString txtto, const EcString txtre, const 
   EcSocket socket;
   int res = TRUE;
   
-  socket = ecsocket_new(ec);
+  socket = ecsocket_new (ec, ENTC_SOCKET_PROTOCOL_TCP);
   
   eclogger_fmt (LL_TRACE, "ENTC", "mail", "try to connect to smtp server '%s:%u'", self->mailhost, self->port );
   

@@ -26,6 +26,8 @@
 #include "system/ecrefcnt.h"
 #include "system/ectime.h"
 
+#include <stdio.h>
+
 //-----------------------------------------------------------------------------------------------------------
 
 struct EcAsyncContext_s
@@ -33,35 +35,21 @@ struct EcAsyncContext_s
   
   void* ptr;
   
+  // reference
   const EcAsyncContextCallbacks* callbacks;
-  
-  EcStopWatch stopwatch;
   
 };
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcAsyncContext ecasync_context_create (ulong_t timeout, const EcAsyncContextCallbacks* callbacks, void* ptr)
+EcAsyncContext ecasync_context_create (const EcAsyncContextCallbacks* callbacks, void* ptr)
 {
   EcAsyncContext self = ENTC_NEW (struct EcAsyncContext_s);
   
   self->callbacks = callbacks;
   self->ptr = ptr;
-  
-  self->stopwatch = ecstopwatch_create (timeout);  
-  ecstopwatch_start (self->stopwatch);
-  
+
   return self;
-}
-
-//-----------------------------------------------------------------------------------------------------------
-
-int _STDCALL ecasync_context_hasTimedOut (void* obj, void* ptr)
-{
-  EcAsyncContext self = obj;
-  EcStopWatch refWatch = ptr;
-
-  return ecstopwatch_timedOutRef(self->stopwatch, refWatch);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -75,9 +63,21 @@ void ecasync_context_destroy (EcAsyncContext* pself)
     self->callbacks->destroy (&(self->ptr));
   }
   
-  ecstopwatch_destroy (&(self->stopwatch));
-  
   ENTC_DEL (pself, EcAsyncContext);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static int _STDCALL ecasync_hasTimedOut (void* obj, void* ptr)
+{
+  EcAsyncContext self = obj;
+    
+  if (isAssigned (self->callbacks->timeout))
+  {
+  return self->callbacks->timeout (self->ptr, ptr);
+  }
+  
+  return FALSE;
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ static int _STDCALL ecasync_thread_run (void* ptr)
   
   if ((res == ENTC_EVENT_TIMEOUT)) // timeout or interupt
   {
-    ece_list_sortout (self->queue, ecasync_context_hasTimedOut, self->stopwatch);
+    ece_list_sortout (self->queue, ecasync_hasTimedOut, self->stopwatch);
     return TRUE;
   }
   
@@ -177,7 +177,6 @@ static int _STDCALL ecasync_thread_run (void* ptr)
   {
     if (context->callbacks->run (context->ptr))
     {
-      ecstopwatch_start (context->stopwatch);
       return TRUE;
     }
   }
@@ -371,18 +370,34 @@ static int _STDCALL ecasync_smartcontext_run (void* ptr)
 
 //-----------------------------------------------------------------------------------------------------------
 
+static int _STDCALL ecasync_smartcontext_hasTimedOut (void* obj, void* ptr)
+{
+  EcAsyncSmartContext* self = obj;
+  
+  EcAsyncContext context = ecrefcnt_get (self->ref);
+  
+  if (isAssigned (context->callbacks->timeout))
+  {
+    return context->callbacks->timeout (context->ptr, ptr);    
+  }
+
+  return FALSE;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 EcAsyncContext ecasync_smartcontext_create (EcAsyncContext* pcontext)
 {
   EcAsyncSmartContext* self;
   EcAsyncContext derive;
 
-  static const EcAsyncContextCallbacks callbacks = {ecasync_smartcontext_destroy, ecasync_smartcontext_handle, ecasync_smartcontext_run};
+  static const EcAsyncContextCallbacks callbacks = {ecasync_smartcontext_destroy, ecasync_smartcontext_handle, ecasync_smartcontext_run, ecasync_smartcontext_hasTimedOut};
 
   self = ENTC_NEW (EcAsyncSmartContext);
 
   self->ref = ecrefcnt_new (*pcontext);
     
-  derive = ecasync_context_create (ecstopwatch_timeout((*pcontext)->stopwatch), &callbacks, self);
+  derive = ecasync_context_create (&callbacks, self);
   
   *pcontext = NULL;
   
@@ -398,7 +413,7 @@ EcAsyncContext ecasync_smartcontext_clone (EcAsyncContext rhs)
   
   self->ref = srhs->ref;    
   
-  return ecasync_context_create (ecstopwatch_timeout(rhs->stopwatch), rhs->callbacks, self);
+  return ecasync_context_create (rhs->callbacks, self);
 }
 
 //-----------------------------------------------------------------------------------------------------------
