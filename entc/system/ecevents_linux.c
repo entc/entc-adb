@@ -156,7 +156,7 @@ int ece_context_wait (EcEventContext self, EcHandle handle, uint_t timeout, int 
     FD_SET(self->efd, &fdset);
     FD_SET(handle, &fdset);      
 
-    if (timeout == ENTC_INFINTE)
+    if (timeout == ENTC_INFINITE)
     {
       retval = select (ENTC_MAX(handle + 1, self->efd + 1), &fdset, NULL, NULL, NULL);      
     }
@@ -210,7 +210,7 @@ int ece_context_waitforAbort (EcEventContext self, uint_t timeout)
     FD_ZERO(&fdset);
     FD_SET(self->efd, &fdset);     
 
-    if (timeout == ENTC_INFINTE)
+    if (timeout == ENTC_INFINITE)
     {
       retval = select (self->efd + 1, &fdset, NULL, NULL, NULL);      
     }
@@ -429,7 +429,7 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
   memcpy (&rfdset, &(self->fdset_r), sizeof (fd_set));
   memcpy (&wfdset, &(self->fdset_w), sizeof (fd_set));
            
-  if (timeout == ENTC_INFINTE)
+  if (timeout == ENTC_INFINITE)
   {
     eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select");
     
@@ -702,7 +702,7 @@ int ece_files_nextEvent(EcEventFiles self)
     // wait until some data received on one of the handles
     eclogger_msg (LL_TRACE, "ENTC", "inotify", "wait for events");
 
-    int res = ece_context_wait (self->econtext, self->notifd, ENTC_INFINTE, ENTC_EVENTTYPE_READ);
+    int res = ece_context_wait (self->econtext, self->notifd, ENTC_INFINITE, ENTC_EVENTTYPE_READ);
     // check the return
     if (res == ENTC_EVENT_ABORT)
     {
