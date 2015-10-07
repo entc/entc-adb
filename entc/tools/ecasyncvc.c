@@ -539,7 +539,7 @@ EcAsynUdpDispatcher ecasync_udpdisp_create (const EcString host, ulong_t port, E
   self->contexts = ecmap_new ();
   self->mutex = ecmutex_new ();
   
-  self->stopwatch = ecstopwatch_create (30000);  
+  self->stopwatch = ecstopwatch_create (60000);  // check each 60 seconds
   ecstopwatch_start (self->stopwatch);
     
   return self;

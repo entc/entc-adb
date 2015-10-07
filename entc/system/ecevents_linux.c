@@ -462,7 +462,7 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
            
   if (timeout == ENTC_INFINITE)
   {
-    eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select");
+    // eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select");
     
     retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, NULL);      
   }
@@ -472,12 +472,12 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
     tv.tv_sec = timeout / 1000;
     tv.tv_usec = (timeout % 1000) * 1000;
     
-    eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select (with timeout)");
+    // eclogger_msg (LL_TRACE, "ENTC", "events", "try to wait for select (with timeout)");
     
     retval = select (FD_SETSIZE, &rfdset, &wfdset, NULL, &tv);
   }
     
-  eclogger_fmt (LL_TRACE, "ENTC", "events", "event triggered (%i)", retval);
+  // eclogger_fmt (LL_TRACE, "ENTC", "events", "event triggered (%i)", retval);
   
   if (retval == -1)
   {
