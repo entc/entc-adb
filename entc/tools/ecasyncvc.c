@@ -652,6 +652,8 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
     {
       EcAsyncUdpContext context = ecmap_data(node);
       
+      // bug doesn't work
+      /*
       if (ecasync_udpcontext_timedOut (context, refWatch))
       {
         eclogger_msg (LL_WARN, "ENTC", "async", "context timed out");
@@ -659,6 +661,7 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
         ecasync_udpcontext_destroy (&context);
         node = ecmap_erase (node);      
       }
+       */
     }
   }
   
