@@ -184,8 +184,6 @@ SET (CORE_SOURCES_TOOLS
   tools/ecasyncvc.c
   tools/ecdata.h
   tools/ecdata.c
-  tools/ecudp.h
-  tools/ecudp.c
 )
 
 
