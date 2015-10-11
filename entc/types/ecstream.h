@@ -56,6 +56,10 @@ __LIB_EXPORT uint_t ecstream_size( EcStream );
 
 __LIB_EXPORT EcBuffer ecstream_trans (EcStream*);
 
+__LIB_EXPORT ulong_t ecstream_registerOffset (EcStream, ulong_t size);
+
+__LIB_EXPORT void ecstream_fillOffset (EcStream, ulong_t offset, const EcString source, ulong_t size);
+
 //------ dev stream ----
 
 __LIB_EXPORT EcDevStream ecdevstream_new (uint_t size, stream_callback_fct, void*);

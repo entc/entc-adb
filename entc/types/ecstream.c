@@ -135,6 +135,27 @@ void ecstream_appendd(EcStream self, const EcString source, uint_t size)
 
 /*------------------------------------------------------------------------*/
 
+ulong_t ecstream_registerOffset (EcStream self, ulong_t size)
+{
+  ulong_t pos = self->pos - self->buffer->buffer;
+  
+  _ecstream_check(self, size);
+
+  self->pos = self->pos + size;
+  *(self->pos) = 0;
+  
+  return pos;
+}
+
+/*------------------------------------------------------------------------*/
+
+void ecstream_fillOffset (EcStream self, ulong_t offset, const EcString source, ulong_t size)
+{
+  memcpy(self->buffer->buffer + offset, source, size);  
+}
+
+/*------------------------------------------------------------------------*/
+
 void ecstream_append( EcStream self, const EcString source )
 {
   // variables

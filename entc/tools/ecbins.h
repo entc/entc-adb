@@ -38,6 +38,8 @@ __LIB_EXPORT EcBuffer ecbins_write (const EcUdc);
 
 __LIB_EXPORT void ecbins_writeElement (EcStream stream, const EcUdc udc);
 
+__LIB_EXPORT EcUdc ecbins_readBuffer (EcBuffer posbuf, const EcString name);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif
