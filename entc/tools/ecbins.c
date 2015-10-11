@@ -151,6 +151,9 @@ EcUdc ecbins_readList (EcBuffer posbuf, const EcString name)
   
   size = (uint32_t)*(posbuf->buffer);
   
+  posbuf->buffer += 4;
+  posbuf->size -= 4;
+
   for (i = 0; i < size; i++)
   {
     EcUdc h = ecbins_readBuffer (posbuf, NULL);
@@ -177,6 +180,9 @@ EcUdc ecbins_readNode (EcBuffer posbuf, const EcString name)
   
   size = (uint32_t)*(posbuf->buffer);
   
+  posbuf->buffer += 4;
+  posbuf->size -= 4;
+
   for (i = 0; i < size; i++)
   {
     EcUdc h;
@@ -529,7 +535,7 @@ void ecbins_writeNode (EcStream stream, const EcUdc udc)
   EcUdc item;
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_VECTOR);
+  ecstream_appendc(stream, ENTC_BINSTYPE_MAP);
   
   {
     ulong_t offsetSize = ecstream_registerOffset (stream, 4);

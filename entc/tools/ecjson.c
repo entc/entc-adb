@@ -518,7 +518,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_BYTE:
     {
-      ecstream_appendu (stream, ecudc_asByte (node));
+      ecstream_appends (stream, ecudc_asByte (node));
     }
     break;
     case ENTC_UDC_UBYTE:
@@ -528,7 +528,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_INT16:
     {
-      ecstream_appendu (stream, ecudc_asInt16 (node));
+      ecstream_appends (stream, ecudc_asInt16 (node));
     }
     break;
     case ENTC_UDC_UINT16:
@@ -538,7 +538,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_INT32:
     {
-      ecstream_appendu (stream, ecudc_asInt32 (node));
+      ecstream_appends (stream, ecudc_asInt32 (node));
     }
     break;
     case ENTC_UDC_UINT32:
@@ -548,7 +548,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_INT64:
     {
-      ecstream_appendu (stream, ecudc_asInt64 (node));
+      ecstream_appends (stream, ecudc_asInt64 (node));
     }
     break;
     case ENTC_UDC_UINT64:

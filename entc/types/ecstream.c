@@ -186,6 +186,20 @@ void ecstream_appendc ( EcStream self, char c )
 
 /*------------------------------------------------------------------------*/
 
+void ecstream_appends (EcStream self, int_t val)
+{
+  // create buffer with size 12
+  EcBuffer buffer = ecbuf_create (12);
+  // transform unsigned value into string */  
+  ecbuf_format (buffer, 11, "%i", val);
+
+  ecstream_append (self, (const char*)buffer->buffer);
+  
+  ecbuf_destroy(&buffer);
+}
+
+/*------------------------------------------------------------------------*/
+
 void ecstream_appendu( EcStream self, uint_t value )
 {
   EcString h = ecstr_long(value);
