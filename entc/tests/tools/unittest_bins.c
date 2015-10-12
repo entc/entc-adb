@@ -28,7 +28,7 @@ int main (int argc, char *argv[])
     ecstr_delete(&jtext);
   }
   
-  EcBuffer h = ecbins_write (mainNode);
+  EcBuffer h = ecbins_write (mainNode, NULL);
   
   EcUdc copy = ecbins_read (h, NULL);
 

@@ -206,7 +206,7 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
     break;
     case ENTC_UDC_BYTE:
     {
-      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asB (item));
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asByte (item));
     }
     break;
     case ENTC_UDC_UINT32:

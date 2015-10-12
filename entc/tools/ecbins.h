@@ -32,7 +32,7 @@ __CPP_EXTERN____________________________________________________________________
 
 __LIB_EXPORT EcUdc ecbins_read (const EcBuffer, const EcString name);
 
-__LIB_EXPORT EcBuffer ecbins_write (const EcUdc);
+__LIB_EXPORT EcBuffer ecbins_write (const EcUdc, const EcString begining);
 
 // misc
 
