@@ -23,3 +23,6 @@ TARGET_LINK_LIBRARIES( unittest_messages entc )
 
 ADD_EXECUTABLE( unittest_events system/unittest_events.c )
 TARGET_LINK_LIBRARIES( unittest_events entc ) 
+
+ADD_EXECUTABLE( unittest_bins tools/unittest_bins.c )
+TARGET_LINK_LIBRARIES( unittest_bins entc ) 

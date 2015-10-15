@@ -34,6 +34,7 @@ typedef signed __int64 int64_t;
 #endif
 
 typedef unsigned char ubyte_t;
+typedef char byte_t;
 
 typedef unsigned long ulong_t;
 typedef long long_t;
