@@ -348,7 +348,7 @@ void ecdatagram_destroy (EcDatagram* pself)
 
 //-----------------------------------------------------------------------------------
 
-ssize_t ecdatagram_read (EcDatagram self)
+size_t ecdatagram_read (EcDatagram self)
 {
   memset (&(self->senderAddr), 0, self->senderAddrSize);
   
@@ -376,9 +376,9 @@ ssize_t ecdatagram_read (EcDatagram self)
 
 //-----------------------------------------------------------------------------------
 
-ssize_t ecdatagram_write (EcDatagram self, ssize_t len)
+size_t ecdatagram_write (EcDatagram self, size_t len)
 {
-  ssize_t count = sendto (self->socket->socket, self->buffer->buffer, len, 0,
+  size_t count = sendto (self->socket->socket, self->buffer->buffer, len, 0,
                  (struct sockaddr*)&(self->senderAddr), self->senderAddrSize);
   
   return count;
@@ -386,9 +386,9 @@ ssize_t ecdatagram_write (EcDatagram self, ssize_t len)
 
 //-----------------------------------------------------------------------------------
 
-ssize_t ecdatagram_writeBuf (EcDatagram self, EcBuffer buf, ssize_t len)
+size_t ecdatagram_writeBuf (EcDatagram self, EcBuffer buf, size_t len)
 {
-  ssize_t count = sendto (self->socket->socket, buf->buffer, len, 0,
+  size_t count = sendto (self->socket->socket, buf->buffer, len, 0,
                           (struct sockaddr*)&(self->senderAddr), self->senderAddrSize);
   
   return count;  
