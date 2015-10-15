@@ -6,6 +6,8 @@
 
 int main (int argc, char *argv[])
 {
+  EcBuffer h;
+  EcUdc sideList, copy;
   EcUdc mainNode = ecudc_create(ENTC_UDC_NODE, NULL);
   
   ecudc_add_asString (mainNode, "col1", "hello world");
@@ -13,7 +15,7 @@ int main (int argc, char *argv[])
   
   ecudc_add_asInt16(mainNode, "c_int16", 42);
   
-  EcUdc sideList = ecudc_create(ENTC_UDC_LIST, "list");
+  sideList = ecudc_create(ENTC_UDC_LIST, "list");
   
   ecudc_add_asUByte(sideList, "l_ubyte", 45);
   ecudc_add_asByte(sideList, "l_byte", -45);
@@ -28,9 +30,9 @@ int main (int argc, char *argv[])
     ecstr_delete(&jtext);
   }
   
-  EcBuffer h = ecbins_write (mainNode, NULL);
+  h = ecbins_write (mainNode, NULL);
   
-  EcUdc copy = ecbins_read (h, NULL);
+  copy = ecbins_read (h, NULL);
 
   {
     EcString jtext = ecjson_write(copy);

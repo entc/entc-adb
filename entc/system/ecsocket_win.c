@@ -45,6 +45,8 @@ struct EcSocket_s
   HANDLE haccept;
   // read windows event handle
   HANDLE hread;
+
+  int protocol;
   
 };
 
@@ -93,6 +95,8 @@ EcHandle ecsocket_createReadHandle (EcSocket self)
 
   if (WSAEventSelect (self->socket, handle, FD_READ | FD_CLOSE ) == SOCKET_ERROR)
   {
+    eclogger_errno (LL_ERROR, "ENTC", "socket", "can't create win handle");
+
     WSACloseEvent (handle);
     return NULL;
   }
@@ -101,7 +105,7 @@ EcHandle ecsocket_createReadHandle (EcSocket self)
 
 //-----------------------------------------------------------------------------------
 
-EcSocket ecsocket_new (EcEventContext ec)
+EcSocket ecsocket_new (EcEventContext ec, int protocol)
 {
   EcSocket self = ENTC_NEW(struct EcSocket_s);
   
@@ -113,6 +117,8 @@ EcSocket ecsocket_new (EcEventContext ec)
 
   self->haccept = NULL;
   self->hread = NULL;
+
+  self->protocol = protocol;
   
   return self;
 }
@@ -168,10 +174,19 @@ SOCKET ecsocket_create (EcSocket self, const EcString host, uint_t port, int rol
 
   ecstr_delete(&port_s);
 
-  sock = socket (addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-  
+  if (self->protocol == ENTC_SOCKET_PROTOCOL_UDP)
+  {
+    sock = socket (addr->ai_family, SOCK_DGRAM, IPPROTO_UDP);
+  }
+  else
+  {
+    sock = socket (addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+  }  
+
   if (sock == INVALID_SOCKET)
   {
+    eclogger_errno (LL_ERROR, "ENTC", "socket", "cna't create socket");
+
     freeaddrinfo(addr);
     return INVALID_SOCKET;
   }
@@ -214,6 +229,19 @@ int ecsocket_listen (EcSocket self, const EcString host, uint_t port)
 {
   SOCKET sock = ecsocket_create(self, host, port, FALSE);
   
+  if (self->protocol == ENTC_SOCKET_PROTOCOL_UDP)
+  {
+    self->socket = sock;
+
+    self->haccept = ecsocket_createReadHandle (self);
+    if (isNotAssigned (self->haccept))
+    {
+      closesocket(sock);
+      return FALSE;
+    }
+    return TRUE;
+  }
+
   if (listen(sock, SOMAXCONN) == SOCKET_ERROR)
   {
     closesocket(sock);
@@ -473,6 +501,114 @@ EcHandle ecsocket_getReadHandle (EcSocket self)
 void ecsocket_resetHandle (EcHandle handle)
 {
   ResetEvent (handle);
+}
+
+//-----------------------------------------------------------------------------------
+
+struct EcDatagram_s
+{
+  
+  EcBuffer buffer;
+  
+  EcSocket socket;
+  
+  struct sockaddr_in senderAddr;
+  
+  unsigned int senderAddrSize;
+  
+  EcBuffer ident;
+  
+};
+
+//-----------------------------------------------------------------------------------
+
+EcDatagram ecdatagram_create (EcSocket socket)
+{
+  EcDatagram self = ENTC_NEW (struct EcDatagram_s);
+  
+  self->buffer = ecbuf_create (1472);
+  self->socket = socket;
+  
+  self->senderAddrSize = sizeof(struct sockaddr_in);
+  self->ident = ecbuf_create (INET_ADDRSTRLEN + 6);
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecdatagram_destroy (EcDatagram* pself)
+{
+  EcDatagram self = *pself;
+  
+  ecbuf_destroy(&(self->buffer));
+  ecbuf_destroy(&(self->ident));
+  
+  ENTC_DEL (pself, struct EcDatagram_s);
+}
+
+//-----------------------------------------------------------------------------------
+
+size_t ecdatagram_read (EcDatagram self)
+{
+  size_t count;
+
+  memset (&(self->senderAddr), 0, self->senderAddrSize);
+  
+  count = recvfrom (self->socket->socket, self->buffer->buffer, self->buffer->size, 0, (struct sockaddr*)&(self->senderAddr), &(self->senderAddrSize));
+  
+  if (count == -1)
+  {
+    eclogger_errno (LL_ERROR, "ENTC", "datagram", "Error on recv");
+    return 0;
+  }
+  else if (count == self->buffer->size)
+  {
+    eclogger_errno (LL_WARN, "ENTC", "datagram", "datagram too large for buffer: truncated");
+  }  
+
+  // convert address information into string    
+  inet_ntop (AF_INET, &(self->senderAddr), (char*)self->ident->buffer, INET_ADDRSTRLEN);
+  
+  ecbuf_format(self->ident, self->ident->size, "%s:%i", self->ident->buffer, self->senderAddr.sin_port);
+  
+  //eclogger_fmt (LL_TRACE, "ENTC", "datagram", "message from '%s'", self->ident->buffer);
+   
+  return count;
+}
+
+//-----------------------------------------------------------------------------------
+
+size_t ecdatagram_write (EcDatagram self, size_t len)
+{
+  size_t count = sendto (self->socket->socket, self->buffer->buffer, len, 0,
+                 (struct sockaddr*)&(self->senderAddr), self->senderAddrSize);
+  
+  return count;
+}
+
+//-----------------------------------------------------------------------------------
+
+size_t ecdatagram_writeBuf (EcDatagram self, EcBuffer buf, size_t len)
+{
+  size_t count = sendto (self->socket->socket, buf->buffer, len, 0,
+                          (struct sockaddr*)&(self->senderAddr), self->senderAddrSize);
+  
+  return count;  
+}
+
+//-----------------------------------------------------------------------------------
+
+EcBuffer ecdatagram_buffer (EcDatagram self)
+{
+  return self->buffer;
+}
+
+//-----------------------------------------------------------------------------------
+
+const EcString ecdatagram_ident (EcDatagram self)
+{
+  return ecbuf_const_str(self->ident);
 }
 
 //-----------------------------------------------------------------------------------

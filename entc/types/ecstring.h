@@ -44,7 +44,7 @@ __LIB_EXPORT EcString ecstr_copy( const EcString );
   /* create a new string from pos 0 to length */
 __LIB_EXPORT EcString ecstr_part( const EcString, uint_t length );
   
-__LIB_EXPORT EcString ecstr_long( uint_t value );
+__LIB_EXPORT EcString ecstr_long( uint64_t value );
 
 __LIB_EXPORT EcString ecstr_float (double, uint_t n);
 

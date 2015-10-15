@@ -46,15 +46,17 @@
 EcString ecbins_readEcString (EcBuffer posbuf)
 {
   EcString s;
-  
+  unsigned char stype;  
+  unsigned long size;
+
   if (posbuf->size < 1)
   {
     return NULL;
   }
   // read size type
-  unsigned char stype = *(posbuf->buffer);
+  stype = *(posbuf->buffer);
   
-  unsigned long size = 0;
+  size = 0;
   
   posbuf->buffer++;
   posbuf->size--;
@@ -411,13 +413,15 @@ EcUdc ecbins_readDouble (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readBuffer (EcBuffer posbuf, const EcString name)
 {
+  unsigned char type;
+
   if (posbuf->size < 1)
   {
     return NULL;    
   }
   
   // read first char
-  unsigned char type = *(posbuf->buffer);
+  type = *(posbuf->buffer);
   
   posbuf->buffer++;
   posbuf->size--;
@@ -502,27 +506,23 @@ void ecbins_writeEcString (EcStream stream, const EcString s)
   if (len < 256)
   {
     ecstream_appendc(stream, 1);
-    
-    ecstream_appendc(stream, len);
-    
+    ecstream_appendc(stream, len);    
     ecstream_appendd(stream, s, len);
   }
-  else if (len < 32000)  // can't fit into a single char
+  else if (len < 65536)  // can't fit into a single char
   {
-    ecstream_appendc(stream, 2);
-    
     uint16_t h = len;
+
+    ecstream_appendc(stream, 2);    
     ecstream_appendd(stream, (const char*)&h, 2);
-    
     ecstream_appendd(stream, s, len);
   }
   else
   {
-    ecstream_appendc(stream, 3);
-    
     uint32_t h = len;
+
+    ecstream_appendc(stream, 3);
     ecstream_appendd(stream, (const char*)&h, 4);
-    
     ecstream_appendd(stream, s, len);
   }  
 }

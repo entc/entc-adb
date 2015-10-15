@@ -84,7 +84,7 @@ __LIB_EXPORT EcAsyncContext ecasync_udpdisp_context (EcAsynUdpDispatcher*);
 
 // **** dispatcher methods ****
 
-__LIB_EXPORT void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher, EcBuffer, ssize_t len, EcAsyncUdpContext ctx);
+__LIB_EXPORT void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher, EcBuffer, size_t len, EcAsyncUdpContext ctx);
 
 __CPP_EXTERN______________________________________________________________________________END
 

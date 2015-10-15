@@ -472,7 +472,7 @@ int ecasync_udpcontext_recv (EcAsyncUdpContext self, EcDatagram* dg, int count)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecasync_udpcontext_send (EcAsyncUdpContext self, EcBuffer buf, ssize_t len)
+void ecasync_udpcontext_send (EcAsyncUdpContext self, EcBuffer buf, size_t len)
 {
   ecmutex_lock(self->mutex);
 
@@ -569,11 +569,17 @@ static EcHandle _STDCALL ecasync_udpdisp_handle (void* ptr)
 
 static int _STDCALL ecasync_udpdisp_run (void* ptr)
 {
+  const EcString ident;
+  EcAsyncUdpContext context;
+  EcMapNode node;
+  int res = TRUE;
+  
+
   EcAsynUdpDispatcher self = ptr;
   
   EcDatagram dg = ecdatagram_create (self->socket);
   
-  ssize_t count = ecdatagram_read (dg);
+  size_t count = ecdatagram_read (dg);
   
   if (count == 0)
   {
@@ -582,14 +588,14 @@ static int _STDCALL ecasync_udpdisp_run (void* ptr)
   }
   
   // get ident
-  const EcString ident = ecdatagram_ident (dg);
+  ident = ecdatagram_ident (dg);
   
   ecmutex_lock (self->mutex);  
   
-  EcAsyncUdpContext context = NULL;
+  context = NULL;
   
   // check if ident is known
-  EcMapNode node = ecmap_find(self->contexts, ident);
+  node = ecmap_find(self->contexts, ident);
   
   if (node == ecmap_end(self->contexts))
   {
@@ -607,7 +613,7 @@ static int _STDCALL ecasync_udpdisp_run (void* ptr)
   
   ecmutex_unlock (self->mutex);
   
-  int res = TRUE;
+  
   
   if (context)
   {
@@ -644,10 +650,10 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
   
   if (ecstopwatch_timedOutRef(self->stopwatch, refWatch))
   {
-    ecstopwatch_start (self->stopwatch);
-    
     EcMapNode node;
-    
+
+    ecstopwatch_start (self->stopwatch);
+       
     for (node = ecmap_first(self->contexts); node != ecmap_end(self->contexts); node = ecmap_next(node))
     {
       EcAsyncUdpContext context = ecmap_data(node);
@@ -672,7 +678,7 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher self, EcBuffer buf, ssize_t len, EcAsyncUdpContext ctx)
+void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher self, EcBuffer buf, size_t len, EcAsyncUdpContext ctx)
 {
   EcMapNode node;
 

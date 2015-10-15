@@ -69,11 +69,11 @@ __LIB_EXPORT EcDatagram ecdatagram_create (EcSocket);
 
 __LIB_EXPORT void ecdatagram_destroy (EcDatagram*);
 
-__LIB_EXPORT ssize_t ecdatagram_read (EcDatagram);
+__LIB_EXPORT size_t ecdatagram_read (EcDatagram);
 
-__LIB_EXPORT ssize_t ecdatagram_write (EcDatagram, ssize_t len);
+__LIB_EXPORT size_t ecdatagram_write (EcDatagram, size_t len);
 
-__LIB_EXPORT ssize_t ecdatagram_writeBuf (EcDatagram, EcBuffer buf, ssize_t len);
+__LIB_EXPORT size_t ecdatagram_writeBuf (EcDatagram, EcBuffer buf, size_t len);
 
 __LIB_EXPORT EcBuffer ecdatagram_buffer (EcDatagram);
 

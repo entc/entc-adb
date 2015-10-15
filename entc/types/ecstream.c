@@ -186,7 +186,7 @@ void ecstream_appendc ( EcStream self, char c )
 
 /*------------------------------------------------------------------------*/
 
-void ecstream_appends (EcStream self, int_t val)
+void ecstream_appends (EcStream self, int64_t val)
 {
   // create buffer with size 12
   EcBuffer buffer = ecbuf_create (12);
@@ -200,7 +200,7 @@ void ecstream_appends (EcStream self, int_t val)
 
 /*------------------------------------------------------------------------*/
 
-void ecstream_appendu( EcStream self, uint_t value )
+void ecstream_appendu( EcStream self, uint64_t value )
 {
   EcString h = ecstr_long(value);
   /* add */

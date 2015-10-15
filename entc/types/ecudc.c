@@ -996,7 +996,10 @@ float ecudc_asFloat (EcUdc self)
       if (isAssigned (h))
       {
         // can be transformed ?
+#pragma warning( push )
+#pragma warning( disable : 4244)
         return atof(h);
+#pragma warning( pop )
       }
     }
   }        

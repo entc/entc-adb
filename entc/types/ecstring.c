@@ -134,7 +134,7 @@ EcString ecstr_format (const EcString format, ...)
 
 //----------------------------------------------------------------------------------------
 
-EcString ecstr_long (uint_t value)
+EcString ecstr_long (uint64_t value)
 {
   /* create buffer with size 12 */
   EcBuffer buffer = ecbuf_create (12);
