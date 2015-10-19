@@ -782,13 +782,13 @@ void ecbins_writeElement (EcStream stream, const EcUdc udc)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcBuffer ecbins_write (const EcUdc udc, const EcString begining)
+EcBuffer ecbins_write (const EcUdc udc, const EcBuffer begining)
 {
   EcStream stream = ecstream_new();
   
   if (isAssigned (begining))
   {
-    ecstream_append (stream, begining);
+    ecstream_appendd (stream, (const char*)begining->buffer, begining->size);
   }
   
   ecbins_writeElement (stream, udc);
