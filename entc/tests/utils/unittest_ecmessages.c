@@ -20,7 +20,7 @@ int _STDCALL m01 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
   if (isAssigned (dOut))
   {
     dOut->type = 0;
-    dOut->content = ecudc_create (ENTC_UDC_STRING, NULL);
+    dOut->content = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, NULL);
     ecudc_setS (dOut->content, "Good 01");
   }
   
@@ -43,7 +43,7 @@ int _STDCALL m02 (void* ptr, EcMessageData* dIn, EcMessageData* dOut)
   if (isAssigned (dOut))
   {
     dOut->type = 0;
-    dOut->content = ecudc_create (ENTC_UDC_STRING, NULL);
+    dOut->content = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, NULL);
     ecudc_setS (dOut->content, "Good 02");
   }
 
@@ -83,14 +83,14 @@ int _STDCALL th01 (void* ptr)
 
     d01.type = 0;
     d01.ref = 0;
-    d01.content = ecudc_create (ENTC_UDC_STRING, NULL);
+    d01.content = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, NULL);
     ecudc_setS (d01.content, "Hello Thread");
     
     o1 = ecmessages_output_create (c01, NULL, 0, 0);
     ecmessages_broadcast (0x01, &d01, o1);
     ecmessages_output_destroy (&o1);
 
-    ecudc_destroy(&(d01.content));    
+    ecudc_destroy(EC_ALLOC, &(d01.content));    
   }  
   
   return 0;
@@ -118,12 +118,12 @@ int main (int argc, char *argv[])
     
   d01.type = 0;
   d01.ref = 0;
-  d01.content = ecudc_create (ENTC_UDC_STRING, NULL);
+  d01.content = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, NULL);
   ecudc_setS (d01.content, "Hello World");
 
   ecmessages_broadcast (0x01, &d01, NULL);
   
-  ecudc_destroy(&(d01.content));
+  ecudc_destroy(EC_ALLOC, &(d01.content));
   
   o1 = ecmessages_output_create (c01, NULL, 0, 0);
   ecmessages_broadcast (0x01, NULL, o1);

@@ -20,9 +20,7 @@
 #ifndef ENTC_TYPES_INTMAP_H
 #define ENTC_TYPES_INTMAP_H 1
 
-/* include external macro for win32 */
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "types/ecalloc.h"
 
 #include "eclist.h"
 
@@ -35,9 +33,9 @@ typedef struct EcListNode_s* EcIntMapNode;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcIntMap ecintmap_new();
+__LIB_EXPORT EcIntMap ecintmap_create (EcAlloc);
   
-__LIB_EXPORT void ecintmap_delete(EcIntMap*);
+__LIB_EXPORT void ecintmap_destroy (EcAlloc, EcIntMap*);
   
 __LIB_EXPORT void ecintmap_clear(EcIntMap);
   
@@ -51,7 +49,7 @@ __LIB_EXPORT EcIntMapNode ecintmap_next(const EcIntMapNode);
   
 __LIB_EXPORT EcIntMapNode ecintmap_end(EcIntMap);
 
-__LIB_EXPORT EcIntMapNode ecintmap_erase(EcIntMapNode);
+__LIB_EXPORT EcIntMapNode ecintmap_erase(EcIntMap, EcIntMapNode);
 
 __LIB_EXPORT void* ecintmap_data(const EcIntMapNode);
   

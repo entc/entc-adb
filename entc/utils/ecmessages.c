@@ -143,7 +143,7 @@ void ecmessages_initialize ()
   EcMessages self = getGlobalMessages ();
 
   self->mutex = ecreadwritelock_new ();
-  self->functions = ecintmap_new ();
+  self->functions = ecintmap_create (EC_ALLOC);
   
   {
     EcString currentDir = ecfs_getCurrentDirectory ();
@@ -190,7 +190,7 @@ void ecmessages_add (uint_t module, uint_t method, ecmessages_request_fct fct, v
   node = ecintmap_find (self->functions, method);
   if (node == ecintmap_end (self->functions))
   {
-    modules = ecintmap_new ();
+    modules = ecintmap_create (EC_ALLOC);
     ecintmap_append (self->functions, method, modules);
   }
   else
@@ -214,7 +214,7 @@ void ecmessages_removeAll_next (EcIntMap modules, uint_t module)
     
     ENTC_DEL (&item, EcMessageModule);
     
-    ecintmap_erase (node);
+    ecintmap_erase (modules, node);
   }
 }
 
@@ -237,8 +237,8 @@ void ecmessages_removeAll (uint_t module)
     if (ecintmap_first (modules) == ecintmap_end (modules))
     {
       // the modules is empty, remove it also from first map
-      ecintmap_delete (&modules);
-      node = ecintmap_erase (node);
+      ecintmap_destroy (EC_ALLOC, &modules);
+      node = ecintmap_erase (self->functions, node);
     }
   }
   
@@ -271,7 +271,7 @@ void ecmessages_clear ()
 
     ecmessages_clear_modules (modules);
     
-    ecintmap_delete (&modules);
+    ecintmap_destroy (EC_ALLOC, &modules);
   }
   
   ecintmap_clear (self->functions);
@@ -288,7 +288,7 @@ void ecmessages_deinitialize ()
   ecfh_close (&(self->fh));
   ecmutex_delete (&(self->fhmutex));
   
-  ecintmap_delete (&(self->functions));
+  ecintmap_destroy (EC_ALLOC, &(self->functions));
   ecreadwritelock_delete (&(self->mutex));
 }
 
@@ -360,7 +360,7 @@ int ecmessages_broadcast_next (EcIntMap modules, EcMessageData* data, EcMessages
       
       if (isAssigned (out.content))
       {
-        ecudc_destroy(&(out.content));
+        ecudc_destroy(EC_ALLOC, &(out.content));
       }
     }
   }
@@ -449,7 +449,7 @@ void ecmessages_initDataN (EcMessageData* data, uint_t type, uint_t rev, uint_t 
   data->type = type;
   data->rev = rev;
   data->ref = ref;  
-  data->content = ecudc_create (udctype, nodeName);
+  data->content = ecudc_create (EC_ALLOC, udctype, nodeName);
 }
 
 //----------------------------------------------------------------------------------------
@@ -462,7 +462,7 @@ void ecmessages_resetData_KOCN (EcMessageData* data, uint_t type, uint_t rev, ui
   
   if (isNotAssigned (data->content))
   {
-    data->content = ecudc_create (ENTC_UDC_NODE, nodeName);  
+    data->content = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, nodeName);  
   }
 }
 
@@ -475,7 +475,7 @@ void ecmessages_clearData (EcMessageData* data)
   
   if (isAssigned (data->content))
   {
-    ecudc_destroy(&(data->content));
+    ecudc_destroy(EC_ALLOC, &(data->content));
   }
 
   data->content = NULL;

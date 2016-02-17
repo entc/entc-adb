@@ -26,7 +26,7 @@
 
 EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream)
 {
-  EcUdc value = ecudc_create (ENTC_UDC_STRING, ecxmlstream_nodeAttribute (xmlstream, "dbcolumn"));
+  EcUdc value = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, ecxmlstream_nodeAttribute (xmlstream, "dbcolumn"));
   
   return value;
 }

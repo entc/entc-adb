@@ -36,26 +36,26 @@ typedef struct
 
 /*------------------------------------------------------------------------*/
 
-EcIntMap ecintmap_new()
+EcIntMap ecintmap_create (EcAlloc alloc)
 {
-  EcIntMap self = ENTC_NEW(struct EcIntMap_s);
+  EcIntMap self = ECMM_NEW(struct EcIntMap_s);
   
-  self->list = eclist_new();
+  self->list = eclist_create (alloc);
   
   return self;
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecintmap_delete(EcIntMap* pself)
+void ecintmap_destroy (EcAlloc alloc, EcIntMap* pself)
 {
   EcIntMap self = *pself;
   
   ecintmap_clear(self);
   
-  eclist_delete( &(self->list) );
+  eclist_free (EC_ALLOC, &(self->list));
   
-  ENTC_DEL(pself, struct EcIntMap_s);
+  ECMM_DEL(pself, struct EcIntMap_s);
 }
 
 /*------------------------------------------------------------------------*/
@@ -82,7 +82,7 @@ void ecintmap_append(EcIntMap self, uint_t key, void* data)
   mapnode->key = key;
   mapnode->data = data;
   
-  eclist_append(self->list, mapnode);  
+  eclist_append (EC_ALLOC, self->list, mapnode);  
 }
 
 /*------------------------------------------------------------------------*/
@@ -124,13 +124,13 @@ EcIntMapNode ecintmap_end(EcIntMap self)
 
 /*------------------------------------------------------------------------*/
 
-EcIntMapNode ecintmap_erase (EcIntMapNode node)
+EcIntMapNode ecintmap_erase (EcIntMap self, EcIntMapNode node)
 {
   EcIntMapDataNode* mapnode = eclist_data (node);
     
   ENTC_DEL (&mapnode, EcIntMapDataNode);
   
-  return eclist_erase(node);
+  return eclist_erase (EC_ALLOC, self->list, node);
 }
 
 /*------------------------------------------------------------------------*/

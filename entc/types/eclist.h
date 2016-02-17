@@ -20,8 +20,7 @@
 #ifndef ENTC_TYPES_LIST_H
 #define ENTC_TYPES_LIST_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "types/ecalloc.h"
 
 struct EcList_s; typedef struct EcList_s* EcList;
 
@@ -39,15 +38,15 @@ typedef struct {
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcList eclist_new();
+__LIB_EXPORT EcList eclist_create (EcAlloc);
   
-__LIB_EXPORT void eclist_delete(EcList*);
+__LIB_EXPORT void eclist_free (EcAlloc, EcList*);
   
-__LIB_EXPORT EcListNode eclist_append(EcList, void* data);
+__LIB_EXPORT EcListNode eclist_append(EcAlloc, EcList, void* data);
   
 __LIB_EXPORT void eclist_set(EcListNode, void* data);
 
-__LIB_EXPORT EcListNode eclist_erase(EcListNode);
+__LIB_EXPORT EcListNode eclist_erase (EcAlloc, EcList, EcListNode);
   
 __LIB_EXPORT EcListNode eclist_first(const EcList);
 
@@ -65,7 +64,7 @@ __LIB_EXPORT void eclist_clear(EcList);
   
 __LIB_EXPORT uint_t eclist_size(const EcList);
   
-__LIB_EXPORT void eclist_remove(EcList, void*);
+__LIB_EXPORT void eclist_remove (EcAlloc alloc, EcList, void*);
   
 // cursor
 
@@ -73,7 +72,7 @@ __LIB_EXPORT void eclist_cursor (EcList, EcListCursor*);
 
 __LIB_EXPORT int eclist_cnext (EcListCursor* c);
 
-__LIB_EXPORT void eclist_cerase (EcListCursor* c);
+__LIB_EXPORT void eclist_cerase (EcAlloc alloc, EcListCursor* c);
 
 __CPP_EXTERN______________________________________________________________________________END
 

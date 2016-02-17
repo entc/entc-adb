@@ -140,6 +140,8 @@ __LIB_EXPORT int ecfs_fileInfo (EcFileInfo, const EcString path);
 
 __LIB_EXPORT int ecfs_createDirIfNotExists (const EcString path);
 
+__LIB_EXPORT int ecfs_exists (const EcString path);
+
 /* **** path string operations **** */
 
 __LIB_EXPORT EcString ecfs_getExecutablePath (int argc, char *argv[]);

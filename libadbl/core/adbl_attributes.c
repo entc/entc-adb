@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:adbl@kalkhof.org]
+ * Copyright (c) 2010-2016 "Alexander Kalkhof" [email:adbl@kalkhof.org]
  *
  * This file is part of adbl framework (Advanced Database Layer)
  *
@@ -23,6 +23,7 @@
 
 #include <types/ecstring.h>
 #include <types/ecmapchar.h>
+#include <types/ecalloc.h>
 
 #include <stdio.h>
 
@@ -30,9 +31,9 @@
 
 AdblAttributes* adbl_attrs_new (void)
 {
-  AdblAttributes* self = ENTC_NEW(AdblAttributes);
+  AdblAttributes* self = ENTC_NEW (AdblAttributes);
   
-  self->columns = ecmapchar_new();
+  self->columns = ecmapchar_create (EC_ALLOC);
   
   return self;
 }
@@ -43,7 +44,7 @@ void adbl_attrs_delete (AdblAttributes** ptr)
 {
   AdblAttributes* self = *ptr;
   
-  ecmapchar_delete( &(self->columns) );
+  ecmapchar_destroy (EC_ALLOC, &(self->columns));
   
   ENTC_DEL(ptr, AdblAttributes);
 }
@@ -80,14 +81,14 @@ const EcString adbl_attrs_get (AdblAttributes* self, const EcString column)
   return ecmapchar_finddata( self->columns, column );
 }
 
-/*------------------------------------------------------------------------*/
+//------------------------------------------------------------------------
 
 int adbl_attrs_empty (AdblAttributes* self)
 {
   return (ecmapchar_first( self->columns ) == ecmapchar_end( self->columns ));
 }
 
-/*------------------------------------------------------------------------*/
+//------------------------------------------------------------------------
 
 void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security)
 {
@@ -117,4 +118,4 @@ void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security)
   }
 }
 
-/*------------------------------------------------------------------------*/
+//------------------------------------------------------------------------

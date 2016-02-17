@@ -299,7 +299,7 @@ void echttp_init (void)
     session_name = ecbuf_create (_ENTC_SESSION_NAMELENGTH);  
     ecbuf_random (session_name, _ENTC_SESSION_NAMELENGTH);
     
-    mime_types = ecmapchar_new(); 
+    mime_types = ecmapchar_create (EC_ALLOC); 
     
     ecmapchar_append( mime_types, "pdf",      "application/pdf" );
     ecmapchar_append( mime_types, "sig",      "application/pgp-signature" );
@@ -361,7 +361,7 @@ void echttp_done (void)
   echhtp_counter--;
   if (echhtp_counter == 0) 
   {
-    ecmapchar_delete(&mime_types);
+    ecmapchar_destroy (EC_ALLOC, &mime_types);
     ecbuf_destroy (&session_name);
   }
 }
@@ -797,7 +797,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->content = NULL;
   header->sessionid = ecstr_init();
   header->auth = NULL;
-  header->values = ecmapchar_new ();
+  header->values = ecmapchar_create (EC_ALLOC);
 }
 
 //---------------------------------------------------------------------------------------
@@ -817,7 +817,7 @@ void echttp_header_clear (EcHttpHeader* header)
   if (isAssigned (header->tokens))
   {
     ecstr_tokenizer_clear(header->tokens);
-    eclist_delete(&(header->tokens));
+    eclist_free (EC_ALLOC, &(header->tokens));
   }  
   ecstr_delete(&(header->urlpath));
   
@@ -830,10 +830,10 @@ void echttp_header_clear (EcHttpHeader* header)
   
   if (isAssigned (header->auth))
   {
-    ecudc_destroy(&(header->auth));
+    ecudc_destroy(EC_ALLOC, &(header->auth));
   }
   
-  ecmapchar_delete(&(header->values));
+  ecmapchar_destroy (EC_ALLOC, &(header->values));
 }
 
 //---------------------------------------------------------------------------------------
@@ -957,7 +957,7 @@ void echttp_header_title (EcHttpHeader* header)
   // unescape html url
   echttp_unescape (url_unescaped);
   
-  header->tokens = eclist_new();
+  header->tokens = eclist_create (EC_ALLOC);
   // split url into parts
   ecstr_tokenizer (header->tokens, url_unescaped, '/');
   // clean up
@@ -1064,11 +1064,11 @@ void echttp_header_lotToService (EcHttpHeader* header)
   data.type = Q5_MSGTYPE_HTTP_REQUEST_INFO; data.rev = 1;
   data.ref = 0;
   
-  data.content = ecudc_create (ENTC_UDC_NODE, "AccessInfo");
+  data.content = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, "AccessInfo");
     
   // generate the udc containers with all the infos we have :-)
   {
-    EcUdc item = ecudc_create(1, "timestamp");
+    EcUdc item = ecudc_create(EC_ALLOC, 1, "timestamp");
     
     EcDate date;
     EcBuffer buffer = ecbuf_create (200);
@@ -1083,21 +1083,21 @@ void echttp_header_lotToService (EcHttpHeader* header)
     ecbuf_destroy (&buffer);
   }
   
-  ecudc_add_asString(data.content, "request-url", header->request_url);
-  ecudc_add_asString(data.content, "remote-address", header->remote_address);
-  ecudc_add_asString(data.content, "user-language", header->user_lang);
-  ecudc_add_asString(data.content, "user-agent", header->user_agent);
+  ecudc_add_asString(EC_ALLOC, data.content, "request-url", header->request_url);
+  ecudc_add_asString(EC_ALLOC, data.content, "remote-address", header->remote_address);
+  ecudc_add_asString(EC_ALLOC, data.content, "user-language", header->user_lang);
+  ecudc_add_asString(EC_ALLOC, data.content, "user-agent", header->user_agent);
 
   if (ecstr_valid(header->title))
   {
-    ecudc_add_asString(data.content, "title", header->title);
+    ecudc_add_asString(EC_ALLOC, data.content, "title", header->title);
   }
   
   ecmessages_broadcast (Q5_SERVICE_HTTP_REQUEST_INFO, &data, NULL);
     
   if ( isAssigned (data.content))
   {
-    ecudc_destroy(&(data.content));
+    ecudc_destroy(EC_ALLOC, &(data.content));
   }  
 }
 
@@ -1169,13 +1169,13 @@ EcUdc echttp_parse_auth (const EcString source)
     return NULL;
   }
   
-  auth = ecudc_create (ENTC_UDC_NODE, "auth");
+  auth = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, "auth");
 
   auth_type = ecstr_part (source, next_space - source);
 
-  ecudc_add_asString(auth, "type", auth_type);
+  ecudc_add_asString(EC_ALLOC, auth, "type", auth_type);
 
-  ecudc_add_asString(auth, "content", next_space + 1);
+  ecudc_add_asString(EC_ALLOC, auth, "content", next_space + 1);
   
   ecstr_delete (&auth_type);
   
@@ -1202,7 +1202,7 @@ void echttp_parse_cookies_next (EcHttpHeader* header, const EcString cookie)
 
 void echttp_parse_cookies (EcHttpHeader* header, const EcString s)
 {
-  EcList list = eclist_new();
+  EcList list = eclist_create (EC_ALLOC);
   EcListNode node;
   
   ecstr_tokenizer(list, s, ';');
@@ -1214,14 +1214,14 @@ void echttp_parse_cookies (EcHttpHeader* header, const EcString s)
     ecstr_delete( &token );
   }
   
-  eclist_delete( &list );
+  eclist_free (EC_ALLOC, &list);
 }
 
 //---------------------------------------------------------------------------------------
 
 void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 {
-  EcList list = eclist_new();
+  EcList list = eclist_create (EC_ALLOC);
   EcListNode node;
   
   ecstr_tokenizer(list, s, ';');
@@ -1233,7 +1233,7 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
   }
   
   ecstr_tokenizer_clear(list);  
-  eclist_delete( &list );
+  eclist_free (EC_ALLOC, &list);
 }
 
 //---------------------------------------------------------------------------------------

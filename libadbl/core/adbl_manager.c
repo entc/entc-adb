@@ -302,8 +302,8 @@ AdblManager adbl_new ()
     
   self->mutex = ecmutex_new ();
   self->observer = 0;
-  self->modules = ecmap_new();
-  self->credentials = ecmap_new();
+  self->modules = ecmap_create (EC_ALLOC);
+  self->credentials = ecmap_create (EC_ALLOC);
   self->path = ecstr_init();
   
   return self;
@@ -353,7 +353,7 @@ void adbl_delete (AdblManager* ptr)
     
     ENTC_DEL (&pc, AdblCredentials);
   }  
-  ecmap_delete( &(self->credentials) );
+  ecmap_destroy (EC_ALLOC, &(self->credentials));
 
   for(node = ecmap_first(self->modules); node != ecmap_end(self->modules); node = ecmap_next(node))
   {
@@ -363,7 +363,7 @@ void adbl_delete (AdblManager* ptr)
     
     ENTC_DEL (&properties, ADBLModuleProperties);
   }
-  ecmap_delete( &(self->modules) );
+  ecmap_destroy (EC_ALLOC, &(self->modules));
   
   ecstr_delete(&(self->path));
 
@@ -550,7 +550,7 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
 
   if (ecstr_valid(self->path))
   {
-    EcList engines = eclist_new ();  
+    EcList engines = eclist_create (EC_ALLOC);  
 
     eclogger_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);   
     
@@ -569,7 +569,7 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
       ecstr_delete(&filename);
     }
     // clean up
-    eclist_delete(&engines);
+    eclist_free (EC_ALLOC, &engines);
     
     adbl_parseConfig (self, configpath, FALSE);
   }

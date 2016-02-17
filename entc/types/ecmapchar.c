@@ -35,27 +35,27 @@ struct EcMapCharDataNode
 
 /*------------------------------------------------------------------------*/
 
-EcMapChar ecmapchar_new()
+EcMapChar ecmapchar_create (EcAlloc alloc)
 {
-  EcMapChar self = ENTC_NEW(struct EcMapChar_s);
+  EcMapChar self = ECMM_NEW(struct EcMapChar_s);
   
-  self->list = eclist_new();
+  self->list = eclist_create (alloc);
   
   return self;
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecmapchar_delete(EcMapChar* pself)
+void ecmapchar_destroy (EcAlloc alloc, EcMapChar* pself)
 {
   EcMapChar self = *pself;
   
   ecmapchar_clear(self);
   
-  eclist_delete( &(self->list) );
+  eclist_free (EC_ALLOC, &(self->list));
   self->list = 0;
   
-  ENTC_DEL(pself, struct EcMapChar_s);
+  ECMM_DEL(pself, struct EcMapChar_s);
 }
 
 /*------------------------------------------------------------------------*/
@@ -84,7 +84,7 @@ void ecmapchar_append(EcMapChar self, const EcString key, const EcString value)
   mapnode->key = ecstr_copy(key);
   mapnode->value = ecstr_copy(value);
   
-  eclist_append(self->list, mapnode);
+  eclist_append (EC_ALLOC, self->list, mapnode);
 }
 
 /*------------------------------------------------------------------------*/
@@ -96,7 +96,7 @@ void ecmapchar_appendTO(EcMapChar self, const EcString key, EcString value)
   mapnode->key = ecstr_copy(key);
   mapnode->value = value;
   
-  eclist_append(self->list, mapnode); 
+  eclist_append (EC_ALLOC, self->list, mapnode); 
 }
 
 /*------------------------------------------------------------------------*/

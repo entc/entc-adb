@@ -20,19 +20,17 @@
 #ifndef ENTC_TYPES_VECTOR_H
 #define ENTC_TYPES_VECTOR_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
-
-#include "eclist.h"
+#include "types/ecalloc.h"
+#include "types/eclist.h"
 
 struct EcVector_s; typedef struct EcVector_s* EcVector;
 typedef struct EcListNode_s* EcVectorNode;
 
 __CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcVector ecvector_new();
+__LIB_EXPORT EcVector ecvector_create (EcAlloc alloc);
   
-__LIB_EXPORT void ecvector_delete(EcVector*);
+__LIB_EXPORT void ecvector_destroy (EcAlloc, EcVector*);
   
 __LIB_EXPORT EcVectorNode ecvector_append(EcVector, void* data);
   
@@ -42,7 +40,7 @@ __LIB_EXPORT EcVectorNode ecvector_find(EcVector, uint_t index);
 
 __LIB_EXPORT void* ecvector_get(EcVector, uint_t index);
   
-__LIB_EXPORT EcVectorNode ecvector_erase(EcVectorNode);
+__LIB_EXPORT EcVectorNode ecvector_erase (EcVector, EcVectorNode);
   
 __LIB_EXPORT EcVectorNode ecvector_first(const EcVector);
   

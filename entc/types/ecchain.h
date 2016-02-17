@@ -20,8 +20,7 @@
 #ifndef ENTC_TYPES_CHAIN_H
 #define ENTC_TYPES_CHAIN_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "types/ecalloc.h"
 
 struct EcChain_s; typedef struct EcChain_s* EcChain;
 
@@ -29,9 +28,9 @@ __CPP_EXTERN____________________________________________________________________
 
 // constructor / destructor
 
-__LIB_EXPORT EcChain ecchain_new();
+__LIB_EXPORT EcChain ecchain_create (EcAlloc);
 
-__LIB_EXPORT void ecchain_delete(EcChain*);
+__LIB_EXPORT void ecchain_destroy (EcAlloc, EcChain*);
 
 __LIB_EXPORT void ecchain_clear(EcChain);
 

@@ -28,7 +28,7 @@ void ecxmldom_add_tag (EcUdc parent, EcUdc child)
   EcUdc tags = ecudc_node (parent, ".tags");
   if (isNotAssigned (tags))
   {
-    EcUdc h = ecudc_create (ENTC_UDC_NODE, ".tags");
+    EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, ".tags");
     
     tags = h;
     
@@ -45,7 +45,7 @@ void ecxmldom_add_tag (EcUdc parent, EcUdc child)
 
 EcUdc ecxmldom_create_tag (EcUdc parent, const EcString name)
 {
-  EcUdc tag = ecudc_create (ENTC_UDC_NODE, name);
+  EcUdc tag = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, name);
   
   if (isAssigned (parent))
   {
@@ -76,7 +76,7 @@ void ecxmldom_set_value (EcUdc tag, const EcString content)
   EcUdc value = ecudc_node (tag, ".value");
   if (isNotAssigned (value))
   {
-    ecudc_add_asString (tag, ".value", content);
+    ecudc_add_asString (EC_ALLOC, tag, ".value", content);
   } 
   else 
   {
@@ -91,14 +91,14 @@ void ecxmldom_add_attribute (EcUdc tag, const EcString name, const EcString valu
   EcUdc attrs = ecudc_node (tag, ".attrs");
   if (isNotAssigned (attrs))
   {
-    EcUdc h = ecudc_create (ENTC_UDC_NODE, ".attrs");
+    EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, ".attrs");
     
     attrs = h;
     
     ecudc_add (tag, &h);
   } 
   // finally add the attribute
-  ecudc_add_asString(attrs, name, value);
+  ecudc_add_asString(EC_ALLOC, attrs, name, value);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ EcBuffer ecxmldom_buffer (EcUdc* pself)
   
   ecxmldom_write (tag, stream, NULL);
   
-  ecudc_destroy (pself);
+  ecudc_destroy (EC_ALLOC, pself);
   
   return ecstream_trans (&stream);
 }
@@ -229,7 +229,7 @@ void ecxmldom_setNamespace (EcUdc tag, const EcString name, const EcString defin
   EcUdc options = ecudc_node (tag, ".options");
   if (isNotAssigned (options))
   {
-    EcUdc h = ecudc_create (ENTC_UDC_NODE, ".options");
+    EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, ".options");
     
     options = h;
     
@@ -243,7 +243,7 @@ void ecxmldom_setNamespace (EcUdc tag, const EcString name, const EcString defin
     }
     else
     {
-      ecudc_add_asString(options, "namespace", name);
+      ecudc_add_asString(EC_ALLOC, options, "namespace", name);
     }
   }
   

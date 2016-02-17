@@ -36,24 +36,24 @@ struct EcPtrMapDataNode
 
 /*------------------------------------------------------------------------*/
 
-EcPtrMap ecptrmap_new()
+EcPtrMap ecptrmap_create (EcAlloc alloc)
 {
-  EcPtrMap self = ENTC_NEW(struct EcPtrMap_s);
+  EcPtrMap self = ECMM_NEW(struct EcPtrMap_s);
   
-  self->list = eclist_new();
+  self->list = eclist_create (alloc);
   
   return self;
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecptrmap_delete(EcPtrMap* pself)
+void ecptrmap_destroy (EcAlloc alloc, EcPtrMap* pself)
 {
   EcPtrMap self = *pself;
   
-  eclist_delete( &(self->list) );
+  eclist_free (EC_ALLOC, &(self->list));
   
-  ENTC_DEL(pself, struct EcPtrMap_s);
+  ECMM_DEL(pself, struct EcPtrMap_s);
 }
 
 /*------------------------------------------------------------------------*/
@@ -78,18 +78,18 @@ void ecptrmap_append(EcPtrMap self, void* key, void* data)
   mapnode->key = key;
   mapnode->data = data;
   
-  eclist_append(self->list, mapnode);  
+  eclist_append (EC_ALLOC, self->list, mapnode);  
 }
 
 /*------------------------------------------------------------------------*/
 
-EcPtrMapNode ecptrmap_erase(EcPtrMapNode node)
+EcPtrMapNode ecptrmap_erase (EcPtrMap self, EcPtrMapNode node)
 {
   struct EcPtrMapDataNode* mapnode = eclist_data(node);
   
   ENTC_DEL(&mapnode, struct EcPtrMapDataNode);
   
-  return eclist_erase(node);
+  return eclist_erase (EC_ALLOC, self->list, node);
 }
 
 /*------------------------------------------------------------------------*/

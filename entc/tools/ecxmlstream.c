@@ -81,12 +81,12 @@ EcXMLStream ecxmlstream_new (void)
   self->constbuffer = 0;
 
   self->nodes = ecstack_new();
-  self->lastattrs = ecmapchar_new();
+  self->lastattrs = ecmapchar_create (EC_ALLOC);
   self->lastype = ENTC_XMLTYPE_NONE;
   self->value = 0; 
   self->filename = 0;
   
-  self->namespaces = ecmap_new ();
+  self->namespaces = ecmap_create (EC_ALLOC);
   
   return self;
 }
@@ -205,13 +205,13 @@ void ecxmlstream_close( EcXMLStream self )
 
   ecstack_delete( &(self->nodes) );
 
-  ecmapchar_delete( &(self->lastattrs) );
+  ecmapchar_destroy (EC_ALLOC, &(self->lastattrs));
   
   ecstr_delete( &(self->value) );
   
   ecstr_delete( &(self->filename) );
   
-  ecmap_delete (&(self->namespaces));
+  ecmap_destroy (EC_ALLOC, &(self->namespaces));
 
   ENTC_DEL(&self, struct EcXMLStream_s);
 }

@@ -65,17 +65,17 @@ void eclogger_msg (EcLogLevel lvl, const char* unit, const char* method, const c
   data.type = ENTC_MSGTYPE_LOG; data.rev = 1;
   data.ref = lvl;
   
-  data.content = ecudc_create (ENTC_UDC_NODE, NULL);
+  data.content = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
   
   // better do the text format in the listeners
-  ecudc_add_asString (data.content, "unit", unit);
-  ecudc_add_asString (data.content, "method", method);
-  ecudc_add_asString (data.content, "msg", msg);
+  ecudc_add_asString (EC_ALLOC, data.content, "unit", unit);
+  ecudc_add_asString (EC_ALLOC, data.content, "method", method);
+  ecudc_add_asString (EC_ALLOC, data.content, "msg", msg);
   
   // send the message by messaging system
   ecmessages_broadcast (ENTC_MSGSRVC_LOG, &data, NULL);
   
-  ecudc_destroy (&(data.content));
+  ecudc_destroy (EC_ALLOC, &(data.content));
 }
 
 //----------------------------------------------------------------------------------------

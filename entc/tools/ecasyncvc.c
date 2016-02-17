@@ -536,7 +536,7 @@ EcAsynUdpDispatcher ecasync_udpdisp_create (const EcString host, ulong_t port, E
   self->cb = cb;
   self->ptr = ptr;
   
-  self->contexts = ecmap_new ();
+  self->contexts = ecmap_create (EC_ALLOC);
   self->mutex = ecmutex_new ();
   
   self->stopwatch = ecstopwatch_create (60000);  // check each 60 seconds
@@ -631,7 +631,7 @@ static int _STDCALL ecasync_udpdisp_run (void* ptr)
     // we can close this context
     ecmutex_lock (self->mutex);
         
-    ecmap_erase(node);
+    ecmap_erase (self->contexts, node);
     
     ecmutex_unlock (self->mutex);
   }
@@ -656,7 +656,7 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
        
     for (node = ecmap_first(self->contexts); node != ecmap_end(self->contexts); node = ecmap_next(node))
     {
-      EcAsyncUdpContext context = ecmap_data(node);
+      EcAsyncUdpContext context = ecmap_data (node);
       
       // bug doesn't work
       /*

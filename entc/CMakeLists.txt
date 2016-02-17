@@ -117,9 +117,12 @@ SET (CORE_SOURCES_SYS
   system/ecrefcnt.c
   system/ecasyncio.h
   system/ecasyncio.c
+  system/ecipc.h
+  system/ecipc.c
 )
 
 SET (CORE_SOURCES_TYPES
+  types/ecalloc.h
   types/ecarray.c
   types/ecintmap.c
   types/eclist.c

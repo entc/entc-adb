@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2016 "Alexander Kalkhof" [email:entc@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -19,6 +19,9 @@
 
 #include "eclist.h"
 #include <stdlib.h>
+#include "utils/eclogger.h"
+
+//----------------------------------------------------------------------------------------
 
 struct EcListNode_s
 {
@@ -29,21 +32,22 @@ struct EcListNode_s
 
 struct EcList_s
 {
+
   //next == begin
   //forw == end
   EcListNode node;  
+
 };
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-EcList eclist_new()
+EcList eclist_create (EcAlloc alloc)
 {
-  EcList self;
-  
-  self = ENTC_NEW( struct EcList_s );
+  EcList self = ECMM_NEW (struct EcList_s);
 
-  self->node = ENTC_NEW( struct EcListNode_s );
-  /* do the loop */
+  self->node = alloc->fnew (alloc->ptr, sizeof(struct EcListNode_s));
+  
+  // set the chain 
   self->node->next = self->node;
   self->node->forw = self->node;
   self->node->data = NULL;
@@ -51,24 +55,30 @@ EcList eclist_new()
   return self;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclist_delete(EcList* pself)
+void eclist_free (EcAlloc alloc, EcList* pself)
 {
   EcList self = *pself;
   
   eclist_clear(self);
   
-  ENTC_DEL(&(self->node), struct EcListNode_s);
-  
-  ENTC_DEL(pself, struct EcList_s);
+  alloc->fdel (alloc->ptr, (void**)&(self->node), sizeof(struct EcListNode_s));
+  alloc->fdel (alloc->ptr, (void**)pself, sizeof(struct EcList_s));
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-EcListNode eclist_insert(EcListNode node, void* data)
+EcListNode eclist_insert (EcAlloc alloc, EcList self, EcListNode node, void* data)
 {
-  EcListNode noden = ENTC_NEW(struct EcListNode_s);
+  EcListNode noden = alloc->fnew (alloc->ptr, sizeof(struct EcListNode_s));
+  
+  if (noden == NULL)
+  {
+    eclogger_fmt (LL_FATAL, "ENTC", "eclist ins", "can't create new node");
+    return NULL;
+  }
+  
   EcListNode n01;
   /* set the data */
   noden->data = data;
@@ -84,23 +94,23 @@ EcListNode eclist_insert(EcListNode node, void* data)
   return noden;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-EcListNode eclist_append(EcList self, void* data)
+EcListNode eclist_append (EcAlloc alloc, EcList self, void* data)
 {
-  return eclist_insert(self->node->forw, data);
+  return eclist_insert (alloc, self, self->node->forw, data);
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void eclist_set(EcListNode node, void* data)
+void eclist_set (EcListNode node, void* data)
 {
   node->data = data;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-EcListNode eclist_erase(EcListNode node)
+EcListNode eclist_erase (EcAlloc alloc, EcList self, EcListNode node)
 {
   EcListNode nextn = node->next;
   EcListNode forwn = node->forw;
@@ -108,12 +118,12 @@ EcListNode eclist_erase(EcListNode node)
   forwn->next = nextn;
   nextn->forw = forwn;  
   
-  free(node);
+  alloc->fdel (alloc->ptr, (void**)&node, sizeof(struct EcListNode_s));
   
   return forwn;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
 EcListNode eclist_first(const EcList self)
 {
@@ -196,7 +206,7 @@ uint_t eclist_size(const EcList self)
 
 /*------------------------------------------------------------------------*/
 
-void eclist_remove(EcList self, void* data)
+void eclist_remove (EcAlloc alloc, EcList self, void* data)
 {
   EcListNode node = self->node->next;
   
@@ -204,7 +214,7 @@ void eclist_remove(EcList self, void* data)
   {
     if(node->data == data)
     {
-      eclist_erase(node);
+      eclist_erase (alloc, self, node);
       return;
     }
     node = node->next;
@@ -240,14 +250,14 @@ int eclist_cnext (EcListCursor* cursor)
 
 //----------------------------------------------------------------------------
 
-void eclist_cerase (EcListCursor* cursor)
+void eclist_cerase (EcAlloc alloc, EcListCursor* cursor)
 {
   if (cursor->node == NULL)
   { 
     return;
   }
   
-  cursor->node = eclist_erase (cursor->node);
+  cursor->node = eclist_erase (alloc, cursor->list, cursor->node);
   cursor->value = cursor->node->data;
 }
 

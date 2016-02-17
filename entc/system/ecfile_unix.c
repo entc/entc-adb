@@ -707,4 +707,18 @@ int ecfs_createDirIfNotExists (const EcString path)
 
 //-------------------------------------------------------------------------
 
+int ecfs_exists (const EcString path)
+{
+  struct stat st;
+  
+  if( !path )
+  {
+    return FALSE;
+  }
+  
+  return stat (path, &st) == 0;
+}
+
+//-------------------------------------------------------------------------
+
 #endif

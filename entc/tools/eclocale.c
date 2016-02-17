@@ -252,7 +252,7 @@ EcLocale eclocale_new (const EcString confdir, const EcString path, EcEventFiles
 
   EcDirHandle dh = ecdh_create (fullpath);
   
-  self->languages = ecmap_new();
+  self->languages = ecmap_create (EC_ALLOC);
   
   if (dh)
   {
@@ -293,7 +293,7 @@ void eclocale_delete(EcLocale* ptr)
     eclocaleset_delete(&lset);
   }
    
-  ecmap_delete(&(self->languages));
+  ecmap_destroy (EC_ALLOC, &(self->languages));
   
   ENTC_DEL(ptr, struct EcLocale_s);
 }

@@ -44,91 +44,40 @@
 //-----------------------------------------------------------------------------------------------------------
 
 EcString ecbins_readEcString (EcBuffer posbuf)
-{
-  EcString s;
-  unsigned char stype;  
-  unsigned long size;
-
-  if (posbuf->size < 1)
+{  
+  uint64_t len = strlen ((char*)posbuf->buffer);
+  
+  if (len < posbuf->size)
+  {
+    EcString s = ecstr_copy((char*)posbuf->buffer);
+    
+    len++;
+    
+    posbuf->buffer += len;
+    posbuf->size -= len;
+    
+    return s;
+  }
+  else
   {
     return NULL;
   }
-  // read size type
-  stype = *(posbuf->buffer);
-  
-  size = 0;
-  
-  posbuf->buffer++;
-  posbuf->size--;
-  
-  switch (stype)
-  {
-    case 1:
-    {
-      if (posbuf->size < 1)
-      {
-        return NULL;
-      }
-      
-      size = (unsigned char)*(posbuf->buffer);
-      
-      posbuf->buffer++;
-      posbuf->size--;
-    }
-    break;
-    case 2:
-    {
-      if (posbuf->size < 2)
-      {
-        return NULL;
-      }
-      
-      size = (uint16_t)*(posbuf->buffer);
-      
-      posbuf->buffer += 2;
-      posbuf->size -= 2;
-    }
-    break;
-    case 3:
-    {
-      if (posbuf->size < 4)
-      {
-        return NULL;
-      }
-      
-      size = (uint32_t)*(posbuf->buffer);
-      
-      posbuf->buffer += 4;
-      posbuf->size -= 4;
-    }
-    break;
-  }
-  
-  if (posbuf->size < size)
-  {
-    return NULL;
-  }
-  
-  s = ecstr_part((const char*)(posbuf->buffer), size);
-  
-  posbuf->buffer += size;
-  posbuf->size -= size;
-
-  return s;
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
 EcUdc ecbins_readString (EcBuffer posbuf, const EcString name)
-{
+{  
   EcString s = ecbins_readEcString (posbuf);
   
   if (isAssigned (s))
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_STRING, name);
+    EcUdc udc = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, name);
 
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "string '%s'", s);  
+    
     ecudc_setS_o (udc, &s);
-
+    
     return udc;
   }
   else
@@ -141,6 +90,8 @@ EcUdc ecbins_readString (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readList (EcBuffer posbuf, const EcString name)
 {
+  eclogger_msg (LL_TRACE, "ENTC", "bins", "list");  
+
   EcUdc udc;
   uint32_t i, size;
   
@@ -149,7 +100,7 @@ EcUdc ecbins_readList (EcBuffer posbuf, const EcString name)
     return NULL;
   }
   
-  udc = ecudc_create(ENTC_UDC_LIST, name);
+  udc = ecudc_create(EC_ALLOC, ENTC_UDC_LIST, name);
   
   size = (uint32_t)*(posbuf->buffer);
   
@@ -170,6 +121,8 @@ EcUdc ecbins_readList (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readNode (EcBuffer posbuf, const EcString name)
 {
+  eclogger_msg (LL_TRACE, "ENTC", "bins", "node");  
+
   EcUdc udc;
   uint32_t i, size;
   
@@ -178,22 +131,79 @@ EcUdc ecbins_readNode (EcBuffer posbuf, const EcString name)
     return NULL;
   }
   
-  udc = ecudc_create(ENTC_UDC_NODE, name);
+  udc = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, name);
   
-  size = (uint32_t)*(posbuf->buffer);
-  
-  posbuf->buffer += 4;
-  posbuf->size -= 4;
+  // read size
+  EcUdc j = ecbins_readBuffer (posbuf, NULL);
 
-  for (i = 0; i < size; i++)
+  switch (ecudc_type(j))
   {
-    EcUdc h;
-    EcString s = ecbins_readEcString (posbuf);
+    case ENTC_BINSTYPE_CHAR:
+    {
+      size = ecudc_asByte(j);
+    }
+    break;
+    case ENTC_BINSTYPE_UCHAR:
+    {
+      size = ecudc_asUByte(j);
+    }
+    break;
+    case ENTC_BINSTYPE_SHORT:
+    {
+      size = ecudc_asInt16(j);
+    }
+    break;
+    case ENTC_BINSTYPE_USHORT:
+    {
+      size = ecudc_asUInt16(j);
+    }
+    break;
+    case ENTC_BINSTYPE_INT:
+    {
+      size = ecudc_asInt32(j);
+    }
+    break;
+    case ENTC_BINSTYPE_UINT:
+    {
+      size = ecudc_asUInt32(j);
+    }
+    break;
+    case ENTC_BINSTYPE_LONG:
+    {
+      size = ecudc_asInt64(j);
+    }
+    break;
+    case ENTC_BINSTYPE_ULONG:
+    {
+      size = ecudc_asUInt64(j);
+    }
+    break;
+    default:
+    {
+      return udc;
+    }
+  }
+  
+  if (size > 0)
+  {
+    EcUdc *strings = ENTC_MALLOC (sizeof(EcString) * size);
     
-    h = ecbins_readBuffer (posbuf, s);
+    for (i = 0; i < size; i++)
+    {
+      strings[i] = ecbins_readBuffer (posbuf, NULL);
+    }
     
-    ecudc_add(udc, &h);
-    ecstr_delete(&s);
+    for (i = 0; i < size; i++)
+    {
+      EcUdc h = ecbins_readBuffer (posbuf, ecudc_asString(strings[i]));
+      
+      if (isAssigned (h))
+      {
+        ecudc_add(udc, &h);
+      }
+      
+      ecudc_destroy(EC_ALLOC, &(strings[i]));
+    }
   }
   
   return udc;
@@ -203,18 +213,22 @@ EcUdc ecbins_readNode (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readByte (EcBuffer posbuf, const EcString name)
 {
+  eclogger_msg (LL_TRACE, "ENTC", "bins", "byte");  
+
   if (posbuf->size < 1)
   {
     return NULL;    
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_BYTE, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_BYTE, name);
     
     ecudc_setByte(udc, (byte_t)*(posbuf->buffer));
     
     posbuf->buffer += 1;
     posbuf->size -= 1;
+
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "byte %i", ecudc_asByte(udc));
 
     return udc;
   }
@@ -224,19 +238,23 @@ EcUdc ecbins_readByte (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readUByte (EcBuffer posbuf, const EcString name)
 {
+  eclogger_msg (LL_TRACE, "ENTC", "bins", "unsigned byte");  
+
   if (posbuf->size < 1)
   {
     return NULL;    
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_UBYTE, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_UBYTE, name);
     
     ecudc_setUByte(udc, (ubyte_t)*(posbuf->buffer));
     
     posbuf->buffer += 1;
     posbuf->size -= 1;
     
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "unsigned byte %i", ecudc_asUByte(udc));
+
     return udc;
   }
 }
@@ -245,18 +263,24 @@ EcUdc ecbins_readUByte (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readInt16 (EcBuffer posbuf, const EcString name)
 {
+  eclogger_msg (LL_TRACE, "ENTC", "bins", "int");  
+
   if (posbuf->size < 2)
   {
     return NULL;    
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_INT16, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_INT16, name);
     
-    ecudc_setInt16(udc, (int16_t)*(posbuf->buffer));
+    int16_t* h = (int16_t*)posbuf->buffer;
+
+    ecudc_setInt16(udc, *h);
     
     posbuf->buffer += 2;
     posbuf->size -= 2;
+    
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "int16 %i", ecudc_asInt16(udc));
     
     return udc;
   }
@@ -272,13 +296,17 @@ EcUdc ecbins_readUInt16 (EcBuffer posbuf, const EcString name)
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_UINT16, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_UINT16, name);
     
-    ecudc_setUInt16(udc, (uint16_t)*(posbuf->buffer));
+    uint16_t* h = (uint16_t*)posbuf->buffer;
+    
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "unsigned int16 %u [%u,%u]", *h, (unsigned char)posbuf->buffer[0], (unsigned char)posbuf->buffer[1]);
+
+    ecudc_setUInt16(udc, *h);
     
     posbuf->buffer += 2;
     posbuf->size -= 2;
-    
+
     return udc;
   }
 }
@@ -293,12 +321,16 @@ EcUdc ecbins_readInt32 (EcBuffer posbuf, const EcString name)
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_INT32, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_INT32, name);
     
-    ecudc_setInt32(udc, (int32_t)*(posbuf->buffer));
+    int32_t* h = (int32_t*)posbuf->buffer;
+    
+    ecudc_setInt32(udc, *h);
     
     posbuf->buffer += 4;
     posbuf->size -= 4;
+    
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "int32 %i", ecudc_asInt32(udc));
     
     return udc;
   }
@@ -314,12 +346,16 @@ EcUdc ecbins_readUInt32 (EcBuffer posbuf, const EcString name)
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_UINT32, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_UINT32, name);
     
-    ecudc_setUInt32(udc, (uint32_t)*(posbuf->buffer));
+    uint32_t* h = (uint32_t*)posbuf->buffer;
+    
+    ecudc_setUInt32(udc, *h);
     
     posbuf->buffer += 4;
     posbuf->size -= 4;
+    
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "unsigned int32 %u", ecudc_asUInt32(udc));
     
     return udc;
   }
@@ -335,12 +371,16 @@ EcUdc ecbins_readInt64 (EcBuffer posbuf, const EcString name)
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_INT64, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_INT64, name);
     
-    ecudc_setInt64(udc, (int64_t)*(posbuf->buffer));
+    int64_t* h = (int64_t*)posbuf->buffer;
+    
+    ecudc_setInt64(udc, *h);
     
     posbuf->buffer += 8;
     posbuf->size -= 8;
+    
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "int64 %l", ecudc_asInt64(udc));
     
     return udc;
   }
@@ -356,13 +396,17 @@ EcUdc ecbins_readUInt64 (EcBuffer posbuf, const EcString name)
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_UINT64, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_UINT64, name);
     
-    ecudc_setUInt64(udc, (uint64_t)*(posbuf->buffer));
+    uint64_t* h = (uint64_t*)posbuf->buffer;
+    
+    ecudc_setUInt64(udc, *h);
     
     posbuf->buffer += 8;
     posbuf->size -= 8;
     
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "unsigned int64 %u", ecudc_asUInt64(udc));
+
     return udc;
   }
 }
@@ -377,13 +421,17 @@ EcUdc ecbins_readFloat (EcBuffer posbuf, const EcString name)
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_FLOAT, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_FLOAT, name);
     
-    ecudc_setFloat(udc, (float)*(posbuf->buffer));
+    float* h = (float*)posbuf->buffer;
+    
+    ecudc_setFloat(udc, *h);
     
     posbuf->buffer += 4;
     posbuf->size -= 4;
     
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "float %f", ecudc_asFloat(udc));
+
     return udc;
   }
 }
@@ -398,13 +446,17 @@ EcUdc ecbins_readDouble (EcBuffer posbuf, const EcString name)
   }
   else
   {
-    EcUdc udc = ecudc_create(ENTC_UDC_DOUBLE, name);
+    EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_DOUBLE, name);
     
-    ecudc_setDouble(udc, (double)*(posbuf->buffer));
+    double* h = (double*)posbuf->buffer;
+    
+    ecudc_setDouble(udc, *h);
     
     posbuf->buffer += 8;
     posbuf->size -= 8;
     
+    eclogger_fmt (LL_TRACE, "ENTC", "bins", "double %f", ecudc_asDouble(udc));
+
     return udc;
   }
 }
@@ -494,7 +546,20 @@ EcUdc ecbins_read (const EcBuffer buf, const EcString name)
   posbuf.buffer = buf->buffer;
   posbuf.size = buf->size;
   
-  return ecbins_readBuffer (&posbuf, name);
+  EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_LIST, NULL);
+  
+  while (TRUE)
+  {
+    EcUdc h = ecbins_readBuffer (&posbuf, name);
+    if (h == NULL)
+    {
+      break;
+    }
+    
+    ecudc_add(udc, &h);
+  }
+  
+  return udc;
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -502,29 +567,7 @@ EcUdc ecbins_read (const EcBuffer buf, const EcString name)
 void ecbins_writeEcString (EcStream stream, const EcString s)
 {
   // depending on the length of the string handle differently
-  unsigned long len = ecstr_len(s);
-  if (len < 256)
-  {
-    ecstream_appendc(stream, 1);
-    ecstream_appendc(stream, len);    
-    ecstream_appendd(stream, s, len);
-  }
-  else if (len < 65536)  // can't fit into a single char
-  {
-    uint16_t h = len;
-
-    ecstream_appendc(stream, 2);    
-    ecstream_appendd(stream, (const char*)&h, 2);
-    ecstream_appendd(stream, s, len);
-  }
-  else
-  {
-    uint32_t h = len;
-
-    ecstream_appendc(stream, 3);
-    ecstream_appendd(stream, (const char*)&h, 4);
-    ecstream_appendd(stream, s, len);
-  }  
+  ecstream_append (stream, s);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -543,8 +586,17 @@ void ecbins_writeNode (EcStream stream, const EcUdc udc)
     
     for (item = ecudc_next(udc, &cursor); isAssigned (item); item = ecudc_next(udc, &cursor))
     {
-      ecbins_writeEcString (stream, ecudc_name(item));
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, NULL);
       
+      ecudc_setS (h, ecudc_name(item));
+      
+      ecbins_writeElement (stream, h);
+      
+      ecudc_destroy(EC_ALLOC, &h);
+    }
+      
+    for (item = ecudc_next(udc, &cursor); isAssigned (item); item = ecudc_next(udc, &cursor))
+    {
       ecbins_writeElement (stream, item);
       counter ++;
     }

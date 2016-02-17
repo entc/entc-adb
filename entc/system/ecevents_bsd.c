@@ -133,7 +133,7 @@ EcEventContext ece_context_new ()
   EcEventContext self = ENTC_NEW(struct EcEventContext_s);
   
   self->mutex = ecmutex_new ();
-  self->lists = eclist_new ();
+  self->lists = eclist_create (EC_ALLOC);
   
   return self;  
 }
@@ -145,7 +145,7 @@ void ece_context_delete (EcEventContext* pself)
   EcEventContext self = *pself;
 
   ecmutex_delete (&(self->mutex));
-  eclist_delete (&(self->lists));
+  eclist_free (EC_ALLOC, &(self->lists));
   
   ENTC_DEL(pself, struct EcEventContext_s);
 }
@@ -233,6 +233,8 @@ struct EcEventQueue_s
   // reference from context
   int kq;
     
+  EcList eclist;
+  
   EcListNode ecnode;
   
   EcMutex ecmutex;
@@ -259,7 +261,8 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   
   ecmutex_lock (self->ecmutex);
 
-  self->ecnode = eclist_append(ec->lists, self);
+  self->eclist = ec->lists;
+  self->ecnode = eclist_append (EC_ALLOC, ec->lists, self);
   
   ecmutex_unlock (self->ecmutex);
 
@@ -267,7 +270,7 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
     
   memset (self->data, 0x0, sizeof(char) * 200);
   
-  self->ptrs = eclist_new ();
+  self->ptrs = eclist_create (EC_ALLOC);
   
   return self;
 }
@@ -326,7 +329,7 @@ void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* 
         self->fct (&(pdata->ptr));
       }
       
-      eclist_cerase (&cursor);
+      eclist_cerase (EC_ALLOC, &cursor);
     }
   }
 
@@ -341,13 +344,13 @@ void ece_list_destroy (EcEventQueue* sptr)
 
   ecmutex_lock (self->ecmutex);
   
-  eclist_erase (self->ecnode);
+  eclist_erase (EC_ALLOC, self->eclist, self->ecnode);
   
   ecmutex_unlock (self->ecmutex);
   
   // cleanup
   ece_list_clear (self);
-  eclist_delete(&(self->ptrs));
+  eclist_free (EC_ALLOC, &(self->ptrs));
       
   close (self->kq);
   
@@ -365,7 +368,7 @@ void ece_list_data_add (EcEventQueue self, EcHandle handle, void* ptr)
     pdata->handle = handle;
     pdata->ptr = ptr;
     
-    eclist_append(self->ptrs, pdata);  
+    eclist_append (EC_ALLOC, self->ptrs, pdata);  
   }
 }
 
@@ -385,7 +388,7 @@ void* ece_list_data_get (EcEventQueue self, EcHandle handle, int remove)
       {
         void* ptr = pdata->ptr;
         
-        eclist_erase (cursor.node);
+        eclist_erase (EC_ALLOC, self->ptrs, cursor.node);
         
         ENTC_DEL (&pdata, EcEventData);
         

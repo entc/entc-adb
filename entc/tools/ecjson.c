@@ -111,7 +111,7 @@ EcUdc json_parse_type (JsonParser* parser, const EcString key, int len)
 {
   EcString h = ecstr_part ((const char*)parser->pos + 2, len);
   
-  EcUdc udc = ecudc_create(ENTC_UDC_UINT32, key);
+  EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_UINT32, key);
   
   ecudc_setUInt32(udc, atoi(h));
   
@@ -136,7 +136,7 @@ void* json_cleanup_udc (EcUdc* pudc)
 {
   if (isAssigned (*pudc))
   {
-    ecudc_destroy(pudc);
+    ecudc_destroy(EC_ALLOC, pudc);
   }
   return NULL;
 }
@@ -168,7 +168,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             return json_cleanup_udc (&udc);
           }
           
-          udc = ecudc_create (ENTC_UDC_LIST, name); 
+          udc = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, name); 
           
           parser->pos = c;
           state = ENT_STATE_ARRAY;
@@ -184,7 +184,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
             return json_cleanup_udc (&udc);
           }
           
-          udc = ecudc_create (ENTC_UDC_NODE, name); 
+          udc = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, name); 
           
           parser->pos = c;
           state = ENT_STATE_OBJECT_KEY;
@@ -228,7 +228,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
               ecstr_delete(&key);            
               return json_cleanup_udc (&udc);
             }
-            ecudc_add_asString(udc, "", value);
+            ecudc_add_asString(EC_ALLOC, udc, "", value);
             ecstr_delete(&value);
           }
           c = parser->pos;
@@ -357,7 +357,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
               ecstr_delete(&key);            
               return json_cleanup_udc (&udc);
             }
-            ecudc_add_asString(udc, key, value);
+            ecudc_add_asString(EC_ALLOC, udc, key, value);
             ecstr_delete(&value);
           }
           c = parser->pos;

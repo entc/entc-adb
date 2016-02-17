@@ -20,8 +20,8 @@
 #ifndef ENTC_TYPES_UDC_H
 #define ENTC_TYPES_UDC_H 1
 
-#include "system/macros.h"
-#include "system/types.h"
+#include "types/ecalloc.h"
+
 #include "system/ecfile.h"
 
 #include "ecstring.h"
@@ -89,13 +89,13 @@ typedef struct
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcUdc ecudc_create (uint_t type, const EcString name);
+__LIB_EXPORT EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name);
 
-__LIB_EXPORT void ecudc_destroy (EcUdc*);
+__LIB_EXPORT void ecudc_destroy (EcAlloc alloc, EcUdc*);
 
 __LIB_EXPORT void ecudc_add (EcUdc, EcUdc*);
 
-__LIB_EXPORT int ecudc_del (EcUdc, const EcString name);
+__LIB_EXPORT int ecudc_del (EcAlloc alloc, EcUdc, const EcString name);
 
 __LIB_EXPORT EcUdc ecudc_node (EcUdc, const EcString name);
 
@@ -209,37 +209,37 @@ __LIB_EXPORT const time_t* ecudc_get_asTime (const EcUdc, const EcString name, c
 
 // helper setter
 
-__LIB_EXPORT void ecudc_add_asP (EcUdc, const EcString name, void* value);
+__LIB_EXPORT void ecudc_add_asP (EcAlloc, EcUdc, const EcString name, void* value);
 
-__LIB_EXPORT void ecudc_add_asString (EcUdc, const EcString name, const EcString value);
+__LIB_EXPORT void ecudc_add_asString (EcAlloc, EcUdc, const EcString name, const EcString value);
 
-__LIB_EXPORT void ecudc_add_asS_o (EcUdc, const EcString name, EcString*);
+__LIB_EXPORT void ecudc_add_asS_o (EcAlloc, EcUdc, const EcString name, EcString*);
 
-__LIB_EXPORT void ecudc_add_asByte (EcUdc, const EcString name, byte_t value);
+__LIB_EXPORT void ecudc_add_asByte (EcAlloc, EcUdc, const EcString name, byte_t value);
 
-__LIB_EXPORT void ecudc_add_asUByte (EcUdc, const EcString name, ubyte_t value);
+__LIB_EXPORT void ecudc_add_asUByte (EcAlloc, EcUdc, const EcString name, ubyte_t value);
 
-__LIB_EXPORT void ecudc_add_asInt16 (EcUdc, const EcString name, int16_t value);
+__LIB_EXPORT void ecudc_add_asInt16 (EcAlloc, EcUdc, const EcString name, int16_t value);
 
-__LIB_EXPORT void ecudc_add_asUInt16 (EcUdc, const EcString name, uint16_t value);
+__LIB_EXPORT void ecudc_add_asUInt16 (EcAlloc, EcUdc, const EcString name, uint16_t value);
 
-__LIB_EXPORT void ecudc_add_asInt32 (EcUdc, const EcString name, int32_t value);
+__LIB_EXPORT void ecudc_add_asInt32 (EcAlloc, EcUdc, const EcString name, int32_t value);
 
-__LIB_EXPORT void ecudc_add_asUInt32 (EcUdc, const EcString name, uint32_t value);
+__LIB_EXPORT void ecudc_add_asUInt32 (EcAlloc, EcUdc, const EcString name, uint32_t value);
 
-__LIB_EXPORT void ecudc_add_asInt64 (EcUdc, const EcString name, int64_t value);
+__LIB_EXPORT void ecudc_add_asInt64 (EcAlloc, EcUdc, const EcString name, int64_t value);
 
-__LIB_EXPORT void ecudc_add_asUInt64 (EcUdc, const EcString name, uint64_t value);
+__LIB_EXPORT void ecudc_add_asUInt64 (EcAlloc, EcUdc, const EcString name, uint64_t value);
 
-__LIB_EXPORT void ecudc_add_asFloat (EcUdc, const EcString name, float value);
+__LIB_EXPORT void ecudc_add_asFloat (EcAlloc, EcUdc, const EcString name, float value);
 
-__LIB_EXPORT void ecudc_add_asDouble (EcUdc, const EcString name, double value);
+__LIB_EXPORT void ecudc_add_asDouble (EcAlloc, EcUdc, const EcString name, double value);
 
-__LIB_EXPORT void ecudc_add_asTime (EcUdc, const EcString name, const time_t* value);
+__LIB_EXPORT void ecudc_add_asTime (EcAlloc, EcUdc, const EcString name, const time_t* value);
 
 // tools
 
-__LIB_EXPORT EcUdc ecudc_errcode (uint_t errcode);
+__LIB_EXPORT EcUdc ecudc_errcode (EcAlloc, uint_t errcode);
 
 __CPP_EXTERN______________________________________________________________________________END
 

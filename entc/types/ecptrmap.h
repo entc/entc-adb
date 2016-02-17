@@ -20,10 +20,9 @@
 #ifndef ENTC_TYPES_PTRMAP_H
 #define ENTC_TYPES_PTRMAP_H 1
 
-#include "../system/macros.h"
-
-#include "../types/ecstring.h"
-#include "../types/eclist.h"
+#include "types/ecalloc.h"
+#include "types/ecstring.h"
+#include "types/eclist.h"
 
 struct EcPtrMap_s;
 
@@ -33,15 +32,15 @@ typedef struct EcListNode_s* EcPtrMapNode;
 
 __CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcPtrMap ecptrmap_new();
+__LIB_EXPORT EcPtrMap ecptrmap_create (EcAlloc);
   
-__LIB_EXPORT void ecptrmap_delete(EcPtrMap*);
+__LIB_EXPORT void ecptrmap_destroy (EcAlloc, EcPtrMap*);
   
 __LIB_EXPORT void ecptrmap_clear(EcPtrMap);
   
 __LIB_EXPORT void ecptrmap_append(EcPtrMap, void* key, void* data);
   
-__LIB_EXPORT EcPtrMapNode ecptrmap_erase(EcPtrMapNode);
+__LIB_EXPORT EcPtrMapNode ecptrmap_erase (EcPtrMap, EcPtrMapNode);
   
 __LIB_EXPORT EcPtrMapNode ecptrmap_find(EcPtrMap, void* key);
   

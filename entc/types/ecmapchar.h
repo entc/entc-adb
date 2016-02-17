@@ -20,11 +20,9 @@
 #ifndef ENTC_TYPES_MAPCHAR_H
 #define ENTC_TYPES_MAPCHAR_H 1
 
-/* include external macro for win32 */
-#include "../system/macros.h"
-
-#include "../types/ecstring.h"
-#include "../types/eclist.h"
+#include "types/ecalloc.h"
+#include "types/ecstring.h"
+#include "types/eclist.h"
 
 struct EcMapChar_s;
 
@@ -34,9 +32,9 @@ typedef struct EcListNode_s* EcMapCharNode;
 
 __CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcMapChar ecmapchar_new();
+__LIB_EXPORT EcMapChar ecmapchar_create (EcAlloc);
   
-__LIB_EXPORT void ecmapchar_delete(EcMapChar*);
+__LIB_EXPORT void ecmapchar_destroy (EcAlloc, EcMapChar*);
   
 __LIB_EXPORT void ecmapchar_clear(EcMapChar);
 
