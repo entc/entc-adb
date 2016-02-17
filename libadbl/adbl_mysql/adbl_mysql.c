@@ -331,7 +331,7 @@ int adblmodule_createStatement (EcStream statement, AdblQuery* query, struct Adb
 {
   int cntBinds = 0;
   
-  EcIntMap orders = ecintmap_new();
+  EcIntMap orders = ecintmap_create (EC_ALLOC);
 
   ecstream_append( statement, "SELECT " );
   
@@ -387,7 +387,7 @@ int adblmodule_createStatement (EcStream statement, AdblQuery* query, struct Adb
     }    
   }
   
-  ecintmap_delete(&orders);
+  ecintmap_destroy (EC_ALLOC, &orders);
   
   if(query->limit > 0)
   {

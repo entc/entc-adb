@@ -25,19 +25,19 @@ void ecnode_add_default (EcUdc self)
 {
   time_t t = 0;
   
-  ecudc_add_asUInt64 (self, ECDATA_SIZE, 0);
-  ecudc_add_asTime (self, ECDATA_CDATE, &t);
-  ecudc_add_asTime (self, ECDATA_MDATE, &t);
+  ecudc_add_asUInt64 (EC_ALLOC, self, ECDATA_SIZE, 0);
+  ecudc_add_asTime (EC_ALLOC, self, ECDATA_CDATE, &t);
+  ecudc_add_asTime (EC_ALLOC, self, ECDATA_MDATE, &t);
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
 EcUdc ecnode_create (const EcString name)
 {
-  EcUdc self = ecudc_create (ENTC_UDC_NODE, name);
+  EcUdc self = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, name);
   
-  EcUdc nodes = ecudc_create (ENTC_UDC_NODE, ECDATA_NODES);
-  EcUdc items = ecudc_create (ENTC_UDC_NODE, ECDATA_ITEMS);
+  EcUdc nodes = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, ECDATA_NODES);
+  EcUdc items = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, ECDATA_ITEMS);
   
   ecudc_add(self, &nodes);
   ecudc_add(self, &items);
@@ -59,7 +59,7 @@ void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, cons
     }
     else
     {
-      ecudc_add_asUInt64 (node, ECDATA_SIZE, size);    
+      ecudc_add_asUInt64 (EC_ALLOC, node, ECDATA_SIZE, size);    
     }
   }
   {
@@ -70,7 +70,7 @@ void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, cons
     }
     else
     {
-      ecudc_add_asTime (node, ECDATA_CDATE, cdate);    
+      ecudc_add_asTime (EC_ALLOC, node, ECDATA_CDATE, cdate);    
     }
   }
   {
@@ -81,7 +81,7 @@ void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, cons
     }
     else
     {
-      ecudc_add_asTime (node, ECDATA_MDATE, mdate);    
+      ecudc_add_asTime (EC_ALLOC, node, ECDATA_MDATE, mdate);    
     }
   }
 }
@@ -90,7 +90,7 @@ void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, cons
 
 EcUdc ecnode_create_item (EcUdc node, const EcString name)
 {
-  EcUdc self = ecudc_create (ENTC_UDC_NODE, name);
+  EcUdc self = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, name);
   
   ecnode_add_default (self);  
 
@@ -114,10 +114,10 @@ EcUdc ecnode_create_item (EcUdc node, const EcString name)
 
 EcUdc ecnode_create_node (EcUdc node, const EcString name)
 {
-  EcUdc self = ecudc_create (ENTC_UDC_NODE, name);
+  EcUdc self = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, name);
 
-  EcUdc nodes = ecudc_create (ENTC_UDC_NODE, ECDATA_NODES);
-  EcUdc items = ecudc_create (ENTC_UDC_NODE, ECDATA_ITEMS);
+  EcUdc nodes = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, ECDATA_NODES);
+  EcUdc items = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, ECDATA_ITEMS);
   
   ecudc_add(self, &nodes);
   ecudc_add(self, &items);

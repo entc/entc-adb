@@ -39,11 +39,11 @@ struct EcChain_s
 
 //----------------------------------------------------------------------------------------
 
-EcChain ecchain_new()
+EcChain ecchain_create (EcAlloc alloc)
 {
   EcChain self = ENTC_NEW(struct EcChain_s);
   
-  self->stack = eclist_new();
+  self->stack = eclist_create (alloc);
   self->length = 200;
   self->buffer = ENTC_MALLOC(sizeof(void*) * self->length);
   
@@ -74,13 +74,13 @@ void ecchain_clear(EcChain self)
 
 //----------------------------------------------------------------------------------------
 
-void ecchain_delete(EcChain* pself)
+void ecchain_destroy (EcAlloc alloc, EcChain* pself)
 {
   EcChain self = *pself;
   
   ecchain_clear (self);
   
-  eclist_delete(&(self->stack));
+  eclist_free (EC_ALLOC, &(self->stack));
   
   ENTC_FREE(self->buffer);
   
@@ -102,7 +102,7 @@ uint_t ecchain_getNextIndex(EcChain self)
     
     res = *pindex;
     
-    eclist_erase(eclist_first(self->stack));
+    eclist_erase (EC_ALLOC, self->stack, eclist_first (self->stack));
     
     ENTC_DEL(&pindex, uint_t);
   }
@@ -155,7 +155,7 @@ void ecchain_del(EcChain self, uint_t index)
   
   pindex = ENTC_NEW(uint_t);  
   *pindex = index;
-  eclist_append(self->stack, pindex);
+  eclist_append (EC_ALLOC, self->stack, pindex);
   self->stacklen++;
   
   pp = self->buffer + index;

@@ -110,7 +110,7 @@ void adbo_node_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstre
     
     if (ecxmlstream_isBegin (xmlstream, "objects"))
     {
-      EcUdc cols = ecudc_create(ENTC_UDC_NODE, ECDATA_COLS);
+      EcUdc cols = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, ECDATA_COLS);
 
       adbo_node_structure_fromXml (cols, context, xmlstream, "objects");
 
@@ -118,7 +118,7 @@ void adbo_node_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstre
     }
     else if (ecxmlstream_isBegin (xmlstream, "primary_keys"))
     {
-      EcUdc ids = ecudc_create(ENTC_UDC_NODE, ECDATA_IDS);
+      EcUdc ids = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, ECDATA_IDS);
       
       adbo_dbkeys_fromXml (ids, context, xmlstream, "primary_keys");
       
@@ -126,7 +126,7 @@ void adbo_node_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstre
     }
     else if (ecxmlstream_isBegin (xmlstream, "foreign_keys"))
     {
-      EcUdc refs = ecudc_create(ENTC_UDC_NODE, ECDATA_REFS);
+      EcUdc refs = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, ECDATA_REFS);
 
       adbo_dbkeys_fromXml (refs, context, xmlstream, "foreign_keys");
       
@@ -343,7 +343,7 @@ void adbo_node_primary_sequence (EcUdc node, AdblSession dbsession, const EcStri
         
         adbl_attrs_addLong(attrs, dbcolumn, id);
         
-        ecudc_add_asUInt32(values, dbcolumn, id);        
+        ecudc_add_asUInt32(EC_ALLOC, values, dbcolumn, id);        
       }
     }
   }
@@ -419,12 +419,12 @@ int adbo_node_dbquery_cursor (EcUdc node, EcUdc values, ulong_t dbmin, AdboConte
     int colno = 0;
     EcListNode c;
 
-    EcUdc items = ecudc_create (ENTC_UDC_NODE, NULL);
+    EcUdc items = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
 
     for (c = eclist_first(query->columns); c != eclist_end(query->columns); c = eclist_next(c), colno++)
     {
       AdblQueryColumn* qc = eclist_data(c);      
-      ecudc_add_asString (items, qc->column, adbl_dbcursor_data(cursor, colno));          
+      ecudc_add_asString (EC_ALLOC, items, qc->column, adbl_dbcursor_data(cursor, colno));          
     }
     
     ecudc_add (values, &items);
@@ -723,7 +723,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
     return FALSE;
   }
   
-  ecudc_del (node, ECDATA_ROWS);
+  ecudc_del (EC_ALLOC, node, ECDATA_ROWS);
   
   dbsource = ecudc_get_asString(node, ".dbsource", "default");  
   dbsession = adbl_openSession (context->adblm, dbsource);
@@ -734,7 +734,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
     return FALSE;
   }
   
-  values = ecudc_create (ENTC_UDC_LIST, ECDATA_ROWS);
+  values = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, ECDATA_ROWS);
   
   dbmin = ecudc_get_asUInt32(node, ".dbmin", 1);
   
@@ -802,7 +802,7 @@ void adbo_node_insert_values (AdboContext context, EcUdc cols, EcUdc update_item
  
     adbl_attrs_addChar(attrs, dbcolumn, update_value);
     
-    ecudc_add_asString(values, dbcolumn, update_value);
+    ecudc_add_asString(EC_ALLOC, values, dbcolumn, update_value);
   }
 }
 
@@ -817,8 +817,8 @@ int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, co
 
   int ret = TRUE;
 
-  ecudc_del (node, ECDATA_ROWS);
-  values_list = ecudc_create (ENTC_UDC_LIST, ECDATA_ROWS);
+  ecudc_del (EC_ALLOC, node, ECDATA_ROWS);
+  values_list = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, ECDATA_ROWS);
   
   // iterate through all new values
   for (item_update = ecudc_next (update_data, &cursor); isAssigned (item_update); item_update = ecudc_next (update_data, &cursor))
@@ -829,10 +829,10 @@ int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, co
       // good now check if it is in the original
       eclogger_msg (LL_WARN, "ADBO", "update", "multi update not implemented yet");
       ret = FALSE;
-    } 
+    }
     else
     {
-      EcUdc values = ecudc_create (ENTC_UDC_NODE, NULL);
+      EcUdc values = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
       
       AdblSecurity adblsec;
       AdblAttributes* attrs = adbl_attrs_new ();
@@ -843,7 +843,7 @@ int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, co
       // convert contraint to attribute
       if (isAssigned (constraint))
       {
-        adbl_constraint_attrs (constraint, attrs);      
+        adbl_constraint_attrs (constraint, attrs);
       }
       adbl_insert_setAttributes (insert, attrs);
 
@@ -854,7 +854,7 @@ int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, co
         adbo_node_insert_values (context, cols, item_update, values, attrs);
       }
       
-      ret = adbl_dbinsert (dbsession, insert, &adblsec);                        
+      ret = adbl_dbinsert (dbsession, insert, &adblsec);
       
       adbl_insert_delete (&insert);
       
@@ -1241,7 +1241,7 @@ void adbo_node_updateSize (EcUdc node, AdboContext context)
   }
   else
   {
-    ecudc_add_asUInt64 (node, ECDATA_SIZE, adbl_table_size (dbsession, ecudc_name (node)));
+    ecudc_add_asUInt64 (EC_ALLOC, node, ECDATA_SIZE, adbl_table_size (dbsession, ecudc_name (node)));
   }
 }
 

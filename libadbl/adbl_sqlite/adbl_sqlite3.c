@@ -330,7 +330,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     return 0;
   }
   
-  orders = ecintmap_new();
+  orders = ecintmap_create (EC_ALLOC);
   
   ecmutex_lock(conn->mutex);
   
@@ -378,7 +378,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     }    
   }
   
-  ecintmap_delete(&orders);
+  ecintmap_destroy (EC_ALLOC, &orders);
   
   if(query->limit > 0)
   {
@@ -1130,11 +1130,11 @@ EcList adblmodule_dbschema (void* ptr)
   ecmutex_unlock(conn->mutex);
   
   // so far so good
-  ret = eclist_new ();
+  ret = eclist_create (EC_ALLOC);
   
   while( res == SQLITE_ROW )
   {
-    eclist_append(ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
+    eclist_append (EC_ALLOC, ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
     // get next row
     ecmutex_lock(conn->mutex);
     res = sqlite3_step(stmt);
@@ -1160,7 +1160,7 @@ EcList adblmodule_dbschema (void* ptr)
 void adblmodule_parseColumn (AdblTable* table, const EcString statement)
 {
   EcListNode node;
-  EcList list = eclist_new ();
+  EcList list = eclist_create (EC_ALLOC);
   
   EcString column;
 
@@ -1171,7 +1171,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement)
   if (node == eclist_end(list))
   {
     ecstr_tokenizer_clear (list);
-    eclist_delete(&list);
+    eclist_free (EC_ALLOC, &list);
     
     return;
   }
@@ -1182,8 +1182,8 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement)
   if (node == eclist_end(list))
   {
     ecstr_tokenizer_clear (list);
-    eclist_delete(&list);
-    ecstr_delete(&column);
+    eclist_free (EC_ALLOC, &list);
+    ecstr_delete (&column);
     
     return;
   }
@@ -1193,7 +1193,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement)
   {
     eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added column: %s", column);          
 
-    eclist_append(table->columns, column);
+    eclist_append (EC_ALLOC, table->columns, column);
   }
   else
   {
@@ -1201,7 +1201,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement)
     {
       eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added primary key: %s", column);          
       
-      eclist_append(table->primary_keys, column);      
+      eclist_append (EC_ALLOC, table->primary_keys, column);      
     }
     else
     {
@@ -1210,7 +1210,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement)
   }
 
   ecstr_tokenizer_clear (list);
-  eclist_delete(&list);
+  eclist_free (EC_ALLOC, &list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -1219,7 +1219,7 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
 {
   
   EcListNode node;
-  EcList list = eclist_new ();
+  EcList list = eclist_create (EC_ALLOC);
   
   EcString column;
   EcString tablename;
@@ -1232,7 +1232,7 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
   if (node == eclist_end(list))
   {
     ecstr_tokenizer_clear (list);
-    eclist_delete(&list);
+    eclist_free (EC_ALLOC,&list);
     
     return;
   }
@@ -1243,8 +1243,8 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
   if (node == eclist_end(list))
   {
     ecstr_tokenizer_clear (list);
-    eclist_delete(&list);
-    ecstr_delete(&column);
+    eclist_free (EC_ALLOC, &list);
+    ecstr_delete (&column);
     
     return;
   }
@@ -1253,8 +1253,8 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
   if (node == eclist_end(list))
   {
     ecstr_tokenizer_clear (list);
-    eclist_delete(&list);
-    ecstr_delete(&column);
+    eclist_free (EC_ALLOC, &list);
+    ecstr_delete (&column);
     
     return;
   }
@@ -1272,11 +1272,11 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
     fkconstraint->table = tablename;
     fkconstraint->reference = reference;
     
-    eclist_append(table->foreign_keys, fkconstraint);
+    eclist_append (EC_ALLOC, table->foreign_keys, fkconstraint);
   }
   
   ecstr_tokenizer_clear (list);
-  eclist_delete(&list);
+  eclist_free (EC_ALLOC, &list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -1284,7 +1284,7 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
 AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcString statement)
 {
   EcListNode node;
-  EcList list = eclist_new ();
+  EcList list = eclist_create (EC_ALLOC);
   
   AdblTable* table = adbl_table_new (tablename);
     
@@ -1309,7 +1309,7 @@ AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcSt
     ecstr_delete(&part);
   }
   
-  eclist_delete(&list);
+  eclist_free (EC_ALLOC, &list);
   
   ecstr_delete(&s1);
   

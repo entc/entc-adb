@@ -20,8 +20,8 @@
 #ifndef ENTC_TYPES_CURSOR_H
 #define ENTC_TYPES_CURSOR_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "system/macros.h"
+#include "system/types.h"
 
 #include "ectable.h"
 

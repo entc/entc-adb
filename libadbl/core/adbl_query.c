@@ -31,7 +31,7 @@ AdblQuery* adbl_query_new (void)
 {
   AdblQuery* self = ENTC_NEW(AdblQuery);
   
-  self->columns = eclist_new();
+  self->columns = eclist_create (EC_ALLOC);
   
   self->table = ecstr_init();
   
@@ -51,7 +51,7 @@ void adbl_query_delete (AdblQuery** ptr)
   
   adbl_query_clear( self );
   
-  eclist_delete( &(self->columns) );
+  eclist_free (EC_ALLOC, &(self->columns));
   
   ENTC_DEL( ptr, AdblQuery );
 }
@@ -108,7 +108,7 @@ void adbl_query_addColumn (AdblQuery* self, const EcString column, int order_pos
   qc->value = 0;
   qc->orderno = order_pos;
   /* add to list */
-  eclist_append(self->columns, qc);
+  eclist_append (EC_ALLOC, self->columns, qc);
 }
 
 //------------------------------------------------------------------------
@@ -124,7 +124,7 @@ void adbl_query_addColumnAsSubquery (AdblQuery* self, const EcString column, con
   qc->value = ecstr_copy(value);
   qc->orderno = order_pos;
   /* add to list */
-  eclist_append(self->columns, qc);  
+  eclist_append (EC_ALLOC, self->columns, qc);  
 }
 
 //------------------------------------------------------------------------

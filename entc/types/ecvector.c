@@ -38,11 +38,11 @@ struct EcVectorDataNode
 
 /*------------------------------------------------------------------------*/
 
-EcVector ecvector_new()
+EcVector ecvector_create (EcAlloc alloc)
 {
   EcVector self = ENTC_NEW(struct EcVector_s);
   
-  self->list = eclist_new();
+  self->list = eclist_create (alloc);
   
   self->indexcounter = 0;
   
@@ -51,13 +51,13 @@ EcVector ecvector_new()
 
 /*------------------------------------------------------------------------*/
 
-void ecvector_delete(EcVector* pself)
+void ecvector_destroy (EcAlloc alloc, EcVector* pself)
 {
   EcVector self = *pself;
   
   ecvector_clear( self );
   
-  eclist_delete(&(self->list));
+  eclist_free (EC_ALLOC, &(self->list));
 
   ENTC_DEL(pself, struct EcVector_s);
 }
@@ -73,7 +73,7 @@ EcVectorNode ecvector_append(EcVector self, void* data)
   vecnode->data = data;
   vecnode->index = self->indexcounter;
   
-  return (EcVectorNode)eclist_append(self->list, vecnode);
+  return (EcVectorNode)eclist_append (EC_ALLOC, self->list, vecnode);
 }
 
 /*------------------------------------------------------------------------*/
@@ -87,7 +87,7 @@ uint_t ecvector_add(EcVector self, void* data)
   vecnode->data = data;
   vecnode->index = self->indexcounter;
   
-  eclist_append(self->list, vecnode);
+  eclist_append (EC_ALLOC, self->list, vecnode);
   
   return self->indexcounter;
 }
@@ -142,13 +142,13 @@ EcVectorNode ecvector_at(const EcVector self, uint_t lindex)
 
 /*------------------------------------------------------------------------*/
 
-EcVectorNode ecvector_erase(EcVectorNode node)
+EcVectorNode ecvector_erase (EcVector self, EcVectorNode node)
 {
   struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)eclist_data(node);
 
   ENTC_DEL(&vecnode, struct EcVectorDataNode);
   
-  return eclist_erase(node);  
+  return eclist_erase (EC_ALLOC, self->list, node);  
 }
 
 /*------------------------------------------------------------------------*/

@@ -20,8 +20,8 @@
 #ifndef ENTC_TYPES_MAP_H
 #define ENTC_TYPES_MAP_H 1
 
-#include "../system/macros.h"
-#include "../types/ecstring.h"
+#include "types/ecalloc.h"
+#include "types/ecstring.h"
 
 #include "eclist.h"
 
@@ -38,15 +38,15 @@ typedef struct {
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcMap ecmap_new();
+__LIB_EXPORT EcMap ecmap_create (EcAlloc);
   
-__LIB_EXPORT void ecmap_delete(EcMap*);
+__LIB_EXPORT void ecmap_destroy (EcAlloc, EcMap*);
 
-__LIB_EXPORT void ecmap_clear(EcMap);
+__LIB_EXPORT void ecmap_clear (EcAlloc, EcMap);
 
 __LIB_EXPORT EcMapNode ecmap_append(EcMap, const EcString key, void* data);
   
-__LIB_EXPORT EcMapNode ecmap_erase(EcMapNode);
+__LIB_EXPORT EcMapNode ecmap_erase(EcMap, EcMapNode);
   
 __LIB_EXPORT EcMapNode ecmap_find(EcMap, const EcString key);
   

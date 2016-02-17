@@ -26,9 +26,9 @@ AdblTable* adbl_table_new (const EcString tablename)
   AdblTable* self = ENTC_NEW (AdblTable);
   
   self->name = ecstr_copy(tablename);
-  self->columns = eclist_new ();
-  self->primary_keys = eclist_new ();
-  self->foreign_keys = eclist_new ();
+  self->columns = eclist_create (EC_ALLOC);
+  self->primary_keys = eclist_create (EC_ALLOC);
+  self->foreign_keys = eclist_create (EC_ALLOC);
   
   return self;
 }
@@ -49,7 +49,7 @@ void adbl_table_del (AdblTable** pself)
     ecstr_delete(&column);
   }
   
-  eclist_delete(&(self->columns));
+  eclist_free (EC_ALLOC, &(self->columns));
   
   for (node = eclist_first(self->primary_keys); node != eclist_end(self->primary_keys); node = eclist_next(node))
   {
@@ -57,7 +57,7 @@ void adbl_table_del (AdblTable** pself)
     ecstr_delete(&prikey);
   }
   
-  eclist_delete(&(self->primary_keys));
+  eclist_free (EC_ALLOC, &(self->primary_keys));
 
   for (node = eclist_first(self->foreign_keys); node != eclist_end(self->foreign_keys); node = eclist_next(node))
   {
@@ -66,7 +66,7 @@ void adbl_table_del (AdblTable** pself)
     ENTC_DEL (&fkconstraint, AdblForeignKeyConstraint);
   }
   
-  eclist_delete(&(self->foreign_keys));
+  eclist_free (EC_ALLOC, &(self->foreign_keys));
 
   ENTC_DEL (pself, AdblTable);
 }
@@ -85,7 +85,7 @@ void adbl_schema_del (EcList* pself)
     ecstr_delete(&value);
   }
   
-  eclist_delete(pself);
+  eclist_free (EC_ALLOC, pself);
 }
 
 //----------------------------------------------------------------------------------------
