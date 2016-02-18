@@ -108,7 +108,7 @@ void adbl_query_addColumn (AdblQuery* self, const EcString column, int order_pos
   qc->value = 0;
   qc->orderno = order_pos;
   /* add to list */
-  eclist_append (EC_ALLOC, self->columns, qc);
+  eclist_append (self->columns, qc);
 }
 
 //------------------------------------------------------------------------
@@ -124,7 +124,7 @@ void adbl_query_addColumnAsSubquery (AdblQuery* self, const EcString column, con
   qc->value = ecstr_copy(value);
   qc->orderno = order_pos;
   /* add to list */
-  eclist_append (EC_ALLOC, self->columns, qc);  
+  eclist_append (self->columns, qc);  
 }
 
 //------------------------------------------------------------------------

@@ -81,7 +81,7 @@ void adbl_constraint_addChar (AdblConstraint* self, const EcString column, ubyte
 {
   AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
   
-  eclist_append (EC_ALLOC, self->list, element);
+  eclist_append (self->list, element);
   
   element->type = type;
   
@@ -97,7 +97,7 @@ void adbl_constraint_addLong (AdblConstraint* self, const EcString column, ubyte
 {
 	AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
 
-	eclist_append (EC_ALLOC, self->list, element);
+	eclist_append (self->list, element);
 
 	element->type = type;
 
@@ -113,7 +113,7 @@ void adbl_constraint_addConstraint (AdblConstraint* self, AdblConstraint* value)
 {
   AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
   
-  eclist_append (EC_ALLOC, self->list, element);
+  eclist_append (self->list, element);
   
   element->type = 0;
   
