@@ -945,7 +945,7 @@ void ecstr_tokenizer(EcList list, const EcString source, char delimeter)
         // set termination
         buffer[diff] = 0;
         // add to list      
-        eclist_append (EC_ALLOC, list, buffer);
+        eclist_append (list, buffer);
       }
       posL = posR + 1;
     }
@@ -964,7 +964,7 @@ void ecstr_tokenizer(EcList list, const EcString source, char delimeter)
       // set termination
       buffer[diff] = 0;
       // add to list      
-      eclist_append (EC_ALLOC, list, buffer);      
+      eclist_append_ex (EC_ALLOC, list, buffer);      
     }
   }
 }

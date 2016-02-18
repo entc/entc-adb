@@ -262,7 +262,7 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   ecmutex_lock (self->ecmutex);
 
   self->eclist = ec->lists;
-  self->ecnode = eclist_append (EC_ALLOC, ec->lists, self);
+  self->ecnode = eclist_append (ec->lists, self);
   
   ecmutex_unlock (self->ecmutex);
 
@@ -368,7 +368,7 @@ void ece_list_data_add (EcEventQueue self, EcHandle handle, void* ptr)
     pdata->handle = handle;
     pdata->ptr = ptr;
     
-    eclist_append (EC_ALLOC, self->ptrs, pdata);  
+    eclist_append (self->ptrs, pdata);  
   }
 }
 

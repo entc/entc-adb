@@ -155,7 +155,7 @@ void ecchain_del(EcChain self, uint_t index)
   
   pindex = ENTC_NEW(uint_t);  
   *pindex = index;
-  eclist_append (EC_ALLOC, self->stack, pindex);
+  eclist_append_ex (EC_ALLOC, self->stack, pindex);
   self->stacklen++;
   
   pp = self->buffer + index;

@@ -84,7 +84,7 @@ void ecmapchar_append(EcMapChar self, const EcString key, const EcString value)
   mapnode->key = ecstr_copy(key);
   mapnode->value = ecstr_copy(value);
   
-  eclist_append (EC_ALLOC, self->list, mapnode);
+  eclist_append_ex (EC_ALLOC, self->list, mapnode);
 }
 
 /*------------------------------------------------------------------------*/
@@ -96,7 +96,7 @@ void ecmapchar_appendTO(EcMapChar self, const EcString key, EcString value)
   mapnode->key = ecstr_copy(key);
   mapnode->value = value;
   
-  eclist_append (EC_ALLOC, self->list, mapnode); 
+  eclist_append_ex (EC_ALLOC, self->list, mapnode); 
 }
 
 /*------------------------------------------------------------------------*/

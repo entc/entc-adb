@@ -86,7 +86,7 @@ EcMapNode ecmap_append (EcMap self, const EcString key, void* data)
   mapnode->key = ecstr_copy(key);
   mapnode->data = data;
   
-  return eclist_append (EC_ALLOC, self->list, mapnode);
+  return eclist_append_ex (EC_ALLOC, self->list, mapnode);
 }
 
 //----------------------------------------------------------------------------------------

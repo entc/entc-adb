@@ -110,7 +110,14 @@ EcListNode eclist_insert (EcAlloc alloc, EcList self, EcListNode node, void* dat
 
 //----------------------------------------------------------------------------------------
 
-EcListNode eclist_append (EcAlloc alloc, EcList self, void* data)
+EcListNode eclist_append (EcList self, void* data)
+{
+  return eclist_insert (EC_ALLOC, self, self->node->forw, data);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcListNode eclist_append_ex (EcAlloc alloc, EcList self, void* data)
 {
   return eclist_insert (alloc, self, self->node->forw, data);
 }

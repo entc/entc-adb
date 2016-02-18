@@ -262,7 +262,7 @@ void ecudc_list_add (EcUdcList* self, EcUdc* pnode)
 {
   EcUdc node = *pnode;
   
-  eclist_append (EC_ALLOC, self->list, node);
+  eclist_append_ex (EC_ALLOC, self->list, node);
   
   *pnode = NULL;
 }

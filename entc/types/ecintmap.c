@@ -82,7 +82,7 @@ void ecintmap_append(EcIntMap self, uint_t key, void* data)
   mapnode->key = key;
   mapnode->data = data;
   
-  eclist_append (EC_ALLOC, self->list, mapnode);  
+  eclist_append_ex (EC_ALLOC, self->list, mapnode);  
 }
 
 /*------------------------------------------------------------------------*/

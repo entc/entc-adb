@@ -73,7 +73,7 @@ EcVectorNode ecvector_append(EcVector self, void* data)
   vecnode->data = data;
   vecnode->index = self->indexcounter;
   
-  return (EcVectorNode)eclist_append (EC_ALLOC, self->list, vecnode);
+  return (EcVectorNode)eclist_append_ex (EC_ALLOC, self->list, vecnode);
 }
 
 /*------------------------------------------------------------------------*/
@@ -87,7 +87,7 @@ uint_t ecvector_add(EcVector self, void* data)
   vecnode->data = data;
   vecnode->index = self->indexcounter;
   
-  eclist_append (EC_ALLOC, self->list, vecnode);
+  eclist_append_ex (EC_ALLOC, self->list, vecnode);
   
   return self->indexcounter;
 }

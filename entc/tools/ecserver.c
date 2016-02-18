@@ -85,7 +85,7 @@ int _STDCALL ecserver_accept_run (void* params)
     ecmutex_lock(self->server->mutex);
   
     // needs to add object to the queue
-    eclist_append (EC_ALLOC, self->server->queue, object);
+    eclist_append_ex (EC_ALLOC, self->server->queue, object);
     pending = eclist_size (self->server->queue);
   
     ecmutex_unlock(self->server->mutex);
