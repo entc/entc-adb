@@ -22,6 +22,7 @@
 #include <system/ecmutex.h>
 #include <system/ecfile.h>
 #include <system/ecdl.h>
+#include <types/ecalloc.h>
 
 #include <types/ecstream.h>
 #include <utils/ecobserver.h>
