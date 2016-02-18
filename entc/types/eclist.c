@@ -41,7 +41,21 @@ struct EcList_s
 
 //----------------------------------------------------------------------------------------
 
-EcList eclist_create (EcAlloc alloc)
+EcList eclist_create (void)
+{
+  return eclist_create_ex (EC_ALLOC);
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclist_free (EcList* pself)
+{
+  eclist_free_ex (EC_ALLOC, pself);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcList eclist_create_ex (EcAlloc alloc)
 {
   EcList self = ECMM_NEW (struct EcList_s);
 
@@ -57,7 +71,7 @@ EcList eclist_create (EcAlloc alloc)
 
 //----------------------------------------------------------------------------------------
 
-void eclist_free (EcAlloc alloc, EcList* pself)
+void eclist_free_ex (EcAlloc alloc, EcList* pself)
 {
   EcList self = *pself;
   
@@ -96,7 +110,14 @@ EcListNode eclist_insert (EcAlloc alloc, EcList self, EcListNode node, void* dat
 
 //----------------------------------------------------------------------------------------
 
-EcListNode eclist_append (EcAlloc alloc, EcList self, void* data)
+EcListNode eclist_append (EcList self, void* data)
+{
+  return eclist_insert (EC_ALLOC, self, self->node->forw, data);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcListNode eclist_append_ex (EcAlloc alloc, EcList self, void* data)
 {
   return eclist_insert (alloc, self, self->node->forw, data);
 }

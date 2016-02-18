@@ -33,7 +33,7 @@ AdblConstraint* adbl_constraint_new (ubyte_t type)
   AdblConstraint* self = ENTC_NEW(AdblConstraint);
   
   self->type = type;
-  self->list = eclist_create (EC_ALLOC);
+  self->list = eclist_create_ex (EC_ALLOC);
   
   return self;
 }
@@ -46,7 +46,7 @@ void adbl_constraint_delete (AdblConstraint** ptr)
   
   adbl_constraint_clear(self);
   
-  eclist_free (EC_ALLOC, &(self->list));
+  eclist_free_ex (EC_ALLOC, &(self->list));
   
   ENTC_DEL( ptr, AdblConstraint );
 }

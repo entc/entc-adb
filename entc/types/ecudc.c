@@ -224,7 +224,7 @@ void* ecudc_list_new (EcAlloc alloc)
 {
   EcUdcList* self = ECMM_NEW (EcUdcList);
 
-  self->list = eclist_create (alloc);
+  self->list = eclist_create_ex (alloc);
   
   return self;
 }
@@ -251,7 +251,7 @@ void ecudc_list_destroy (EcAlloc alloc, void** pself)
   // if protected dont delete
   ecudc_list_clear (alloc, self);
   
-  eclist_free (EC_ALLOC, &(self->list));
+  eclist_free_ex (EC_ALLOC, &(self->list));
   
   ECMM_DEL (pself, EcUdcList);    
 }
@@ -262,7 +262,7 @@ void ecudc_list_add (EcUdcList* self, EcUdc* pnode)
 {
   EcUdc node = *pnode;
   
-  eclist_append (EC_ALLOC, self->list, node);
+  eclist_append_ex (EC_ALLOC, self->list, node);
   
   *pnode = NULL;
 }

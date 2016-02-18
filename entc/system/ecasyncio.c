@@ -230,7 +230,7 @@ void ecasync_create_threads (EcAsync self, int threads)
   {
     EcAsyncThread* thread = ecasync_thread_create ();
     
-    eclist_append (EC_ALLOC, self->threads, thread);
+    eclist_append (self->threads, thread);
     
     ecasync_thread_start (thread);
   }
@@ -242,7 +242,7 @@ EcAsync ecasync_create (int threads)
 {
   EcAsync self = ENTC_NEW (struct EcAsync_s);
   
-  self->threads = eclist_create (EC_ALLOC);
+  self->threads = eclist_create ();
 
   ecasync_create_threads (self, threads);
   
@@ -279,7 +279,7 @@ void ecasync_destroy (EcAsync* pself)
   EcAsync self = *pself;
   
   ecasync_clear (self);
-  eclist_free (EC_ALLOC, &(self->threads));
+  eclist_free_ex (EC_ALLOC, &(self->threads));
   
   ENTC_DEL (pself, struct EcAsync_s);
 }

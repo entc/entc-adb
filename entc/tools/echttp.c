@@ -817,7 +817,7 @@ void echttp_header_clear (EcHttpHeader* header)
   if (isAssigned (header->tokens))
   {
     ecstr_tokenizer_clear(header->tokens);
-    eclist_free (EC_ALLOC, &(header->tokens));
+    eclist_free_ex (EC_ALLOC, &(header->tokens));
   }  
   ecstr_delete(&(header->urlpath));
   
@@ -957,7 +957,7 @@ void echttp_header_title (EcHttpHeader* header)
   // unescape html url
   echttp_unescape (url_unescaped);
   
-  header->tokens = eclist_create (EC_ALLOC);
+  header->tokens = eclist_create_ex (EC_ALLOC);
   // split url into parts
   ecstr_tokenizer (header->tokens, url_unescaped, '/');
   // clean up
@@ -1202,7 +1202,7 @@ void echttp_parse_cookies_next (EcHttpHeader* header, const EcString cookie)
 
 void echttp_parse_cookies (EcHttpHeader* header, const EcString s)
 {
-  EcList list = eclist_create (EC_ALLOC);
+  EcList list = eclist_create_ex (EC_ALLOC);
   EcListNode node;
   
   ecstr_tokenizer(list, s, ';');
@@ -1214,14 +1214,14 @@ void echttp_parse_cookies (EcHttpHeader* header, const EcString s)
     ecstr_delete( &token );
   }
   
-  eclist_free (EC_ALLOC, &list);
+  eclist_free_ex (EC_ALLOC, &list);
 }
 
 //---------------------------------------------------------------------------------------
 
 void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 {
-  EcList list = eclist_create (EC_ALLOC);
+  EcList list = eclist_create_ex (EC_ALLOC);
   EcListNode node;
   
   ecstr_tokenizer(list, s, ';');
@@ -1233,7 +1233,7 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
   }
   
   ecstr_tokenizer_clear(list);  
-  eclist_free (EC_ALLOC, &list);
+  eclist_free_ex (EC_ALLOC, &list);
 }
 
 //---------------------------------------------------------------------------------------

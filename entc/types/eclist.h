@@ -38,11 +38,17 @@ typedef struct {
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcList eclist_create (EcAlloc);
+__LIB_EXPORT EcList eclist_create (void);
   
-__LIB_EXPORT void eclist_free (EcAlloc, EcList*);
+__LIB_EXPORT void eclist_free (EcList*);
+
+__LIB_EXPORT EcList eclist_create_ex (EcAlloc);
+
+__LIB_EXPORT void eclist_free_ex (EcAlloc, EcList*);
   
-__LIB_EXPORT EcListNode eclist_append(EcAlloc, EcList, void* data);
+__LIB_EXPORT EcListNode eclist_append (EcList, void* data);
+
+__LIB_EXPORT EcListNode eclist_append_ex (EcAlloc, EcList, void* data);
   
 __LIB_EXPORT void eclist_set(EcListNode, void* data);
 

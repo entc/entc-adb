@@ -40,7 +40,7 @@ EcPtrMap ecptrmap_create (EcAlloc alloc)
 {
   EcPtrMap self = ECMM_NEW(struct EcPtrMap_s);
   
-  self->list = eclist_create (alloc);
+  self->list = eclist_create_ex (alloc);
   
   return self;
 }
@@ -51,7 +51,7 @@ void ecptrmap_destroy (EcAlloc alloc, EcPtrMap* pself)
 {
   EcPtrMap self = *pself;
   
-  eclist_free (EC_ALLOC, &(self->list));
+  eclist_free_ex (EC_ALLOC, &(self->list));
   
   ECMM_DEL(pself, struct EcPtrMap_s);
 }
@@ -78,7 +78,7 @@ void ecptrmap_append(EcPtrMap self, void* key, void* data)
   mapnode->key = key;
   mapnode->data = data;
   
-  eclist_append (EC_ALLOC, self->list, mapnode);  
+  eclist_append_ex (EC_ALLOC, self->list, mapnode);  
 }
 
 /*------------------------------------------------------------------------*/

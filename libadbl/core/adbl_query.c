@@ -31,7 +31,7 @@ AdblQuery* adbl_query_new (void)
 {
   AdblQuery* self = ENTC_NEW(AdblQuery);
   
-  self->columns = eclist_create (EC_ALLOC);
+  self->columns = eclist_create_ex (EC_ALLOC);
   
   self->table = ecstr_init();
   
@@ -51,7 +51,7 @@ void adbl_query_delete (AdblQuery** ptr)
   
   adbl_query_clear( self );
   
-  eclist_free (EC_ALLOC, &(self->columns));
+  eclist_free_ex (EC_ALLOC, &(self->columns));
   
   ENTC_DEL( ptr, AdblQuery );
 }

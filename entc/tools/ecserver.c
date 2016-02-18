@@ -85,7 +85,7 @@ int _STDCALL ecserver_accept_run (void* params)
     ecmutex_lock(self->server->mutex);
   
     // needs to add object to the queue
-    eclist_append (EC_ALLOC, self->server->queue, object);
+    eclist_append_ex (EC_ALLOC, self->server->queue, object);
     pending = eclist_size (self->server->queue);
   
     ecmutex_unlock(self->server->mutex);
@@ -166,7 +166,7 @@ EcServer ecserver_create (uint_t poolSize, EcServerCallbacks* callbacks, EcEvent
   self->mainabort = ec;
   self->poolSize = poolSize;
   self->equeue = ece_list_create (ec, NULL);
-  self->queue = eclist_create (EC_ALLOC);
+  self->queue = eclist_create_ex (EC_ALLOC);
   self->mutex = ecmutex_new();
   self->worker_lock = ece_list_handle (self->equeue, NULL);
 
@@ -213,7 +213,7 @@ void ecserver_destroy (EcServer* ptr)
     }
   }
     
-  eclist_free (EC_ALLOC, &(self->queue));
+  eclist_free_ex (EC_ALLOC, &(self->queue));
   ecmutex_delete(&(self->mutex));
   
   ece_list_destroy (&(self->equeue));
