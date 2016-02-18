@@ -1134,7 +1134,7 @@ EcList adblmodule_dbschema (void* ptr)
   
   while( res == SQLITE_ROW )
   {
-    eclist_append (EC_ALLOC, ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
+    eclist_append (ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
     // get next row
     ecmutex_lock(conn->mutex);
     res = sqlite3_step(stmt);
@@ -1193,7 +1193,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement)
   {
     eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added column: %s", column);          
 
-    eclist_append (EC_ALLOC, table->columns, column);
+    eclist_append (table->columns, column);
   }
   else
   {
@@ -1201,7 +1201,7 @@ void adblmodule_parseColumn (AdblTable* table, const EcString statement)
     {
       eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added primary key: %s", column);          
       
-      eclist_append (EC_ALLOC, table->primary_keys, column);      
+      eclist_append (table->primary_keys, column);      
     }
     else
     {
@@ -1272,7 +1272,7 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
     fkconstraint->table = tablename;
     fkconstraint->reference = reference;
     
-    eclist_append (EC_ALLOC, table->foreign_keys, fkconstraint);
+    eclist_append (table->foreign_keys, fkconstraint);
   }
   
   ecstr_tokenizer_clear (list);
