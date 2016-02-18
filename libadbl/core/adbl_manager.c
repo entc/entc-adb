@@ -550,7 +550,7 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
 
   if (ecstr_valid(self->path))
   {
-    EcList engines = eclist_create (EC_ALLOC);  
+    EcList engines = eclist_create_ex (EC_ALLOC);  
 
     eclogger_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);   
     
@@ -569,7 +569,7 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
       ecstr_delete(&filename);
     }
     // clean up
-    eclist_free (EC_ALLOC, &engines);
+    eclist_free_ex (EC_ALLOC, &engines);
     
     adbl_parseConfig (self, configpath, FALSE);
   }

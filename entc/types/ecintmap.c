@@ -40,7 +40,7 @@ EcIntMap ecintmap_create (EcAlloc alloc)
 {
   EcIntMap self = ECMM_NEW(struct EcIntMap_s);
   
-  self->list = eclist_create (alloc);
+  self->list = eclist_create_ex (alloc);
   
   return self;
 }
@@ -53,7 +53,7 @@ void ecintmap_destroy (EcAlloc alloc, EcIntMap* pself)
   
   ecintmap_clear(self);
   
-  eclist_free (EC_ALLOC, &(self->list));
+  eclist_free_ex (EC_ALLOC, &(self->list));
   
   ECMM_DEL(pself, struct EcIntMap_s);
 }

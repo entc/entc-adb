@@ -39,7 +39,7 @@ EcMapChar ecmapchar_create (EcAlloc alloc)
 {
   EcMapChar self = ECMM_NEW(struct EcMapChar_s);
   
-  self->list = eclist_create (alloc);
+  self->list = eclist_create_ex (alloc);
   
   return self;
 }
@@ -52,7 +52,7 @@ void ecmapchar_destroy (EcAlloc alloc, EcMapChar* pself)
   
   ecmapchar_clear(self);
   
-  eclist_free (EC_ALLOC, &(self->list));
+  eclist_free_ex (EC_ALLOC, &(self->list));
   self->list = 0;
   
   ECMM_DEL(pself, struct EcMapChar_s);

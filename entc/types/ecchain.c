@@ -43,7 +43,7 @@ EcChain ecchain_create (EcAlloc alloc)
 {
   EcChain self = ENTC_NEW(struct EcChain_s);
   
-  self->stack = eclist_create (alloc);
+  self->stack = eclist_create_ex (alloc);
   self->length = 200;
   self->buffer = ENTC_MALLOC(sizeof(void*) * self->length);
   
@@ -80,7 +80,7 @@ void ecchain_destroy (EcAlloc alloc, EcChain* pself)
   
   ecchain_clear (self);
   
-  eclist_free (EC_ALLOC, &(self->stack));
+  eclist_free_ex (EC_ALLOC, &(self->stack));
   
   ENTC_FREE(self->buffer);
   

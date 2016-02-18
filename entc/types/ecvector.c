@@ -42,7 +42,7 @@ EcVector ecvector_create (EcAlloc alloc)
 {
   EcVector self = ENTC_NEW(struct EcVector_s);
   
-  self->list = eclist_create (alloc);
+  self->list = eclist_create_ex (alloc);
   
   self->indexcounter = 0;
   
@@ -57,7 +57,7 @@ void ecvector_destroy (EcAlloc alloc, EcVector* pself)
   
   ecvector_clear( self );
   
-  eclist_free (EC_ALLOC, &(self->list));
+  eclist_free_ex (EC_ALLOC, &(self->list));
 
   ENTC_DEL(pself, struct EcVector_s);
 }

@@ -133,7 +133,7 @@ EcEventContext ece_context_new ()
   EcEventContext self = ENTC_NEW(struct EcEventContext_s);
   
   self->mutex = ecmutex_new ();
-  self->lists = eclist_create (EC_ALLOC);
+  self->lists = eclist_create_ex (EC_ALLOC);
   
   return self;  
 }
@@ -145,7 +145,7 @@ void ece_context_delete (EcEventContext* pself)
   EcEventContext self = *pself;
 
   ecmutex_delete (&(self->mutex));
-  eclist_free (EC_ALLOC, &(self->lists));
+  eclist_free_ex (EC_ALLOC, &(self->lists));
   
   ENTC_DEL(pself, struct EcEventContext_s);
 }
@@ -270,7 +270,7 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
     
   memset (self->data, 0x0, sizeof(char) * 200);
   
-  self->ptrs = eclist_create (EC_ALLOC);
+  self->ptrs = eclist_create_ex (EC_ALLOC);
   
   return self;
 }
@@ -350,7 +350,7 @@ void ece_list_destroy (EcEventQueue* sptr)
   
   // cleanup
   ece_list_clear (self);
-  eclist_free (EC_ALLOC, &(self->ptrs));
+  eclist_free_ex (EC_ALLOC, &(self->ptrs));
       
   close (self->kq);
   

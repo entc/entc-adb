@@ -41,7 +41,21 @@ struct EcList_s
 
 //----------------------------------------------------------------------------------------
 
-EcList eclist_create (EcAlloc alloc)
+EcList eclist_create (void)
+{
+  return eclist_create_ex (EC_ALLOC);
+}
+
+//----------------------------------------------------------------------------------------
+
+void eclist_free (EcList* pself)
+{
+  eclist_free_ex (EC_ALLOC, pself);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcList eclist_create_ex (EcAlloc alloc)
 {
   EcList self = ECMM_NEW (struct EcList_s);
 
@@ -57,7 +71,7 @@ EcList eclist_create (EcAlloc alloc)
 
 //----------------------------------------------------------------------------------------
 
-void eclist_free (EcAlloc alloc, EcList* pself)
+void eclist_free_ex (EcAlloc alloc, EcList* pself)
 {
   EcList self = *pself;
   

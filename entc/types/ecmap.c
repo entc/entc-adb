@@ -41,7 +41,7 @@ EcMap ecmap_create (EcAlloc alloc)
 {
   EcMap self = ECMM_NEW(struct EcMap_s);
 
-  self->list = eclist_create (alloc);
+  self->list = eclist_create_ex (alloc);
 
   return self;
 }
@@ -73,7 +73,7 @@ void ecmap_destroy (EcAlloc alloc, EcMap* pself)
   ecmap_clear (alloc, self);
 
   // delete the list
-  eclist_free (EC_ALLOC, &(self->list));
+  eclist_free_ex (EC_ALLOC, &(self->list));
   
   ECMM_DEL(pself, struct EcMap_s);
 }
