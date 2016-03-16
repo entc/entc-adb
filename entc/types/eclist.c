@@ -57,8 +57,8 @@ void eclist_free (EcList* pself)
 
 EcList eclist_create_ex (EcAlloc alloc)
 {
-  EcList self = ECMM_NEW (struct EcList_s);
-
+  EcList self = alloc->fnew (alloc->ptr, sizeof(struct EcList_s));  
+  
   self->node = alloc->fnew (alloc->ptr, sizeof(struct EcListNode_s));
   
   // set the chain 

@@ -1177,6 +1177,8 @@ EcUdc echttp_parse_auth (const EcString source)
 
   ecudc_add_asString(EC_ALLOC, auth, "content", next_space + 1);
   
+  eclogger_fmt (LL_TRACE, "ENTC", "http auth", "WWW-Authorization: %s %s", auth_type, next_space + 1);
+  
   ecstr_delete (&auth_type);
   
   return auth;

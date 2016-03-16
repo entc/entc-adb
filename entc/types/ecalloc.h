@@ -27,6 +27,10 @@ typedef void*  (_STDCALL *ecnew_fct)(void*, uint32_t);
 
 typedef void   (_STDCALL *ecdel_fct)(void*, void**, uint32_t);
 
+typedef void   (_STDCALL *ecset_fct)(void*, void* addr, void* val);
+
+typedef void*  (_STDCALL *ecget_fct)(void*, void* addr);
+
 struct EcAlloc_s
 {
   
@@ -35,6 +39,10 @@ struct EcAlloc_s
   ecnew_fct fnew;
   
   ecdel_fct fdel;
+  
+  ecset_fct fset;
+  
+  ecget_fct fget;
   
 }; typedef struct EcAlloc_s* EcAlloc;
 
