@@ -937,3 +937,18 @@ EcBuffer ecbuf_hex2bin (EcBuffer hex)
 }
 
 //----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_bin2hex (EcBuffer bin)
+{
+  EcBuffer hex = ecbuf_create (bin->size + bin->size + 1);
+
+  uint32_t pos;
+  for (pos = 0; pos < bin->size; pos++)
+  {
+    snprintf ((char*)hex->buffer + pos + pos, 2, "%02x", bin->buffer[pos]);
+  }
+  
+  return hex;
+}
+
+//----------------------------------------------------------------------------------------

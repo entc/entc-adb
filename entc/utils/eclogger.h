@@ -74,6 +74,7 @@ __LIB_EXPORT void eclogger_err (EcLogLevel, const char* unit, const char* method
 
 __LIB_EXPORT void eclogger_errno (EcLogLevel, const char* unit, const char* method, const char* format, ...);
 
+__LIB_EXPORT void eclogger_bin (EcLogLevel, const char* unit, const char* method, const char* data, uint_t size);
 
 /*
 

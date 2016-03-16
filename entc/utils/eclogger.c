@@ -183,4 +183,18 @@ void eclogger_errno (EcLogLevel lvl, const char* unit, const char* method, const
 
 //----------------------------------------------------------------------------------------
 
+void eclogger_bin (EcLogLevel lvl, const char* unit, const char* method, const char* data, uint_t size)
+{
+  EcBuffer_s h = {(unsigned char*)data, size};
+  EcBuffer hex = ecbuf_bin2hex (&h);
+  
+  EcString hexs = ecbuf_str (&hex);
+  
+  eclogger_msg (lvl, unit, method, hexs);
+  
+  ecstr_delete (&hexs);
+}
+
+//----------------------------------------------------------------------------------------
+
 

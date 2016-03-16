@@ -67,6 +67,8 @@ __LIB_EXPORT EcBuffer ecbuf_concat (EcBuffer, EcBuffer);
 
 __LIB_EXPORT EcBuffer ecbuf_hex2bin (EcBuffer);
 
+__LIB_EXPORT EcBuffer ecbuf_bin2hex (EcBuffer);
+
 // getters
 
 __LIB_EXPORT const EcString ecbuf_const_str (const EcBuffer);
