@@ -887,7 +887,7 @@ EcBuffer ecbuf_hex2bin (EcBuffer hex)
   uint8_t  idx0;
   uint8_t  idx1;
   
-  EcBuffer bin = ecbuf_create (blen / 2 + 1);
+  EcBuffer bin = ecbuf_create (blen / 2);
   
   // mapping of ASCII characters to hex values
   const uint8_t hashmap[] =
