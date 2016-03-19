@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2016 "Alexander Kalkhof" [email:entc@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -54,6 +54,8 @@ struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 #define ENTC_UDC_TABLEINFO   0x1008
 #define ENTC_UDC_SET         0x1009
 #define ENTC_UDC_USERINFO    0x100a
+#define ENTC_UDC_ERROR       0x100b
+#define ENTC_UDC_METHOD      0x100c
 
 typedef struct
 {
@@ -81,6 +83,30 @@ typedef struct
   uint64_t uid;
   
 } EcUserInfo_s; typedef EcUserInfo_s* EcUserInfo;
+
+typedef struct
+{
+  
+  uint32_t code;
+  
+  EcString text;
+  
+} EcError_s; typedef EcError_s* EcError;
+
+typedef struct
+{
+  
+  EcString name;
+  
+  ubyte_t version;
+  
+  EcUdc error;
+  
+  EcUdc params;
+  
+  EcUdc result;
+  
+} EcMethod_s; typedef EcMethod_s* EcMethod;
 
 // complex types (structs)
 
@@ -178,6 +204,10 @@ __LIB_EXPORT EcTableInfo ecudc_asTableInfo (EcUdc);
 __LIB_EXPORT EcSet ecudc_asSet (EcUdc);
 
 __LIB_EXPORT EcUserInfo ecudc_asUserInfo (EcUdc);
+
+__LIB_EXPORT EcError ecudc_asError (EcUdc);
+
+__LIB_EXPORT EcMethod ecudc_asMethod (EcUdc);
 
 // helper
 

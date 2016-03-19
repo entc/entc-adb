@@ -443,6 +443,29 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       self->extension = h; 
     }
     break;
+    case ENTC_UDC_ERROR:
+    {
+      EcError h = ECMM_NEW (EcError_s);
+      
+      h->text = ecstr_init ();
+      h->code = 0;
+      
+      self->extension = h;
+    }
+    break;
+    case ENTC_UDC_METHOD:
+    {
+      EcMethod h = ECMM_NEW (EcMethod_s);
+      
+      h->name = ecstr_init ();
+      h->version = 0;
+      h->error = NULL;
+      h->params = NULL;
+      h->result = NULL;
+      
+      self->extension = h;
+    }
+    break;
   }
   
   return self;
@@ -535,7 +558,42 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
       ENTC_DEL (&h, EcUserInfo_s);
       self->extension = NULL;
     }
-    break;      
+    break; 
+    case ENTC_UDC_ERROR:
+    {
+      EcError h = self->extension;
+
+      ecstr_delete (&(h->text));
+      
+      ENTC_DEL (&h, EcError_s);
+      self->extension = NULL;
+    }
+    break;
+    case ENTC_UDC_METHOD:
+    {
+      EcMethod h = self->extension;
+
+      ecstr_delete (&(h->name));
+
+      if (isAssigned (h->error))
+      {
+        ecudc_destroy (alloc, &(h->error));
+      }
+      
+      if (isAssigned (h->params))
+      {
+        ecudc_destroy (alloc, &(h->params));
+      }
+
+      if (isAssigned (h->result))
+      {
+        ecudc_destroy (alloc, &(h->result));
+      }
+      
+      ENTC_DEL (&h, EcMethod_s);
+      self->extension = NULL;
+    }
+    break;
   }
   // delete only if the content was deleted
   if (isNotAssigned (self->extension))
@@ -694,6 +752,28 @@ EcTableInfo ecudc_asTableInfo (EcUdc self)
   switch (self->type) 
   {
     case ENTC_UDC_TABLEINFO: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcError ecudc_asError (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_ERROR: return self->extension;
+  }    
+  return NULL;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcMethod ecudc_asMethod (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_METHOD: return self->extension;
   }    
   return NULL;
 }
