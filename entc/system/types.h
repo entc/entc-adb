@@ -58,7 +58,8 @@ typedef signed int int_t;
 #define ENTC_RESCODE_NEEDS_PERMISSION    22
 #define ENTC_RESCODE_ALREADY_EXISTS      23
 #define ENTC_RESCODE_CLEAR_AUTH          24
-
+#define ENTC_RESCODE_NEEDS_CRYPT         25
+#define ENTC_RESCODE_REQUEST_TOOBIG      26
 
 #define ENTC_RESOURCE_UNKNOWN            0
 #define ENTC_RESOURCE_AVAILABLE          1

@@ -562,6 +562,16 @@ void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t er
       echttp_send_status (header, stream, "405 Method Not Allowed");
     }
     break;
+    case ENTC_RESCODE_NEEDS_CRYPT:
+    {
+      echttp_send_status (header, stream, "418 I’m a teapot");      
+    }
+    break;
+    case ENTC_RESCODE_REQUEST_TOOBIG:
+    {
+      echttp_send_status (header, stream, "413 Request Entity Too Large");      
+    }
+    break;
     default:
     {
       echttp_send_status (header, stream, "404 Not Found");            
