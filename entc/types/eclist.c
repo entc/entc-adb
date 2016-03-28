@@ -85,6 +85,7 @@ void eclist_free_ex (EcAlloc alloc, EcList* pself)
 
 EcListNode eclist_insert (EcAlloc alloc, EcList self, EcListNode node, void* data)
 {
+  EcListNode n01;
   EcListNode noden = alloc->fnew (alloc->ptr, sizeof(struct EcListNode_s));
   
   if (noden == NULL)
@@ -93,7 +94,6 @@ EcListNode eclist_insert (EcAlloc alloc, EcList self, EcListNode node, void* dat
     return NULL;
   }
   
-  EcListNode n01;
   /* set the data */
   noden->data = data;
 

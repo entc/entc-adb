@@ -19,6 +19,7 @@
 
 #include "ecbins.h"
 #include "utils/eclogger.h"
+#include <string.h>
 
 #define ENTC_BINSTYPE_STRING    0
 #define ENTC_BINSTYPE_VECTOR    1
@@ -90,8 +91,6 @@ EcUdc ecbins_readString (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readList (EcBuffer posbuf, const EcString name)
 {
-  eclogger_msg (LL_TRACE, "ENTC", "bins", "list");  
-
   EcUdc udc;
   uint32_t i, size;
   
@@ -121,9 +120,8 @@ EcUdc ecbins_readList (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_readNode (EcBuffer posbuf, const EcString name)
 {
-  eclogger_msg (LL_TRACE, "ENTC", "bins", "node");  
-
   EcUdc udc;
+  EcUdc j;
   uint32_t i, size;
   
   if (posbuf->size < 4)
@@ -134,7 +132,7 @@ EcUdc ecbins_readNode (EcBuffer posbuf, const EcString name)
   udc = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, name);
   
   // read size
-  EcUdc j = ecbins_readBuffer (posbuf, NULL);
+  j = ecbins_readBuffer (posbuf, NULL);
 
   switch (ecudc_type(j))
   {
@@ -541,12 +539,13 @@ EcUdc ecbins_readBuffer (EcBuffer posbuf, const EcString name)
 
 EcUdc ecbins_read (const EcBuffer buf, const EcString name)
 {
+  EcUdc udc;
   EcBuffer_s posbuf;
   
   posbuf.buffer = buf->buffer;
   posbuf.size = buf->size;
   
-  EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_LIST, NULL);
+  udc = ecudc_create(EC_ALLOC, ENTC_UDC_LIST, NULL);
   
   while (TRUE)
   {
