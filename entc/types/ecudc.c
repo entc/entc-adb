@@ -912,6 +912,25 @@ const EcString ecudc_asString (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+EcString ecudc_getString (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_STRING:  return ecstr_copy (ecudc_sitem_asString (self->extension)); 
+    case ENTC_UDC_BYTE:    return ecstr_long (ecudc_asByte (self));
+    case ENTC_UDC_UBYTE:   return ecstr_long (ecudc_asUByte (self));
+    case ENTC_UDC_INT16:   return ecstr_long (ecudc_asInt16 (self));
+    case ENTC_UDC_UINT16:  return ecstr_long (ecudc_asUInt16 (self));
+    case ENTC_UDC_INT32:   return ecstr_long (ecudc_asInt32 (self));
+    case ENTC_UDC_UINT32:  return ecstr_long (ecudc_asUInt32 (self));
+    case ENTC_UDC_INT64:   return ecstr_long (ecudc_asInt64 (self));
+    case ENTC_UDC_UINT64:  return ecstr_long (ecudc_asUInt64 (self));
+  } 
+  return ecstr_init ();
+}
+
+//----------------------------------------------------------------------------------------
+
 void* ecudc_asP (EcUdc self)
 {
   switch (self->type) 

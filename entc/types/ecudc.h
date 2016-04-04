@@ -171,6 +171,8 @@ __LIB_EXPORT void ecudc_setTime (EcUdc, const time_t*);
 
 __LIB_EXPORT const EcString ecudc_asString (EcUdc);
 
+__LIB_EXPORT EcString ecudc_getString (EcUdc);
+
 __LIB_EXPORT void* ecudc_asP (EcUdc);
 
 __LIB_EXPORT byte_t ecudc_asByte (EcUdc);
