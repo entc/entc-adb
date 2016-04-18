@@ -444,7 +444,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
   }
   else
   {
-    ecstream_append (stream, "null");    
+    ecstream_append (stream, "");    
   }
 }
 
@@ -511,9 +511,19 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_STRING:
     {
-      ecstream_appendc (stream, '"');
-      jsonwriter_escape (stream, ecudc_asString (node));
-      ecstream_appendc (stream, '"');
+      // check special chars at the beginning
+      const EcString text = ecudc_asString (node);
+      if (ecstr_leading (text, "##J"))
+      {
+        // already json encoded
+        ecstream_append (stream, text + 3);
+      }
+      else
+      {
+        ecstream_appendc (stream, '"');
+        jsonwriter_escape (stream, text);
+        ecstream_appendc (stream, '"');        
+      }
     }
     break;
     case ENTC_UDC_BYTE:

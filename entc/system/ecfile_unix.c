@@ -102,13 +102,26 @@ int ecfh_writeConst(EcFileHandle self, const char* buffer, uint_t size)
 
 /*------------------------------------------------------------------------*/
 
-uint_t ecfh_readBuffer(EcFileHandle self, EcBuffer buffer)
+uint_t ecfh_readBuffer (EcFileHandle self, EcBuffer buffer)
 {
   int res = read(self->fd, buffer->buffer, buffer->size);
   if (res < 0)
   {
     return 0;
   }
+  return res;
+}
+
+//--------------------------------------------------------------------------------
+
+uint_t ecfh_readBufferOf (EcFileHandle self, EcBuffer buffer, uint_t offset)
+{
+  int res = read (self->fd, buffer->buffer + offset, buffer->size - offset);
+  if (res < 0)
+  {
+    return 0;
+  }
+
   return res;
 }
 
@@ -203,6 +216,13 @@ void ecdh_destroy (EcDirHandle* pself)
   ecstr_delete(&(self->path));
   
   ENTC_DEL (pself, struct EcDirHandle_s);
+}
+
+//--------------------------------------------------------------------------------
+
+const EcString ecdh_path (EcDirHandle self)
+{
+  return self->path;
 }
 
 //--------------------------------------------------------------------------------
@@ -478,7 +498,11 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
             }
             else
             {
-              res = unlink(path);            
+              if (unlink(path) != 0)
+              {
+                eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't unlink file");
+                res = FALSE;
+              }
             }                    
           }
           else
@@ -496,7 +520,11 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
         break;
         default:
         {
-          res = unlink(path);
+          if (unlink(path) != 0)
+          {
+            eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't unlink file");
+            res = FALSE;
+          }
         }
         break;
       }
@@ -524,6 +552,12 @@ int ecfs_rmdir_dir (const EcString source)
   
   closedir(dir);  
   
+  if (rmdir (source) != 0)
+  {
+    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't delete directory");
+    return FALSE;    
+  }
+  
   return res;
 }
 
@@ -534,13 +568,12 @@ int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
   // try to remove recusively
   if (forceOnNoneEmpty)
   {
-    if (!ecfs_rmdir_dir (source))
-    {
-      return FALSE;
-    }
+    return ecfs_rmdir_dir (source);
   }
-  
-  return (rmdir (source) == 0);
+  else
+  {
+    return (rmdir (source) == 0);
+  }
 }
 
 //--------------------------------------------------------------------------------
@@ -584,11 +617,12 @@ int ecfs_fileInfo (EcFileInfo info, const EcString path)
   }
   
   info->size = st.st_size;
+  info->inode = st.st_ino;
 
   info->cdate = st.st_ctime;
   info->mdate = st.st_mtime;
   info->adate = st.st_atime;
-
+  
   return TRUE;
 }
 

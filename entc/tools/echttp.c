@@ -238,6 +238,11 @@ void echttp_content_destroy (EcHttpContent* pself)
 
 int echttp_content_hasBuffer (EcHttpContent self)
 {
+  if (isNotAssigned (self))
+  {
+    return FALSE;
+  }
+  
   return isAssigned (self->buffer);
 }
 
@@ -245,6 +250,11 @@ int echttp_content_hasBuffer (EcHttpContent self)
 
 int echttp_content_hasFile (EcHttpContent self)
 {
+  if (isNotAssigned (self))
+  {
+    return FALSE;
+  }
+    
   return isAssigned (self->filename);
 }
 

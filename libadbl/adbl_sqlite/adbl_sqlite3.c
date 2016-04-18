@@ -629,7 +629,7 @@ int adblmodule_dbupdate_insert (struct AdblSqlite3Connection* conn, AdblUpdate* 
   // create the stream
   EcStream statement = ecstream_new();
   // construct the stream 
-  ecstream_append( statement, "INSERT OR REPLACE INTO " );
+  ecstream_append( statement, "INSERT OR IGNORE INTO " );
   ecstream_append( statement, update->table );
   
   adbl_constructAttributesInsertOrReplace (statement, update->constraint, update->attrs );
@@ -716,9 +716,16 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
 
   if (insert)
   {
-    eclogger_msg (LL_DEBUG, "SQLT", "dbupdate", "try insert or update");      
+    eclogger_msg (LL_DEBUG, "SQLT", "dbupdate", "try insert or ignore");      
 
-    return adblmodule_dbupdate_insert (conn, update);
+    int res = adblmodule_dbupdate_insert (conn, update);
+    
+    if (res == 0)
+    {
+      return adblmodule_dbupdate_update (conn, update);
+    }
+    
+    return res;
   }
   else
   {
