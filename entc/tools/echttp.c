@@ -1644,3 +1644,42 @@ void echttp_request_callbacks (EcHttpRequest self, EcHttpCallbacks* callbacks)
 }
 
 //---------------------------------------------------------------------------------------
+
+EcUdc echttp_getParams (EcHttpHeader* header)
+{
+  // check for token params
+  if (ecstr_valid (header->request_params))
+  {
+    EcUdc ret = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+    
+    EcListCursor cursor;
+    EcList tokens = eclist_create ();
+    
+    ecstr_tokenizer(tokens, header->request_params, '&');
+    
+    eclist_cursor (tokens, &cursor);
+    while (eclist_cnext (&cursor))
+    {
+      EcString key = ecstr_init ();
+      EcString val = ecstr_init ();
+      
+      if (ecstr_split (cursor.value, &key, &val, '='))
+      {
+        echttp_unescape (val);
+        
+        EcString value = ecstr_trimc (val, '"');
+        
+        ecudc_add_asS_o (EC_ALLOC, ret, key, &value);
+      }
+      
+      ecstr_delete (&key);
+      ecstr_delete (&val);
+    }
+    
+    return ret;
+  }
+
+  return NULL;
+}
+
+//---------------------------------------------------------------------------------------
