@@ -82,6 +82,8 @@ typedef struct
   
   uint64_t uid;
   
+  EcUdc extras;
+  
 } EcUserInfo_s; typedef EcUserInfo_s* EcUserInfo;
 
 typedef struct

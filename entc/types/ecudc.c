@@ -439,6 +439,7 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       EcUserInfo h = ECMM_NEW (EcUserInfo_s);
       
       h->name = ecstr_init ();
+      h->extras = NULL;
       
       self->extension = h; 
     }
@@ -554,6 +555,11 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
       EcUserInfo h = self->extension;
       
       ecstr_delete (&(h->name));
+      
+      if (isAssigned (h->extras))
+      {
+        ecudc_destroy (alloc, &(h->extras));
+      }
       
       ENTC_DEL (&h, EcUserInfo_s);
       self->extension = NULL;
