@@ -1030,6 +1030,20 @@ int32_t ecudc_asInt32 (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+void ecudc_refUInt32 (EcUdc self, uint32_t** ref)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_UINT32:
+    {
+      *ref = self->extension;
+    }
+    break;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 uint32_t ecudc_asUInt32 (EcUdc self)
 {
   switch (self->type) 

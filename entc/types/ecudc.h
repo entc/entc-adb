@@ -141,6 +141,8 @@ __LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);
 
 // setter
 
+__LIB_EXPORT void ecudc_refUInt32 (EcUdc, uint32_t** ref);
+
 __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
 
 __LIB_EXPORT void ecudc_setS_o (EcUdc, EcString*);
