@@ -121,6 +121,8 @@ typedef struct
   // access date
   time_t adate;
   
+  uint64_t inode;
+  
 } EcFileInfo_s; typedef EcFileInfo_s* EcFileInfo;
 
 
@@ -178,8 +180,10 @@ __LIB_EXPORT int ecfh_writeBuffer (EcFileHandle, const EcBuffer buffer, uint_t s
 
 __LIB_EXPORT int ecfh_writeConst (EcFileHandle, const char* buffer, uint_t size);
 
-__LIB_EXPORT uint_t ecfh_readBuffer(EcFileHandle, EcBuffer buffer);
-  
+__LIB_EXPORT uint_t ecfh_readBuffer (EcFileHandle, EcBuffer buffer);
+
+__LIB_EXPORT uint_t ecfh_readBufferOf (EcFileHandle, EcBuffer buffer, uint_t offset);
+
 __LIB_EXPORT void ecfh_reset(EcFileHandle);
 
 __LIB_EXPORT int ecfh_fileno(EcFileHandle);
@@ -206,6 +210,8 @@ __LIB_EXPORT int ecdh_scan (const EcString path, EcList entries, int filetype);
 __LIB_EXPORT void ecdh_seekType (const EcString path, EcFileInfo entry);
 
 __LIB_EXPORT void ecfi_clone (const EcFileInfo, EcFileInfo);
+
+__LIB_EXPORT const EcString ecdh_path (EcDirHandle);
 
 __CPP_EXTERN______________________________________________________________________________END
   

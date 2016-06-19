@@ -232,10 +232,14 @@ void adbl_constructConstraintElement( EcStream statement, AdblConstraintElement*
     }
     else
     {
-      ecstream_append( statement, element->column );
+      EcString val = ecudc_getString (element->data);
+      
+      ecstream_append( statement, ecudc_name(element->data) );
       ecstream_append( statement, " = \'" );
-      ecstream_append( statement, element->value );
+      ecstream_append( statement, val );
       ecstream_append( statement, "\'" );
+      
+      ecstr_delete(&val);
     }    
   }
 }
@@ -274,19 +278,29 @@ void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint
         // TODO
         if( element->type == QUOMADBL_CONSTRAINT_EQUAL )
         {
-          ecstream_append( statement, element->column );
-          ecstream_append( statement, " IN (\'" );
-          ecstream_append( statement, element->value );
-          ecstream_append( statement, "\'" );
-
+          {
+            EcString val = ecudc_getString (element->data);
+            
+            ecstream_append( statement, ecudc_name(element->data) );
+            ecstream_append( statement, " IN (\'" );
+            ecstream_append( statement, val );
+            ecstream_append( statement, "\'" );
+            
+            ecstr_delete(&val);
+          }
+            
           node = eclist_next(node);
           
           for(; node != eclist_end(constraint->list); node = eclist_next(node) )
           {
+            EcString val = ecudc_getString (element->data);
+
             element = eclist_data (node);
             ecstream_append( statement, ",\'");
-            ecstream_append( statement, element->value );
+            ecstream_append( statement, val );
             ecstream_append( statement, "\'" );
+            
+            ecstr_delete(&val);            
           }
 
           ecstream_append( statement, ")" );
@@ -584,10 +598,16 @@ void adbl_constructAttributesInsertOrReplace (EcStream statement, AdblConstraint
             ecstream_append( values, ", " );
           }
           
-          ecstream_append (cols, element->column);
-          ecstream_append( values, "\"" );
-          ecstream_append( values, element->value);
-          ecstream_append( values, "\"" );  
+          {
+            EcString val = ecudc_getString (element->data);
+ 
+            ecstream_append (cols, ecudc_name(element->data));
+            ecstream_append( values, "\"" );
+            ecstream_append( values, val);
+            ecstream_append( values, "\"" );  
+
+            ecstr_delete(&val);
+          }
           
           cnt++;
         }
@@ -629,7 +649,7 @@ int adblmodule_dbupdate_insert (struct AdblSqlite3Connection* conn, AdblUpdate* 
   // create the stream
   EcStream statement = ecstream_new();
   // construct the stream 
-  ecstream_append( statement, "INSERT OR REPLACE INTO " );
+  ecstream_append( statement, "INSERT OR IGNORE INTO " );
   ecstream_append( statement, update->table );
   
   adbl_constructAttributesInsertOrReplace (statement, update->constraint, update->attrs );
@@ -716,9 +736,16 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
 
   if (insert)
   {
-    eclogger_msg (LL_DEBUG, "SQLT", "dbupdate", "try insert or update");      
+    eclogger_msg (LL_DEBUG, "SQLT", "dbupdate", "try insert or ignore");      
 
-    return adblmodule_dbupdate_insert (conn, update);
+    int res = adblmodule_dbupdate_insert (conn, update);
+    
+    if (res == 0)
+    {
+      return adblmodule_dbupdate_update (conn, update);
+    }
+    
+    return res;
   }
   else
   {

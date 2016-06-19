@@ -67,8 +67,7 @@ void adbl_constraint_clear (AdblConstraint* self)
   {
     AdblConstraintElement* element = eclist_data(node);
     
-    ecstr_delete( &(element->column) );
-    ecstr_delete( &(element->value) );
+    ecudc_destroy (EC_ALLOC, &(element->data));
     
     ENTC_DEL(&element, AdblConstraintElement);
   }
@@ -85,8 +84,9 @@ void adbl_constraint_addChar (AdblConstraint* self, const EcString column, ubyte
   
   element->type = type;
   
-  element->column = ecstr_copy( column );
-  element->value = ecstr_copy( value );
+  element->data = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, column);
+  ecudc_setS (element->data, value);
+  
   //no constraint
   element->constraint = 0;
 }
@@ -100,9 +100,10 @@ void adbl_constraint_addLong (AdblConstraint* self, const EcString column, ubyte
 	eclist_append (self->list, element);
 
 	element->type = type;
+  
+  element->data = ecudc_create (EC_ALLOC, ENTC_UDC_UINT32, column);
+  ecudc_setUInt32 (element->data, value);
 
-	element->column = ecstr_copy( column );
-	element->value = ecstr_long( value );
 	/* no constraint */
 	element->constraint = 0;  
 }
@@ -117,8 +118,8 @@ void adbl_constraint_addConstraint (AdblConstraint* self, AdblConstraint* value)
   
   element->type = 0;
   
-  element->column = ecstr_init();
-  element->value = ecstr_init();
+  element->data = NULL;
+
   //set constraint
   element->constraint = value;    
 }
@@ -132,7 +133,11 @@ void adbl_constraint_attrs (AdblConstraint* self, AdblAttributes* attrs)
   {
     AdblConstraintElement* element = eclist_data(node);
 
-    adbl_attrs_addChar( attrs, element->column, element->value );
+    EcString val = ecudc_getString (element->data);
+    
+    adbl_attrs_addChar( attrs, ecudc_name(element->data), val );
+    
+    ecstr_delete(&val);
   }  
 }
 
@@ -145,16 +150,17 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
   {
     AdblConstraintElement* element = eclist_data(node);
     
-    if( adbl_security_checkValue( element->column ) )
+    if( adbl_security_checkValue( ecudc_name(element->data) ) )
     {
       security->inicident = 1;
       
       //eclogger_sec (SL_RED);
       
-      eclogger_fmt (LL_DEBUG, "ADBL", "security", "suspious content in column string '%s'", element->column );
+      eclogger_fmt (LL_DEBUG, "ADBL", "security", "suspious content in column string '%s'", ecudc_name(element->data) );
       return;  
     }
 
+    /*
     if( adbl_security_checkValue( element->value ) )
     {
       security->inicident = 1;
@@ -165,6 +171,7 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
       
       return;  
     }
+     */
     
   }
 }

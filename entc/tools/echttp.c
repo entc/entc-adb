@@ -238,6 +238,11 @@ void echttp_content_destroy (EcHttpContent* pself)
 
 int echttp_content_hasBuffer (EcHttpContent self)
 {
+  if (isNotAssigned (self))
+  {
+    return FALSE;
+  }
+  
   return isAssigned (self->buffer);
 }
 
@@ -245,6 +250,11 @@ int echttp_content_hasBuffer (EcHttpContent self)
 
 int echttp_content_hasFile (EcHttpContent self)
 {
+  if (isNotAssigned (self))
+  {
+    return FALSE;
+  }
+    
   return isAssigned (self->filename);
 }
 
@@ -1631,6 +1641,45 @@ void echttp_request_process (EcHttpRequest self, EcSocket socket)
 void echttp_request_callbacks (EcHttpRequest self, EcHttpCallbacks* callbacks)
 {
   memcpy (&(self->callbacks), callbacks, sizeof(EcHttpCallbacks));
+}
+
+//---------------------------------------------------------------------------------------
+
+EcUdc echttp_getParams (EcHttpHeader* header)
+{
+  // check for token params
+  if (ecstr_valid (header->request_params))
+  {
+    EcUdc ret = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+    
+    EcListCursor cursor;
+    EcList tokens = eclist_create ();
+    
+    ecstr_tokenizer(tokens, header->request_params, '&');
+    
+    eclist_cursor (tokens, &cursor);
+    while (eclist_cnext (&cursor))
+    {
+      EcString key = ecstr_init ();
+      EcString val = ecstr_init ();
+      
+      if (ecstr_split (cursor.value, &key, &val, '='))
+      {
+        echttp_unescape (val);
+        
+        EcString value = ecstr_trimc (val, '"');
+        
+        ecudc_add_asS_o (EC_ALLOC, ret, key, &value);
+      }
+      
+      ecstr_delete (&key);
+      ecstr_delete (&val);
+    }
+    
+    return ret;
+  }
+
+  return NULL;
 }
 
 //---------------------------------------------------------------------------------------

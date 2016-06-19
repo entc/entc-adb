@@ -439,6 +439,7 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       EcUserInfo h = ECMM_NEW (EcUserInfo_s);
       
       h->name = ecstr_init ();
+      h->extras = NULL;
       
       self->extension = h; 
     }
@@ -554,6 +555,11 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
       EcUserInfo h = self->extension;
       
       ecstr_delete (&(h->name));
+      
+      if (isAssigned (h->extras))
+      {
+        ecudc_destroy (alloc, &(h->extras));
+      }
       
       ENTC_DEL (&h, EcUserInfo_s);
       self->extension = NULL;
@@ -912,6 +918,25 @@ const EcString ecudc_asString (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+EcString ecudc_getString (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_STRING:  return ecstr_copy (ecudc_sitem_asString (self->extension)); 
+    case ENTC_UDC_BYTE:    return ecstr_long (ecudc_asByte (self));
+    case ENTC_UDC_UBYTE:   return ecstr_long (ecudc_asUByte (self));
+    case ENTC_UDC_INT16:   return ecstr_long (ecudc_asInt16 (self));
+    case ENTC_UDC_UINT16:  return ecstr_long (ecudc_asUInt16 (self));
+    case ENTC_UDC_INT32:   return ecstr_long (ecudc_asInt32 (self));
+    case ENTC_UDC_UINT32:  return ecstr_long (ecudc_asUInt32 (self));
+    case ENTC_UDC_INT64:   return ecstr_long (ecudc_asInt64 (self));
+    case ENTC_UDC_UINT64:  return ecstr_long (ecudc_asUInt64 (self));
+  } 
+  return ecstr_init ();
+}
+
+//----------------------------------------------------------------------------------------
+
 void* ecudc_asP (EcUdc self)
 {
   switch (self->type) 
@@ -1001,6 +1026,20 @@ int32_t ecudc_asInt32 (EcUdc self)
     }
   }        
   return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_refUInt32 (EcUdc self, uint32_t** ref)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_UINT32:
+    {
+      *ref = self->extension;
+    }
+    break;
+  }
 }
 
 //----------------------------------------------------------------------------------------

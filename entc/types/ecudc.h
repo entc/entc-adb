@@ -82,6 +82,8 @@ typedef struct
   
   uint64_t uid;
   
+  EcUdc extras;
+  
 } EcUserInfo_s; typedef EcUserInfo_s* EcUserInfo;
 
 typedef struct
@@ -139,6 +141,8 @@ __LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);
 
 // setter
 
+__LIB_EXPORT void ecudc_refUInt32 (EcUdc, uint32_t** ref);
+
 __LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
 
 __LIB_EXPORT void ecudc_setS_o (EcUdc, EcString*);
@@ -170,6 +174,8 @@ __LIB_EXPORT void ecudc_setTime (EcUdc, const time_t*);
 // getter
 
 __LIB_EXPORT const EcString ecudc_asString (EcUdc);
+
+__LIB_EXPORT EcString ecudc_getString (EcUdc);
 
 __LIB_EXPORT void* ecudc_asP (EcUdc);
 

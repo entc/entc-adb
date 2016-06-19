@@ -28,8 +28,11 @@ IF( MYSQL_LIBRARIES )
 
   TARGET_LINK_LIBRARIES( adbl_mysql adbl ${MYSQL_LIBRARIES} ${ENTC_LIBRARIES})
   
-#  ADD_EXECUTABLE( test_adbl_mysql_basic test_adbl_mysql_basic.c )
-#  TARGET_LINK_LIBRARIES( test_adbl_mysql_basic adbl_mysql ${ENTC_LIBRARIES})
+  ADD_EXECUTABLE( test_adbl_mysql_basic test_adbl_mysql_basic.c )
+  TARGET_LINK_LIBRARIES( test_adbl_mysql_basic adbl_mysql ${ENTC_LIBRARIES})
+  
+  ADD_EXECUTABLE(test_adbl_mysql_ps test_adbl_mysql_ps.c )
+  TARGET_LINK_LIBRARIES(test_adbl_mysql_ps adbl_mysql ${ENTC_LIBRARIES})
 
 ELSE( MYSQL_LIBRARIES )
 

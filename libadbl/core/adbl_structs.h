@@ -21,6 +21,7 @@
 #define ADBL_STRUCTS_H
 
 #include "types/ecmapchar.h"
+#include "types/ecudc.h"
 
 struct AdblSession_s;
 
@@ -62,9 +63,7 @@ typedef struct
   
   ubyte_t type;
   
-  EcString column;
-  
-  EcString value;
+  EcUdc data;
   
   AdblConstraint* constraint;    
   

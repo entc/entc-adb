@@ -175,6 +175,8 @@ __LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream s
 
 __LIB_EXPORT const EcString echttp_getMimeType (const EcString filename);
 
+__LIB_EXPORT EcUdc echttp_getParams (EcHttpHeader* header);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

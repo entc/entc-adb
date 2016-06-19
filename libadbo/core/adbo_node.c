@@ -126,11 +126,19 @@ void adbo_node_fromXml (EcUdc rootNode, AdboContext context, EcXMLStream xmlstre
     }
     else if (ecxmlstream_isBegin (xmlstream, "foreign_keys"))
     {
-      EcUdc refs = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, ECDATA_REFS);
-
-      adbo_dbkeys_fromXml (refs, context, xmlstream, "foreign_keys");
-      
-      ecudc_add (node, &refs);
+      EcUdc refs = ecudc_node (node, ECDATA_REFS);
+      if (isAssigned (refs))
+      {
+        adbo_dbkeys_fromXml (refs, context, xmlstream, "foreign_keys");
+      }
+      else
+      {
+        refs = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, ECDATA_REFS);
+        
+        adbo_dbkeys_fromXml (refs, context, xmlstream, "foreign_keys");
+        
+        ecudc_add (node, &refs);
+      }      
     }
     else if (ecxmlstream_isBegin (xmlstream, "value"))
     {
@@ -275,7 +283,7 @@ int adbo_dbkeys_constraints (EcUdc dbkeys, EcUdc data, AdblConstraint* constrain
   
   void* cursor = NULL;
   EcUdc dbkey;
-  
+
   for (dbkey  = ecudc_next (dbkeys, &cursor); isAssigned (dbkey); dbkey = ecudc_next (dbkeys, &cursor))
   {
     int h = adbo_dbkeys_value_contraint_add (dbkey, data, constraint, query);
@@ -291,11 +299,14 @@ AdblConstraint* adbo_node_constraints (EcUdc node, EcUdc data, AdboContext conte
 {
   AdblConstraint* constraint = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
   // check primary keys and foreign keys if exists and add them
+    
   EcUdc prikeys = ecudc_node (node, ECDATA_IDS);
   if (isAssigned (prikeys))
   {
+    eclogger_fmt (LL_TRACE, "ADBO", "constraints", "add primary keys");
     adbo_dbkeys_constraints (prikeys, data, constraint, query);
   }  
+  
   if (adbl_constraint_empty (constraint))
   {
     EcUdc fkeys, cols;
@@ -403,6 +414,7 @@ void adbo_node_dbquery_columns (EcUdc node, AdblQuery* query)
     {
       continue;
     }
+    
     adbl_query_addColumn (query, dbcolumn, 0);
   }  
 }
@@ -697,7 +709,7 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
     adbl_constraint_delete (&constraints);
   }
 
-  eclogger_msg (LL_TRACE, "ADBO", "request", "query done");
+  eclogger_fmt (LL_TRACE, "ADBO", "request", "query done [%i]", ret);
   
   return ret;
 }
@@ -762,12 +774,13 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
     // execute in extra method to avoid memory leaks in query and dbsession
     ret = adbo_node_dbquery (node, values, dbmin, context, dbsession, query);    
   }
+  
   adbl_query_delete (&query);
   
   adbl_closeSession (&dbsession);
   
-  eclogger_msg (LL_TRACE, "ADBO", "request", "query done");
-  
+  eclogger_fmt (LL_TRACE, "ADBO", "request", "query done [%i]", ret);
+
   ecudc_add (node, &values);
   
   return ret;  
