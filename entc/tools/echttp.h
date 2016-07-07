@@ -39,7 +39,7 @@ typedef char* (_STDCALL *http_content_callback) (void* ptr, char* buffer, ulong_
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void*, const EcString path);
+__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void*, const EcString path);
 
 __LIB_EXPORT void echttp_content_destroy (EcHttpContent*);
 
@@ -87,9 +87,13 @@ typedef struct {
   
   EcString urlpath;
   
+  // *** content
+  
   uint_t content_length;
   
   EcHttpContent content;
+
+  EcString content_type;
   
   EcString sessionid;
   

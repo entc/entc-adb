@@ -24,6 +24,7 @@
 #include <utils/ecmessages.h>
 #include <types/ecmapchar.h>
 #include <system/ectime.h>
+#include "ecmime.h"
 
 #include <string.h>
 #include <fcntl.h>
@@ -179,11 +180,39 @@ void echttp_setPath (EcHttpContent self, const EcString path)
 
 //---------------------------------------------------------------------------------------
 
-EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path)
+EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path)
 {
   EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
   
   self->path = ecstr_init ();
+  
+  // check type
+  if (isAssigned (type))
+  {
+    if (ecstr_leading (type, "multipart/form-data"))
+    {
+      eclogger_fmt (LL_DEBUG, "ENTC", "http", "found multipart '%s'", type);
+
+      EcString boundary = echttpheader_parseLine (type, "boundary");
+      if (boundary)
+      {
+        //eclogger_fmt (LL_DEBUG, "ENTC", "http", "boundary '%s'", boundary);
+
+        EcMultipartParser mp = ecmultipartparser_create (boundary, bf, ptr);
+      
+        int res = ecmultipartparser_process (mp, path, size);
+        if (res == ENTC_RESCODE_OK)
+        {
+
+        }
+        
+        ecmultipartparser_destroy (&mp);
+        
+        return self;
+      }
+    }
+  }
+  
   
   if (size > _ENTC_MAX_BUFFERSIZE)
   {
@@ -815,6 +844,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->urlpath = ecstr_init();
   header->content_length = 0;
   header->content = NULL;
+  header->content_type = ecstr_init();
   header->sessionid = ecstr_init();
   header->auth = NULL;
   header->values = ecmapchar_create (EC_ALLOC);
@@ -852,6 +882,8 @@ void echttp_header_clear (EcHttpHeader* header)
   {
     ecudc_destroy(EC_ALLOC, &(header->auth));
   }
+  
+  ecstr_delete(&(header->content_type));
   
   ecmapchar_destroy (EC_ALLOC, &(header->values));
 }
@@ -1300,6 +1332,11 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
       {
         header->content_length = atoi(line + 16);
       }
+      // Content-Type: 27
+      else if ((line[0] == 'C')&&(line[7] == '-')&&(line[9] == 'y'))
+      {
+        ecstr_replace (&(header->content_type), line + 14);
+      }
       // Authorization: xxx
       else if ((line[0] == 'A')&&(line[7] == 'z')&&(line[14] == ' '))
       {
@@ -1459,7 +1496,7 @@ void* echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcSt
       echttp_content_destroy (&(header->content));
     }
     
-    header->content = echttp_content_create (header->content_length, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot);  
+    header->content = echttp_content_create (header->content_length, header->content_type, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot);  
     if (isNotAssigned (header->content)) 
     {
       echttp_send_500 (header, socket);

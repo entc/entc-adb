@@ -189,6 +189,8 @@ SET (CORE_SOURCES_TOOLS
   tools/ecasyncvc.c
   tools/ecdata.h
   tools/ecdata.c
+  tools/ecmime.h
+  tools/ecmime.c
 )
 
 
