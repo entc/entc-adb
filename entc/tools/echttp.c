@@ -48,6 +48,10 @@ struct EcHttpContent_s
   
   EcString path;
   
+  EcMapChar params;
+  
+  EcHttpContent next;
+  
 };
 
 //---------------------------------------------------------------------------------------
@@ -180,11 +184,30 @@ void echttp_setPath (EcHttpContent self, const EcString path)
 
 //---------------------------------------------------------------------------------------
 
+EcHttpContent echttp_content_create2 (EcBuffer* pbuf, EcMapChar* pparams)
+{
+  EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
+  
+  self->path = ecstr_init ();
+  self->next = NULL;
+
+  self->buffer = *pbuf; *pbuf = NULL;
+  self->params = *pparams; *pparams = NULL;
+  
+  self->filename = NULL;
+  
+  return self;
+}
+
+//---------------------------------------------------------------------------------------
+
 EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path)
 {
   EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
   
   self->path = ecstr_init ();
+  self->params = NULL;
+  self->next = NULL;
   
   // check type
   if (isAssigned (type))
@@ -198,9 +221,9 @@ EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_con
       {
         //eclogger_fmt (LL_DEBUG, "ENTC", "http", "boundary '%s'", boundary);
 
-        EcMultipartParser mp = ecmultipartparser_create (boundary, bf, ptr);
+        EcMultipartParser mp = ecmultipartparser_create (boundary, path, bf, ptr, self);
       
-        int res = ecmultipartparser_process (mp, path, size);
+        int res = ecmultipartparser_process (mp, size);
         if (res == ENTC_RESCODE_OK)
         {
 
@@ -208,11 +231,13 @@ EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_con
         
         ecmultipartparser_destroy (&mp);
         
+        self->buffer = NULL;
+        self->filename = NULL;
+        
         return self;
       }
     }
   }
-  
   
   if (size > _ENTC_MAX_BUFFERSIZE)
   {
@@ -246,6 +271,11 @@ void echttp_content_destroy (EcHttpContent* pself)
 {
   EcHttpContent self = *pself;
   
+  if (isAssigned (self->params))
+  {
+    ecmapchar_destroy(EC_ALLOC, &(self->params));
+  }
+  
   if (isAssigned (self->buffer))
   {
     ecbuf_destroy(&(self->buffer));
@@ -257,10 +287,30 @@ void echttp_content_destroy (EcHttpContent* pself)
     
     ecstr_delete(&(self->filename));
   }
+  
+  if (isAssigned (self->next))
+  {
+    echttp_content_destroy (&(self->next));
+  }
 
   ecstr_delete (&(self->path));
   
   ENTC_DEL (pself, struct EcHttpContent_s);
+}
+
+//---------------------------------------------------------------------------------------
+
+EcHttpContent echttp_content_add (EcHttpContent self, EcHttpContent* pp)
+{
+  if (isAssigned (self->next))
+  {
+    echttp_content_destroy (&(self->next));
+  }
+
+  self->next = *pp;
+  *pp = NULL;
+  
+  return self->next;
 }
 
 //---------------------------------------------------------------------------------------
@@ -1349,22 +1399,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
       }
       else
       {
-        // add special header value to map
-        EcString key = ecstr_init ();
-        EcString val = ecstr_init ();
-        
-        if (ecstr_split(line, &key, &val, ':'))
-        {
-          ecstr_replaceTO (&key, ecstr_trim (key));
-          ecstr_replaceTO (&val, ecstr_trim (val));
-          
-          ecstr_toUpper(key);
-          
-          ecmapchar_append(header->values, key, val);
-        }
-
-        ecstr_delete (&key);
-        ecstr_delete (&val);
+        echttpheader_parseParam (header->values, line);
       }
     }
     else

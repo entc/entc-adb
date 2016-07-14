@@ -41,6 +41,8 @@ __CPP_EXTERN____________________________________________________________________
 
 __LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void*, const EcString path);
 
+__LIB_EXPORT EcHttpContent echttp_content_create2 ();
+
 __LIB_EXPORT void echttp_content_destroy (EcHttpContent*);
 
 __LIB_EXPORT int echttp_content_hasBuffer (EcHttpContent);
@@ -50,6 +52,8 @@ __LIB_EXPORT int echttp_content_hasFile (EcHttpContent);
 __LIB_EXPORT EcString echttp_content_getFile (EcHttpContent);
 
 __LIB_EXPORT EcBuffer echttp_content_getBuffer (EcHttpContent);
+
+__LIB_EXPORT EcHttpContent echttp_content_add (EcHttpContent, EcHttpContent*);
 
 __CPP_EXTERN______________________________________________________________________________END
 

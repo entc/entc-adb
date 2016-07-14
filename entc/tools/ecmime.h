@@ -24,17 +24,20 @@
 #include "types/ecstring.h"
 #include "tools/echttp.h"
 
+struct EcHttpContent_s;
 struct EcMultipartParser_s; typedef struct EcMultipartParser_s* EcMultipartParser;
 
 __CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcMultipartParser ecmultipartparser_create (const EcString boundary, http_content_callback cb, void* ptr);
+__LIB_EXPORT EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString, http_content_callback cb, void* ptr, struct EcHttpContent_s*);
 
 __LIB_EXPORT void ecmultipartparser_destroy (EcMultipartParser*);
 
-__LIB_EXPORT int ecmultipartparser_process (EcMultipartParser, const EcString path, ulong_t size);
+__LIB_EXPORT int ecmultipartparser_process (EcMultipartParser, ulong_t size);
 
 __LIB_EXPORT EcString echttpheader_parseLine (const EcString line, const EcString key);
+
+__LIB_EXPORT void echttpheader_parseParam (EcMapChar map, const EcString line);
 
 __CPP_EXTERN______________________________________________________________________________END
 
