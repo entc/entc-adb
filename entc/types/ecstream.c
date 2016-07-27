@@ -121,16 +121,19 @@ void _ecstream_check (EcStream self, uint_t size)
 
 /*------------------------------------------------------------------------*/
 
-void ecstream_appendd(EcStream self, const EcString source, uint_t size)
+void ecstream_appendd (EcStream self, const EcString source, uint_t size)
 {
-  _ecstream_check(self, size);
-  
-  // copy the source to the buffer
-  memcpy(self->pos, source, size);
-  
-  self->pos = self->pos + size;
-  // terminate
-  *(self->pos) = 0;    
+  if (size > 0)
+  {
+    _ecstream_check(self, size);
+    
+    // copy the source to the buffer
+    memcpy(self->pos, source, size);
+    
+    self->pos = self->pos + size;
+    // terminate
+    *(self->pos) = 0;
+  }
 }
 
 /*------------------------------------------------------------------------*/

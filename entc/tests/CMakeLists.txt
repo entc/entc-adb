@@ -26,3 +26,9 @@ TARGET_LINK_LIBRARIES( unittest_events entc )
 
 ADD_EXECUTABLE( unittest_bins tools/unittest_bins.c )
 TARGET_LINK_LIBRARIES( unittest_bins entc ) 
+
+ADD_EXECUTABLE( unittest_mime tools/unittest_mime.c )
+TARGET_LINK_LIBRARIES( unittest_mime entc ) 
+
+ADD_EXECUTABLE( unittest_stream types/unittest_stream.c )
+TARGET_LINK_LIBRARIES( unittest_stream entc ) 

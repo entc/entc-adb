@@ -25,6 +25,7 @@
 #include "system/ecfile.h"
 
 #include "ecstring.h"
+#include "ecbuffer.h"
 #include "eccursor.h"
 
 // structure types
@@ -56,6 +57,7 @@ struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 #define ENTC_UDC_USERINFO    0x100a
 #define ENTC_UDC_ERROR       0x100b
 #define ENTC_UDC_METHOD      0x100c
+#define ENTC_UDC_BUFFER      0x100d
 
 typedef struct
 {
@@ -171,6 +173,8 @@ __LIB_EXPORT void ecudc_setDouble (EcUdc, double);
 
 __LIB_EXPORT void ecudc_setTime (EcUdc, const time_t*);
 
+__LIB_EXPORT void ecudc_setB_o (EcUdc, EcBuffer*);
+
 // getter
 
 __LIB_EXPORT const EcString ecudc_asString (EcUdc);
@@ -215,6 +219,8 @@ __LIB_EXPORT EcError ecudc_asError (EcUdc);
 
 __LIB_EXPORT EcMethod ecudc_asMethod (EcUdc);
 
+__LIB_EXPORT EcBuffer ecudc_asB (EcUdc);
+
 // helper
 
 __LIB_EXPORT void* ecudc_get_asP (const EcUdc, const EcString name, void* alt);
@@ -242,6 +248,8 @@ __LIB_EXPORT float ecudc_get_asFloat (const EcUdc, const EcString name, float al
 __LIB_EXPORT double ecudc_get_asDouble (const EcUdc, const EcString name, double alt);
 
 __LIB_EXPORT const time_t* ecudc_get_asTime (const EcUdc, const EcString name, const time_t* alt);
+
+__LIB_EXPORT EcBuffer ecudc_get_asB (const EcUdc, const EcString name, const EcBuffer alt);
 
 // helper setter
 
@@ -272,6 +280,8 @@ __LIB_EXPORT void ecudc_add_asFloat (EcAlloc, EcUdc, const EcString name, float 
 __LIB_EXPORT void ecudc_add_asDouble (EcAlloc, EcUdc, const EcString name, double value);
 
 __LIB_EXPORT void ecudc_add_asTime (EcAlloc, EcUdc, const EcString name, const time_t* value);
+
+__LIB_EXPORT void ecudc_add_asB_o (EcAlloc, EcUdc, const EcString name, EcBuffer*);
 
 // tools
 

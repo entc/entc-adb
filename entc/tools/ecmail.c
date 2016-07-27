@@ -56,15 +56,14 @@ void ecmail_destroy (EcMail* pself)
 
 /*------------------------------------------------------------------------*/
 
-int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const EcString subject, const EcString text, EcSocket socket, EcStreamBuffer buffer, EcStream stream)
+int ecmail_next (EcMail self, const EcString txtto, const EcString txtre, const EcString subject, const EcString text, EcSocket socket, EcStreamBuffer buffer, EcStream stream)
 {
   const EcString response;
-  int error;
   
   char b1 = 0;
   char b2 = 0;
   
-  if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if ( !ecstreambuffer_readln (buffer, stream, &b1, &b2) )
   {
     eclogger_msg (LL_ERROR, "ENTC", "mail", "can't get initial handshake" );
     return FALSE;
@@ -83,7 +82,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   /* now send our host */
   ecsocket_write (socket, "HELO me\n", 8);
   
-  if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if ( !ecstreambuffer_readln (buffer, stream, &b1, &b2) )
   {
     eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout receiving handshake" );
     return FALSE;
@@ -102,7 +101,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   ecsocket_write (socket, txtre, ecstr_len (txtre));
   ecsocket_write (socket, "\n", 1);
   
-  if ( !ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if ( !ecstreambuffer_readln (buffer, stream, &b1, &b2) )
   {
     eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'mail from'" );
     return FALSE;
@@ -119,7 +118,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   ecsocket_write( socket, txtto, ecstr_len (txtto) );
   ecsocket_write( socket, "\n", 1 );
   
-  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
+  if (!ecstreambuffer_readln (buffer, stream, &b1, &b2))
   {
     eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'rcpt from'" );
     return FALSE;
@@ -135,7 +134,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   
   ecsocket_write (socket, "DATA\n", 5);
   
-  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
+  if (!ecstreambuffer_readln (buffer, stream, &b1, &b2))
   {
     eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'data'" );
     return FALSE;
@@ -160,7 +159,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   ecsocket_write( socket, text, ecstr_len (text) );
   ecsocket_write( socket, "\n.\n", 3 );
   
-  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
+  if (!ecstreambuffer_readln (buffer, stream, &b1, &b2))
   {
     eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'mail'" );
     return FALSE;
@@ -176,7 +175,7 @@ int ecmail_next(EcMail self, const EcString txtto, const EcString txtre, const E
   
   ecsocket_write( socket, "QUIT\n", 5 );
   
-  if (!ecstreambuffer_readln (buffer, stream, &error, &b1, &b2) )
+  if (!ecstreambuffer_readln (buffer, stream, &b1, &b2) )
   {
     eclogger_msg (LL_ERROR, "ENTC", "mail", "timeout in accepting 'quit'" );
     return FALSE;

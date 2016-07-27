@@ -467,6 +467,11 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       self->extension = h;
     }
     break;
+    case ENTC_UDC_BUFFER:
+    {
+      self->extension = NULL;  // initialize with NULL
+    }
+    break;
   }
   
   return self;
@@ -600,6 +605,16 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
       self->extension = NULL;
     }
     break;
+    case ENTC_UDC_BUFFER: 
+    {
+      if (isAssigned (self->extension))
+      {
+        ecbuf_destroy ((void*)&(self->extension));
+      }
+        
+      self->extension = NULL;
+    }
+    break;
   }
   // delete only if the content was deleted
   if (isNotAssigned (self->extension))
@@ -704,6 +719,26 @@ void ecudc_setS_o (EcUdc self, EcString* ptr)
   switch (self->type) 
   {
     case ENTC_UDC_STRING: ecudc_sitem_setS_o (self->extension, ptr); break;
+  }  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_setB_o (EcUdc self, EcBuffer* ptr)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_BUFFER: 
+    {
+      if (isAssigned (self->extension))
+      {
+        ecbuf_destroy ((void*)&(self->extension));
+      }
+      
+      self->extension = *ptr;
+      *ptr = NULL;
+    }
+    break;
   }  
 }
 
@@ -1158,6 +1193,17 @@ const time_t* ecudc_asTime (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+EcBuffer ecudc_asB (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_BUFFER: return self->extension; 
+  }        
+  return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcUdc ecudc_next (EcUdc self, void** cursor)
 {
   switch (self->type) 
@@ -1449,6 +1495,29 @@ const time_t* ecudc_get_asTime (const EcUdc self, const EcString name, const tim
 
 //----------------------------------------------------------------------------------------
 
+EcBuffer ecudc_get_asB (const EcUdc self, const EcString name, const EcBuffer alt)
+{
+  const EcUdc res = ecudc_node (self, name);
+  if (isAssigned (res))
+  {
+    EcBuffer ret = ecudc_asB (res);
+    if (ret == 0)
+    {
+      return alt;
+    }
+    else
+    {
+      return ret;
+    }
+  }
+  else
+  {
+    return alt;
+  }  
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_add_asP (EcAlloc alloc, EcUdc node, const EcString name, void* value)
 {
   // create new item as reference
@@ -1481,6 +1550,18 @@ void ecudc_add_asS_o (EcAlloc alloc, EcUdc node, const EcString name, EcString* 
   ecudc_setS_o(item, ptr);
   // add item to node 
   ecudc_add (node, &item);    
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_add_asB_o (EcAlloc alloc, EcUdc node, const EcString name, EcBuffer* ptr)
+{
+  // create new item as string
+  EcUdc item = ecudc_create (alloc, ENTC_UDC_BUFFER, name);
+  // set new value to item
+  ecudc_setB_o (item, ptr);
+  // add item to node 
+  ecudc_add (node, &item);      
 }
 
 //----------------------------------------------------------------------------------------

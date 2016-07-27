@@ -69,7 +69,7 @@ void echttp_content_newRandomFile (EcHttpContent self)
 
 //---------------------------------------------------------------------------------------
 
-char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
@@ -85,11 +85,15 @@ char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSi
 
 //---------------------------------------------------------------------------------------
 
-char* _STDCALL echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
-  return ecstreambuffer_getBunch (bstream, inSize, outRes);
+  char* ret = ecstreambuffer_getBunch (bstream, inSize, outRes);
+
+ // printf("**** read **** in %lu out %lu\n", inSize, *outRes);
+  
+  return ret;
 }
 
 //---------------------------------------------------------------------------------------
@@ -113,8 +117,7 @@ int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_call
   
   while (read < size)
   {
-    int res = 0;
-    
+    ulong_t res = 0;
     ulong_t diff = size - read;
     
     void* data = bf (ptr, (char*)self->buffer->buffer, diff < _ENTC_MAX_BUFFERSIZE ? diff : _ENTC_MAX_BUFFERSIZE, &res);    
@@ -157,7 +160,7 @@ int echttp_content_fillBuffer (EcHttpContent self, ulong_t size, http_content_ca
     
     while (read < size)
     {
-      int res = 0;
+      ulong_t res = 0;
       
       mm (ptr, (char*)self->buffer->buffer + read, size - read, &res);      
       if (res > 0)
@@ -191,8 +194,23 @@ EcHttpContent echttp_content_create2 (EcBuffer* pbuf, EcMapChar* pparams)
   self->path = ecstr_init ();
   self->next = NULL;
 
-  self->buffer = *pbuf; *pbuf = NULL;
-  self->params = *pparams; *pparams = NULL;
+  if (pbuf)
+  {
+    self->buffer = *pbuf; *pbuf = NULL;
+  }
+  else
+  {
+    self->buffer = NULL;
+  }
+  
+  if (pparams)
+  {
+    self->params = *pparams; *pparams = NULL;
+  }
+  else
+  {
+    self->params = NULL;
+  }
   
   self->filename = NULL;
   
@@ -223,13 +241,16 @@ EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_con
 
         EcMultipartParser mp = ecmultipartparser_create (boundary, path, bf, ptr, self);
       
-        int res = ecmultipartparser_process (mp, size);
-        if (res == ENTC_RESCODE_OK)
+        if (mp)
         {
-
-        }
-        
-        ecmultipartparser_destroy (&mp);
+          int res = ecmultipartparser_process (mp, size);
+          if (res == ENTC_RESCODE_OK)
+          {
+            
+          }
+          
+          ecmultipartparser_destroy (&mp);
+        }        
         
         self->buffer = NULL;
         self->filename = NULL;
@@ -311,6 +332,43 @@ EcHttpContent echttp_content_add (EcHttpContent self, EcHttpContent* pp)
   *pp = NULL;
   
   return self->next;
+}
+
+//---------------------------------------------------------------------------------------
+
+EcHttpContent echttp_content_next (EcHttpContent self)
+{
+  return self->next;
+}
+
+//---------------------------------------------------------------------------------------
+
+const EcString echttp_content_parameter (EcHttpContent self, const EcString name)
+{
+  if (isNotAssigned (self->params))
+  {
+    return NULL;
+  }
+  
+  return ecmapchar_finddata (self->params, name);
+}
+
+//---------------------------------------------------------------------------------------
+
+EcString echttp_content_extractString (EcHttpContent self)
+{
+  return ecbuf_str (&(self->buffer));
+}
+
+//---------------------------------------------------------------------------------------
+
+EcBuffer echttp_content_extractBuffer (EcHttpContent self)
+{
+  EcBuffer ret = self->buffer;
+  
+  self->buffer = NULL;
+  
+  return ret;
 }
 
 //---------------------------------------------------------------------------------------
@@ -1344,15 +1402,14 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 
 int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
 {
-  int error;
   EcStream stream = ecstream_new();
   
   char b1 = 0;
   char b2 = 0;
   
-  while (ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
+  while (ecstreambuffer_readln (buffer, stream, &b1, &b2))
   {      
-    const char* line = ecstream_buffer(stream);
+    const char* line = ecstream_buffer (stream);
     if( *line )
     {
       //eclogger_msg(LL_TRACE, "ENTC", "http header", line);
@@ -1404,6 +1461,14 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
     }
     else
     {
+      // set to next position
+      ecstreambuffer_next (buffer);
+      
+      const char* data = ecstreambuffer_buffer (buffer);
+      
+      
+      printf("\n======================================\n%s\n======================================\n", data);
+
       //printf("{recv end}\n");
       break;        
     }
@@ -1418,13 +1483,12 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
 
 int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer)
 {
-  int error;
-  
   char b1 = 0;
   char b2 = 0;
 
   // parse the first line received
-  if ( ecstreambuffer_readln (buffer, streambuffer, &error, &b1, &b2) )
+  int res = ecstreambuffer_readln (buffer, streambuffer, &b1, &b2);
+  if (res)
   {
     const char* line = ecstream_buffer(streambuffer);
     if(!ecstr_empty(line))
@@ -1453,6 +1517,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
       header->url = ecstr_part (after_method, afetr_url - after_method);         
     }
   }
+  /*
   else
   {
     // check error and send response
@@ -1461,6 +1526,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
       return FALSE;
     }
   }
+   */
   // if not method found, we cannot handle the request
   return ecstr_valid (header->method);
 }

@@ -65,13 +65,15 @@ void ecstreambuffer_destroy (EcStreamBuffer* pself)
 
 /*------------------------------------------------------------------------*/
 
-int ecstreambuffer_refill (EcStreamBuffer self, int* error)
+int ecstreambuffer_refill (EcStreamBuffer self)
 {
-  *error = ecsocket_readBunch (self->socket, self->buffer->buffer, self->buffer->size - 2);
-  if( *error > 0 )
+  //printf("**** refill ****\n");
+  
+  int res = ecsocket_readBunch (self->socket, self->buffer->buffer, self->buffer->size - 2);
+  if (res > 0)
   {
     self->pos = self->buffer->buffer;
-    self->end = self->pos + *error;
+    self->end = self->pos + res;
     /* create the cstring end */
     *(self->end) = 0;
     
@@ -88,21 +90,18 @@ int ecstreambuffer_refill (EcStreamBuffer self, int* error)
 
 /*------------------------------------------------------------------------*/
 
-int ecstreambuffer_next (EcStreamBuffer self, int* error)
+int ecstreambuffer_next (EcStreamBuffer self)
 {
-  if( self->pos < self->end )
+  if (self->pos < self->end)
   {
     self->pos++;
+    return TRUE;
   }
   else
   {
-    /* refill the buffer */
-    if( !ecstreambuffer_refill(self, error) )
-    {
-      return FALSE;  
-    }
+    // we need to refill the buffer
+    return ecstreambuffer_refill (self);
   }
-  return TRUE;
 }
 
 /*------------------------------------------------------------------------*/
@@ -119,38 +118,48 @@ void* ecstreambuffer_buffer (EcStreamBuffer self)
   return self->pos;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-uint_t ecstreambuffer_filled (EcStreamBuffer self, int* error)
+int ecstreambuffer_filled (EcStreamBuffer self, ulong_t* readSize)
 {
-  /* variables */
-  uint_t size = self->end - self->pos;
-  /* check if it is zero */
-  if( size == 0 )
+  // variables 
+  *readSize = self->end - self->pos;
+  
+  // check if it is zero 
+  if (*readSize > 0)
   {
-    ecstreambuffer_refill(self, error);
-    /* calculate again */
-    size = self->end - self->pos;
+    return TRUE;
   }
-  return size;
+  
+  if (ecstreambuffer_refill (self))
+  {
+    // calculate again 
+    *readSize = self->end - self->pos;
+    
+    return TRUE;    
+  }
+
+  return FALSE;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-uint_t ecstreambuffer_fill(EcStreamBuffer self, int* error)
+int ecstreambuffer_fill (EcStreamBuffer self, ulong_t* readSize)
 {
-  if( ecstreambuffer_refill(self, error) )
+  if (ecstreambuffer_refill (self))
   {
-    return self->end - self->pos;
+    *readSize = self->end - self->pos;
+    return TRUE;
   }
-  return 0;
+  
+  return FALSE;
 }
 
 //---------------------------------------------------------------
 
-int ecstreambuffer_readln_1break (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+int ecstreambuffer_readln_1break (EcStreamBuffer self, EcStream stream, char* b1, char* b2)
 {  
-  while (ecstreambuffer_next (self, error))
+  while (ecstreambuffer_next (self))
   {
     char c = *(self->pos);
     
@@ -174,11 +183,11 @@ int ecstreambuffer_readln_1break (EcStreamBuffer self, EcStream stream, int* err
 
 //---------------------------------------------------------------
 
-int ecstreambuffer_readln_2breaks (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+int ecstreambuffer_readln_2breaks (EcStreamBuffer self, EcStream stream, char* b1, char* b2)
 {
   int hasBreak1 = FALSE;
   
-  while (ecstreambuffer_next (self, error))
+  while (ecstreambuffer_next (self))
   {
     char c = *(self->pos);
     
@@ -190,6 +199,8 @@ int ecstreambuffer_readln_2breaks (EcStreamBuffer self, EcStream stream, int* er
       }
       else
       {        
+        eclogger_fmt (LL_WARN, "ENTC", "streambf", "wrong sequence of breaks #2"); 
+
         self->pos--;
         return TRUE;
       }
@@ -202,6 +213,7 @@ int ecstreambuffer_readln_2breaks (EcStreamBuffer self, EcStream stream, int* er
       }
       else if (c == '\r' || c == '\n')
       {
+        eclogger_fmt (LL_WARN, "ENTC", "streambf", "wrong sequence of breaks"); 
         // error, but we count it as line break
         return TRUE;
       }
@@ -217,11 +229,11 @@ int ecstreambuffer_readln_2breaks (EcStreamBuffer self, EcStream stream, int* er
 
 //---------------------------------------------------------------
 
-int ecstreambuffer_readln_getbreaks (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+int ecstreambuffer_readln_getbreaks (EcStreamBuffer self, EcStream stream, char* b1, char* b2)
 {
   int hasBreak1 = FALSE;
   
-  while (ecstreambuffer_next (self, error))
+  while (ecstreambuffer_next (self))
   {
     char c = *(self->pos);
     
@@ -263,62 +275,68 @@ int ecstreambuffer_readln_getbreaks (EcStreamBuffer self, EcStream stream, int* 
 
 //---------------------------------------------------------------
 
-int ecstreambuffer_readln (EcStreamBuffer self, EcStream stream, int* error, char* b1, char* b2)
+int ecstreambuffer_readln (EcStreamBuffer self, EcStream stream, char* b1, char* b2)
 {
   /* clean up the stream */
   ecstream_clear( stream );
 
   if (*b1 && *b2)
   {
-    return ecstreambuffer_readln_2breaks (self, stream, error, b1, b2);
+    return ecstreambuffer_readln_2breaks (self, stream, b1, b2);
   }
   else if (*b1 && (*b2 == 0))
   {
-    return ecstreambuffer_readln_1break (self, stream, error, b1, b2);
+    return ecstreambuffer_readln_1break (self, stream, b1, b2);
   }
   else
   {
-    return ecstreambuffer_readln_getbreaks (self, stream, error, b1, b2);
+    return ecstreambuffer_readln_getbreaks (self, stream, b1, b2);
   }
 }
 
 /*------------------------------------------------------------------------*/
 
-void ecstreambuffer_read (EcStreamBuffer self, EcStream stream, int* error)
+void ecstreambuffer_read (EcStreamBuffer self, EcStream stream, ulong_t* readSize)
 {
-  /* clean up the stream */
+  // clean up the stream
   ecstream_clear( stream );
   
-  while( ecstreambuffer_next (self, error) )
+  // TODO: make this more efficient
+  while (ecstreambuffer_next (self))
   {
-    char c = ecstreambuffer_get(self);
+    char c = ecstreambuffer_get (self);
     
-    ecstream_appendc(stream, c);    
+    ecstream_appendc (stream, c);    
   }
 }
 
 /*------------------------------------------------------------------------*/
 
-void* ecstreambuffer_getBunch (EcStreamBuffer self, ulong_t size, int* res)
+void* ecstreambuffer_getBunch (EcStreamBuffer self, ulong_t size, ulong_t* readSize)
 {
-  void* ret = NULL;
-
-  if (ecstreambuffer_next (self, res))
+  if (!ecstreambuffer_filled (self, readSize))
   {
-    uint_t filled = ecstreambuffer_filled (self, res);      
-    if (filled > 0)
-    {
-      ulong_t diff = filled < size ? filled : size;
-      
-      ret = self->pos;
-      
-      self->pos += diff;
-      
-      *res = diff;
-    }    
+    *readSize = 0;
+    return NULL;
   }
   
-  return ret;
+  if (*readSize > 0)
+  {    
+    ulong_t diff = (*readSize < size) ? *readSize : size;
+   
+   // printf("get bunch %lu\n", diff);
+
+    void* ret = self->pos;
+    
+    self->pos += diff;
+    
+    *readSize = diff;
+    
+    return ret;
+  }
+  
+  *readSize = 0;
+  return NULL;
 }
 
 //--------------------------------------------------------------------------
