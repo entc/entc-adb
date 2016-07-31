@@ -49,6 +49,8 @@ __LIB_EXPORT EcIntMapNode ecintmap_next(const EcIntMapNode);
   
 __LIB_EXPORT EcIntMapNode ecintmap_end(EcIntMap);
 
+__LIB_EXPORT uint_t ecintmap_key(const EcIntMapNode);
+
 __LIB_EXPORT EcIntMapNode ecintmap_erase(EcIntMap, EcIntMapNode);
 
 __LIB_EXPORT void* ecintmap_data(const EcIntMapNode);

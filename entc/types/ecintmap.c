@@ -124,6 +124,15 @@ EcIntMapNode ecintmap_end(EcIntMap self)
 
 /*------------------------------------------------------------------------*/
 
+uint_t ecintmap_key (const EcIntMapNode node)
+{
+  EcIntMapDataNode* mapnode = eclist_data (node);
+
+  return mapnode->key;
+}
+
+/*------------------------------------------------------------------------*/
+
 EcIntMapNode ecintmap_erase (EcIntMap self, EcIntMapNode node)
 {
   EcIntMapDataNode* mapnode = eclist_data (node);

@@ -31,6 +31,10 @@ struct EcMultipartParser_s
   
   EcString boundary;
   
+  ulong_t boundaryLenMin;
+
+  ulong_t boundaryLenMax;
+
   http_content_callback cb;
   
   void* ptr;
@@ -62,6 +66,8 @@ struct EcMultipartParser_s
   EcString fn;
   
   EcMapChar params;
+  
+  EcFileHandle fhDebug;
   
 };
 
@@ -101,6 +107,8 @@ EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcStr
   EcMultipartParser self = ENTC_NEW (struct EcMultipartParser_s);
   
   self->boundary = ecstr_cat2 ("--", boundary);
+  self->boundaryLenMin = ecstr_len (self->boundary);
+  self->boundaryLenMax = self->boundaryLenMin + 4;
   
   self->cb =cb;
   self->ptr = ptr;
@@ -164,7 +172,7 @@ void echttpheader_parseParam (EcMapChar map, const EcString line)
     
     ecmapchar_append (map, key, val);
     
-    eclogger_fmt (LL_TRACE, "ENTC", "mime", "add param '%s':'%s'", key, val);
+    //eclogger_fmt (LL_TRACE, "ENTC", "mime", "add param '%s':'%s'", key, val);
   }
   
   ecstr_delete (&key);
@@ -173,10 +181,17 @@ void echttpheader_parseParam (EcMapChar map, const EcString line)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, int addToContent)
+void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, ulong_t lsize, int addToContent)
 {
+  /*
+  if (lsize < self->boundaryLenMax && lsize >= self->boundaryLenMin)
+  {
+    eclogger_fmt (LL_TRACE, "ENTC", "mime", "check line '%s' len: %u size: %u", line, lsize); 
+  }
+   */
+  
   // reached boundary
-  if (ecstr_leading (line, self->boundary))
+  if ((lsize < self->boundaryLenMax) && (lsize >= self->boundaryLenMin) && ecstr_leading (line, self->boundary))
   {
     // create a new http content
     if (isAssigned (self->hc))
@@ -184,7 +199,7 @@ void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, 
       // transform stream to buffer
       EcBuffer buf = ecstream_trans (&(self->content));
       
-      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "content '%s'", ecbuf_const_str(buf)); 
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "add content '%u'", buf->size); 
       
       // create a new content part
       EcHttpContent hc = echttp_content_create2 (&buf, &(self->params));
@@ -197,6 +212,8 @@ void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, 
     }
     else
     {
+      eclogger_fmt (LL_WARN, "ENTC", "mime", "no hc, content deleted"); 
+
       ecstream_delete (&(self->content));
     }
     
@@ -221,10 +238,9 @@ void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, 
       self->addLineBreak = FALSE;
     }
     
-    // add to content
-    ecstream_appendd (self->content, line, ecstream_size (self->line));
-    // add line breaks
-    //if (ecstream_size (self->content) > 0)
+    // append to content
+    ecstream_appendStream (self->content, self->line);
+    
     self->addLineBreak = TRUE;        
   }
 }
@@ -236,11 +252,9 @@ int ecmultipartparser_line (EcMultipartParser self, EcParserData* pd)
   // get last line
   const EcString line = ecstream_buffer (self->line);
 
-  //printf("\n****\n%s\n**** %i\n", line, line [0]);
-    
   if (self->content)
   {
-    ecmultipartparser_isBoundary (self, line, TRUE);
+    ecmultipartparser_isBoundary (self, line, ecstream_size (self->line), TRUE);
   }
   else if (line [0] == 0)
   {
@@ -254,6 +268,9 @@ int ecmultipartparser_line (EcMultipartParser self, EcParserData* pd)
     echttpheader_parseParam (self->params, line);    
   }
   
+  //printf("\n======================================\n%s\n======================================[%u]\n", line, ecstream_size (self->line));
+  
+  //eclogger_fmt (LL_TRACE, "ENTC", "mime", "clear line"); 
   ecstream_clear (self->line);
 
   return TRUE;
@@ -360,10 +377,10 @@ int ecmultipartparser_state1 (EcMultipartParser self, EcParserData* pd)
   }
   
   ecstream_appendd (self->line, pd->pos, a);
-
+    
   if (self->content)
   {
-    ecmultipartparser_isBoundary (self, ecstream_buffer(self->line), FALSE);
+    ecmultipartparser_isBoundary (self, ecstream_buffer(self->line), ecstream_size (self->line), FALSE);
   }
     
   return FALSE;  
@@ -376,10 +393,10 @@ int ecmultipartparser_state2 (EcMultipartParser self, EcParserData* pd)
   const char* c;
   for (c = pd->pos; (pd->len > 0); c++)
   {
-    (pd->len)--;
-    
     if ((self->breakType == 3) && (*c == '\n'))
     {
+      (pd->len)--;
+
       self->state = 1;
       pd->pos = c + 1;
       
@@ -389,11 +406,8 @@ int ecmultipartparser_state2 (EcMultipartParser self, EcParserData* pd)
     if (self->content)
     {
       ecstream_appendc (self->line, '\r'); 
-      ecstream_appendc (self->line, *c); 
-
       self->state = 1;
-      pd->pos = c + 1;
-
+      
       return TRUE;
     }
     else
@@ -487,13 +501,19 @@ void ecmultipartparser_processBuffer (EcMultipartParser self, const char* buffer
   pd.len = size;  
   pd.name = NULL;
   
-  while (ecmultipartparser_checkStates (self, &pd));
+  //ecfh_writeConst (self->fhDebug, buffer, size);
+  
+  //printf("\n======================================\n%s\n======================================[%u]\n", buffer, size);
+  
+  while (ecmultipartparser_checkStates (self, &pd));  
 }
 
 //-----------------------------------------------------------------------------------------------------------
 
 int ecmultipartparser_process (EcMultipartParser self, ulong_t size)
 {
+  //self->fhDebug = ecfh_open ("debug.dat", O_CREAT | O_RDWR | O_TRUNC);
+  
   if (size > 0)
   {
     EcStateParser sp;
@@ -509,8 +529,6 @@ int ecmultipartparser_process (EcMultipartParser self, ulong_t size)
       ulong_t max = diff < C_MAX_BUFSIZE ? diff : C_MAX_BUFSIZE;
       
       char* data = self->cb (self->ptr, (char*)self->buffer->buffer, max, &res);    
-      
-      //printf("\n======================================\n%s\n======================================\n", data);
       
       if (res > 0)
       {
@@ -543,7 +561,9 @@ int ecmultipartparser_process (EcMultipartParser self, ulong_t size)
     }
   }
   
-  eclogger_fmt (LL_DEBUG, "ENTC", "mime", "done parsing"); 
+  //ecfh_close (&(self->fhDebug));
+  
+  //eclogger_fmt (LL_DEBUG, "ENTC", "mime", "done parsing"); 
   
   return ENTC_RESCODE_OK;
 }

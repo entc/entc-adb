@@ -556,7 +556,19 @@ const EcString echttp_getMimeType (const EcString filename)
     return "application/octet-stream";
   }
   
-  node = ecmapchar_find( mime_types, pos02 + 1 );
+  {
+    EcString extension = ecstr_copy (pos02 + 1);
+    
+    // convert all to lower case
+    ecstr_toLower (extension);
+    
+    // can we find it?
+    node = ecmapchar_find( mime_types, extension);
+    
+    // cleanup
+    ecstr_delete (&extension);
+  }
+    
   if( node != ecmapchar_end( mime_types ))
   {
     return ecmapchar_data( node );  
@@ -1464,10 +1476,8 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
       // set to next position
       ecstreambuffer_next (buffer);
       
-      const char* data = ecstreambuffer_buffer (buffer);
-      
-      
-      printf("\n======================================\n%s\n======================================\n", data);
+      //const char* data = ecstreambuffer_buffer (buffer);
+      //printf("\n======================================\n%s\n======================================\n", data);
 
       //printf("{recv end}\n");
       break;        

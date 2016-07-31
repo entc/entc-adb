@@ -190,6 +190,12 @@ void ecbuf_format (EcBuffer self, uint_t size, const char* format, ...)
 void ecbuf_resize (EcBuffer self, uint_t size)
 {
   self->buffer = (unsigned char*) realloc (self->buffer, size);
+  
+  if (self->buffer == NULL)
+  {
+    printf("******** FATAL: realloc failed !! **********\n");
+  }
+  
   self->size = size; 
 }
 

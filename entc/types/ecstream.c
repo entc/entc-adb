@@ -97,26 +97,48 @@ const EcString ecstream_buffer( EcStream self )
 
 /*------------------------------------------------------------------------*/
 
-void _ecstream_check (EcStream self, uint_t size)
+void ecstream_check (EcStream self, uint_t size)
 {
-  uint_t filled = 0;
   // already filled bytes
-  filled = self->pos - self->buffer->buffer;
-  // remaining bytes free + zero termination
-  if(size > (self->buffer->size - filled - 1))
+  uint_t filled = ecstream_size (self);
+
+  // calculate the minimum size we need
+  uint_t minSize = filled + size;
+  
+  // calculate how many free bytes we still have in the buffer
+  uint_t bytesRemain = self->buffer->size - filled - 1;
+  
+  if (minSize > bytesRemain)
   {
-    // double size should be ok
-    uint_t new_size = self->buffer->size + self->buffer->size;
-    if (new_size < size) 
-    {
-      // more is always better
-      new_size = size + self->buffer->size;
-    }
+    uint_t newSize = minSize + self->buffer->size;
+
+    //printf("*** resize (%p) *** %u -> %u (%u) [%u]\n", self, self->buffer->size, newSize, size, filled);
     
-    ecbuf_resize (self->buffer, new_size);  
+    ecbuf_resize (self->buffer, newSize);  
+    
     // set new position in possible new buffer
-    self->pos = self->buffer->buffer + filled;      
+    self->pos = self->buffer->buffer + filled;          
   }
+}
+
+/*------------------------------------------------------------------------*/
+
+void ecstream_appendStream (EcStream self, EcStream source)
+{
+  uint_t size = ecstream_size (source);
+  
+  if (size > 0)
+  {
+    ecstream_check (self, size);
+    
+    // copy the source to the buffer
+    memcpy (self->pos, source->buffer->buffer, size);
+    
+    self->pos = self->pos + size;
+    
+    // terminate
+    *(self->pos) = 0;
+  }  
 }
 
 /*------------------------------------------------------------------------*/
@@ -125,10 +147,10 @@ void ecstream_appendd (EcStream self, const EcString source, uint_t size)
 {
   if (size > 0)
   {
-    _ecstream_check(self, size);
+    ecstream_check (self, size);
     
     // copy the source to the buffer
-    memcpy(self->pos, source, size);
+    memcpy (self->pos, source, size);
     
     self->pos = self->pos + size;
     // terminate
@@ -142,7 +164,7 @@ ulong_t ecstream_registerOffset (EcStream self, ulong_t size)
 {
   ulong_t pos = self->pos - self->buffer->buffer;
   
-  _ecstream_check(self, size);
+  ecstream_check(self, size);
 
   self->pos = self->pos + size;
   *(self->pos) = 0;
@@ -179,7 +201,7 @@ void ecstream_append( EcStream self, const EcString source )
 
 void ecstream_appendc ( EcStream self, char c )
 {
-  _ecstream_check(self, 1);  
+  ecstream_check(self, 1);  
   // copy the source to the buffer
   *(self->pos) = c;
   (self->pos)++;
