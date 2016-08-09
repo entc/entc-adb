@@ -472,6 +472,16 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       self->extension = NULL;  // initialize with NULL
     }
     break;
+    case ENTC_UDC_BOOL:
+    {
+      self->extension = NULL; // false
+    }
+    break;
+    case ENTC_UDC_NONE:
+    {
+      self->extension = NULL; // just nothing
+    }
+    break;
   }
   
   return self;
@@ -740,6 +750,20 @@ void ecudc_setB_o (EcUdc self, EcBuffer* ptr)
     }
     break;
   }  
+}
+
+//----------------------------------------------------------------------------------------
+
+void ecudc_setBool (EcUdc self, int val)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_BOOL: 
+    {
+      self->extension = (val == TRUE) ? (void*)1 : NULL;
+    }
+    break;
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -1200,6 +1224,18 @@ EcBuffer ecudc_asB (EcUdc self)
     case ENTC_UDC_BUFFER: return self->extension; 
   }        
   return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
+int ecudc_asBool (EcUdc self)
+{
+  switch (self->type) 
+  {
+    case ENTC_UDC_BOOL: return self->extension != NULL; 
+  }     
+  
+  return FALSE;
 }
 
 //----------------------------------------------------------------------------------------

@@ -58,6 +58,8 @@ struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 #define ENTC_UDC_ERROR       0x100b
 #define ENTC_UDC_METHOD      0x100c
 #define ENTC_UDC_BUFFER      0x100d
+#define ENTC_UDC_BOOL        0x100e
+#define ENTC_UDC_NONE        0x100f
 
 typedef struct
 {
@@ -175,6 +177,8 @@ __LIB_EXPORT void ecudc_setTime (EcUdc, const time_t*);
 
 __LIB_EXPORT void ecudc_setB_o (EcUdc, EcBuffer*);
 
+__LIB_EXPORT void ecudc_setBool (EcUdc, int);
+
 // getter
 
 __LIB_EXPORT const EcString ecudc_asString (EcUdc);
@@ -220,6 +224,8 @@ __LIB_EXPORT EcError ecudc_asError (EcUdc);
 __LIB_EXPORT EcMethod ecudc_asMethod (EcUdc);
 
 __LIB_EXPORT EcBuffer ecudc_asB (EcUdc);
+
+__LIB_EXPORT int ecudc_asBool (EcUdc);
 
 // helper
 
