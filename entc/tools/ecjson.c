@@ -109,13 +109,38 @@ EcString json_parse_string (JsonParser* parser)
 
 EcUdc json_parse_type (JsonParser* parser, const EcString key, int len)
 {
-  EcString h = ecstr_part ((const char*)parser->pos + 2, len);
+  EcUdc udc = NULL;
   
-  EcUdc udc = ecudc_create(EC_ALLOC, ENTC_UDC_UINT32, key);
+  EcString h1 = ecstr_part ((const char*)parser->pos + 2, len);
+  EcString h2 = ecstr_trim (h1);
+
+  if (ecstr_equal (h2, "null"))
+  {
+    udc = ecudc_create(EC_ALLOC, ENTC_UDC_NONE, key);    
+  }
+  else if (ecstr_equal (h2, "true"))
+  {
+    udc = ecudc_create(EC_ALLOC, ENTC_UDC_BOOL, key);
+    ecudc_setBool (udc, TRUE);
+  }
+  else if (ecstr_equal (h2, "false"))
+  {
+    udc = ecudc_create(EC_ALLOC, ENTC_UDC_BOOL, key);
+    ecudc_setBool (udc, FALSE);
+  }
+  else if (ecstr_has (h2, '.'))
+  {
+    udc = ecudc_create(EC_ALLOC, ENTC_UDC_DOUBLE, key);
+    ecudc_setDouble(udc, atof(h2));
+  }
+  else
+  {
+    udc = ecudc_create(EC_ALLOC, ENTC_UDC_INT32, key);    
+    ecudc_setInt32(udc, atoi(h2));
+  }
   
-  ecudc_setUInt32(udc, atoi(h));
-  
-  ecstr_delete(&h);
+  ecstr_delete(&h2);
+  ecstr_delete(&h1);
   
   return udc;
 }
@@ -271,7 +296,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           return json_cleanup_udc (&udc);
         }
       }
-        break;
+      break;
       case ENT_STATE_OBJECT_KEY: switch (*c)
       {
         case '\"':
@@ -288,18 +313,18 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           c = parser->pos;
           state = ENT_STATE_OBJECT_KEY_EOE;
         }
-          break;
-          // ignore
+        break;
+        // ignore
         case '\t' : case '\r' : case '\n' : case ' ': 
-          break;
-          // error
+        break;
+        // error
         default:
         {
           ecstr_delete(&key);            
           return json_cleanup_udc (&udc);          
         }
       }
-        break;
+      break;
       case ENT_STATE_OBJECT_KEY_EOE: switch (*c)
       {
         case ':': state = ENT_STATE_OBJECT;
@@ -330,7 +355,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           parser->pos = c;
           return udc;
         }
-          break;
+        break;
         case '[': case '{':
         {
           parser->pos = c;
@@ -346,7 +371,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           c = parser->pos;
           state = ENT_STATE_OBJECT_EOE;
         }
-          break;
+        break;
         case '\"':
         {
           parser->pos = c + 1;
@@ -526,6 +551,16 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       }
     }
     break;
+    case ENTC_UDC_BOOL:
+    {
+      ecstream_append (stream, ecudc_asBool (node) ? "true" : "false");
+    }
+    break;
+    case ENTC_UDC_NONE:
+    {
+      ecstream_append (stream, "null");
+    }
+    break;
     case ENTC_UDC_BYTE:
     {
       ecstream_appends (stream, ecudc_asByte (node));
@@ -569,6 +604,15 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     case ENTC_UDC_TIME:
     {
       ecstream_appendt (stream, ecudc_asTime (node));
+    }
+    break;
+    case ENTC_UDC_DOUBLE:
+    {
+      EcString h = ecstr_float (ecudc_asDouble(node), 10);
+      
+      ecstream_append (stream, h);
+      
+      ecstr_delete(&h);
     }
     break;
   }

@@ -84,7 +84,6 @@ int echtmlreq_process_post (EcHtmlRequest self, EcSocket socket, const EcString 
 {
   /* variables */
   const char* line;
-  int error;
   
   char b1 = 0;
   char b2 = 0;
@@ -107,7 +106,7 @@ int echtmlreq_process_post (EcHtmlRequest self, EcSocket socket, const EcString 
   
   
   
-  if( !ecstreambuffer_readln(sbuffer, stream, &error, &b1, &b2) )
+  if( !ecstreambuffer_readln(sbuffer, stream, &b1, &b2) )
   {
     eclogger_msg (LL_TRACE, "ENTC", "http", "can't get new line");    
     return FALSE;
@@ -130,7 +129,6 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
 {
   /* variables */
   const char* line;
-  int error;
   
   char b1 = 0;
   char b2 = 0;
@@ -149,7 +147,7 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
   /* send the request */
   ecsocket_writeStream(socket, stream);
   
-  if( !ecstreambuffer_readln(sbuffer, stream, &error, &b1, &b2) )
+  if( !ecstreambuffer_readln(sbuffer, stream, &b1, &b2) )
   {
     eclogger_msg (LL_TRACE, "ENTC", "http", "can't get new line");    
     return FALSE;
@@ -163,7 +161,7 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
     return FALSE;
   }
   /* read all header lines */
-  while( ecstreambuffer_readln(sbuffer, stream, &error, &b1, &b2) )
+  while( ecstreambuffer_readln(sbuffer, stream, &b1, &b2) )
   {
     line = ecstream_buffer(stream);
     if( !*line )
@@ -171,10 +169,13 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
       break;
     }      
   }
-  /* read all data lines */
-  ecstreambuffer_read(sbuffer, self->stream, &error);
   
-  
+  {
+    ulong_t readBytes;
+    /* read all data lines */
+    ecstreambuffer_read(sbuffer, self->stream, &readBytes);
+  }
+    
   return TRUE;
 }
 

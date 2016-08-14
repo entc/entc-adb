@@ -596,10 +596,14 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
 {
   struct AdblMysqlConnection* conn = ptr;
     
+  ecmutex_lock (conn->mutex);
+  
   // try to get a prepared statement handle
   MYSQL_STMT* stmt = mysql_stmt_init (&(conn->handle));
   if (isNotAssigned (stmt))
   {
+    ecmutex_unlock (conn->mutex);
+
     eclogger_msg  (LL_ERROR, C_MODDESC, "query#1", mysql_stmt_error(stmt));
     return NULL;
   }
@@ -610,6 +614,8 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   
   bindvars_destroy (&bv);
   
+  ecmutex_unlock (conn->mutex);
+
   return ret;
 }
 

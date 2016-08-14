@@ -35,11 +35,13 @@
 
 struct EcHttpContent_s; typedef struct EcHttpContent_s* EcHttpContent;
 
-typedef char* (_STDCALL *http_content_callback) (void* ptr, char* buffer, ulong_t inSize, int* outRes);
+typedef char* (_STDCALL *http_content_callback) (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes);
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void*, const EcString path);
+__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void*, const EcString path);
+
+__LIB_EXPORT EcHttpContent echttp_content_create2 (EcBuffer* pbuf, EcMapChar* pparams);
 
 __LIB_EXPORT void echttp_content_destroy (EcHttpContent*);
 
@@ -50,6 +52,16 @@ __LIB_EXPORT int echttp_content_hasFile (EcHttpContent);
 __LIB_EXPORT EcString echttp_content_getFile (EcHttpContent);
 
 __LIB_EXPORT EcBuffer echttp_content_getBuffer (EcHttpContent);
+
+__LIB_EXPORT EcHttpContent echttp_content_add (EcHttpContent, EcHttpContent*);
+
+__LIB_EXPORT EcHttpContent echttp_content_next (EcHttpContent);
+
+__LIB_EXPORT const EcString echttp_content_parameter (EcHttpContent, const EcString name);
+
+__LIB_EXPORT EcString echttp_content_extractString (EcHttpContent);
+
+__LIB_EXPORT EcBuffer echttp_content_extractBuffer (EcHttpContent);
 
 __CPP_EXTERN______________________________________________________________________________END
 
@@ -87,9 +99,13 @@ typedef struct {
   
   EcString urlpath;
   
+  // *** content
+  
   uint_t content_length;
   
   EcHttpContent content;
+
+  EcString content_type;
   
   EcString sessionid;
   

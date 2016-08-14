@@ -44,6 +44,8 @@ __LIB_EXPORT const EcString ecstream_buffer( EcStream );
   
 __LIB_EXPORT void ecstream_appendd(EcStream, const EcString source, uint_t size);
 
+__LIB_EXPORT void ecstream_appendStream (EcStream, EcStream);
+
 __LIB_EXPORT void ecstream_append( EcStream, const EcString );
 
 __LIB_EXPORT void ecstream_appendc( EcStream, char );

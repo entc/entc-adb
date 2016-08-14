@@ -24,6 +24,7 @@
 #include <utils/ecmessages.h>
 #include <types/ecmapchar.h>
 #include <system/ectime.h>
+#include "ecmime.h"
 
 #include <string.h>
 #include <fcntl.h>
@@ -47,6 +48,10 @@ struct EcHttpContent_s
   
   EcString path;
   
+  EcMapChar params;
+  
+  EcHttpContent next;
+  
 };
 
 //---------------------------------------------------------------------------------------
@@ -64,7 +69,7 @@ void echttp_content_newRandomFile (EcHttpContent self)
 
 //---------------------------------------------------------------------------------------
 
-char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
@@ -80,11 +85,15 @@ char* _STDCALL echttp_content_callback_mm (void* ptr, char* buffer, ulong_t inSi
 
 //---------------------------------------------------------------------------------------
 
-char* _STDCALL echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, int* outRes)
+char* _STDCALL echttp_content_callback_bf (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes)
 {
   EcStreamBuffer bstream = ptr;
   
-  return ecstreambuffer_getBunch (bstream, inSize, outRes);
+  char* ret = ecstreambuffer_getBunch (bstream, inSize, outRes);
+
+ // printf("**** read **** in %lu out %lu\n", inSize, *outRes);
+  
+  return ret;
 }
 
 //---------------------------------------------------------------------------------------
@@ -108,8 +117,7 @@ int echttp_content_fillFile (EcHttpContent self, ulong_t size, http_content_call
   
   while (read < size)
   {
-    int res = 0;
-    
+    ulong_t res = 0;
     ulong_t diff = size - read;
     
     void* data = bf (ptr, (char*)self->buffer->buffer, diff < _ENTC_MAX_BUFFERSIZE ? diff : _ENTC_MAX_BUFFERSIZE, &res);    
@@ -152,7 +160,7 @@ int echttp_content_fillBuffer (EcHttpContent self, ulong_t size, http_content_ca
     
     while (read < size)
     {
-      int res = 0;
+      ulong_t res = 0;
       
       mm (ptr, (char*)self->buffer->buffer + read, size - read, &res);      
       if (res > 0)
@@ -179,11 +187,78 @@ void echttp_setPath (EcHttpContent self, const EcString path)
 
 //---------------------------------------------------------------------------------------
 
-EcHttpContent echttp_content_create (ulong_t size, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path)
+EcHttpContent echttp_content_create2 (EcBuffer* pbuf, EcMapChar* pparams)
 {
   EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
   
   self->path = ecstr_init ();
+  self->next = NULL;
+
+  if (pbuf)
+  {
+    self->buffer = *pbuf; *pbuf = NULL;
+  }
+  else
+  {
+    self->buffer = NULL;
+  }
+  
+  if (pparams)
+  {
+    self->params = *pparams; *pparams = NULL;
+  }
+  else
+  {
+    self->params = NULL;
+  }
+  
+  self->filename = NULL;
+  
+  return self;
+}
+
+//---------------------------------------------------------------------------------------
+
+EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void* ptr, const EcString path)
+{
+  EcHttpContent self = ENTC_NEW (struct EcHttpContent_s);
+  
+  self->path = ecstr_init ();
+  self->params = NULL;
+  self->next = NULL;
+  
+  // check type
+  if (isAssigned (type))
+  {
+    if (ecstr_leading (type, "multipart/form-data"))
+    {
+      eclogger_fmt (LL_DEBUG, "ENTC", "http", "found multipart '%s'", type);
+
+      EcString boundary = echttpheader_parseLine (type, "boundary");
+      if (boundary)
+      {
+        //eclogger_fmt (LL_DEBUG, "ENTC", "http", "boundary '%s'", boundary);
+
+        EcMultipartParser mp = ecmultipartparser_create (boundary, path, bf, ptr, self);
+      
+        if (mp)
+        {
+          int res = ecmultipartparser_process (mp, size);
+          if (res == ENTC_RESCODE_OK)
+          {
+            
+          }
+          
+          ecmultipartparser_destroy (&mp);
+        }        
+        
+        self->buffer = NULL;
+        self->filename = NULL;
+        
+        return self;
+      }
+    }
+  }
   
   if (size > _ENTC_MAX_BUFFERSIZE)
   {
@@ -217,6 +292,11 @@ void echttp_content_destroy (EcHttpContent* pself)
 {
   EcHttpContent self = *pself;
   
+  if (isAssigned (self->params))
+  {
+    ecmapchar_destroy(EC_ALLOC, &(self->params));
+  }
+  
   if (isAssigned (self->buffer))
   {
     ecbuf_destroy(&(self->buffer));
@@ -228,10 +308,67 @@ void echttp_content_destroy (EcHttpContent* pself)
     
     ecstr_delete(&(self->filename));
   }
+  
+  if (isAssigned (self->next))
+  {
+    echttp_content_destroy (&(self->next));
+  }
 
   ecstr_delete (&(self->path));
   
   ENTC_DEL (pself, struct EcHttpContent_s);
+}
+
+//---------------------------------------------------------------------------------------
+
+EcHttpContent echttp_content_add (EcHttpContent self, EcHttpContent* pp)
+{
+  if (isAssigned (self->next))
+  {
+    echttp_content_destroy (&(self->next));
+  }
+
+  self->next = *pp;
+  *pp = NULL;
+  
+  return self->next;
+}
+
+//---------------------------------------------------------------------------------------
+
+EcHttpContent echttp_content_next (EcHttpContent self)
+{
+  return self->next;
+}
+
+//---------------------------------------------------------------------------------------
+
+const EcString echttp_content_parameter (EcHttpContent self, const EcString name)
+{
+  if (isNotAssigned (self->params))
+  {
+    return NULL;
+  }
+  
+  return ecmapchar_finddata (self->params, name);
+}
+
+//---------------------------------------------------------------------------------------
+
+EcString echttp_content_extractString (EcHttpContent self)
+{
+  return ecbuf_str (&(self->buffer));
+}
+
+//---------------------------------------------------------------------------------------
+
+EcBuffer echttp_content_extractBuffer (EcHttpContent self)
+{
+  EcBuffer ret = self->buffer;
+  
+  self->buffer = NULL;
+  
+  return ret;
 }
 
 //---------------------------------------------------------------------------------------
@@ -419,7 +556,19 @@ const EcString echttp_getMimeType (const EcString filename)
     return "application/octet-stream";
   }
   
-  node = ecmapchar_find( mime_types, pos02 + 1 );
+  {
+    EcString extension = ecstr_copy (pos02 + 1);
+    
+    // convert all to lower case
+    ecstr_toLower (extension);
+    
+    // can we find it?
+    node = ecmapchar_find( mime_types, extension);
+    
+    // cleanup
+    ecstr_delete (&extension);
+  }
+    
   if( node != ecmapchar_end( mime_types ))
   {
     return ecmapchar_data( node );  
@@ -815,6 +964,7 @@ void echttp_header_init (EcHttpHeader* header, int header_on)
   header->urlpath = ecstr_init();
   header->content_length = 0;
   header->content = NULL;
+  header->content_type = ecstr_init();
   header->sessionid = ecstr_init();
   header->auth = NULL;
   header->values = ecmapchar_create (EC_ALLOC);
@@ -852,6 +1002,8 @@ void echttp_header_clear (EcHttpHeader* header)
   {
     ecudc_destroy(EC_ALLOC, &(header->auth));
   }
+  
+  ecstr_delete(&(header->content_type));
   
   ecmapchar_destroy (EC_ALLOC, &(header->values));
 }
@@ -1262,15 +1414,14 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 
 int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
 {
-  int error;
   EcStream stream = ecstream_new();
   
   char b1 = 0;
   char b2 = 0;
   
-  while (ecstreambuffer_readln (buffer, stream, &error, &b1, &b2))
+  while (ecstreambuffer_readln (buffer, stream, &b1, &b2))
   {      
-    const char* line = ecstream_buffer(stream);
+    const char* line = ecstream_buffer (stream);
     if( *line )
     {
       //eclogger_msg(LL_TRACE, "ENTC", "http header", line);
@@ -1300,6 +1451,11 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
       {
         header->content_length = atoi(line + 16);
       }
+      // Content-Type: 27
+      else if ((line[0] == 'C')&&(line[7] == '-')&&(line[9] == 'y'))
+      {
+        ecstr_replace (&(header->content_type), line + 14);
+      }
       // Authorization: xxx
       else if ((line[0] == 'A')&&(line[7] == 'z')&&(line[14] == ' '))
       {
@@ -1312,26 +1468,17 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
       }
       else
       {
-        // add special header value to map
-        EcString key = ecstr_init ();
-        EcString val = ecstr_init ();
-        
-        if (ecstr_split(line, &key, &val, ':'))
-        {
-          ecstr_replaceTO (&key, ecstr_trim (key));
-          ecstr_replaceTO (&val, ecstr_trim (val));
-          
-          ecstr_toUpper(key);
-          
-          ecmapchar_append(header->values, key, val);
-        }
-
-        ecstr_delete (&key);
-        ecstr_delete (&val);
+        echttpheader_parseParam (header->values, line);
       }
     }
     else
     {
+      // set to next position
+      ecstreambuffer_next (buffer);
+      
+      //const char* data = ecstreambuffer_buffer (buffer);
+      //printf("\n======================================\n%s\n======================================\n", data);
+
       //printf("{recv end}\n");
       break;        
     }
@@ -1346,13 +1493,12 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
 
 int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream streambuffer)
 {
-  int error;
-  
   char b1 = 0;
   char b2 = 0;
 
   // parse the first line received
-  if ( ecstreambuffer_readln (buffer, streambuffer, &error, &b1, &b2) )
+  int res = ecstreambuffer_readln (buffer, streambuffer, &b1, &b2);
+  if (res)
   {
     const char* line = ecstream_buffer(streambuffer);
     if(!ecstr_empty(line))
@@ -1381,6 +1527,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
       header->url = ecstr_part (after_method, afetr_url - after_method);         
     }
   }
+  /*
   else
   {
     // check error and send response
@@ -1389,6 +1536,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
       return FALSE;
     }
   }
+   */
   // if not method found, we cannot handle the request
   return ecstr_valid (header->method);
 }
@@ -1459,7 +1607,7 @@ void* echttp_request_flow_stream (EcHttpRequest self, EcHttpHeader* header, EcSt
       echttp_content_destroy (&(header->content));
     }
     
-    header->content = echttp_content_create (header->content_length, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot);  
+    header->content = echttp_content_create (header->content_length, header->content_type, echttp_content_callback_bf, echttp_content_callback_mm, buffer, self->tmproot);  
     if (isNotAssigned (header->content)) 
     {
       echttp_send_500 (header, socket);
