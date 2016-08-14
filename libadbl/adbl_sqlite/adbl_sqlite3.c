@@ -736,10 +736,11 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
 
   if (insert)
   {
+    int res;
+
     eclogger_msg (LL_DEBUG, "SQLT", "dbupdate", "try insert or ignore");      
 
-    int res = adblmodule_dbupdate_insert (conn, update);
-    
+    res = adblmodule_dbupdate_insert (conn, update);
     if (res == 0)
     {
       return adblmodule_dbupdate_update (conn, update);

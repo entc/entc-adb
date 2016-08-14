@@ -1665,9 +1665,11 @@ EcUdc echttp_getParams (EcHttpHeader* header)
       
       if (ecstr_split (cursor.value, &key, &val, '='))
       {
+        EcString value;
+
         echttp_unescape (val);
         
-        EcString value = ecstr_trimc (val, '"');
+        value = ecstr_trimc (val, '"');
         
         ecudc_add_asS_o (EC_ALLOC, ret, key, &value);
       }
