@@ -758,6 +758,11 @@ void adbl_sequence_release (AdblSequence** ptr)
 
 uint_t adbl_sequence_next (AdblSequence* self)
 {
+  if (isNotAssigned (self))
+  {
+    return 0;
+  }
+  
   if (isNotAssigned (self->pp))
   {
     return 0;
