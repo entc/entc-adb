@@ -120,7 +120,7 @@ void bindvars_addS (AdblMysqlBindVars* self, const EcString val)
     bind->length = 0;
     bind->error = 0; 
     
-    eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);      
+    //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);      
     
     self->pos++;
   }
@@ -148,7 +148,7 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
         bind->length = 0;
         bind->error = 0; 
 
-        eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);      
+        //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);      
 
         self->pos++;
       }
@@ -165,7 +165,7 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
         bind->error = 0; 
         bind->is_unsigned = 1;
         
-        eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%i' as integer", self->pos, *((uint32_t*)bind->buffer));      
+        //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%i' as integer", self->pos, *((uint32_t*)bind->buffer));      
         
         self->pos++;
       }
@@ -534,7 +534,7 @@ int adblmodule_prepared_statement (MYSQL_STMT* stmt, AdblMysqlBindVars* bv, EcSt
     return FALSE;
   }
   
-  eclogger_fmt (LL_TRACE, C_MODDESC, "bind params", "bind %i parameters", bv->pos);
+  //eclogger_fmt (LL_TRACE, C_MODDESC, "bind params", "bind %i parameters", bv->pos);
 
   // try to bind all constraint values
   if (mysql_stmt_bind_param (stmt, bv->binds) != 0)
@@ -1057,7 +1057,7 @@ int adblmodule_dbcursor_next( void* ptr )
     }
     case MYSQL_NO_DATA:
     {
-      eclogger_msg  (LL_TRACE, C_MODDESC, "fetch", "no data");
+      //eclogger_msg  (LL_TRACE, C_MODDESC, "fetch", "no data");
       return FALSE;
     }
     case MYSQL_DATA_TRUNCATED:
