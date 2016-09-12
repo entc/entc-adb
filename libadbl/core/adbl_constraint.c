@@ -150,6 +150,7 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
   {
     AdblConstraintElement* element = eclist_data(node);
     
+    /*
     if( adbl_security_checkValue( ecudc_name(element->data) ) )
     {
       security->inicident = 1;
@@ -159,6 +160,7 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
       eclogger_fmt (LL_DEBUG, "ADBL", "security", "suspious content in column string '%s'", ecudc_name(element->data) );
       return;  
     }
+     */
 
     /*
     if( adbl_security_checkValue( element->value ) )

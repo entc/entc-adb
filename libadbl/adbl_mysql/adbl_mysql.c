@@ -1076,7 +1076,15 @@ const char* adblmodule_dbcursor_data (void* ptr, uint_t column)
 {
   AdblMysqlCursor* self = ptr;
 
-  return self->data + (column * 255);
+  my_bool* isNull = self->is_null + (column * sizeof(my_bool));
+  if (*isNull)
+  {
+    return NULL;
+  }
+  else
+  {
+    return self->data + (column * 255);    
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -1085,7 +1093,18 @@ const char* adblmodule_dbcursor_nextdata (void* ptr)
 {
   AdblMysqlCursor* self = ptr;
   
-  const char* res = self->data + (self->pos * 255);
+  const char* res;
+  
+  my_bool* isNull = self->is_null + (self->pos * sizeof(my_bool));
+  if (*isNull)
+  {
+    res = NULL;
+  }
+  else
+  {
+    res = self->data + (self->pos * 255);
+  }
+  
   self->pos++;
   
   return res;
