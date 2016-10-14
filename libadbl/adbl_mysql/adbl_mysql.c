@@ -40,6 +40,8 @@ typedef struct {
   
   uint_t pos;
   
+  uint_t size;
+  
   // the followings are arrays with the same length
   
   MYSQL_BIND* bindResult;
@@ -65,7 +67,7 @@ typedef struct
   
 } AdblMyslSequence;
 
-//-----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 
 typedef struct
 {
@@ -78,7 +80,7 @@ typedef struct
   
 } AdblMysqlBindVars;
 
-//-----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 
 AdblMysqlBindVars* bindvars_create ()
 {
@@ -93,7 +95,7 @@ AdblMysqlBindVars* bindvars_create ()
   return self;
 }
 
-//-----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 
 void bindvars_destroy (AdblMysqlBindVars** pself)
 {
@@ -104,7 +106,7 @@ void bindvars_destroy (AdblMysqlBindVars** pself)
   ENTC_DEL (pself, AdblMysqlBindVars);
 }
 
-//-----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 
 void bindvars_addS (AdblMysqlBindVars* self, const EcString val)
 {
@@ -126,7 +128,7 @@ void bindvars_addS (AdblMysqlBindVars* self, const EcString val)
   }
 }
 
-//-----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 
 void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
 {
@@ -175,7 +177,7 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
   }
 }
 
-//-----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 
 void* adblmodule_dbconnect (AdblConnectionProperties* cp )
 {
@@ -190,7 +192,7 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp )
   
   mysql_options(mysql, MYSQL_OPT_RECONNECT, "1");
   
-  if(!mysql_real_connect(mysql, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, CLIENT_MULTI_STATEMENTS))
+  if(!mysql_real_connect(mysql, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, 0))
   {
     eclogger_msg (LL_ERROR, "MYSQ", "connect", mysql_error(mysql) );
     
@@ -505,20 +507,23 @@ int adblmodule_createStatement (EcStream statement, AdblQuery* query, struct Adb
 
 //--------------------------------------------------------------------------
 
-AdblMysqlCursor* adblmodule_dbcursor_create (MYSQL_STMT* stmt)
+AdblMysqlCursor* adblmodule_dbcursor_create (MYSQL_STMT* stmt, int columns)
 {
   AdblMysqlCursor* self = ENTC_NEW (AdblMysqlCursor);
   
   self->stmt = stmt;
+  self->size = columns;
   
-  self->bindResult = (MYSQL_BIND*)ENTC_MALLOC (sizeof(MYSQL_BIND) * 10);
-  memset (self->bindResult, 0x00, sizeof(self->bindResult));
+  int bindSize = sizeof(MYSQL_BIND) * columns;
+    
+  self->bindResult = (MYSQL_BIND*)ENTC_MALLOC (bindSize);
+  memset (self->bindResult, 0x00, bindSize);
   
-  self->data = (char*)ENTC_MALLOC (255 * 10);
+  self->data = (char*)ENTC_MALLOC (255 * columns);
   
-  self->length = (unsigned long*)ENTC_MALLOC (sizeof(unsigned long) * 10);
-  self->is_null = (my_bool*)ENTC_MALLOC (sizeof(my_bool) * 10);
-  self->error = (my_bool*)ENTC_MALLOC (sizeof(my_bool) * 10);
+  self->length = (unsigned long*)ENTC_MALLOC (sizeof(unsigned long) * columns);
+  self->is_null = (my_bool*)ENTC_MALLOC (sizeof(my_bool) * columns);
+  self->error = (my_bool*)ENTC_MALLOC (sizeof(my_bool) * columns);
   
   return self;
 }
@@ -559,7 +564,7 @@ void* adblmodule_dbquery_create (AdblQuery* query, struct AdblMysqlConnection* c
 {
   int res;
   EcStream statement = ecstream_new ();
-  AdblMysqlCursor* cursor = adblmodule_dbcursor_create (stmt);
+  AdblMysqlCursor* cursor = adblmodule_dbcursor_create (stmt, eclist_size (query->columns));
   
   adblmodule_createStatement (statement, query, conn, bv, cursor);
   
@@ -1018,6 +1023,22 @@ void adblmodule_dbbegin( void* ptr )
   struct AdblMysqlConnection* conn = ptr;
   
   mysql_query(&(conn->handle), "START TRANSACTION");
+
+  if (mysql_errno (&(conn->handle)))
+  {
+    if(mysql_errno (&(conn->handle)))
+    {
+      eclogger_msg (LL_ERROR, "MYSQ", "transaction", mysql_error( &(conn->handle) ) );
+    }
+    else
+    {
+      eclogger_msg (LL_ERROR, "MYSQ", "transaction", "unknown Mysql error" );
+    }
+  }
+  else
+  {
+    eclogger_msg (LL_DEBUG, C_MODDESC, "transaction", "START TRANSACTION");
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -1027,6 +1048,22 @@ void adblmodule_dbcommit( void* ptr )
   struct AdblMysqlConnection* conn = ptr;
   
   mysql_query(&(conn->handle), "COMMIT");
+
+  if (mysql_errno (&(conn->handle)))
+  {
+    if(mysql_errno (&(conn->handle)))
+    {
+      eclogger_msg (LL_ERROR, "MYSQ", "transaction", mysql_error( &(conn->handle) ) );
+    }
+    else
+    {
+      eclogger_msg (LL_ERROR, "MYSQ", "transaction", "unknown Mysql error" );
+    }
+  }
+  else
+  {
+    eclogger_msg (LL_DEBUG, C_MODDESC, "transaction", "COMMIT");
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -1036,11 +1073,27 @@ void adblmodule_dbrollback( void* ptr )
   struct AdblMysqlConnection* conn = ptr;
   
   mysql_query(&(conn->handle), "ROLLBACK");
+
+  if (mysql_errno (&(conn->handle)))
+  {
+    if(mysql_errno (&(conn->handle)))
+    {
+      eclogger_msg (LL_ERROR, "MYSQ", "transaction", mysql_error( &(conn->handle) ) );
+    }
+    else
+    {
+      eclogger_msg (LL_ERROR, "MYSQ", "transaction", "unknown Mysql error" );
+    }
+  }
+  else
+  {
+    eclogger_msg (LL_DEBUG, C_MODDESC, "transaction", "ROLLBACK");
+  }
 }
 
 /*------------------------------------------------------------------------*/
 
-int adblmodule_dbcursor_next( void* ptr )
+int adblmodule_dbcursor_next (void* ptr)
 {
   AdblMysqlCursor* self = ptr;
   
@@ -1057,7 +1110,7 @@ int adblmodule_dbcursor_next( void* ptr )
     }
     case MYSQL_NO_DATA:
     {
-      //eclogger_msg  (LL_TRACE, C_MODDESC, "fetch", "no data");
+      eclogger_msg  (LL_TRACE, C_MODDESC, "fetch", "no data");
       return FALSE;
     }
     case MYSQL_DATA_TRUNCATED:
@@ -1075,15 +1128,28 @@ int adblmodule_dbcursor_next( void* ptr )
 const char* adblmodule_dbcursor_data (void* ptr, uint_t column)
 {
   AdblMysqlCursor* self = ptr;
-
-  my_bool* isNull = self->is_null + (column * sizeof(my_bool));
-  if (*isNull)
+  
+  if (column < self->size)
   {
-    return NULL;
+    my_bool* isNull = self->is_null + (column * sizeof(my_bool));
+    if (*isNull)
+    {
+      eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got NULL");
+      
+      return NULL;
+    }
+    else
+    {
+      eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got '%s'", self->data + (column * 255));
+      
+      return self->data + (column * 255);
+    }
   }
   else
   {
-    return self->data + (column * 255);    
+    eclogger_fmt (LL_WARN, C_MODDESC, "fetch data", "access column %i outside column range %i", column + 1, self->size);
+    
+    return NULL;
   }
 }
 
@@ -1124,6 +1190,8 @@ void adblmodule_dbcursor_release (void* ptr)
   ENTC_FREE (self->length);
   
   ENTC_DEL (&ptr, AdblMysqlCursor)
+  
+  eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "cursor released");
 }
 
 /*------------------------------------------------------------------------*/
@@ -1132,8 +1200,8 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
 {
   struct AdblMysqlConnection* conn = ptr;
   
-  /* try to get all columns of this table */
-  MYSQL_RES* res = mysql_list_fields(&(conn->handle), table, 0);
+  // try to get all columns of this table
+  MYSQL_RES* res = mysql_list_fields (&(conn->handle), table, 0);
   
   MYSQL_FIELD* field;
   
@@ -1150,9 +1218,10 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
       eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error" );
     }
 
-    return 0;
+    return NULL;
   }
-  /* iterate through all columns */
+  
+  // iterate through all columns
   for( field = mysql_fetch_field(res); field; field = mysql_fetch_field(res))
   {
     unsigned int flags = field->flags;
@@ -1162,25 +1231,27 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
       if (ecstr_valid (column))
       {
         eclogger_fmt (LL_ERROR, "MYSQ", "sequence", "Only one auto_increment primary key is allowed for table '%s'", table );
-        /* clean up */
+        // clean up
         mysql_free_result(res);
         
         ecstr_delete(&column);
         
-        return 0;
+        return NULL;
       }
-      /* primary key and auto_increment */
+      
+      // primary key and auto_increment
       ecstr_replace(&column, field->org_name);
     }
   }
-  /* clean up */
+  
+  // clean up
   mysql_free_result(res);
   
   if (!ecstr_valid (column))
   {
     eclogger_fmt (LL_ERROR, "MYSQ", "sequence", "Please add primary key with auto_increment flag for table '%s'", table );
 
-    return 0;
+    return NULL;
   }
   
   AdblMyslSequence* sequence = ENTC_NEW(AdblMyslSequence);

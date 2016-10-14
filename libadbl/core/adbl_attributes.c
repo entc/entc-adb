@@ -92,7 +92,7 @@ int adbl_attrs_empty (AdblAttributes* self)
 
 void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security)
 {
-  EcMapCharNode node;
+  //EcMapCharNode node;
   /*
   for( node = ecmapchar_first( self->columns ); node != ecmapchar_end( self->columns ); node = ecmapchar_next(node) )
   {

@@ -148,7 +148,7 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
   EcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    AdblConstraintElement* element = eclist_data(node);
+    //AdblConstraintElement* element = eclist_data(node);
     
     /*
     if( adbl_security_checkValue( ecudc_name(element->data) ) )

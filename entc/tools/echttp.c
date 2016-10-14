@@ -1158,9 +1158,9 @@ void echttp_header_title (EcHttpHeader* header)
 void echttp_header_trimurl (EcHttpHeader* header)
 {
   // extract host part
-  if ((header->request_url[0] == '/')) 
+  if (header->request_url[0] == '/')
   {
-    if ((header->request_url[1] == '/')) 
+    if (header->request_url[1] == '/') 
     {
       // we do have a complete url, remove the first part
       const EcString pos = strchr (header->request_url + 2, '/');  

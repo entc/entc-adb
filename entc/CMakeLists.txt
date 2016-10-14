@@ -119,6 +119,8 @@ SET (CORE_SOURCES_SYS
   system/ecasyncio.c
   system/ecipc.h
   system/ecipc.c
+  system/ecnotify.h
+  system/ecnotify.c
 )
 
 SET (CORE_SOURCES_TYPES

@@ -63,7 +63,7 @@ void ecasync_context_destroy (EcAsyncContext* pself)
     self->callbacks->destroy (&(self->ptr));
   }
   
-  ENTC_DEL (pself, EcAsyncContext);
+  ENTC_DEL (pself, struct EcAsyncContext_s);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ static int _STDCALL ecasync_thread_run (void* ptr)
   // update internal time of the stopwatch
   ecstopwatch_start (self->stopwatch);
   
-  if ((res == ENTC_EVENT_TIMEOUT)) // timeout or interupt
+  if (res == ENTC_EVENT_TIMEOUT) // timeout or interupt
   {
     ece_list_sortout (self->queue, ecasync_hasTimedOut, self->stopwatch);
     return TRUE;

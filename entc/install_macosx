@@ -4,6 +4,9 @@ BCONFIG=Debug
 VERSION=1.2.0
 
 INSTALLDIR="/usr/local/lib"
+mkdir $INSTALLDIR
+
+mkdir /usr/local/include
 
 INCLUDEDIR="/usr/local/include/entc-"$VERSION
 mkdir $INCLUDEDIR

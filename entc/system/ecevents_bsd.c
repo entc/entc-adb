@@ -209,7 +209,7 @@ void ece_context_resetAbort (EcEventContext self)
   
   for (node = eclist_first(self->lists); node != eclist_end(self->lists); node = eclist_next(node))
   {
-    EcEventQueue list = eclist_data (node);
+    //EcEventQueue list = eclist_data (node);
 
   }
   
