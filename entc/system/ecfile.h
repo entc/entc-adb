@@ -108,6 +108,8 @@ typedef struct
   
   EcString name;
   
+  EcString path;
+ 
   ubyte_t type;
   
   uint64_t size;

@@ -23,6 +23,8 @@ int main (int argc, char *argv[])
     res = FALSE;
   }
   
+  getchar();
+  
   int i;
   for (i = 0; i < 2; i++)
   {
@@ -70,9 +72,14 @@ int main (int argc, char *argv[])
         eclogger_msg (LL_INFO, "TEST", "basic", adblmodule_dbcursor_data (c1, 0));    
         eclogger_msg (LL_INFO, "TEST", "basic", adblmodule_dbcursor_data (c1, 1));    
        // eclogger_log(logger, LL_INFO, "TEST", adblmodule_dbcursor_data (c1, 1));
-      }    
+      }
+      
+      adblmodule_dbcursor_release(c1);
     }
+    
   }
+  
+  getchar();
   
   adblmodule_dbdisconnect (connptr);
   

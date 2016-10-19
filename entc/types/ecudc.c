@@ -411,6 +411,7 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       EcFileInfo h = ECMM_NEW (EcFileInfo_s);
       
       h->name = ecstr_init ();
+      h->path = ecstr_init ();
       
       self->extension = h;
     }
@@ -532,6 +533,7 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
       EcFileInfo h = self->extension;
       
       ecstr_delete (&(h->name));
+      ecstr_delete (&(h->path));
       
       ENTC_DEL (&h, EcFileInfo_s);
       self->extension = NULL;
@@ -1168,6 +1170,12 @@ float ecudc_asFloat (EcUdc self)
   switch (self->type) 
   {
     case ENTC_UDC_FLOAT: return *((float*)self->extension); 
+    case ENTC_UDC_INT16: return *((int16_t*)self->extension);
+    case ENTC_UDC_UINT16: return *((uint16_t*)self->extension);
+    case ENTC_UDC_INT32: return *((int32_t*)self->extension);
+    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension);
+    case ENTC_UDC_INT64: return *((int64_t*)self->extension);
+    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension);
     case ENTC_UDC_STRING:
     {
       const EcString h = ecudc_asString (self);
@@ -1191,6 +1199,12 @@ double ecudc_asDouble (EcUdc self)
   switch (self->type) 
   {
     case ENTC_UDC_DOUBLE: return *((double*)self->extension); 
+    case ENTC_UDC_INT16: return *((int16_t*)self->extension);
+    case ENTC_UDC_UINT16: return *((uint16_t*)self->extension);
+    case ENTC_UDC_INT32: return *((int32_t*)self->extension);
+    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension);
+    case ENTC_UDC_INT64: return *((int64_t*)self->extension);
+    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension);
     case ENTC_UDC_STRING:
     {
       const EcString h = ecudc_asString (self);

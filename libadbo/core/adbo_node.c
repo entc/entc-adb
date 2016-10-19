@@ -493,7 +493,7 @@ int _STDCALL adbo_cursor_fill (void* ptr, EcTable* table)
       
       ectable_set (self->data, row, col, current);
 
-      eclogger_fmt (LL_TRACE, "ADBO", "cursor", "set value [%i][%i] '%s'", row, col, current);
+      //eclogger_fmt (LL_TRACE, "ADBO", "cursor", "set value [%i][%i] '%s'", row, col, current);
     }
     
     if (row >= PREFETCHED_CACHE)
