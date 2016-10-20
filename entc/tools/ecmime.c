@@ -854,8 +854,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         ecstream_append (stream, "Content-Type: multipart/mixed; ");
         ecstream_append (stream, "boundary=\"");
         ecstream_append (stream, self->boundary);
-        ecstream_append (stream, "\"\r\n");
-        ecstream_append (stream, "\r\n");
+        ecstream_append (stream, "\"");
         
         self->buffer = ecstream_trans(&stream);
         self->bufpos = 0;
@@ -905,7 +904,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         
         ecstream_append (stream, "\r\n\r\n--");
         ecstream_append (stream, self->boundary);
-        ecstream_append (stream, "\r\nContent-Type: text/plain\r\n\r\n");
+        ecstream_append (stream, "\r\nContent-Type: text/plain; charset=\"UTF-8\"\r\n\r\n");
         ecstream_append (stream, ecudc_asString(self->item));
         
         self->buffer = ecstream_trans(&stream);
@@ -937,16 +936,17 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           ecstream_append (stream, "\r\n");
           ecstream_append (stream, "Content-Type: ");
           ecstream_append (stream, mimeType);
+          ecstream_append (stream, "; name=");
+          ecstream_append (stream, fi->name);
           ecstream_append (stream, "\r\n");
           ecstream_append (stream, "Content-Transfer-Encoding: base64");
           ecstream_append (stream, "\r\n");
-          ecstream_append (stream, "Content-Description: ");
+          ecstream_append (stream, "Content-Disposition: inline; filename=");
           ecstream_append (stream, fi->name);
           ecstream_append (stream, "\r\n");
           ecstream_append (stream, "Content-ID: <");
           ecstream_appendu (stream, fi->inode);
-          ecstream_append (stream, ">\r\n");
-          ecstream_append (stream, "Content-Disposition: inline");
+          ecstream_append (stream, ">");
           ecstream_append (stream, "\r\n\r\n");
           
           self->buffer = ecstream_trans(&stream);
