@@ -59,7 +59,7 @@ __LIB_EXPORT void ecmultipart_destroy (EcMultipart*);
 
 __LIB_EXPORT void ecmultipart_addText (EcMultipart, const EcString text);
 
-__LIB_EXPORT void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file);
+__LIB_EXPORT void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file, int fileId);
 
 __LIB_EXPORT uint_t ecmultipart_next (EcMultipart, EcBuffer);
 

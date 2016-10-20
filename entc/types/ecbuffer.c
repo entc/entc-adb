@@ -382,6 +382,59 @@ int ecbuf_encode_base64_len (int len)
 
 //----------------------------------------------------------------------------------------
 
+ulong_t ecbuf_encode_base64_calculateSize (ulong_t max)
+{
+  return ((max - 1) / 4 * 3);
+}
+
+//----------------------------------------------------------------------------------------
+
+ulong_t ecbuf_encode_base64_d (EcBuffer source, EcBuffer base64)
+{
+  int i;
+  int l = source->size;
+  ulong_t b64size = ecbuf_encode_base64_len (l);
+  
+  if (base64->size < b64size)
+  {
+    return 0;
+  }
+
+  unsigned char* b = base64->buffer;
+  
+  //unsigned char* b = (unsigned char*)ENTC_MALLOC(ecbuf_encode_base64_len (self->size));
+  unsigned char* s = source->buffer;
+  
+  unsigned char* p = b;
+  
+  for (i = 0; i < l - 2; i += 3) {
+    *p++ = basis_64[(s[i] >> 2) & 0x3F];
+    *p++ = basis_64[((s[i] & 0x3) << 4) |
+                    ((int) (s[i + 1] & 0xF0) >> 4)];
+    *p++ = basis_64[((s[i + 1] & 0xF) << 2) |
+                    ((int) (s[i + 2] & 0xC0) >> 6)];
+    *p++ = basis_64[s[i + 2] & 0x3F];
+  }
+  if (i < l) {
+    *p++ = basis_64[(s[i] >> 2) & 0x3F];
+    if (i == (l - 1))
+    {
+      *p++ = basis_64[((s[i] & 0x3) << 4)];
+      *p++ = '=';
+    }
+    else
+    {
+      *p++ = basis_64[((s[i] & 0x3) << 4) | ((int) (s[i + 1] & 0xF0) >> 4)];
+      *p++ = basis_64[((s[i + 1] & 0xF) << 2)];
+    }
+    *p++ = '=';
+  }
+  
+  return p - b;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcBuffer ecbuf_encode_base64 (EcBuffer self)
 {
   EcBuffer ret;

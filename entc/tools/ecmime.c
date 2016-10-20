@@ -776,12 +776,14 @@ void ecmultipart_addText (EcMultipart self, const EcString text)
 {
   EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, NULL);
   
+  ecudc_setS (h, text);
+  
   ecudc_add (self->sections, &h);
 }
 
 //------------------------------------------------------------------------------------------------------
 
-void ecmultipart_addFile (EcMultipart self, const EcString path, const EcString file)
+void ecmultipart_addFile (EcMultipart self, const EcString path, const EcString file, int fileId)
 {
   EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_FILEINFO, NULL);
 
@@ -789,6 +791,7 @@ void ecmultipart_addFile (EcMultipart self, const EcString path, const EcString 
   
   fi->name = ecstr_copy (file);
   fi->path = ecfs_mergeToPath (path, file);
+  fi->inode = fileId;
   
   ecudc_add (self->sections, &h);
 }
@@ -931,8 +934,19 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           
           ecstream_append (stream, "\r\n\r\n--");
           ecstream_append (stream, self->boundary);
-          ecstream_append (stream, "\r\nContent-Type: ");
+          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "Content-Type: ");
           ecstream_append (stream, mimeType);
+          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "Content-Transfer-Encoding: base64");
+          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "Content-Description: ");
+          ecstream_append (stream, fi->name);
+          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "Content-ID: <");
+          ecstream_appendu (stream, fi->inode);
+          ecstream_append (stream, ">\r\n");
+          ecstream_append (stream, "Content-Disposition: inline");
           ecstream_append (stream, "\r\n\r\n");
           
           self->buffer = ecstream_trans(&stream);
@@ -941,16 +955,28 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
       }
       else if (self->buffer == NULL)
       {
-        uint_t readBytes = ecfh_readBuffer (self->fh, buf);
+        ulong_t size = ecbuf_encode_base64_calculateSize (buf->size);
+        
+        EcBuffer h = ecbuf_create (size);
+        
+        uint_t readBytes = ecfh_readBuffer (self->fh, h);
         if (readBytes == 0) // EOF reached
         {
+          ecbuf_destroy(&h);
+          
           ecfh_close (&(self->fh));
           return ecmultipart_nextState (self, buf, MULTIPART_STATE_NEXTITEM);
         }
         else
         {
-          return readBytes;
+          ulong_t res = ecbuf_encode_base64_d (h, buf);
+          
+          ecbuf_destroy(&h);
+
+          return res;
         }
+        
+        
       }
 
       return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_FILE);

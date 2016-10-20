@@ -53,6 +53,10 @@ __LIB_EXPORT void ecbuf_format (EcBuffer, uint_t size, const char* format, ...);
 
 __LIB_EXPORT void ecbuf_resize (EcBuffer, uint_t size);
 
+__LIB_EXPORT ulong_t ecbuf_encode_base64_calculateSize (ulong_t max);
+
+__LIB_EXPORT ulong_t ecbuf_encode_base64_d (EcBuffer, EcBuffer);
+
 __LIB_EXPORT EcBuffer ecbuf_encode_base64 (EcBuffer);
 
 __LIB_EXPORT EcBuffer ecbuf_decode_base64 (EcBuffer);
