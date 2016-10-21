@@ -457,13 +457,14 @@ void jsonwriter_escape (EcStream stream, const EcString source)
     const char* c;
     for (c = source; *c; c++)
     {
-      if (*c <= 0x7e)
+      if (*c == '"')
       {
+        ecstream_appendc (stream, '\\');
         ecstream_appendc (stream, *c);
       }
-      else
+      else if (*c <= 0x7e)
       {
-        
+        ecstream_appendc (stream, *c);
       }
     }
   }
