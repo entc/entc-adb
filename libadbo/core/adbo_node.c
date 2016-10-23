@@ -790,35 +790,149 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
 
 //----------------------------------------------------------------------------------------
 
+void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc dataItems, EcUdc values)
+{
+  const EcString columnName;
+  
+  columnName = ecudc_name (columnItem);
+  if (isNotAssigned (columnName))
+  {
+    eclogger_msg (LL_WARN, "ADBO", "attr", "value in items without dbcolumn");
+    return;
+  }
+
+  EcUdc dataItem = ecudc_node(dataItems, columnName);
+  if (isNotAssigned (dataItem))
+  {
+    eclogger_fmt (LL_TRACE, "ADBO", "attr", "node has not item '%s'", columnName);
+    return;
+  }
+  
+  switch (ecudc_type (dataItem))
+  {
+    case ENTC_UDC_NODE:
+    case ENTC_UDC_LIST:
+    {
+      EcString val = ecjson_write (dataItem);
+      
+      adbl_attrs_addChar (attrs, columnName, val);
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asS_o(EC_ALLOC, values, columnName, &val);
+      }
+      else
+      {
+        ecstr_delete (&val);
+      }
+    }
+    break;
+    case ENTC_UDC_STRING:
+    {
+      adbl_attrs_addChar (attrs, columnName, ecudc_asString (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asString (EC_ALLOC, values, columnName, ecudc_asString (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_INT64:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asInt64 (dataItem));
+
+      if (isAssigned(values))
+      {
+        ecudc_add_asInt64 (EC_ALLOC, values, columnName, ecudc_asInt64 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_UINT64:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt64 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asUInt64 (EC_ALLOC, values, columnName, ecudc_asUInt64 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_INT32:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asInt32 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asInt32 (EC_ALLOC, values, columnName, ecudc_asInt32 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_UINT32:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt32 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asUInt32 (EC_ALLOC, values, columnName, ecudc_asUInt32 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_INT16:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asInt16 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asInt16 (EC_ALLOC, values, columnName, ecudc_asInt16 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_UINT16:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt16 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asUInt16 (EC_ALLOC, values, columnName, ecudc_asUInt16 (dataItem));
+      }
+    }
+    break;
+    default:
+    {
+      const EcString val = ecudc_asString (dataItem);
+      if (val)
+      {
+        adbl_attrs_addChar (attrs, columnName, val);
+
+        if (isAssigned(values))
+        {
+          ecudc_add_asString (EC_ALLOC, values, columnName, val);
+        }
+      }
+      else
+      {
+        eclogger_fmt (LL_WARN, "ADBO", "attr", "column item '%s' has no value", columnName);
+        return;
+      }
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 void adbo_node_insert_values (AdboContext context, EcUdc cols, EcUdc update_item, EcUdc values, AdblAttributes* attrs)
 {
   EcUdc column;
   void* cursor = NULL;
+  EcString update_value = ecstr_init ();
   
   for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
   {
     // variables
-    const EcString dbcolumn;
-    const EcString update_value;
-    
-    dbcolumn = ecudc_name (column);
-    if (isNotAssigned (dbcolumn))
-    {
-      eclogger_msg (LL_WARN, "ADBO", "insert", "value in items without dbcolumn");
-      continue;
-    }
-
-    update_value = ecudc_get_asString (update_item, dbcolumn, NULL);
-    if (isNotAssigned (update_value))
-    {
-      eclogger_fmt (LL_TRACE, "ADBO", "insert", "item '%s' has no value and will not be insert", dbcolumn);    
-      continue;
-    }
- 
-    adbl_attrs_addChar(attrs, dbcolumn, update_value);
-    
-    ecudc_add_asString(EC_ALLOC, values, dbcolumn, update_value);
+    adbo_node_appendColumn (attrs, column, update_item, values);
   }
+  
+  ecstr_delete (&update_value);
 }
 
 //----------------------------------------------------------------------------------------
@@ -931,27 +1045,10 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
   //if (isNotAssigned (item_value))
   {
     isInsert = TRUE;
-       
+    
     for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
     {
-      const EcString dbcolumn;
-      const EcString update_value;
-
-      dbcolumn = ecudc_name (column);
-      if (isNotAssigned (dbcolumn))
-      {
-        eclogger_msg (LL_WARN, "ADBO", "update", "column with empty name");
-        continue;
-      }
-      
-      update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
-      if (isNotAssigned (update_value))
-      {
-        eclogger_fmt (LL_TRACE, "ADBO", "update", "item '%s' has no value and will not be updated", dbcolumn);    
-        continue;
-      }
-      
-      adbl_attrs_addChar (attrs, dbcolumn, update_value);            
+      adbo_node_appendColumn (attrs, column, item_update, NULL);
     }
   }
   /*
