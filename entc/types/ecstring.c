@@ -146,6 +146,23 @@ EcString ecstr_long (uint64_t value)
 
 //----------------------------------------------------------------------------------------
 
+EcString ecstr_longPadded ( uint64_t value, int amount)
+{
+  EcBuffer buffer = ecbuf_create (12 + amount);
+  
+  // generate the format string
+  EcBuffer h = ecbuf_create (21);
+  ecbuf_format (h, 20, "%%0%ilu", amount);
+
+  // do formatting and padding
+  ecbuf_format (buffer, 11 + amount, ecbuf_const_str(h), value);
+
+  ecbuf_destroy (&h);
+  return ecbuf_str (&buffer);
+}
+
+//----------------------------------------------------------------------------------------
+
 EcString ecstr_float (double value, uint_t n)
 {
   EcString s;
