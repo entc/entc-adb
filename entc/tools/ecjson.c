@@ -634,4 +634,64 @@ EcString ecjson_write (const EcUdc source)
   return ecbuf_str (&buffer);  
 }
 
-//-----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+
+int ecjson_readFromFile (const EcString filename, EcUdc* retUdc)
+{
+  EcFileHandle fh;
+
+  fh = ecfh_open (filename, O_RDONLY);
+  if (isNotAssigned (fh))
+  {
+    return ENTC_RESCODE_NOT_AVAILABLE;
+  }
+  
+  uint64_t fsize = ecfh_size (fh);
+  
+  // TODO: using stream
+  EcBuffer content = ecbuf_create (fsize + 1);
+  
+  if (ecfh_readBuffer (fh, content) == 0)
+  {
+    return ENTC_RESCODE_NOT_AVAILABLE;
+  }
+  
+  ecfh_close(&fh);
+  
+  EcString text = ecbuf_str (&content);
+  
+  *retUdc = ecjson_read(text, NULL);
+  
+  ecstr_delete (&text);
+  
+  return ENTC_RESCODE_OK;
+}
+
+//-------------------------------------------------------------------------------------------------------
+
+int ecjson_writeToFile (const EcString filename, const EcUdc source)
+{
+  EcFileHandle fh;
+  int res = ENTC_RESCODE_OK;
+
+  fh = ecfh_open (filename, O_CREAT | O_RDWR | O_TRUNC);
+  if (isNotAssigned (fh))
+  {
+    return ENTC_RESCODE_NOT_AVAILABLE;
+  }
+  
+  EcString text = ecjson_write (source);
+  if (text)
+  {
+    ecfh_writeString (fh, text);
+  }
+  else
+  {
+    res = ENTC_RESCODE_NOT_AVAILABLE;
+  }
+  
+  ecfh_close(&fh);
+  return res;
+}
+
+//-------------------------------------------------------------------------------------------------------

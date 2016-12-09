@@ -175,6 +175,8 @@ __CPP_EXTERN____________________________________________________________________
 __LIB_EXPORT EcFileHandle ecfh_open(const EcString filename, int flags);
   
 __LIB_EXPORT void ecfh_close(EcFileHandle*);
+
+__LIB_EXPORT uint64_t ecfh_size (EcFileHandle);
   
 __LIB_EXPORT int ecfh_writeString (EcFileHandle, const EcString);
   

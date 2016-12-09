@@ -81,6 +81,17 @@ void ecfh_close(EcFileHandle* pself)
 
 /*------------------------------------------------------------------------*/
 
+uint64_t ecfh_size (EcFileHandle self)
+{
+  struct stat st;
+  
+  fstat (self->fd, &st);
+  
+  return st.st_size;
+}
+
+/*------------------------------------------------------------------------*/
+
 int ecfh_writeString(EcFileHandle self, const EcString value)
 {
   return write (self->fd, value, strlen(value));
