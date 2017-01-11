@@ -33,5 +33,8 @@ TARGET_LINK_LIBRARIES( unittest_mime entc )
 ADD_EXECUTABLE( unittest_mimeparser tools/unittest_mimeparser.c )
 TARGET_LINK_LIBRARIES( unittest_mimeparser entc )
 
+ADD_EXECUTABLE( unittest_json tools/unittest_json.c )
+TARGET_LINK_LIBRARIES( unittest_json entc )
+
 ADD_EXECUTABLE( unittest_stream types/unittest_stream.c )
 TARGET_LINK_LIBRARIES( unittest_stream entc ) 

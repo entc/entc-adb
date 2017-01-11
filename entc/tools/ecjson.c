@@ -315,7 +315,13 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         }
         break;
         // ignore
-        case '\t' : case '\r' : case '\n' : case ' ': 
+        case '\t' : case '\r' : case '\n' : case ' ':
+        break;
+        case '}': // empty node
+        {
+          parser->pos = c;
+          return udc;
+        }
         break;
         // error
         default:
