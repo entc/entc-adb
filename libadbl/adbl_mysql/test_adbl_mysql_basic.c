@@ -3,6 +3,8 @@
 
 int main (int argc, char *argv[])
 {
+  ecmessages_initialize ();
+  
   /* variables */
   void* connptr = 0;
   AdblConnectionProperties cp;
@@ -19,19 +21,23 @@ int main (int argc, char *argv[])
   }
   else
   {
-    cp.host = "127.0.0.1";  
+    cp.host = "localhost";
     cp.file = 0;
     cp.port = 0;
-    cp.schema = "test";
+    cp.schema = "test1";
     cp.username = "root";  
-    cp.password = "";    
+    cp.password = "lobo2020";
   }
   
   connptr = adblmodule_dbconnect (&cp);
   if( !connptr )
   {
     eclogger_msg (LL_ERROR, "TEST", "basic", "Error by connecting");
-    res = FALSE;
+    exit (1);
+  }
+  else
+  {
+    eclogger_msg (LL_INFO, "TEST", "basic", "connected");
   }
   
   
@@ -44,7 +50,7 @@ int main (int argc, char *argv[])
   
   AdblConstraint* const1 = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
   
-  adbl_constraint_addChar (const1, "id", QUOMADBL_CONSTRAINT_EQUAL, "1");
+  adbl_constraint_addChar (const1, "id", QUOMADBL_CONSTRAINT_EQUAL, "2");
   
   adbl_query_setConstraint (q1, const1);
   

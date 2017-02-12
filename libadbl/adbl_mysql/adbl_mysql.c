@@ -315,8 +315,8 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
   }
   
   cursor->bindResult[index].buffer_type = MYSQL_TYPE_STRING;
-  cursor->bindResult[index].buffer = cursor->data + index * 255;
-  cursor->bindResult[index].buffer_length = 255;
+  cursor->bindResult[index].buffer = 0;
+  cursor->bindResult[index].buffer_length = 0;
   cursor->bindResult[index].is_null = &(cursor->is_null[index]);
   cursor->bindResult[index].length = &(cursor->length[index]);
   cursor->bindResult[index].error = &(cursor->error[index]);
@@ -1192,7 +1192,7 @@ int adblmodule_dbcursor_next (void* ptr)
     }
   }
   
-  return FALSE;
+  return TRUE;
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -1212,9 +1212,23 @@ const char* adblmodule_dbcursor_data (void* ptr, uint_t column)
     }
     else
     {
-      //eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got '%s'", self->data + (column * 255));
+      unsigned long length = self->length[column];
       
-      return self->data + (column * 255);
+      self->bindResult[column].buffer = realloc(self->bindResult[column].buffer, length + 1);
+      self->bindResult[column].buffer_length = length;
+      
+      int res = mysql_stmt_fetch_column (self->stmt, &(self->bindResult[column]), column, 0);
+      if (res != 0)
+      {
+        eclogger_fmt (LL_ERROR, C_MODDESC, "fetch data", "got error %i", res);
+      }
+      
+      // set terminator
+      ((char*)(self->bindResult[column].buffer))[length] = 0;
+      
+      //eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got '%s'", self->bindResult[column].buffer);
+      
+      return self->bindResult[column].buffer;
     }
   }
   else
@@ -1231,21 +1245,11 @@ const char* adblmodule_dbcursor_nextdata (void* ptr)
 {
   AdblMysqlCursor* self = ptr;
   
-  const char* res;
-  
-  my_bool* isNull = self->is_null + (self->pos * sizeof(my_bool));
-  if (*isNull)
-  {
-    res = NULL;
-  }
-  else
-  {
-    res = self->data + (self->pos * 255);
-  }
+  const char* data = adblmodule_dbcursor_data (ptr, self->pos);
   
   self->pos++;
   
-  return res;
+  return data;
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -1262,6 +1266,15 @@ void adblmodule_dbcursor_release (void* ptr)
   ENTC_FREE (self->is_null);
   ENTC_FREE (self->error);
   ENTC_FREE (self->length);
+  
+  int i;
+  for (i = 0; i < self->size; i++)
+  {
+    if (self->bindResult[i].buffer)
+    {
+      free(self->bindResult[i].buffer);
+    }
+  }
   
   ENTC_DEL (&ptr, AdblMysqlCursor)
   
