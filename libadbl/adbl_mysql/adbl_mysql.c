@@ -1187,7 +1187,7 @@ int adblmodule_dbcursor_next (void* ptr)
     }
     case MYSQL_DATA_TRUNCATED:
     {
-      eclogger_msg  (LL_WARN, C_MODDESC, "fetch", "data truncated");
+      //eclogger_msg  (LL_WARN, C_MODDESC, "fetch", "data truncated");
       return TRUE;
     }
   }
