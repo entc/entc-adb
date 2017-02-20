@@ -798,6 +798,21 @@ void ecmultipart_addFile (EcMultipart self, const EcString path, const EcString 
 
 //------------------------------------------------------------------------------------------------------
 
+void ecmultipart_addPath (EcMultipart self, const EcString path, const EcString name, int fileId)
+{
+  EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_FILEINFO, NULL);
+  
+  EcFileInfo fi = ecudc_asFileInfo(h);
+  
+  fi->name = ecstr_copy (name);
+  fi->path = ecstr_copy (path);
+  fi->inode = fileId;
+  
+  ecudc_add (self->sections, &h);
+}
+
+//------------------------------------------------------------------------------------------------------
+
 uint_t ecmultipart_nextState (EcMultipart self, EcBuffer buf, int newState)
 {
   self->state = newState;
@@ -936,14 +951,14 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           ecstream_append (stream, "\r\n");
           ecstream_append (stream, "Content-Type: ");
           ecstream_append (stream, mimeType);
-          ecstream_append (stream, "; name=");
+          ecstream_append (stream, "; name=\"");
           ecstream_append (stream, fi->name);
-          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "\"\r\n");
           ecstream_append (stream, "Content-Transfer-Encoding: base64");
           ecstream_append (stream, "\r\n");
-          ecstream_append (stream, "Content-Disposition: inline; filename=");
+          ecstream_append (stream, "Content-Disposition: inline; filename=\"");
           ecstream_append (stream, fi->name);
-          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "\"\r\n");
           ecstream_append (stream, "Content-ID: <");
           ecstream_appendu (stream, fi->inode);
           ecstream_append (stream, ">");

@@ -61,6 +61,8 @@ __LIB_EXPORT void ecmultipart_addText (EcMultipart, const EcString text);
 
 __LIB_EXPORT void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file, int fileId);
 
+__LIB_EXPORT void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId);
+
 __LIB_EXPORT uint_t ecmultipart_next (EcMultipart, EcBuffer);
 
 __CPP_EXTERN______________________________________________________________________________END
