@@ -439,6 +439,7 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
     {
       EcUserInfo h = ECMM_NEW (EcUserInfo_s);
       
+      h->acc_type = 0;
       h->name = ecstr_init ();
       h->extras = NULL;
       

@@ -85,6 +85,8 @@ typedef struct
   EcString name;
   
   uint64_t uid;
+
+  uint32_t acc_type;
   
   EcUdc extras;
   
