@@ -1226,7 +1226,7 @@ const char* adblmodule_dbcursor_data (void* ptr, uint_t column)
       // set terminator
       ((char*)(self->bindResult[column].buffer))[length] = 0;
       
-      //eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got '%s'", self->bindResult[column].buffer);
+      //eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got '%s' len %i", self->bindResult[column].buffer, length);
       
       return self->bindResult[column].buffer;
     }
