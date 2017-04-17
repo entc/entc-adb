@@ -39,6 +39,8 @@ __LIB_EXPORT EcBuffer ecbuf_create_str (EcString* s);
 
 __LIB_EXPORT EcBuffer ecbuf_create_uuid ();
 
+__LIB_EXPORT EcBuffer ecbuf_create_fromBuffer (const unsigned char*, uint_t size);
+
 __LIB_EXPORT void ecbuf_destroy (EcBuffer*);
 
 // manipulators
