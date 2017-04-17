@@ -104,15 +104,20 @@ EcMapNode ecmap_erase (EcMap self, EcMapNode node)
 
 EcMapNode ecmap_find (EcMap self, const EcString key)
 {
-  //iterate through all list members
   EcListNode node;
+
+  //iterate through all list members
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
     struct EcMapDataNode* mapnode = (struct EcMapDataNode*)eclist_data(node);
+    
     //compare the stored name with the name we got
     if(ecstr_equal(mapnode->key, key))
+    {
       return node;
+    }
   }
+  
   return eclist_end(self->list);
 }
 

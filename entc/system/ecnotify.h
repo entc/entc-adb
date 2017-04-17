@@ -17,25 +17,23 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_TOOLS_JSON_H
-#define ENTC_TOOLS_JSON_H 1
+#ifndef ENTC_SYSTEM_EVENTS_H
+#define ENTC_SYSTEM_EVENTS_H 1
 
 #include "../system/macros.h"
-#include "../system/types.h"
-
-#include "../types/ecudc.h"
 #include "../types/ecstring.h"
 
+struct EcNotify_s; typedef struct EcNotify_s* EcNotify;
+
 __CPP_EXTERN______________________________________________________________________________START
+  
+__LIB_EXPORT EcNotify ecnotify_create ();
+  
+__LIB_EXPORT void ecnotify_destroy (EcNotify*);
 
-__LIB_EXPORT EcUdc ecjson_read (const EcString, const EcString name);
-
-__LIB_EXPORT EcString ecjson_write (const EcUdc);
-
-__LIB_EXPORT int ecjson_readFromFile (const EcString filename, EcUdc*);
-
-__LIB_EXPORT int ecjson_writeToFile (const EcString filename, const EcUdc);
+__LIB_EXPORT void enotify_addPath (EcNotify, const EcString path);
 
 __CPP_EXTERN______________________________________________________________________________END
+
 
 #endif

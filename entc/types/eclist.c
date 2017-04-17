@@ -131,6 +131,16 @@ void eclist_set (EcListNode node, void* data)
 
 //----------------------------------------------------------------------------------------
 
+void eclist_swap (EcListNode node1, EcListNode node2)
+{
+  void* data = node1->data;
+  
+  node1->data = node2->data;
+  node2->data = data;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcListNode eclist_erase (EcAlloc alloc, EcList self, EcListNode node)
 {
   EcListNode nextn = node->next;

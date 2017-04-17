@@ -758,11 +758,22 @@ void adbl_sequence_release (AdblSequence** ptr)
 
 uint_t adbl_sequence_next (AdblSequence* self)
 {
-  if (isAssigned(self->pp->dbsequence_next))
+  if (isNotAssigned (self))
   {
-      return self->pp->dbsequence_next(self->ptr);
+    return 0;
   }
-  return 0;  
+  
+  if (isNotAssigned (self->pp))
+  {
+    return 0;
+  }
+  
+  if (isNotAssigned (self->pp->dbsequence_next))
+  {
+    return 0;  
+  }
+
+  return self->pp->dbsequence_next (self->ptr);
 }
 
 /*------------------------------------------------------------------------*/

@@ -39,6 +39,8 @@ __LIB_EXPORT EcBuffer ecbuf_create_str (EcString* s);
 
 __LIB_EXPORT EcBuffer ecbuf_create_uuid ();
 
+__LIB_EXPORT EcBuffer ecbuf_create_fromBuffer (const unsigned char*, uint_t size);
+
 __LIB_EXPORT void ecbuf_destroy (EcBuffer*);
 
 // manipulators
@@ -52,6 +54,10 @@ __LIB_EXPORT void ecbuf_random (EcBuffer, uint_t size);
 __LIB_EXPORT void ecbuf_format (EcBuffer, uint_t size, const char* format, ...);
 
 __LIB_EXPORT void ecbuf_resize (EcBuffer, uint_t size);
+
+__LIB_EXPORT ulong_t ecbuf_encode_base64_calculateSize (ulong_t max);
+
+__LIB_EXPORT ulong_t ecbuf_encode_base64_d (EcBuffer, EcBuffer);
 
 __LIB_EXPORT EcBuffer ecbuf_encode_base64 (EcBuffer);
 

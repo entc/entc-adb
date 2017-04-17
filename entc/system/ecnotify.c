@@ -17,25 +17,38 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_TOOLS_JSON_H
-#define ENTC_TOOLS_JSON_H 1
+#include "ecnotify.h"
 
-#include "../system/macros.h"
-#include "../system/types.h"
+struct EcNotify_s
+{
+    
+    
+};
 
-#include "../types/ecudc.h"
-#include "../types/ecstring.h"
+//------------------------------------------------------------------------------------------------------
 
-__CPP_EXTERN______________________________________________________________________________START
+EcNotify ecnotify_create ()
+{
+    EcNotify self = ENTC_NEW (struct EcNotify_s);
+    
+    
+    return self;
+}
 
-__LIB_EXPORT EcUdc ecjson_read (const EcString, const EcString name);
+//------------------------------------------------------------------------------------------------------
 
-__LIB_EXPORT EcString ecjson_write (const EcUdc);
+void ecnotify_destroy (EcNotify* pself)
+{
+    EcNotify self = *pself;
 
-__LIB_EXPORT int ecjson_readFromFile (const EcString filename, EcUdc*);
+    ENTC_DEL(pself, struct EcNotify_s);
+}
 
-__LIB_EXPORT int ecjson_writeToFile (const EcString filename, const EcUdc);
+//------------------------------------------------------------------------------------------------------
 
-__CPP_EXTERN______________________________________________________________________________END
+void enotify_addPath (EcNotify self, const EcString path)
+{
+    
+}
 
-#endif
+//------------------------------------------------------------------------------------------------------

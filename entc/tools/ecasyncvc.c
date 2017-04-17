@@ -656,7 +656,7 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
        
     for (node = ecmap_first(self->contexts); node != ecmap_end(self->contexts); node = ecmap_next(node))
     {
-      EcAsyncUdpContext context = ecmap_data (node);
+      //EcAsyncUdpContext context = ecmap_data (node);
       
       // bug doesn't work
       /*

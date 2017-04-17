@@ -63,7 +63,7 @@ void ecrefcnt_inc (EcRefCnt self)
 int ecrefcnt_dec (EcRefCnt self)
 {
 #ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_16
-  return (__sync_sub_and_fetch(&(self->cnt), 1);
+  return (__sync_sub_and_fetch(&(self->cnt), 1));
 #else
   self->cnt--;
   return self->cnt;

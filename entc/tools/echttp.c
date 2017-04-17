@@ -1158,9 +1158,9 @@ void echttp_header_title (EcHttpHeader* header)
 void echttp_header_trimurl (EcHttpHeader* header)
 {
   // extract host part
-  if ((header->request_url[0] == '/')) 
+  if (header->request_url[0] == '/')
   {
-    if ((header->request_url[1] == '/')) 
+    if (header->request_url[1] == '/') 
     {
       // we do have a complete url, remove the first part
       const EcString pos = strchr (header->request_url + 2, '/');  
@@ -1349,7 +1349,7 @@ EcUdc echttp_parse_auth (const EcString source)
 
   ecudc_add_asString(EC_ALLOC, auth, "content", next_space + 1);
   
-  eclogger_fmt (LL_TRACE, "ENTC", "http auth", "WWW-Authorization: %s %s", auth_type, next_space + 1);
+  //eclogger_fmt (LL_TRACE, "ENTC", "http auth", "WWW-Authorization: %s %s", auth_type, next_space + 1);
   
   ecstr_delete (&auth_type);
   

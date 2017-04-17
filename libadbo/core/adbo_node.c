@@ -252,8 +252,9 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
 
   if (isAssigned (query))
   {
-    adbl_query_addColumn(query, dbcolumn, 0);
+    adbl_query_addColumn (query, dbcolumn, 0);
   }
+  
   // check if we have a data value with the same name as the dbcolumn
   if (isNotAssigned (data))
   {
@@ -263,13 +264,16 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
   
   {
     EcUdc dataConstraint = ecudc_node (data, dbcolumn); 
+    
     if (isNotAssigned (dataConstraint))
     {
-      //eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' no value found", dbcolumn); 
+      eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "key '%s' no value found", dbcolumn);
       return FALSE;
     }
-    
-    return adbo_dbkeys_set_constraint (dataConstraint, constraint, dbcolumn, TRUE);
+    else
+    {
+      return adbo_dbkeys_set_constraint (dataConstraint, constraint, dbcolumn, TRUE);
+    }
   }
       
   return TRUE;
@@ -284,12 +288,19 @@ int adbo_dbkeys_constraints (EcUdc dbkeys, EcUdc data, AdblConstraint* constrain
   void* cursor = NULL;
   EcUdc dbkey;
 
+  // for debug
+  {
+    EcString jsontext = ecjson_write (dbkeys);
+    eclogger_fmt (LL_TRACE, "ADBO", "dbkeys", ecstr_cstring(jsontext));
+    ecstr_delete(&jsontext);
+  }
+  
   for (dbkey  = ecudc_next (dbkeys, &cursor); isAssigned (dbkey); dbkey = ecudc_next (dbkeys, &cursor))
   {
     int h = adbo_dbkeys_value_contraint_add (dbkey, data, constraint, query);
     ret = ret && h;
   }
-  
+
   return ret;
 }
   
@@ -334,7 +345,7 @@ AdblConstraint* adbo_node_constraints (EcUdc node, EcUdc data, AdboContext conte
 
 //----------------------------------------------------------------------------------------
 
-void adbo_node_primary_sequence (EcUdc node, AdblSession dbsession, const EcString dbtable, EcUdc values, AdblAttributes* attrs)
+void adbo_node_primary_sequence (EcUdc node, AdblSession dbsession, const EcString dbtable, EcUdc filter,EcUdc values, AdblAttributes* attrs)
 {
   // check only primary key
   EcUdc prikeys = ecudc_node (node, ECDATA_IDS);
@@ -355,6 +366,7 @@ void adbo_node_primary_sequence (EcUdc node, AdblSession dbsession, const EcStri
         adbl_attrs_addLong(attrs, dbcolumn, id);
         
         ecudc_add_asUInt32(EC_ALLOC, values, dbcolumn, id);        
+        ecudc_add_asUInt32(EC_ALLOC, filter, dbcolumn, id);
       }
     }
   }
@@ -364,13 +376,16 @@ void adbo_node_primary_sequence (EcUdc node, AdblSession dbsession, const EcStri
 
 int adbo_node_primary (EcUdc node, EcUdc data, AdboContext context, AdblConstraint* constraint)
 {
+  int ret = FALSE;
+  
   // check only primary key
   EcUdc prikeys = ecudc_node (node, ECDATA_IDS);
   if (isAssigned (prikeys))
   {
-    return adbo_dbkeys_constraints (prikeys, data, constraint, NULL);
-  }  
-  return FALSE;
+    ret = adbo_dbkeys_constraints (prikeys, data, constraint, NULL);
+  }
+  
+  return ret;
 }
 
 //----------------------------------------------------------------------------------------
@@ -492,6 +507,8 @@ int _STDCALL adbo_cursor_fill (void* ptr, EcTable* table)
       ecstr_replace (&current, adbl_dbcursor_data (self->dbcursor, col));
       
       ectable_set (self->data, row, col, current);
+
+      eclogger_fmt (LL_TRACE, "ADBO", "cursor", "set value [%i][%i] '%s'", row, col, current);
     }
     
     if (row >= PREFETCHED_CACHE)
@@ -788,40 +805,154 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
 
 //----------------------------------------------------------------------------------------
 
-void adbo_node_insert_values (AdboContext context, EcUdc cols, EcUdc update_item, EcUdc values, AdblAttributes* attrs)
+void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc dataItems, EcUdc values)
 {
-  EcUdc column;
-  void* cursor = NULL;
+  const EcString columnName;
   
-  for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
+  columnName = ecudc_name (columnItem);
+  if (isNotAssigned (columnName))
   {
-    // variables
-    const EcString dbcolumn;
-    const EcString update_value;
-    
-    dbcolumn = ecudc_name (column);
-    if (isNotAssigned (dbcolumn))
-    {
-      eclogger_msg (LL_WARN, "ADBO", "insert", "value in items without dbcolumn");
-      continue;
-    }
+    eclogger_msg (LL_WARN, "ADBO", "attr", "value in items without dbcolumn");
+    return;
+  }
 
-    update_value = ecudc_get_asString (update_item, dbcolumn, NULL);
-    if (isNotAssigned (update_value))
+  EcUdc dataItem = ecudc_node(dataItems, columnName);
+  if (isNotAssigned (dataItem))
+  {
+    eclogger_fmt (LL_TRACE, "ADBO", "attr", "node has not item '%s'", columnName);
+    return;
+  }
+  
+  switch (ecudc_type (dataItem))
+  {
+    case ENTC_UDC_NODE:
+    case ENTC_UDC_LIST:
     {
-      eclogger_fmt (LL_TRACE, "ADBO", "insert", "item '%s' has no value and will not be insert", dbcolumn);    
-      continue;
+      EcString val = ecjson_write (dataItem);
+      
+      adbl_attrs_addChar (attrs, columnName, val);
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asS_o(EC_ALLOC, values, columnName, &val);
+      }
+      else
+      {
+        ecstr_delete (&val);
+      }
     }
- 
-    adbl_attrs_addChar(attrs, dbcolumn, update_value);
-    
-    ecudc_add_asString(EC_ALLOC, values, dbcolumn, update_value);
+    break;
+    case ENTC_UDC_STRING:
+    {
+      adbl_attrs_addChar (attrs, columnName, ecudc_asString (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asString (EC_ALLOC, values, columnName, ecudc_asString (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_INT64:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asInt64 (dataItem));
+
+      if (isAssigned(values))
+      {
+        ecudc_add_asInt64 (EC_ALLOC, values, columnName, ecudc_asInt64 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_UINT64:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt64 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asUInt64 (EC_ALLOC, values, columnName, ecudc_asUInt64 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_INT32:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asInt32 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asInt32 (EC_ALLOC, values, columnName, ecudc_asInt32 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_UINT32:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt32 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asUInt32 (EC_ALLOC, values, columnName, ecudc_asUInt32 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_INT16:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asInt16 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asInt16 (EC_ALLOC, values, columnName, ecudc_asInt16 (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_UINT16:
+    {
+      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt16 (dataItem));
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asUInt16 (EC_ALLOC, values, columnName, ecudc_asUInt16 (dataItem));
+      }
+    }
+    break;
+    default:
+    {
+      const EcString val = ecudc_asString (dataItem);
+      if (val)
+      {
+        adbl_attrs_addChar (attrs, columnName, val);
+
+        if (isAssigned(values))
+        {
+          ecudc_add_asString (EC_ALLOC, values, columnName, val);
+        }
+      }
+      else
+      {
+        eclogger_fmt (LL_WARN, "ADBO", "attr", "column item '%s' has no value", columnName);
+        return;
+      }
+    }
   }
 }
 
 //----------------------------------------------------------------------------------------
 
-int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, const EcString dbtable, EcUdc update_data, EcUdc cols, AdblConstraint* constraint)
+void adbo_node_insert_values (AdboContext context, EcUdc cols, EcUdc update_item, EcUdc values, AdblAttributes* attrs)
+{
+  EcUdc column;
+  void* cursor = NULL;
+  EcString update_value = ecstr_init ();
+  
+  for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
+  {
+    // variables
+    adbo_node_appendColumn (attrs, column, update_item, values);
+  }
+  
+  ecstr_delete (&update_value);
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, const EcString dbtable, EcUdc filter, EcUdc update_data, EcUdc cols, AdblConstraint* constraint)
 {
   void* cursor = NULL;
 
@@ -860,7 +991,7 @@ int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, co
       }
       adbl_insert_setAttributes (insert, attrs);
 
-      adbo_node_primary_sequence (node, dbsession, dbtable, values, attrs);      
+      adbo_node_primary_sequence (node, dbsession, dbtable, filter, values, attrs);
       // all additional values
       if (isAssigned (cols) && isAssigned (values))
       {
@@ -929,27 +1060,10 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
   //if (isNotAssigned (item_value))
   {
     isInsert = TRUE;
-       
+    
     for (column = ecudc_next (cols, &cursor); isAssigned (column); column = ecudc_next (cols, &cursor))
     {
-      const EcString dbcolumn;
-      const EcString update_value;
-
-      dbcolumn = ecudc_name (column);
-      if (isNotAssigned (dbcolumn))
-      {
-        eclogger_msg (LL_WARN, "ADBO", "update", "column with empty name");
-        continue;
-      }
-      
-      update_value = ecudc_get_asString(item_update, dbcolumn, NULL);
-      if (isNotAssigned (update_value))
-      {
-        eclogger_fmt (LL_TRACE, "ADBO", "update", "item '%s' has no value and will not be updated", dbcolumn);    
-        continue;
-      }
-      
-      adbl_attrs_addChar (attrs, dbcolumn, update_value);            
+      adbo_node_appendColumn (attrs, column, item_update, NULL);
     }
   }
   /*
@@ -1019,6 +1133,8 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
 
   if (adbo_node_primary (node, filter, context, constraint))
   {
+    eclogger_msg (LL_TRACE, "ADBO", "update", "decided to update");
+
     if (adbo_node_foreign (node, filter, context, constraint))
     {
       
@@ -1040,12 +1156,12 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
   else if (adbo_node_foreign (node, filter, context, constraint))
   {
     // no primary key but foreign key, lets try to insert
-    ret = adbo_node_insert (node, context, dbsession, dbtable, update_data, cols, constraint);            
+    ret = adbo_node_insert (node, context, dbsession, dbtable, filter, update_data, cols, constraint);
   }
   else
   {
     // no primary key nor foreign key, lets try to insert
-    ret = adbo_node_insert (node, context, dbsession, dbtable, update_data, cols, NULL);            
+    ret = adbo_node_insert (node, context, dbsession, dbtable, filter, update_data, cols, NULL);
   }
   
   adbl_constraint_delete(&constraint);

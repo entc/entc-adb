@@ -115,7 +115,7 @@ int main (int argc, char *argv[])
     
   res = ece_context_waitforAbort (econtext, 200);
   
-  printf("waited for %u ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_TIMEOUT);
+  printf("waited for %ld ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_TIMEOUT);
   
   // simple tests with one thread
   {
@@ -126,7 +126,7 @@ int main (int argc, char *argv[])
     
     res = ece_context_waitforAbort (econtext, ENTC_INFINITE);
 
-    printf("waited for %u ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_ABORT);
+    printf("waited for %ld ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_ABORT);
       
     ecthread_join(th1);
     ecthread_delete(&th1);
@@ -151,7 +151,7 @@ int main (int argc, char *argv[])
     
     res = ece_list_wait (equeue, 200, &ptr);
     
-    printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res == ENTC_EVENT_TIMEOUT, ptr);
+    printf("waited for %ld ms with type %i with pointer %p\n", (long)(time(0) - t1), res == ENTC_EVENT_TIMEOUT, ptr);
 
     p1.queue = equeue;
     p1.handle = ece_list_handle (equeue, &p1);
@@ -160,7 +160,7 @@ int main (int argc, char *argv[])
 
     res = ece_list_wait (equeue, ENTC_INFINITE, &ptr);
 
-    printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
+    printf("waited for %ld ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
     
     ece_sleep (100);
     
@@ -178,13 +178,13 @@ int main (int argc, char *argv[])
 
     res = ece_list_wait (equeue, ENTC_INFINITE, &ptr);
 
-    printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
+    printf("waited for %ld ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
     
     t1 = time(0);
     
     res = ece_list_wait (equeue, ENTC_INFINITE, &ptr);
     
-    printf("waited for %u ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
+    printf("waited for %ld ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
 
     ecthread_start (th4, callback4, &p3);
 

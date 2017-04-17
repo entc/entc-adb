@@ -22,7 +22,100 @@
 #include "types/ecbuffer.h"
 #include "types/ecmapchar.h"
 
-//-----------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------
+
+const EcString ecmime_getFromFile (const EcString filename)
+{
+  const EcString ext = ecfs_extractFileExtension (filename);
+  
+  if (ext)
+  {
+    return ecmime_getFromExtension (ext);
+  }
+  else
+  {
+    eclogger_fmt (LL_WARN, "ENTC", "mime", "can't extract extension from '%s'", filename);
+    return "application/octet-stream";
+  }
+}
+
+//------------------------------------------------------------------------------------------------------
+
+const EcString ecmime_getFromExtension (const EcString ext)
+{
+  static EcMapChar mime_types = NULL;
+  
+  if (mime_types == NULL)
+  {
+    mime_types = ecmapchar_create (EC_ALLOC);
+    
+    ecmapchar_append( mime_types, "pdf",      "application/pdf" );
+    ecmapchar_append( mime_types, "sig",      "application/pgp-signature" );
+    ecmapchar_append( mime_types, "class",    "application/octet-stream" );
+    ecmapchar_append( mime_types, "ps",       "application/postscript" );
+    ecmapchar_append( mime_types, "torrent",  "application/x-bittorrent" );
+    ecmapchar_append( mime_types, "dvi",      "application/x-dvi" );
+    ecmapchar_append( mime_types, "gz",       "application/x-gzip" );
+    ecmapchar_append( mime_types, "pac",      "application/x-ns-proxy-autoconfig" );
+    ecmapchar_append( mime_types, "swf",      "application/x-shockwave-flash" );
+    
+    ecmapchar_append( mime_types, "tgz",      "application/x-tgz" );
+    ecmapchar_append( mime_types, "tar",      "application/x-tar" );
+    ecmapchar_append( mime_types, "zip",      "application/zip" );
+    ecmapchar_append( mime_types, "mp3",      "audio/mpeg" );
+    ecmapchar_append( mime_types, "m3u",      "audio/x-mpegurl" );
+    ecmapchar_append( mime_types, "wma",      "audio/x-ms-wma" );
+    ecmapchar_append( mime_types, "wax",      "audio/x-ms-wax" );
+    ecmapchar_append( mime_types, "ogg",      "application/ogg" );
+    ecmapchar_append( mime_types, "wav",      "audio/x-wav" );
+    
+    ecmapchar_append( mime_types, "gif",      "image/gif" );
+    ecmapchar_append( mime_types, "jpg",      "image/jpeg" );
+    ecmapchar_append( mime_types, "jpeg",     "image/jpeg" );
+    ecmapchar_append( mime_types, "png",      "image/png" );
+    ecmapchar_append( mime_types, "xbm",      "image/x-xbitmap" );
+    ecmapchar_append( mime_types, "xpm",      "image/x-xpixmap" );
+    ecmapchar_append( mime_types, "xwd",      "image/x-xwindowdump" );
+    ecmapchar_append( mime_types, "svg",      "image/svg+xml");
+    
+    ecmapchar_append( mime_types, "css",      "text/css" );
+    ecmapchar_append( mime_types, "html",     "text/html" );
+    ecmapchar_append( mime_types, "htm",      "text/html" );
+    ecmapchar_append( mime_types, "js",       "text/javascript" );
+    ecmapchar_append( mime_types, "asc",      "text/plain" );
+    ecmapchar_append( mime_types, "c",        "text/plain" );
+    ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
+    ecmapchar_append( mime_types, "map",      "application/json");
+    
+    ecmapchar_append( mime_types, "woff",     "application/font-woff");
+    ecmapchar_append( mime_types, "woff2",    "application/font-woff2");
+    ecmapchar_append( mime_types, "ttf",      "application/font-ttf");
+    ecmapchar_append( mime_types, "eot",      "application/vnd.ms-fontobject");
+    ecmapchar_append( mime_types, "otf",      "application/font-otf");
+    
+    ecmapchar_append( mime_types, "csv",      "text/csv");
+    ecmapchar_append( mime_types, "xls",      "application/vnd.ms-excel");
+    
+    ecmapchar_append( mime_types, "exe",      "application/octet-stream" );
+    ecmapchar_append( mime_types, "dll",      "application/x-msdownload" );
+  }
+  
+  {
+    EcMapCharNode node = ecmapchar_find( mime_types, ext);
+    
+    if( node != ecmapchar_end( mime_types ))
+    {
+      return ecmapchar_data( node );
+    }
+    else
+    {
+      eclogger_fmt (LL_WARN, "ENTC", "mime", "can't find mime type from extension '%s'", ext);
+      return "application/octet-stream";
+    }
+  }
+}
+
+//------------------------------------------------------------------------------------------------------
 
 #define C_MAX_BUFSIZE 100
 
@@ -607,6 +700,310 @@ EcString echttpheader_parseLine (const EcString line, const EcString key)
 
 //-----------------------------------------------------------------------------------------------------------
 
+struct EcMultipart_s {
+  
+  EcString boundary;
+  
+  EcString header;
+  
+  EcUdc sections;
+  
+  // state machine
+  
+  int state;
+  
+  EcBuffer buffer;
+  
+  ulong_t bufpos;
+  
+  EcUdc item;
+  
+  void* cursor;
+  
+  EcFileHandle fh;
+  
+};
 
+//------------------------------------------------------------------------------------------------------
 
+EcMultipart ecmultipart_create (const EcString boundary, const EcString header)
+{
+  EcMultipart self = ENTC_NEW (struct EcMultipart_s);
+  
+  if (isAssigned(boundary))
+  {
+    self->boundary = ecstr_copy(boundary);
+  }
+  else
+  {
+    EcBuffer buf = ecbuf_create_uuid ();
+    
+    self->boundary = ecbuf_str(&buf);
+  }
+  
+  self->header = ecstr_copy (header);
+  
+  self->sections = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, NULL);
+  
+  // for the state machine
+  self->state = 0;
+  self->buffer = NULL;
+  self->bufpos = 0;
+  self->item = NULL;
+  self->cursor = NULL;
+  self->fh = NULL;
+  
+  return self;
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ecmultipart_destroy (EcMultipart* pself)
+{
+  EcMultipart self = *pself;
+
+  ecstr_delete(&(self->boundary));
+  ecstr_delete(&(self->header));
+  
+  ecudc_destroy(EC_ALLOC, &(self->sections));
+  
+  ENTC_DEL(pself, struct EcMultipart_s);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ecmultipart_addText (EcMultipart self, const EcString text)
+{
+  EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, NULL);
+  
+  ecudc_setS (h, text);
+  
+  ecudc_add (self->sections, &h);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ecmultipart_addFile (EcMultipart self, const EcString path, const EcString file, int fileId)
+{
+  EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_FILEINFO, NULL);
+
+  EcFileInfo fi = ecudc_asFileInfo(h);
+  
+  fi->name = ecstr_copy (file);
+  fi->path = ecfs_mergeToPath (path, file);
+  fi->inode = fileId;
+  
+  ecudc_add (self->sections, &h);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ecmultipart_addPath (EcMultipart self, const EcString path, const EcString name, int fileId)
+{
+  EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_FILEINFO, NULL);
+  
+  EcFileInfo fi = ecudc_asFileInfo(h);
+  
+  fi->name = ecstr_copy (name);
+  fi->path = ecstr_copy (path);
+  fi->inode = fileId;
+  
+  ecudc_add (self->sections, &h);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+uint_t ecmultipart_nextState (EcMultipart self, EcBuffer buf, int newState)
+{
+  self->state = newState;
+  return ecmultipart_next (self, buf);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+uint_t ecmultipart_handleBuffer (EcMultipart self, EcBuffer buf, int newState)
+{
+  ulong_t min = ENTC_MIN(buf->size, self->buffer->size - self->bufpos);
+  
+  if (min == 0)
+  {
+    ecbuf_destroy (&(self->buffer));
+    
+    return ecmultipart_nextState (self, buf, newState);
+  }
+  else
+  {
+    memcpy (buf->buffer, self->buffer->buffer + self->bufpos, min);
+    self->bufpos += min;
+    
+    return min;
+  }
+}
+
+//------------------------------------------------------------------------------------------------------
+
+#define MULTIPART_STATE_BEGIN 0
+#define MULTIPART_STATE_NEXTITEM 1
+#define MULTIPART_STATE_END 2
+#define MULTIPART_STATE_TEXT 3
+#define MULTIPART_STATE_FILE 4
+#define MULTIPART_STATE_TERM 5
+
+uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
+{
+  switch (self->state)
+  {
+    case MULTIPART_STATE_BEGIN:
+    {
+      if (self->buffer == NULL)
+      {
+        EcStream stream = ecstream_new();
+
+        // start with header
+        if (self->header)
+        {
+          ecstream_append (stream, self->header);
+        }
+        
+        ecstream_append (stream, "MIME-Version: 1.0\r\n");
+        ecstream_append (stream, "Content-Type: multipart/mixed; ");
+        ecstream_append (stream, "boundary=\"");
+        ecstream_append (stream, self->boundary);
+        ecstream_append (stream, "\"");
+        
+        self->buffer = ecstream_trans(&stream);
+        self->bufpos = 0;
+      }
+      
+      return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_NEXTITEM);
+    }
+    case MULTIPART_STATE_NEXTITEM:
+    {
+      self->item = ecudc_next (self->sections, &(self->cursor));
+      if (isAssigned(self->item))
+      {
+        switch (ecudc_type(self->item))
+        {
+          case ENTC_UDC_STRING: return ecmultipart_nextState (self, buf, MULTIPART_STATE_TEXT);
+          case ENTC_UDC_FILEINFO: return ecmultipart_nextState (self, buf, MULTIPART_STATE_FILE);
+          default: return ecmultipart_next (self, buf); // skip this
+        }
+      }
+      else
+      {
+        // no items left
+        return ecmultipart_nextState (self, buf, MULTIPART_STATE_END);
+      }
+    }
+    case MULTIPART_STATE_END: // finalize
+    {
+      if (self->buffer == NULL)
+      {
+        EcStream stream = ecstream_new();
+      
+        ecstream_append (stream, "\r\n\r\n--");
+        ecstream_append (stream, self->boundary);
+        ecstream_append (stream, "--");
+        
+        self->buffer = ecstream_trans(&stream);
+        self->bufpos = 0;
+      }
+      
+      return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_TERM);
+    }
+    case MULTIPART_STATE_TEXT: // text
+    {
+      if (self->buffer == NULL)
+      {
+        EcStream stream = ecstream_new();
+        
+        ecstream_append (stream, "\r\n\r\n--");
+        ecstream_append (stream, self->boundary);
+        ecstream_append (stream, "\r\nContent-Type: text/plain; charset=\"UTF-8\"\r\n\r\n");
+        ecstream_append (stream, ecudc_asString(self->item));
+        
+        self->buffer = ecstream_trans(&stream);
+        self->bufpos = 0;
+      }
+      
+      return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_NEXTITEM);
+    }
+    case MULTIPART_STATE_FILE: // file
+    {
+      if (self->fh == NULL)
+      {
+        EcFileInfo fi = ecudc_asFileInfo(self->item);
+        
+        self->fh = ecfh_open (fi->path, O_RDONLY);
+        if (isNotAssigned (self->fh))
+        {
+          eclogger_fmt (LL_WARN, "ENTC", "mime", "can't open file '%s'", fi->path);
+          // in case of error just continue
+          return ecmultipart_nextState (self, buf, MULTIPART_STATE_NEXTITEM);
+        }
+        {
+          const EcString mimeType = ecmime_getFromFile (fi->path);
+          
+          EcStream stream = ecstream_new();
+          
+          ecstream_append (stream, "\r\n\r\n--");
+          ecstream_append (stream, self->boundary);
+          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "Content-Type: ");
+          ecstream_append (stream, mimeType);
+          ecstream_append (stream, "; name=\"");
+          ecstream_append (stream, fi->name);
+          ecstream_append (stream, "\"\r\n");
+          ecstream_append (stream, "Content-Transfer-Encoding: base64");
+          ecstream_append (stream, "\r\n");
+          ecstream_append (stream, "Content-Disposition: inline; filename=\"");
+          ecstream_append (stream, fi->name);
+          ecstream_append (stream, "\"\r\n");
+          ecstream_append (stream, "Content-ID: <");
+          ecstream_appendu (stream, fi->inode);
+          ecstream_append (stream, ">");
+          ecstream_append (stream, "\r\n\r\n");
+          
+          self->buffer = ecstream_trans(&stream);
+          self->bufpos = 0;
+        }
+      }
+      else if (self->buffer == NULL)
+      {
+        ulong_t size = ecbuf_encode_base64_calculateSize (buf->size);
+        
+        EcBuffer h = ecbuf_create (size);
+        
+        uint_t readBytes = ecfh_readBuffer (self->fh, h);
+        if (readBytes == 0) // EOF reached
+        {
+          ecbuf_destroy(&h);
+          
+          ecfh_close (&(self->fh));
+          return ecmultipart_nextState (self, buf, MULTIPART_STATE_NEXTITEM);
+        }
+        else
+        {
+          ulong_t res = ecbuf_encode_base64_d (h, buf);
+          
+          ecbuf_destroy(&h);
+
+          return res;
+        }
+        
+        
+      }
+
+      return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_FILE);
+    }
+    case MULTIPART_STATE_TERM: // terminate
+    {
+      return 0;
+    }
+  }
+  
+  return 0;
+}
+
+//------------------------------------------------------------------------------------------------------
 

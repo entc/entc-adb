@@ -24,6 +24,14 @@
 #include "types/ecstring.h"
 #include "tools/echttp.h"
 
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT const EcString ecmime_getFromFile (const EcString filename);
+
+__LIB_EXPORT const EcString ecmime_getFromExtension (const EcString ext);
+
+__CPP_EXTERN______________________________________________________________________________END
+
 struct EcHttpContent_s;
 struct EcMultipartParser_s; typedef struct EcMultipartParser_s* EcMultipartParser;
 
@@ -38,6 +46,24 @@ __LIB_EXPORT int ecmultipartparser_process (EcMultipartParser, ulong_t size);
 __LIB_EXPORT EcString echttpheader_parseLine (const EcString line, const EcString key);
 
 __LIB_EXPORT void echttpheader_parseParam (EcMapChar map, const EcString line);
+
+__CPP_EXTERN______________________________________________________________________________END
+
+struct EcMultipart_s; typedef struct EcMultipart_s* EcMultipart;
+
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT EcMultipart ecmultipart_create (const EcString boundary, const EcString header);
+
+__LIB_EXPORT void ecmultipart_destroy (EcMultipart*);
+
+__LIB_EXPORT void ecmultipart_addText (EcMultipart, const EcString text);
+
+__LIB_EXPORT void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file, int fileId);
+
+__LIB_EXPORT void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId);
+
+__LIB_EXPORT uint_t ecmultipart_next (EcMultipart, EcBuffer);
 
 __CPP_EXTERN______________________________________________________________________________END
 
