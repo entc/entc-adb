@@ -808,7 +808,8 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
 void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc dataItems, EcUdc values)
 {
   const EcString columnName;
-  
+  EcUdc dataItem;  
+
   columnName = ecudc_name (columnItem);
   if (isNotAssigned (columnName))
   {
@@ -816,7 +817,7 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
     return;
   }
 
-  EcUdc dataItem = ecudc_node(dataItems, columnName);
+  dataItem = ecudc_node(dataItems, columnName);
   if (isNotAssigned (dataItem))
   {
     eclogger_fmt (LL_TRACE, "ADBO", "attr", "node has not item '%s'", columnName);

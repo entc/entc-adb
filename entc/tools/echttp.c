@@ -232,7 +232,7 @@ EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_con
   {
     if (ecstr_leading (type, "multipart/form-data"))
     {
-      eclogger_fmt (LL_DEBUG, "ENTC", "http", "found multipart '%s'", type);
+      //eclogger_fmt (LL_DEBUG, "ENTC", "http", "found multipart '%s'", type);
 
       EcString boundary = echttpheader_parseLine (type, "boundary");
       if (boundary)

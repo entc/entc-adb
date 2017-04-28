@@ -73,21 +73,21 @@ EcBuffer ecbuf_create_str (EcString* ps)
 
 EcBuffer ecbuf_create_uuid ()
 {
-  EcBuffer self = ecbuf_create (40);
-  
+/*
 #ifdef _WIN32
-  /*
-  if (CryptAcquireContext (
-                                  _Out_ HCRYPTPROV *phProv,
-                                  _In_  LPCTSTR    pszContainer,
-                                  _In_  LPCTSTR    pszProvider,
-                                  _In_  DWORD      dwProvType,
-                                  _In_  DWORD      dwFlags
-                                  );
-   */
+
+  TGUID guid;
+
+  if (CreateGUID (guid) == 0)
+  {
+    EcString uuid = GUIDToString (guid);
+
+    return ecbuf_create_str (&uuid);  
+  }
+
 #else
-      
-  srand (clock());
+*/      
+  EcBuffer self = ecbuf_create (40);
   int t = 0;
 
   char *szTemp = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
@@ -95,6 +95,8 @@ EcBuffer ecbuf_create_uuid ()
   int nLen = strlen (szTemp);
   unsigned char* pos = self->buffer;
   
+  srand (clock());
+
   for (t = 0; t < nLen + 1; t++, pos++)
   {
     int r = rand () % 16;
@@ -112,7 +114,7 @@ EcBuffer ecbuf_create_uuid ()
   }
       
       
-#endif
+//#endif
   return self;
 }
 
@@ -280,6 +282,26 @@ EcBuffer ecbuf_decode_base64 (EcBuffer self)
   ret->buffer [ret->size] = 0; 
 
   return ret; 
+}
+
+//----------------------------------------------------------------------------------------
+
+ulong_t ecbuf_encode_base64_d (EcBuffer source, EcBuffer base64)
+{
+  ulong_t size;
+
+  // decrypt
+  CryptStringToBinary (source->buffer, 0, CRYPT_STRING_BASE64, base64->buffer, &size, NULL, NULL);
+  base64->buffer [size] = 0; 
+
+  return size; 
+}
+
+//----------------------------------------------------------------------------------------
+
+ulong_t ecbuf_encode_base64_calculateSize (ulong_t max)
+{
+  return ((max - 1) / 4 * 3);
 }
 
 #else

@@ -21,7 +21,7 @@
 
 struct EcNotify_s
 {
-    
+    void* dummy;
     
 };
 

@@ -31,10 +31,12 @@ EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream)
   const EcString dbcolumn = ecxmlstream_nodeAttribute (xmlstream, "dbcolumn");
   if (dbcolumn)
   {
+    const EcString size;
+
     value = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, dbcolumn);
   
     // check for more options
-    const EcString size = ecxmlstream_nodeAttribute (xmlstream, "size");
+    size = ecxmlstream_nodeAttribute (xmlstream, "size");
     if (size)
     {
       ecudc_add_asUInt32(EC_ALLOC, value, "size", atoi(size));

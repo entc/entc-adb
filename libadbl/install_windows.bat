@@ -1,4 +1,4 @@
-set bconfig=Debug
+set bconfig=Release
 set version=1.0.5
 set target=%PROGRAMFILES%\quom\adbl\%version%
 

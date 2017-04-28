@@ -153,6 +153,17 @@ EcString ecfh_md5(EcFileHandle self)
 
 /*------------------------------------------------------------------------*/
 
+uint64_t ecfh_size (EcFileHandle self)
+{
+  struct stat st;
+  
+  fstat (self->fd, &st);
+  
+  return st.st_size;
+}
+
+/*------------------------------------------------------------------------*/
+
 #include <malloc.h>
 
 struct EcDirHandle_s
