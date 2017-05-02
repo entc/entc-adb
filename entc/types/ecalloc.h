@@ -31,6 +31,7 @@ typedef void   (_STDCALL *ecset_fct)(void*, void* addr, void* val);
 
 typedef void*  (_STDCALL *ecget_fct)(void*, void* addr);
 
+#pragma pack(push, 16)
 struct EcAlloc_s
 {
   
@@ -45,6 +46,7 @@ struct EcAlloc_s
   ecget_fct fget;
   
 }; typedef struct EcAlloc_s* EcAlloc;
+#pragma pack(pop)
 
 //-------------------------------------------------------------------------------------------
 
