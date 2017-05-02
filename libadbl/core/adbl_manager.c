@@ -187,8 +187,8 @@ void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char*
       if( node == ecmap_end(self->credentials) )
       { 
         int isfile = FALSE;
-        char* fileprefix = 0;
-        char* filextension = 0;
+        EcString fileprefix = NULL;
+        EcString filextension = NULL;
         //create new credential
         AdblCredentials* pc = adbl_credentials_new (dbtype);
         pc->pp = pp;
@@ -229,16 +229,18 @@ void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char*
           {
             ecstream_append( file, fileprefix );
             ecstream_append( file, "_" );
-            free( fileprefix );  
+            ecstr_delete (&fileprefix );  
           }
+
           if( pc->properties.schema )
           {
             ecstream_append( file, pc->properties.schema );
           }
+
           if( filextension )
           {
             ecstream_append( file, filextension );
-            free( filextension );  
+            ecstr_delete (&filextension);  
           }
           else
           {

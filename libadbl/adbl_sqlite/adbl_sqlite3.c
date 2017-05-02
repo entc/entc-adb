@@ -103,7 +103,7 @@ void adblmodule_dbdisconnect (void* ptr)
   
   ecmutex_delete(&(conn->mutex));
   
-  free(conn);
+  ENTC_DEL(&conn, struct AdblSqlite3Connection);
 }
 
 //------------------------------------------------------------------------
@@ -949,7 +949,7 @@ void adblmodule_dbcursor_release (void* ptr)
   
   sqlite3_finalize(cursor->stmt);
   
-  free( cursor );
+  ENTC_DEL (&cursor, struct AdblSqlite3Cursor);
 }
 
 /*------------------------------------------------------------------------*/

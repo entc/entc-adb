@@ -125,6 +125,7 @@ SET (CORE_SOURCES_SYS
 
 SET (CORE_SOURCES_TYPES
   types/ecalloc.h
+  types/ecalloc.c
   types/ecarray.c
   types/ecintmap.c
   types/eclist.c

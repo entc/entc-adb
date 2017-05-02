@@ -48,26 +48,12 @@ struct EcAlloc_s
 
 //-------------------------------------------------------------------------------------------
 
-static void* _STDCALL EC_NEW (void* ptr, uint32_t size)
-{
-  return ENTC_MALLOC(size);
-}
+__CPP_EXTERN______________________________________________________________________________START
+ 
+__LIB_EXPORT void* _STDCALL EC_NEW (void* ptr, uint32_t size);
+__LIB_EXPORT void  _STDCALL EC_DEL (void* ptr, void** pobj, uint32_t size);
 
-//-------------------------------------------------------------------------------------------
-
-static void _STDCALL EC_DEL (void* ptr, void** pobj, uint32_t size)
-{
-  // clear all data
-  memset (*pobj, 0, size);
-  
-  // free
-  ENTC_FREE(*pobj);
-  
-  // return
-  *pobj = NULL;
-}
-
-//-------------------------------------------------------------------------------------------
+__CPP_EXTERN______________________________________________________________________________END
 
 static struct EcAlloc_s EC_ALLOC_S = {NULL, EC_NEW, EC_DEL};
 

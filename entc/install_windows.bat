@@ -1,4 +1,4 @@
-set bconfig=Release
+set bconfig=Debug
 set version=1.2.0
 set target=%PROGRAMFILES%\quom\entc\%version%
 
