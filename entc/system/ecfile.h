@@ -103,6 +103,7 @@ typedef int EcOsHandle;
 
 /* start with some methods */
 
+#pragma pack(push, 16)
 typedef struct
 {
   
@@ -126,7 +127,7 @@ typedef struct
   uint64_t inode;
   
 } EcFileInfo_s; typedef EcFileInfo_s* EcFileInfo;
-
+#pragma pack(pop)
 
 __CPP_EXTERN______________________________________________________________________________START
 

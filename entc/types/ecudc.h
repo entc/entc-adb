@@ -61,6 +61,7 @@ struct EcUdc_s; typedef struct EcUdc_s* EcUdc;
 #define ENTC_UDC_BOOL        0x100e
 #define ENTC_UDC_NONE        0x100f
 
+#pragma pack(push, 16)
 typedef struct
 {
   
@@ -115,6 +116,7 @@ typedef struct
   EcUdc result;
   
 } EcMethod_s; typedef EcMethod_s* EcMethod;
+#pragma pack(pop)
 
 // complex types (structs)
 

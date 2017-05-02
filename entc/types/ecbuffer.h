@@ -25,7 +25,9 @@
 
 #include "ecstring.h"
 
+#pragma pack(push, 16)
 typedef struct { unsigned char* buffer; uint_t size; } EcBuffer_s, * EcBuffer;
+#pragma pack(pop)
 
 __CPP_EXTERN______________________________________________________________________________START
   
@@ -85,6 +87,7 @@ __LIB_EXPORT void ecbuf_replace (EcString*, EcBuffer*);
 
 // iterators ----------------------------------------------------------------------------
 
+#pragma pack(push, 16)
 typedef struct 
 {
   
@@ -99,6 +102,7 @@ typedef struct
   const unsigned char* pos;
   
 } EcBufferIterator;
+#pragma pack(pop)
 
 __LIB_EXPORT void ecbuf_iterator (EcBuffer, EcBufferIterator*);
 
