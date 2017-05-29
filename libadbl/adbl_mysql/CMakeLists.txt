@@ -2,15 +2,15 @@ cmake_minimum_required(VERSION 2.4)
 
 FIND_LIBRARY(MYSQL_LIBRARY
     NAMES mysqlclient
-    HINTS "/opt/local/lib/mysql57/mysql" "/usr/lib" "/usr/local/lib"
+    HINTS ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib"
 )
 
 MARK_AS_ADVANCED(MYSQL_LIBRARY)
 
 FIND_PATH(MYSQL_INCLUDE_DIR
     NAMES mysql.h
-    PATHS "/opt/local/include" "/opt/local/include/mysql57" "/usr/include" "/usr/local/include"
-    PATH_SUFFIXES "mysql"
+    PATHS "/opt/local/include" "/opt/local/include/mysql57" "/usr/include" "/usr/local/include" ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/include"
+    #PATH_SUFFIXES "mysql"
 )
 
 MARK_AS_ADVANCED(MYSQL_INCLUDE_DIR)
