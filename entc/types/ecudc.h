@@ -297,6 +297,10 @@ __LIB_EXPORT void ecudc_add_asB_o (EcAlloc, EcUdc, const EcString name, EcBuffer
 
 __LIB_EXPORT EcUdc ecudc_errcode (EcAlloc, uint_t errcode);
 
+__LIB_EXPORT EcUdc ecudc_readFromFile (const EcString);
+
+__LIB_EXPORT int ecudc_writeToFile (const EcString, const EcUdc);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif
