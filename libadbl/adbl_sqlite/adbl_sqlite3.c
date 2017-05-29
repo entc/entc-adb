@@ -1062,7 +1062,8 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
   
   if( res != SQLITE_OK )
   {
-    return 0;  
+    eclogger_msg (LL_TRACE, "SQLT", "dbsequence", "fetch failed");
+    return 0;
   }
 
   /* create a new instance */
@@ -1078,9 +1079,11 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
   {
     self->value = (uint_t)sqlite3_column_int64(stmt, 0);
   }
-    
-  sqlite3_finalize(stmt);
   
+  sqlite3_finalize(stmt);
+
+  eclogger_msg (LL_TRACE, "SQLT", "dbsequence", "fetch done #3");
+
   return self;
 }
 

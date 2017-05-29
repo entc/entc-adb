@@ -84,6 +84,8 @@ const EcString ecmime_getFromExtension (const EcString ext)
     ecmapchar_append( mime_types, "js",       "text/javascript" );
     ecmapchar_append( mime_types, "asc",      "text/plain" );
     ecmapchar_append( mime_types, "c",        "text/plain" );
+    ecmapchar_append( mime_types, "txt",      "text/plain" );
+    ecmapchar_append( mime_types, "json",     "application/json");
     ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
     ecmapchar_append( mime_types, "map",      "application/json");
     

@@ -146,10 +146,12 @@ EcString ecfs_extractFileName(const EcString path)
   
   if( pos )
   {
-    return ecstr_part(filename, (pos - filename));
+    return ecstr_part (filename, (pos - filename));
   }
-  
-  return 0;
+  else
+  {
+    return ecstr_copy (filename);
+  }
 }
 
 //-----------------------------------------------------------------------------------
