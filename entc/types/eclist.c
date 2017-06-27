@@ -156,6 +156,22 @@ EcListNode eclist_erase (EcAlloc alloc, EcList self, EcListNode node)
 
 //----------------------------------------------------------------------------------------
 
+EcListNode eclist_splice (EcList self, EcListNode from, EcListNode to, EcList dest)
+{
+  EcListNode node = from;
+  
+  for (; (node != eclist_end(self)) && (node != to); node = eclist_next(node))
+  {
+    eclist_append(dest, eclist_data(node));
+    
+    node = eclist_erase(EC_ALLOC, self, node);
+  }
+  
+  return node;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcListNode eclist_first(const EcList self)
 {
   return self->node->next;

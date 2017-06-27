@@ -206,6 +206,11 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
   
   node = *cursor;
   
+  if (node == NULL)
+  {
+    node = ecmap_first(self->map);
+  }
+  
   if (node == ecmap_end (self->map))
   {
     return NULL;

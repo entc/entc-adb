@@ -61,7 +61,7 @@ int main (int argc, char *argv[])
     {
       EcHttpContent hc = echttp_content_create2 (NULL, NULL);
       
-      EcMultipartParser mp = ecmultipartparser_create ("----WebKitFormBoundaryagZuqZ2AyfbmPxMl", path, content_callback, td, hc);
+      EcMultipartParser mp = ecmultipartparser_create ("----WebKitFormBoundaryagZuqZ2AyfbmPxMl", path, content_callback, td, hc, NULL, NULL);
       
       int res = ecmultipartparser_process (mp, 0);
       if (res == ENTC_RESCODE_OK)

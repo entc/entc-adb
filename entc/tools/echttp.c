@@ -239,7 +239,7 @@ EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_con
       {
         //eclogger_fmt (LL_DEBUG, "ENTC", "http", "boundary '%s'", boundary);
 
-        EcMultipartParser mp = ecmultipartparser_create (boundary, path, bf, ptr, self);
+        EcMultipartParser mp = ecmultipartparser_create (boundary, path, bf, ptr, self, NULL, NULL);
       
         if (mp)
         {

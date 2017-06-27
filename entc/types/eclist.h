@@ -56,6 +56,8 @@ __LIB_EXPORT void eclist_set(EcListNode, void* data);
 
 __LIB_EXPORT EcListNode eclist_erase (EcAlloc, EcList, EcListNode);
   
+__LIB_EXPORT EcListNode eclist_splice (EcList, EcListNode from, EcListNode to, EcList);
+
 __LIB_EXPORT EcListNode eclist_first(const EcList);
 
 __LIB_EXPORT EcListNode eclist_last(const EcList);
