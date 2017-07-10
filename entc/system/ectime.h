@@ -69,6 +69,8 @@ __LIB_EXPORT void ectime_toString (const time_t* t, char* buffer, ulong_t size);
 
 __LIB_EXPORT void ectime_parseISO8601 (time_t* t, const char* stime);
 
+__LIB_EXPORT void ectime_toPaddedTimestamp (time_t* t, char* buffer, ulong_t size);
+
 // stop watch
 
 __LIB_EXPORT EcStopWatch ecstopwatch_create (ulong_t timeout);

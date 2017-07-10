@@ -762,6 +762,83 @@ EcBuffer ecbuf_sha1 (EcBuffer self)
 
 //----------------------------------------------------------------------------------------
 
+#ifdef _WIN32
+
+EcBuffer ecbuf_sha_256 (EcBuffer b1)
+{
+  TError error;
+  
+  HCRYPTPROV provHandle = NULL;
+  HCRYPTHASH hashHandle;
+  
+  if (!::CryptAcquireContext (&provHandle, NULL, NULL, PROV_RSA_AES, 0))
+  {
+    return TError::createWindowsError ("");
+  }
+  
+  if (!::CryptCreateHash (provHandle, CALG_SHA_256, 0, 0, &hashHandle))
+  {
+    ::CryptReleaseContext (provHandle, 0);
+    
+    return TError::createWindowsError ("");
+  }
+  
+  BYTE hash [32];
+  DWORD hashlen;
+  
+  if (::CryptHashData (hashHandle, source.c_str(), source.Length(), 0) && ::CryptGetHashParam (hashHandle, HP_HASHVAL, hash, &hashlen, 0))
+  {
+    CHAR rgbDigits[] = "0123456789abcdef";
+    
+    for (DWORD i = 0; i < hashlen; i++)
+    {
+      result += (char)(rgbDigits[hash[i] >> 4]);
+      result += (char)(rgbDigits[hash[i] & 0xf]);
+    }
+  }
+  else
+  {
+    error = TError::createWindowsError ("");
+  }
+  
+  ::CryptDestroyHash (hashHandle);
+  ::CryptReleaseContext (provHandle, 0);
+  
+  return error;
+}
+
+//----------------------------------------------------------------------------------------
+
+#else
+
+#include <openssl/sha.h>
+
+EcBuffer ecbuf_sha_256 (EcBuffer b1)
+{
+  unsigned char hash [SHA256_DIGEST_LENGTH];
+  EcBuffer outb = ecbuf_create (64);
+  
+  SHA256_CTX sha256;
+
+  SHA256_Init (&sha256);
+  
+  SHA256_Update (&sha256, b1->buffer, b1->size);
+  
+  SHA256_Final(hash, &sha256);
+  
+  int i = 0;
+  for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
+  {
+    sprintf((char*)(outb->buffer) + (i * 2), "%02x", hash[i]);
+  }
+
+  return outb;
+}
+
+#endif
+
+//----------------------------------------------------------------------------------------
+
 EcBuffer ecbuf_xor (EcBuffer b1, EcBuffer b2)
 {
   uint_t i;

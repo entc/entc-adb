@@ -65,6 +65,14 @@ __LIB_EXPORT void ecmultipart_addFile (EcMultipart, const EcString path, const E
 
 __LIB_EXPORT void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId);
 
+__LIB_EXPORT void ecmultipart_addContentDisposition_B_o (EcMultipart, const EcString name, EcBuffer*);
+
+__LIB_EXPORT void ecmultipart_addContentDisposition_S (EcMultipart, const EcString name, const EcString content);
+
+__LIB_EXPORT void ecmultipart_addContentDisposition_S_o (EcMultipart, const EcString name, EcString* content);
+
+__LIB_EXPORT EcString ecmultipart_startGetContentType (EcMultipart);
+
 __LIB_EXPORT uint_t ecmultipart_next (EcMultipart, EcBuffer);
 
 __CPP_EXTERN______________________________________________________________________________END

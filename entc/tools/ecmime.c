@@ -846,6 +846,42 @@ void ecmultipart_addPath (EcMultipart self, const EcString path, const EcString 
 
 //------------------------------------------------------------------------------------------------------
 
+void ecmultipart_addContentDisposition_B_o (EcMultipart self, const EcString name, EcBuffer* pbuf)
+{
+  EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+  
+  ecudc_add_asString (EC_ALLOC, h, "name", name);
+  ecudc_add_asB_o (EC_ALLOC, h, "data", pbuf);
+  
+  ecudc_add (self->sections, &h);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ecmultipart_addContentDisposition_S (EcMultipart self, const EcString name, const EcString content)
+{
+  EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+  
+  ecudc_add_asString (EC_ALLOC, h, "name", name);
+  ecudc_add_asString (EC_ALLOC, h, "data", content);
+  
+  ecudc_add (self->sections, &h);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ecmultipart_addContentDisposition_S_o (EcMultipart self, const EcString name, EcString* pcontent)
+{
+  EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+  
+  ecudc_add_asString (EC_ALLOC, h, "name", name);
+  ecudc_add_asS_o (EC_ALLOC, h, "data", pcontent);
+  
+  ecudc_add (self->sections, &h);
+}
+
+//------------------------------------------------------------------------------------------------------
+
 uint_t ecmultipart_nextState (EcMultipart self, EcBuffer buf, int newState)
 {
   self->state = newState;
@@ -882,6 +918,27 @@ uint_t ecmultipart_handleBuffer (EcMultipart self, EcBuffer buf, int newState)
 #define MULTIPART_STATE_FILE 4
 #define MULTIPART_STATE_TERM 5
 #define MULTIPART_STATE_NODE 6
+#define MULTIPART_STATE_FILE_EOF 7
+
+//------------------------------------------------------------------------------------------------------
+
+EcString ecmultipart_startGetContentType (EcMultipart self)
+{
+  EcStream stream = ecstream_new();
+  EcBuffer h;
+  
+  ecstream_append (stream, "Content-Type: multipart/related; ");
+  ecstream_append (stream, "boundary=\"");
+  ecstream_append (stream, self->boundary);
+  ecstream_append (stream, "\"");
+
+  self->state = MULTIPART_STATE_NEXTITEM;
+  
+  h = ecstream_trans(&stream);
+  return ecbuf_str(&h);
+}
+
+//------------------------------------------------------------------------------------------------------
 
 uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
 {
@@ -905,6 +962,8 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         ecstream_append (stream, self->boundary);
         ecstream_append (stream, "\"");
         
+        ecstream_append (stream, "\r\n\r\n");
+
         self->buffer = ecstream_trans(&stream);
         self->bufpos = 0;
       }
@@ -936,7 +995,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
       {
         EcStream stream = ecstream_new();
       
-        ecstream_append (stream, "\r\n\r\n--");
+        ecstream_append (stream, "--");
         ecstream_append (stream, self->boundary);
         ecstream_append (stream, "--");
         
@@ -952,10 +1011,11 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
       {
         EcStream stream = ecstream_new();
         
-        ecstream_append (stream, "\r\n\r\n--");
+        ecstream_append (stream, "--");
         ecstream_append (stream, self->boundary);
         ecstream_append (stream, "\r\nContent-Type: text/plain; charset=\"UTF-8\"\r\n\r\n");
         ecstream_append (stream, ecudc_asString(self->item));
+        ecstream_append (stream, "\r\n");
         
         self->buffer = ecstream_trans(&stream);
         self->bufpos = 0;
@@ -969,14 +1029,44 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
       {
         EcStream stream = ecstream_new();
         
-        ecstream_append (stream, "\r\n\r\n--");
-        ecstream_append (stream, self->boundary);
-        ecstream_append (stream, "\r\nContent-Type: ");
-        ecstream_append (stream, ecudc_get_asString(self->item, "mime", "text/plain; charset=\"UTF-8\""));
-        ecstream_append (stream, "\r\n\r\n");
-        ecstream_append (stream, ecudc_get_asString(self->item, "text", ""));
+        const EcString name = ecudc_get_asString(self->item, "name", NULL);
+        if (name)
+        {
+          ecstream_append (stream, "--");
+          ecstream_append (stream, self->boundary);
+          ecstream_append (stream, "\r\nContent-Disposition: name=\"");
+          ecstream_append (stream, name);
+          ecstream_append (stream, "\"\r\n\r\n");
+          
+          EcUdc dataNode = ecudc_node(self->item, "data");
+          if (dataNode)
+          {
+            if (ecudc_type(dataNode) == ENTC_UDC_BUFFER)
+            {
+              EcBuffer h = ecudc_asB (dataNode);
+              
+              ecstream_appendd(stream, (const char*)h->buffer, h->size);
+            }
+            else if (ecudc_type(dataNode) == ENTC_UDC_STRING)
+            {
+              ecstream_append (stream, ecudc_asString(dataNode));
+            }
+          }
+          
+          ecstream_append (stream, "\r\n");
+        }
+        else
+        {
+          ecstream_append (stream, "--");
+          ecstream_append (stream, self->boundary);
+          ecstream_append (stream, "\r\nContent-Type: ");
+          ecstream_append (stream, ecudc_get_asString(self->item, "mime", "text/plain; charset=\"UTF-8\""));
+          ecstream_append (stream, "\r\n\r\n");
+          ecstream_append (stream, ecudc_get_asString(self->item, "text", ""));
+          ecstream_append (stream, "\r\n");
+        }
         
-        self->buffer = ecstream_trans(&stream);
+        self->buffer = ecstream_trans (&stream);
         self->bufpos = 0;
       }
       
@@ -1000,7 +1090,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           
           EcStream stream = ecstream_new();
           
-          ecstream_append (stream, "\r\n\r\n--");
+          ecstream_append (stream, "--");
           ecstream_append (stream, self->boundary);
           ecstream_append (stream, "\r\n");
           ecstream_append (stream, "Content-Type: ");
@@ -1018,7 +1108,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           ecstream_append (stream, "Content-Transfer-Encoding: base64");
           ecstream_append (stream, "\r\n\r\n");
           
-          self->buffer = ecstream_trans(&stream);
+          self->buffer = ecstream_trans (&stream);
           self->bufpos = 0;
         }
       }
@@ -1034,7 +1124,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           ecbuf_destroy(&h);
           
           ecfh_close (&(self->fh));
-          return ecmultipart_nextState (self, buf, MULTIPART_STATE_NEXTITEM);
+          return ecmultipart_nextState (self, buf, MULTIPART_STATE_FILE_EOF);
         }
         else
         {
@@ -1044,11 +1134,23 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
 
           return res;
         }
-        
-        
       }
 
       return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_FILE);
+    }
+    case MULTIPART_STATE_FILE_EOF:
+    {
+      if (self->buffer == NULL)
+      {
+        EcStream stream = ecstream_new();
+
+        ecstream_append (stream, "\r\n");
+        
+        self->buffer = ecstream_trans (&stream);
+        self->buffer = 0;
+      }
+      
+      return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_NEXTITEM);
     }
     case MULTIPART_STATE_TERM: // terminate
     {

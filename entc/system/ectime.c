@@ -203,6 +203,24 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
 
 //-----------------------------------------------------------------------------------
 
+void ectime_toPaddedTimestamp (time_t* t, char* buffer, ulong_t size)
+{
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_toTimeInfo (&timeinfo, t);
+  
+  // create buffer with timeinfo as string
+  strftime (buffer, size, "%s", &timeinfo);
+  
+  EcString h = ecstr_lpad (buffer, '0', size);
+  
+  memcpy (buffer, h, size);
+  buffer [size] = 0;
+}
+
+//-----------------------------------------------------------------------------------
+
 struct EcStopWatch_s
 {
 #ifdef _WIN32

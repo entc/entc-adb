@@ -189,6 +189,18 @@ EcString ecstr_float (double value, uint_t n)
   return s;
 }
 
+//----------------------------------------------------------------------------------------
+
+EcString ecstr_filled (char c, uint_t n)
+{
+  EcString s = (EcString)malloc((n + 1));
+  
+  memset (s, c, n);
+  s[n] = 0;
+  
+  return s;
+}
+
 /*------------------------------------------------------------------------*/
 
 void ecstr_delete( EcString* ptr )
@@ -773,6 +785,25 @@ EcString ecstr_wrappedl (const EcString source, char c)
   }
   // compose the return
   return ecstr_part(start + 1, end - start - 1);
+}
+
+//---------------------------------------------------------------------------
+
+EcString ecstr_lpad (const EcString source, char c, uint_t len)
+{
+  uint_t slen = ecstr_len (source);
+  uint_t dlen = len - slen;
+  
+  if (dlen > 0)
+  {
+    EcString h = ecstr_filled (c, dlen);
+    
+    return ecstr_replaceTO (&h, ecstr_cat2 (h, source));
+  }
+  else
+  {
+    return ecstr_copy (source);
+  }
 }
 
 /*------------------------------------------------------------------------*/

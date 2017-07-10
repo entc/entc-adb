@@ -50,6 +50,8 @@ __LIB_EXPORT EcString ecstr_longPadded ( uint64_t value, int amount);
 
 __LIB_EXPORT EcString ecstr_float (double, uint_t n);
 
+__LIB_EXPORT EcString ecstr_filled (char c, uint_t n);
+
 __LIB_EXPORT EcString ecstr_format (const EcString format, ...);
 
 __LIB_EXPORT EcString ecstr_format_list (const EcString format, va_list ptr);
@@ -125,6 +127,8 @@ __LIB_EXPORT EcString ecstr_trimlr (const EcString, char l, char r);
 __LIB_EXPORT EcString ecstr_toVersion( uint_t version );
 
 __LIB_EXPORT EcString ecstr_wrappedl (const EcString, char c);
+
+__LIB_EXPORT EcString ecstr_lpad (const EcString, char c, uint_t len);
 
 // transform: no change on size
 
