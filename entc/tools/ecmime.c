@@ -894,6 +894,8 @@ uint_t ecmultipart_handleBuffer (EcMultipart self, EcBuffer buf, int newState)
 {
   ulong_t min = ENTC_MIN(buf->size, self->buffer->size - self->bufpos);
   
+  //eclogger_fmt (LL_TRACE, "ENTC", "mime", "buffer %u", min);
+
   if (min == 0)
   {
     ecbuf_destroy (&(self->buffer));
@@ -972,6 +974,8 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
     }
     case MULTIPART_STATE_NEXTITEM:
     {
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "nextitem");
+
       self->item = ecudc_next (self->sections, &(self->cursor));
       if (isAssigned(self->item))
       {
@@ -1007,6 +1011,8 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
     }
     case MULTIPART_STATE_TEXT: // text
     {
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "text");
+      
       if (self->buffer == NULL)
       {
         EcStream stream = ecstream_new();
@@ -1021,10 +1027,14 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         self->bufpos = 0;
       }
       
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "text done");
+
       return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_NEXTITEM);
     }
     case MULTIPART_STATE_NODE:
     {
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "node");
+
       if (self->buffer == NULL)
       {
         EcStream stream = ecstream_new();
@@ -1069,11 +1079,15 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         self->buffer = ecstream_trans (&stream);
         self->bufpos = 0;
       }
-      
+
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "node done");
+
       return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_NEXTITEM);
     }
     case MULTIPART_STATE_FILE: // file
     {
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "file");
+
       if (self->fh == NULL)
       {
         EcFileInfo fi = ecudc_asFileInfo(self->item);
@@ -1136,10 +1150,14 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         }
       }
 
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "file done");
+
       return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_FILE);
     }
     case MULTIPART_STATE_FILE_EOF:
     {
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "file eof");
+
       if (self->buffer == NULL)
       {
         EcStream stream = ecstream_new();
@@ -1147,9 +1165,11 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         ecstream_append (stream, "\r\n");
         
         self->buffer = ecstream_trans (&stream);
-        self->buffer = 0;
+        self->bufpos = 0;
       }
       
+      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "file eof done");
+
       return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_NEXTITEM);
     }
     case MULTIPART_STATE_TERM: // terminate

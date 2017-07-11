@@ -86,7 +86,7 @@ int eccursor_fill (EcCursor self)
   
   self->max = self->fill (self->ptr, &(self->data));
   
-  eclogger_fmt (LL_TRACE, "ENTC", "cursor fill", "cursor refilled with max %i", self->max);
+  //eclogger_fmt (LL_TRACE, "ENTC", "cursor fill", "cursor refilled with max %i", self->max);
   
   if (self->max > 0)
   {

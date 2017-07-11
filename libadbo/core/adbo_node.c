@@ -207,7 +207,7 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
         return FALSE;          
       }
       
-      eclogger_fmt (LL_TRACE, "ADBO", "dbkey", "add key '%s' with value '%s'", dbcolumn, h);
+      //eclogger_fmt (LL_TRACE, "ADBO", "dbkey", "add key '%s' with value '%s'", dbcolumn, h);
       
       adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, h);            
     }
@@ -258,7 +258,7 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
   // check if we have a data value with the same name as the dbcolumn
   if (isNotAssigned (data))
   {
-    eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "no constraints in data"); 
+    //eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "no constraints in data");
     return FALSE;
   }  
   
@@ -267,7 +267,7 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     
     if (isNotAssigned (dataConstraint))
     {
-      eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "key '%s' no value found", dbcolumn);
+      //eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "key '%s' no value found", dbcolumn);
       return FALSE;
     }
     else
@@ -289,11 +289,13 @@ int adbo_dbkeys_constraints (EcUdc dbkeys, EcUdc data, AdblConstraint* constrain
   EcUdc dbkey;
 
   // for debug
+  /*
   {
     EcString jsontext = ecjson_write (dbkeys);
     eclogger_fmt (LL_TRACE, "ADBO", "dbkeys", ecstr_cstring(jsontext));
     ecstr_delete(&jsontext);
   }
+   */
   
   for (dbkey  = ecudc_next (dbkeys, &cursor); isAssigned (dbkey); dbkey = ecudc_next (dbkeys, &cursor))
   {
@@ -314,7 +316,7 @@ AdblConstraint* adbo_node_constraints (EcUdc node, EcUdc data, AdboContext conte
   EcUdc prikeys = ecudc_node (node, ECDATA_IDS);
   if (isAssigned (prikeys))
   {
-    eclogger_fmt (LL_TRACE, "ADBO", "constraints", "add primary keys");
+    //eclogger_fmt (LL_TRACE, "ADBO", "constraints", "add primary keys");
     adbo_dbkeys_constraints (prikeys, data, constraint, query);
   }  
   
@@ -508,14 +510,14 @@ int _STDCALL adbo_cursor_fill (void* ptr, EcTable* table)
       
       ectable_set (self->data, row, col, current);
 
-      eclogger_fmt (LL_TRACE, "ADBO", "cursor", "set value [%i][%i] '%s'", row, col, current);
+      //eclogger_fmt (LL_TRACE, "ADBO", "cursor", "set value [%i][%i] '%s'", row, col, current);
     }
     
     if (row >= PREFETCHED_CACHE)
     {
       *table = self->data;
 
-      eclogger_fmt (LL_TRACE, "ADBO", "cursor", "fetched %i rows", row);
+      //eclogger_fmt (LL_TRACE, "ADBO", "cursor", "fetched %i rows", row);
       return row;
     }
   }
@@ -527,7 +529,7 @@ int _STDCALL adbo_cursor_fill (void* ptr, EcTable* table)
   
   self->done = TRUE;
   
-  eclogger_fmt (LL_TRACE, "ADBO", "cursor", "fetched %i rows", row);
+  //eclogger_fmt (LL_TRACE, "ADBO", "cursor", "fetched %i rows", row);
   return row;
 }
 
@@ -564,7 +566,7 @@ AdboCursorData* adbo_cursordata_create (AdblSession* dbsession, AdblQuery** dbqu
     }    
   }
   
-  eclogger_fmt (LL_TRACE, "ADBO", "cursor", "created with %i columns", self->columns);
+  //eclogger_fmt (LL_TRACE, "ADBO", "cursor", "created with %i columns", self->columns);
   
   return self;
 }
@@ -575,7 +577,7 @@ int _STDCALL adbo_cursor_destroy (void* ptr, EcTable table)
 {
   AdboCursorData* self = ptr;
   
-  eclogger_msg (LL_TRACE, "ADBO", "cursor", "destroy and clean cursor");
+  //eclogger_msg (LL_TRACE, "ADBO", "cursor", "destroy and clean cursor");
   
   adbl_query_delete (&(self->dbquery));
   
@@ -636,7 +638,7 @@ int adbo_node_dbquery (EcUdc node, EcUdc parts, ulong_t dbmin, AdboContext conte
   
   adbo_node_dbquery_columns (node, query);
   // execute sql query
-  eclogger_msg (LL_TRACE, "ADBO", "query", "execute query");
+  //eclogger_msg (LL_TRACE, "ADBO", "query", "execute query");
 
   cursor = adbl_dbquery (session, query, &adblsec);
   if (isAssigned (cursor))
@@ -701,7 +703,7 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
     return FALSE;
   }
   
-  eclogger_msg (LL_TRACE, "ADBO", "request", "prepare query");
+  //eclogger_msg (LL_TRACE, "ADBO", "request", "prepare query");
 
   query = adbl_query_new ();
 
@@ -726,7 +728,7 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
     adbl_constraint_delete (&constraints);
   }
 
-  eclogger_fmt (LL_TRACE, "ADBO", "request", "query done [%i]", ret);
+  //eclogger_fmt (LL_TRACE, "ADBO", "request", "query done [%i]", ret);
   
   return ret;
 }
@@ -770,7 +772,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   
   query = adbl_query_new ();
   // add some default stuff
-  eclogger_msg (LL_TRACE, "ADBO", "request", "prepare query");
+  //eclogger_msg (LL_TRACE, "ADBO", "request", "prepare query");
   
   // ***** check constraints *****
   // we can use spart here, because constrainst are the same for all parts
@@ -796,7 +798,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   
   adbl_closeSession (&dbsession);
   
-  eclogger_fmt (LL_TRACE, "ADBO", "request", "query done [%i]", ret);
+  //eclogger_fmt (LL_TRACE, "ADBO", "request", "query done [%i]", ret);
 
   ecudc_add (node, &values);
   
@@ -1029,7 +1031,8 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
   int isInsert = FALSE;
 
   EcUdc item_value;
-      
+  
+  /*
   {
     EcString jsontext = ecjson_write (cols);    
     eclogger_fmt (LL_DEBUG, "ADBO", "update", "cols: %s", ecstr_cstring(jsontext));
@@ -1047,6 +1050,7 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
     eclogger_fmt (LL_DEBUG, "ADBO", "update", "updates: %s", ecstr_cstring(jsontext));
     ecstr_delete(&jsontext);
   }
+   */
   
   item_update = ecudc_next (update_data, &cursor_update);  
   if (isNotAssigned (item_update))
@@ -1134,7 +1138,7 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
 
   if (adbo_node_primary (node, filter, context, constraint))
   {
-    eclogger_msg (LL_TRACE, "ADBO", "update", "decided to update");
+    //eclogger_msg (LL_TRACE, "ADBO", "update", "decided to update");
 
     if (adbo_node_foreign (node, filter, context, constraint))
     {
@@ -1292,7 +1296,7 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
   {
     AdblConstraint* constraint = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
     
-    eclogger_fmt (LL_TRACE, "ADBO", "delete", "prepare constraints");
+    //eclogger_fmt (LL_TRACE, "ADBO", "delete", "prepare constraints");
 
     if (adbo_node_primary (node, filter, context, constraint))
     {
