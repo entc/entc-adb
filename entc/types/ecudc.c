@@ -206,6 +206,11 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
   
   node = *cursor;
   
+  if (node == NULL)
+  {
+    node = ecmap_first(self->map);
+  }
+  
   if (node == ecmap_end (self->map))
   {
     return NULL;
@@ -213,7 +218,9 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
   
   ret = ecmap_data (node);
   
-  *cursor = ecmap_erase (self->map, node);
+  node = ecmap_erase (self->map, node);
+  
+  *cursor = ecmap_next(node);
 
   return ret;
 }

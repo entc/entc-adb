@@ -35,9 +35,11 @@ __CPP_EXTERN____________________________________________________________________
 struct EcHttpContent_s;
 struct EcMultipartParser_s; typedef struct EcMultipartParser_s* EcMultipartParser;
 
+typedef void (_STDCALL *ecmultipartparser_callback) (void* ptr, EcBuffer*, EcMapChar*);
+
 __CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString, http_content_callback cb, void* ptr, struct EcHttpContent_s*);
+__LIB_EXPORT EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString, http_content_callback cb, void* ptr, struct EcHttpContent_s*, ecmultipartparser_callback dc, void* obj);
 
 __LIB_EXPORT void ecmultipartparser_destroy (EcMultipartParser*);
 
@@ -57,11 +59,19 @@ __LIB_EXPORT EcMultipart ecmultipart_create (const EcString boundary, const EcSt
 
 __LIB_EXPORT void ecmultipart_destroy (EcMultipart*);
 
-__LIB_EXPORT void ecmultipart_addText (EcMultipart, const EcString text);
+__LIB_EXPORT void ecmultipart_addText (EcMultipart, const EcString text, const EcString mimeType);
 
 __LIB_EXPORT void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file, int fileId);
 
 __LIB_EXPORT void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId);
+
+__LIB_EXPORT void ecmultipart_addContentDisposition_B_o (EcMultipart, const EcString name, EcBuffer*);
+
+__LIB_EXPORT void ecmultipart_addContentDisposition_S (EcMultipart, const EcString name, const EcString content);
+
+__LIB_EXPORT void ecmultipart_addContentDisposition_S_o (EcMultipart, const EcString name, EcString* content);
+
+__LIB_EXPORT EcString ecmultipart_startGetContentType (EcMultipart);
 
 __LIB_EXPORT uint_t ecmultipart_next (EcMultipart, EcBuffer);
 

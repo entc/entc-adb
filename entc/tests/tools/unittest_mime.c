@@ -17,7 +17,7 @@ int main (int argc, char *argv[])
 
   EcMultipart mp = ecmultipart_create (NULL, "From: John Doe <example@example.com>\r\n");
   
-  ecmultipart_addText (mp, "Hello World!");
+  ecmultipart_addText (mp, "Hello World!", "text");
   ecmultipart_addFile (mp, "samples", "test.pdf", 1);
   
   // use a very small buffer

@@ -158,6 +158,19 @@ void ectime_toString (const time_t* t, char* buffer, ulong_t size)
 
 //-----------------------------------------------------------------------------------
 
+void ectime_toAlphaNum (const time_t* t, char* buffer, ulong_t size)
+{
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_toTimeInfo (&timeinfo, t);
+
+  // create buffer with timeinfo as string
+  strftime (buffer, size, "%a, %e %b %Y %H:%M:%S %z", &timeinfo);
+}
+
+//-----------------------------------------------------------------------------------
+
 void ectime_parseISO8601 (time_t* t, const char* stime)
 {
   struct tm timeinfo;  
@@ -186,6 +199,24 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
   timeinfo.tm_isdst = 1;
   
   *t = mktime (&timeinfo);
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_toPaddedTimestamp (time_t* t, char* buffer, ulong_t size)
+{
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_toTimeInfo (&timeinfo, t);
+  
+  // create buffer with timeinfo as string
+  strftime (buffer, size, "%s", &timeinfo);
+  
+  EcString h = ecstr_lpad (buffer, '0', size);
+  
+  memcpy (buffer, h, size);
+  buffer [size] = 0;
 }
 
 //-----------------------------------------------------------------------------------

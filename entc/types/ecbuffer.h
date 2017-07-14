@@ -69,6 +69,8 @@ __LIB_EXPORT EcBuffer ecbuf_md5 (EcBuffer);
 
 __LIB_EXPORT EcBuffer ecbuf_sha1 (EcBuffer);
 
+__LIB_EXPORT EcBuffer ecbuf_sha_256 (EcBuffer);
+
 __LIB_EXPORT EcBuffer ecbuf_xor (EcBuffer, EcBuffer);  // uses always the smallest one
 
 __LIB_EXPORT EcBuffer ecbuf_concat (EcBuffer, EcBuffer);

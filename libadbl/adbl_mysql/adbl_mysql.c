@@ -211,7 +211,7 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
   // connect
   if(!mysql_real_connect(self->conn, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, 0))
   {
-    eclogger_msg (LL_ERROR, "MYSQ", "connect", mysql_error(self->conn) );
+    //eclogger_msg (LL_ERROR, "MYSQ", "connect", mysql_error(self->conn) );
     
     mysql_close (self->conn);
     
@@ -582,7 +582,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
   
   adblmodule_createStatement (self, statement, query, bv, cursor);
   
-  eclogger_msg  (LL_DEBUG, C_MODDESC, "query", ecstream_buffer (statement));
+  //eclogger_msg  (LL_DEBUG, C_MODDESC, "query", ecstream_buffer (statement));
 
   res = adblmodule_prepared_statement (stmt, bv, statement);
 
@@ -598,7 +598,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
   // try to bind result
   if (mysql_stmt_bind_result (stmt, cursor->bindResult) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "query#5", mysql_stmt_error(stmt));
+    //eclogger_msg  (LL_ERROR, C_MODDESC, "query#5", mysql_stmt_error(stmt));
     
     // clean up
     adblmodule_dbcursor_release (cursor);    
@@ -706,7 +706,7 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table)
   }
   
   // log it
-  eclogger_msg (LL_TRACE, "MYSQ", "size", ecstream_buffer (statement));
+  //eclogger_msg (LL_TRACE, "MYSQ", "size", ecstream_buffer (statement));
   
   // execute
   mysql_real_query (self->conn, ecstream_buffer (statement), ecstream_size (statement));
@@ -874,7 +874,7 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
   
   adbl_constructConstraint (statement, update->constraint, self->ansi, bv);
 
-  eclogger_msg (LL_DEBUG, C_MODDESC, "update", ecstream_buffer( statement ) );
+  //eclogger_msg (LL_DEBUG, C_MODDESC, "update", ecstream_buffer( statement ) );
   
   res = adblmodule_prepared_statement (stmt, bv, statement);
   
@@ -1040,7 +1040,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   
   adbl_constructAttributesInsert (statement, bv, insert->attrs, self->ansi);
   
-  eclogger_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_buffer( statement ) );
+  //eclogger_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_buffer( statement ) );
   
   adblmodule_prepared_statement (stmt, bv, statement);
   
@@ -1114,7 +1114,7 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del)
 
   adbl_constructConstraint (statement, del->constraint, self->ansi, bv);
 
-  eclogger_msg (LL_DEBUG, C_MODDESC, "delete", ecstream_buffer( statement ) );
+  //eclogger_msg (LL_DEBUG, C_MODDESC, "delete", ecstream_buffer( statement ) );
     
   res = adblmodule_prepared_statement (stmt, bv, statement);
   
@@ -1483,7 +1483,7 @@ uint_t adblmodule_dbsequence_next (void* ptr)
       return 0;
     }
     
-    eclogger_fmt (LL_TRACE, "MYSQ", "sequence", "got new sequence number '%llu'", unique_id );
+    //eclogger_fmt (LL_TRACE, "MYSQ", "sequence", "got new sequence number '%llu'", unique_id );
   }
   
   // delete the fake row
