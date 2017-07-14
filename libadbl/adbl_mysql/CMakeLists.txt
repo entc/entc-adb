@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 2.4)
 
 FIND_LIBRARY(MYSQL_LIBRARY
-    NAMES mysqlclient
+    NAMES libmysql
     HINTS ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib"
 )
+
+IF (NOT MYSQL_FOUND)
+FIND_LIBRARY(MYSQL_LIBRARY
+    NAMES mysqlclient
+    HINTS ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib" "/opt/local/lib/mysql57/mysql" "/usr/lib" "/usr/local/lib"
+)
+ENDIF(MYSQL_FOUND)
 
 MARK_AS_ADVANCED(MYSQL_LIBRARY)
 
