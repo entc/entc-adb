@@ -1042,13 +1042,15 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         const EcString name = ecudc_get_asString(self->item, "name", NULL);
         if (name)
         {
+          EcUdc dataNode;
+
           ecstream_append (stream, "--");
           ecstream_append (stream, self->boundary);
           ecstream_append (stream, "\r\nContent-Disposition: name=\"");
           ecstream_append (stream, name);
           ecstream_append (stream, "\"\r\n\r\n");
           
-          EcUdc dataNode = ecudc_node(self->item, "data");
+          dataNode = ecudc_node(self->item, "data");
           if (dataNode)
           {
             if (ecudc_type(dataNode) == ENTC_UDC_BUFFER)

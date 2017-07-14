@@ -766,45 +766,48 @@ EcBuffer ecbuf_sha1 (EcBuffer self)
 
 EcBuffer ecbuf_sha_256 (EcBuffer b1)
 {
-  TError error;
-  
-  HCRYPTPROV provHandle = NULL;
+  EcBuffer ret = NULL;
+
+  HCRYPTPROV provHandle = (HCRYPTPROV)NULL;
   HCRYPTHASH hashHandle;
   
-  if (!::CryptAcquireContext (&provHandle, NULL, NULL, PROV_RSA_AES, 0))
+  if (!CryptAcquireContext (&provHandle, NULL, NULL, PROV_RSA_AES, 0))
   {
-    return TError::createWindowsError ("");
+    return NULL;
   }
   
-  if (!::CryptCreateHash (provHandle, CALG_SHA_256, 0, 0, &hashHandle))
+  if (!CryptCreateHash (provHandle, CALG_SHA_256, 0, 0, &hashHandle))
   {
-    ::CryptReleaseContext (provHandle, 0);
+    CryptReleaseContext (provHandle, 0);
     
-    return TError::createWindowsError ("");
+    return NULL;
   }
   
-  BYTE hash [32];
-  DWORD hashlen;
-  
-  if (::CryptHashData (hashHandle, source.c_str(), source.Length(), 0) && ::CryptGetHashParam (hashHandle, HP_HASHVAL, hash, &hashlen, 0))
   {
-    CHAR rgbDigits[] = "0123456789abcdef";
-    
-    for (DWORD i = 0; i < hashlen; i++)
+    EcStream stream = ecstream_new ();
+
+    BYTE hash [32];
+    DWORD hashlen;
+  
+    if (CryptHashData (hashHandle, b1->buffer, b1->size, 0) && CryptGetHashParam (hashHandle, HP_HASHVAL, hash, &hashlen, 0))
     {
-      result += (char)(rgbDigits[hash[i] >> 4]);
-      result += (char)(rgbDigits[hash[i] & 0xf]);
+      CHAR rgbDigits[] = "0123456789abcdef";
+      DWORD i;    
+
+      for (i = 0; i < hashlen; i++)
+      {
+        ecstream_appendc (stream, (char)(rgbDigits[hash[i] >> 4]));
+        ecstream_appendc (stream, (char)(rgbDigits[hash[i] & 0xf]));
+      }
+
+      ret = ecstream_trans (&stream);
     }
   }
-  else
-  {
-    error = TError::createWindowsError ("");
-  }
   
-  ::CryptDestroyHash (hashHandle);
-  ::CryptReleaseContext (provHandle, 0);
+  CryptDestroyHash (hashHandle);
+  CryptReleaseContext (provHandle, 0);
   
-  return error;
+  return ret;
 }
 
 //----------------------------------------------------------------------------------------
