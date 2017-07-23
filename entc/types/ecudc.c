@@ -1756,17 +1756,3 @@ EcUdc ecudc_errcode (EcAlloc alloc, uint_t errcode)
 }
 
 //----------------------------------------------------------------------------------------
-
-EcUdc ecudc_readFromFile (const EcString fileName)
-{
-  
-}
-
-//----------------------------------------------------------------------------------------
-
-int ecudc_writeToFile (const EcString fileName, const EcUdc nodes)
-{
-  
-}
-
-//----------------------------------------------------------------------------------------
