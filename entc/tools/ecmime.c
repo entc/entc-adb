@@ -47,6 +47,8 @@ const EcString ecmime_getFromExtension (const EcString ext)
   
   if (mime_types == NULL)
   {
+    eclogger_fmt (LL_TRACE, "ENTC", "mime", "create new mime types");
+
     mime_types = ecmapchar_create (EC_ALLOC);
     
     ecmapchar_append( mime_types, "pdf",      "application/pdf" );

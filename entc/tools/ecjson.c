@@ -695,6 +695,9 @@ int ecjson_writeToFile (const EcString filename, const EcUdc source)
     if (text)
     {
       ecfh_writeString (fh, text);
+      
+      // clean up
+      ecstr_delete (&text);
     }
     else
     {
