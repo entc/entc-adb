@@ -507,7 +507,7 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
 	eclogger_fmt (LL_ERROR, "ENTC", "event", "can't trigger");        
       }
       
-      eclogger_msg (LL_TRACE, "ENTC", "events", "return (ABORT)");
+      //eclogger_msg (LL_TRACE, "ENTC", "events", "return (ABORT)");
       
       return ENTC_EVENT_ABORT;
     }
@@ -515,7 +515,7 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
     // internal interupt, is triggered by changes on the fdsets
     if (FD_ISSET (self->intrfd, &rfdset))
     { 
-      eclogger_msg (LL_TRACE, "ENTC", "events", "got event (INTR)");
+      //eclogger_msg (LL_TRACE, "ENTC", "events", "got event (INTR)");
       
       return ENTC_EVENT_INTERNAL;
     }
@@ -532,7 +532,7 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
 	// otherwise this event is triggered forever
 	if (self->userhdl [i] == 0x42)
 	{
-	  eclogger_msg (LL_TRACE, "ENTC", "events", "read (USER-EVENT)");
+	  //eclogger_msg (LL_TRACE, "ENTC", "events", "read (USER-EVENT)");
 	  
 	  uint64_t s = read (i, &s, sizeof(uint64_t));
 	  if (s != sizeof(uint64_t))
@@ -541,7 +541,7 @@ int ece_list_select (EcEventQueue self, uint_t timeout, void** pptr)
 	  }  
 	}
 	
-	eclogger_msg (LL_TRACE, "ENTC", "events", "return (EVENT)");
+	//eclogger_msg (LL_TRACE, "ENTC", "events", "return (EVENT)");
 	
 	return i;
       }
@@ -685,7 +685,7 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
   
   if (pevent->mask & IN_IGNORED)
   {
-    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "ident %i was replaced", ident);
+    //eclogger_fmt (LL_TRACE, "ENTC", "inotify", "ident %i was replaced", ident);
     
     if (ecstr_valid(data->filename))
     {
@@ -708,7 +708,7 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
   
   if( (pevent->mask & IN_DELETE) || (pevent->mask & IN_DELETE_SELF) || (pevent->mask & IN_MOVE_SELF) || (pevent->mask & IN_CREATE) )
   {
-    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "remove event %i", ident);
+    //eclogger_fmt (LL_TRACE, "ENTC", "inotify", "remove event %i", ident);
     /* unregister event */
     inotify_rm_watch( self->notifd, ident );
     
@@ -727,10 +727,10 @@ void ece_files_nextEvent2 (EcEventFiles self, struct inotify_event* pevent)
   || (pevent->mask & IN_MOVED_TO)
   || (pevent->mask & IN_MOVE_SELF);
   
-  eclogger_fmt (LL_TRACE, "ENTC", "inotify", "detect change [%u] A:%i C:%i M:%i F:%i T:%i S:%i O:%i R:%i", pevent->mask
-               , pevent->mask & IN_ATTRIB, pevent->mask & IN_CLOSE_WRITE, pevent->mask & IN_MODIFY, pevent->mask & IN_MOVED_FROM,
-                 pevent->mask & IN_MOVED_TO, pevent->mask & IN_MOVE_SELF, pevent->mask & IN_OPEN, pevent->mask & IN_ACCESS
-                );
+  //eclogger_fmt (LL_TRACE, "ENTC", "inotify", "detect change [%u] A:%i C:%i M:%i F:%i T:%i S:%i O:%i R:%i", pevent->mask
+  //             , pevent->mask & IN_ATTRIB, pevent->mask & IN_CLOSE_WRITE, pevent->mask & IN_MODIFY, pevent->mask & IN_MOVED_FROM,
+  //               pevent->mask & IN_MOVED_TO, pevent->mask & IN_MOVE_SELF, pevent->mask & IN_OPEN, pevent->mask & IN_ACCESS
+  //              );
   
   if ( changes )
   {
@@ -755,7 +755,7 @@ int ece_files_nextEvent(EcEventFiles self)
     char *p;
     
     // wait until some data received on one of the handles
-    eclogger_msg (LL_TRACE, "ENTC", "inotify", "wait for events");
+    //eclogger_msg (LL_TRACE, "ENTC", "inotify", "wait for events");
 
     int res = ece_context_wait (self->econtext, self->notifd, ENTC_INFINITE, ENTC_EVENTTYPE_READ);
     // check the return
@@ -787,7 +787,7 @@ int ece_files_nextEvent(EcEventFiles self)
       break;
     }
     
-    eclogger_fmt (LL_TRACE, "ENTC", "inotify", "got %i new events", numRead);
+    //eclogger_fmt (LL_TRACE, "ENTC", "inotify", "got %i new events", numRead);
     
     for (p = buf; p < buf + numRead; )
     {
@@ -802,7 +802,7 @@ int ece_files_nextEvent(EcEventFiles self)
     break;
   }
   
-  eclogger_fmt (LL_TRACE, "ENTC", "inotify", "ended with %i", rt);
+  //eclogger_fmt (LL_TRACE, "ENTC", "inotify", "ended with %i", rt);
   
   return rt;
 }
@@ -881,8 +881,8 @@ void ece_files_register (EcEventFiles self, const EcString filename, events_call
   data->onDeletePtr = onDeletePtr;
   ecstr_replace(&(data->filename), filename);
   
-  eclogger_fmt (LL_DEBUG, "ENTC", "inotify", "registered event at inotify on %i", ident);
-  eclogger_fmt (LL_TRACE, "ENTC", "inotify", " at '%s'", filename);
+  //eclogger_fmt (LL_DEBUG, "ENTC", "inotify", "registered event at inotify on %i", ident);
+  //eclogger_fmt (LL_TRACE, "ENTC", "inotify", " at '%s'", filename);
 }
 
 /*------------------------------------------------------------------------*/
