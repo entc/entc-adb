@@ -222,9 +222,19 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
       adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asUInt32 (item));
     }
     break;
+    case ENTC_UDC_INT32:
+    {
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asInt32 (item));
+    }
+    break;
     case ENTC_UDC_UINT64:
     {
       adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asUInt64 (item));
+    }
+    break;
+    case ENTC_UDC_INT64:
+    {
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asInt64 (item));
     }
     break;
     default:
