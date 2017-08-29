@@ -32,6 +32,8 @@
 #include <tools/ecdata.h>
 #include <tools/ecjson.h>
 
+#include <system/ectime.h>
+
 struct AdboNodePart_s {
   
   AdboContainer container;
@@ -862,6 +864,21 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
       if (isAssigned(values))
       {
         ecudc_add_asString (EC_ALLOC, values, columnName, ecudc_asString (dataItem));
+      }
+    }
+    break;
+    case ENTC_UDC_TIME:
+    {
+      const time_t* t = ecudc_asTime (dataItem);
+      
+      char buffer [100];
+      ectime_toString (t, buffer, 100);
+      
+      adbl_attrs_addChar (attrs, columnName, buffer);
+      
+      if (isAssigned(values))
+      {
+        ecudc_add_asString (EC_ALLOC, values, columnName, buffer);
       }
     }
     break;

@@ -30,6 +30,7 @@
 #include <types/ecmap.h>
 
 #include <tools/ecxmlstream.h>
+#include <tools/ecjson.h>
 
 #include "adbl_security.h"
 
@@ -519,22 +520,11 @@ void adbl_scanPlugin (AdblManager self, const EcString filename)
   }
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
 
-void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath, const EcString execpath)
+void adbl_validate_config (AdblManager self, const EcString configpath, const EcString execpath)
 {
   EcListNode node;
-  
-  if (isAssigned (self->observer))
-  {
-    ecf_observer_delete(self->observer);
-  }
-  
-  eclogger_fmt (LL_TRACE, MODULE, "scan", "using configpath '%s'", configpath);        
-
-  self->observer = ecf_observer_newFromPath (configpath, "adbl.xml", configpath, events, 0, 0);
-  
-  adbl_parseConfig (self, configpath, TRUE);  
   
   // check some things
   if (ecstr_empty(self->path))
@@ -546,22 +536,22 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
       EcString path2 = ecfs_getRealPath (path1);
       
       ecstr_replaceTO (&(self->path), path2);
-
+      
       ecstr_delete (&path1);
     }
   }
-
+  
   if (ecstr_valid(self->path))
   {
-    EcList engines = eclist_create_ex (EC_ALLOC);  
-
-    eclogger_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);   
+    EcList engines = eclist_create_ex (EC_ALLOC);
+    
+    eclogger_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);
     
     // fill a list with all files in that directory
     if (!ecdh_scan(self->path, engines, ENTC_FILETYPE_ISFILE))
     {
-      eclogger_fmt (LL_ERROR, MODULE, "scan", "can't find path '%s'", ecstr_cstring(self->path) );    
-    }  
+      eclogger_fmt (LL_ERROR, MODULE, "scan", "can't find path '%s'", ecstr_cstring(self->path) );
+    }
     
     for (node = eclist_first(engines); node != eclist_end(engines); node = eclist_next(node))
     {
@@ -574,12 +564,152 @@ void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath
     // clean up
     eclist_free_ex (EC_ALLOC, &engines);
     
-    adbl_parseConfig (self, configpath, FALSE);
+    if (self->observer)
+    {
+      adbl_parseConfig (self, configpath, FALSE);
+    }
   }
   else
   {
-    eclogger_msg (LL_ERROR, MODULE, "scan", "no scanpath defined in config");        
+    eclogger_msg (LL_ERROR, MODULE, "scan", "no scanpath defined in config");
   }
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbl_scanJson (AdblManager self, const EcString configpath, const EcString execpath)
+{
+  EcUdc data = NULL;
+  
+  {
+    EcString filename = ecfs_mergeToPath (configpath, "adbl.json");
+    
+    eclogger_fmt (LL_TRACE, MODULE, "scan", "using config '%s'", filename);
+    
+    int res = ecjson_readFromFile (filename, &data);
+    if (res != ENTC_RESCODE_OK)
+    {
+      eclogger_fmt (LL_WARN, MODULE, "scan", "can't read json file '%s'", filename);
+      return;
+    }
+    
+    ecstr_delete(&filename);
+  }
+    
+  ecstr_replace (&(self->path), ecudc_get_asString(data, "path", NULL));
+
+  adbl_validate_config (self, configpath, execpath);
+
+  EcUdc databases = ecudc_node(data, "databases");
+  if (databases == NULL)
+  {
+    eclogger_fmt (LL_WARN, MODULE, "scan", "can't find databases in json");
+    return;
+  }
+  
+  void* cursor = NULL;
+  EcUdc item;
+  
+  for (item = ecudc_next(databases, &cursor); item; item = ecudc_next(databases, &cursor))
+  {
+    const EcString dbname = ecudc_get_asString(item, "name", NULL);
+    const EcString dbtype = ecudc_get_asString(item, "type", NULL);
+    
+    eclogger_fmt (LL_TRACE, MODULE, "scan", "found name = '%s', type = '%s'", dbname, dbtype);
+
+    if (dbname && dbtype)
+    {
+      ADBLModuleProperties* pp;
+      EcMapNode node;
+
+      node = ecmap_find(self->modules, dbtype);
+      if (node == ecmap_end (self->modules))
+      {
+        eclogger_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
+        return;
+      }
+      
+      pp = ecmap_data (node);
+
+      node = ecmap_find(self->credentials, dbname);
+      if( node != ecmap_end (self->credentials) )
+      {
+        eclogger_fmt (LL_WARN, MODULE, "credentials", "parsing the config file: db-source already exists [%s] in current register", dbname );
+        continue;
+      }
+      
+      {
+        //create new credential
+        AdblCredentials* pc = adbl_credentials_new (dbtype);
+        pc->pp = pp;
+        //add to map
+        ecmap_append(self->credentials, dbname, pc);
+        //parse the other stuff
+
+        eclogger_fmt (LL_TRACE, MODULE, "scan", "added '%s'", dbname);
+        
+        pc->properties.host = ecstr_copy (ecudc_get_asString(item, "host", NULL));
+        pc->properties.port = ecudc_get_asInt32 (item, "port", 0);
+
+        pc->properties.username = ecstr_copy (ecudc_get_asString(item, "user", NULL));
+        pc->properties.password = ecstr_copy (ecudc_get_asString(item, "pass", NULL));
+
+        pc->properties.schema = ecstr_copy (ecudc_get_asString(item, "schema", NULL));
+        
+        EcUdc file = ecudc_node (item, "file");
+        if (file)
+        {
+          const EcString fileprefix = ecudc_get_asString(item, "prefix", NULL);
+          const EcString filextension = ecudc_get_asString(item, "ext", NULL);
+          
+          EcStream file = ecstream_new();
+          
+          if( fileprefix )
+          {
+            ecstream_append( file, fileprefix );
+            ecstream_append( file, "_" );
+          }
+          
+          if( pc->properties.schema )
+          {
+            ecstream_append( file, pc->properties.schema );
+          }
+          
+          if( filextension )
+          {
+            ecstream_append( file, filextension );
+          }
+          else
+          {
+            ecstream_append( file, ".db" );
+          }
+          
+          pc->properties.file = ecfs_mergeToPath (configpath, ecstream_buffer( file ));
+          
+          /* clean up */
+          ecstream_delete(&file);
+        }
+      }
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath, const EcString execpath)
+{
+  if (isAssigned (self->observer))
+  {
+    ecf_observer_delete(self->observer);
+  }
+  
+  eclogger_fmt (LL_TRACE, MODULE, "scan", "using configpath '%s'", configpath);        
+
+  self->observer = ecf_observer_newFromPath (configpath, "adbl.xml", configpath, events, 0, 0);
+  
+  adbl_parseConfig (self, configpath, TRUE);  
+  
+  adbl_validate_config (self, configpath, execpath);
 }
 
 /*------------------------------------------------------------------------*/

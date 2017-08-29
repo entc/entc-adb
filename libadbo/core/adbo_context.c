@@ -36,6 +36,21 @@ AdboContext adbo_context_create (EcEventFiles files, const EcString configpath, 
 
 //----------------------------------------------------------------------------------------
 
+AdboContext adbo_context_createJson (const EcString configpath, const EcString execpath)
+{
+  AdboContext self = ENTC_NEW (struct AdboContext_s);
+  
+  self->adblm = adbl_new ();
+  adbl_scanJson (self->adblm, configpath, execpath);
+  
+  // self->substitutes = adbo_subsmgr_new (path, self);
+  
+  return self;
+  
+}
+
+//----------------------------------------------------------------------------------------
+
 void adbo_context_destroy (AdboContext* pself)
 {
   AdboContext self = *pself;

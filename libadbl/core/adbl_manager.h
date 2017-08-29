@@ -36,7 +36,9 @@ __CPP_EXTERN____________________________________________________________________
 __LIB_EXPORT AdblManager adbl_new ();
   
 __LIB_EXPORT void adbl_scan (AdblManager, EcEventFiles events, const EcString configpath, const EcString execpath);
-  
+
+__LIB_EXPORT void adbl_scanJson (AdblManager, const EcString configpath, const EcString execpath);
+
 __LIB_EXPORT void adbl_delete (AdblManager*);
   
 __LIB_EXPORT void adbl_setCredentialsFile (AdblManager, const EcString name, const EcString module, const EcString file);

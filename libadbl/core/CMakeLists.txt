@@ -7,6 +7,7 @@ SET (CORE_SOURCES
   adbl_module.inc
 
   adbl_manager.c
+  adbl_manager.h
   adbl_attributes.c
   adbl_query.c
   adbl_constraint.c
