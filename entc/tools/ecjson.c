@@ -107,11 +107,11 @@ EcString json_parse_string (JsonParser* parser)
 
 //-------------------------------------------------------------------------------------------
 
-EcUdc json_parse_type (JsonParser* parser, const EcString key, int len)
+EcUdc json_parse_type (JsonParser* parser, const EcString key, int len, int offset)
 {
   EcUdc udc = NULL;
   
-  EcString h1 = ecstr_part ((const char*)parser->pos + 2, len);
+  EcString h1 = ecstr_part ((const char*)parser->pos + offset, len);
   EcString h2 = ecstr_trim (h1);
 
   if (ecstr_equal (h2, "null"))
@@ -221,7 +221,15 @@ EcUdc json_parse (JsonParser* parser, const char* name)
       {
         case ']':
         {
-          ecstr_delete(&key);            
+          /*
+          EcUdc h = json_parse_type (parser, NULL, c - parser->pos - 1, 1);
+          if (h)
+          {
+            ecudc_add (udc, &h);
+          }
+           
+          ecstr_delete(&key);
+           */
           // todo
           parser->pos = c;
           return udc;
@@ -262,7 +270,14 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         break;
         case ',':
         {
-          // todo
+          /*
+          EcUdc h = json_parse_type (parser, NULL, c - parser->pos - 1, 1);
+          if (h)
+          {
+            ecudc_add (udc, &h);
+          }
+           */
+           
           parser->pos = c;
         }
         break;
@@ -350,7 +365,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
       {
         case '}':
         {
-          EcUdc h = json_parse_type (parser, key, c - parser->pos - 2);
+          EcUdc h = json_parse_type (parser, key, c - parser->pos - 2, 2);
           if (h)
           {
             ecudc_add (udc, &h);
@@ -397,7 +412,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
         break;
         case ',':
         {
-          EcUdc h = json_parse_type (parser, key, c - parser->pos - 2);
+          EcUdc h = json_parse_type (parser, key, c - parser->pos - 2, 2);
           if (h)
           {
             ecudc_add (udc, &h);

@@ -22,6 +22,7 @@
 #include "adbo_context_intern.h"
 #include <tools/ecdata.h>
 #include <tools/ecjson.h>
+#include "adbo_context.h"
 
 //----------------------------------------------------------------------------------------
 
@@ -196,5 +197,166 @@ int adbo_clear (EcUdc node)
   return TRUE;
 }
 
+//========================================================================================
+
+struct Adbo_s
+{
+  AdboContext adbo;
+  
+  EcUdc root;
+  
+  EcMutex mutex;
+};
+
 //----------------------------------------------------------------------------------------
 
+Adbo adbo_create (const EcString confPath, const EcString binPath, const EcString objFile)
+{
+  Adbo self = ENTC_NEW (struct Adbo_s);
+  
+  self->adbo = adbo_context_createJson (confPath, binPath);
+  self->root = NULL;
+  self->mutex = ecmutex_new ();
+  
+  {
+    EcXMLStream xmlstream;
+    
+    xmlstream = ecxmlstream_openfile (objFile, confPath);
+    /* parse the xml structure */
+    while( ecxmlstream_nextNode( xmlstream ) )
+    {
+      if( ecxmlstream_isBegin( xmlstream, "nodes" ) )
+      {
+        self->root = adbo_structure_fromXml (self->adbo, xmlstream, "root", "nodes");
+      }
+    }
+    
+    ecxmlstream_close(xmlstream);
+  }
+
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbo_destroy (Adbo* pself)
+{
+  Adbo self = *pself;
+  
+  if (self->root)
+  {
+    ecudc_destroy(EC_ALLOC, &(self->root));
+  }
+  
+  adbo_context_destroy(&(self->adbo));
+  ecmutex_delete(&(self->mutex));
+  
+  ENTC_DEL (pself, struct Adbo_s);
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode)
+{
+  int res = TRUE;
+  EcUdc tableNode;
+  EcUdc dataNode;
+  EcUdc dataTable;
+  EcUdc params;
+  
+  ecmutex_lock (self->mutex);
+  
+  if (self->root == NULL)
+  {
+    ecmutex_unlock (self->mutex);
+    
+    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
+
+    return FALSE;
+  }
+  
+  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] #1", table);
+
+  tableNode = adbo_get_table (self->root, table);
+  if (isNotAssigned (tableNode))
+  {
+    ecmutex_unlock (self->mutex);
+    
+    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
+
+    return FALSE;
+  }
+  
+  dataNode = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+  dataTable = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, table);
+
+  ecudc_add (dataTable, data);
+  ecudc_add (dataNode, &dataTable);
+
+  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] #2", table);
+
+  if (caseNode == NULL)
+  {
+    params = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+  }
+  else
+  {
+    params = caseNode;
+  }
+  
+  res = adbo_update (tableNode, params, self->adbo, dataNode);
+
+  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] done -> %i", table, res);
+
+  ecudc_destroy (EC_ALLOC, &dataNode);
+  
+  if (caseNode == NULL)
+  {
+    ecudc_destroy (EC_ALLOC, &params);
+  }
+  
+  ecmutex_unlock (self->mutex);
+  
+  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] #3", table);
+
+  return res;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
+{
+  EcUdc tableNode;
+  EcUdc values;
+
+  ecmutex_lock (self->mutex);
+  
+  if (self->root == NULL)
+  {
+    ecmutex_unlock (self->mutex);
+    
+    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
+    
+    return NULL;
+  }
+
+  tableNode = adbo_get_table (self->root, table);
+  if (isNotAssigned (tableNode))
+  {
+    ecmutex_unlock (self->mutex);
+    
+    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
+    
+    return NULL;
+  }
+  
+  adbo_item_fetch (tableNode, params, self->adbo);
+  
+  values = adbo_item_values (tableNode);
+
+  ecmutex_unlock (self->mutex);
+
+  return values;
+}
+
+//----------------------------------------------------------------------------------------

@@ -969,8 +969,7 @@ void ecudc_setTime (EcUdc self, const time_t* value)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_TIME: memcpy(self->extension, value, sizeof(time_t)); 
-    break;
+    case ENTC_UDC_TIME: memcpy(self->extension, value, sizeof(time_t)); break;
   }
 }
 

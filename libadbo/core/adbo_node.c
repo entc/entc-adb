@@ -869,6 +869,8 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
     break;
     case ENTC_UDC_TIME:
     {
+      eclogger_fmt (LL_TRACE, "ADBO", "attr", "add time type");
+
       const time_t* t = ecudc_asTime (dataItem);
       
       char buffer [100];
@@ -880,6 +882,8 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
       {
         ecudc_add_asString (EC_ALLOC, values, columnName, buffer);
       }
+
+      eclogger_fmt (LL_TRACE, "ADBO", "attr", "add time type");
     }
     break;
     case ENTC_UDC_INT64:

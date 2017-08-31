@@ -60,7 +60,19 @@ __LIB_EXPORT int adbo_update (EcUdc, EcUdc filter, AdboContext, EcUdc data);
 // delete the content in the structure from database
 __LIB_EXPORT int adbo_delete (EcUdc, EcUdc filter, AdboContext);
 
+__CPP_EXTERN______________________________________________________________________________END
 
+struct Adbo_s; typedef struct Adbo_s* Adbo;
+
+__CPP_EXTERN______________________________________________________________________________START
+
+__LIB_EXPORT Adbo adbo_create (const EcString confPath, const EcString binPath, const EcString objFile);
+
+__LIB_EXPORT void adbo_destroy (Adbo*);
+
+__LIB_EXPORT int adbo_db_update (Adbo, const EcString table, EcUdc* data, EcUdc caseNode);
+
+__LIB_EXPORT EcUdc adbo_db_fetch (Adbo, const EcString table, EcUdc params);
 
 __CPP_EXTERN______________________________________________________________________________END
 
