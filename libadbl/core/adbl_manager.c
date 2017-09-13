@@ -577,29 +577,30 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
 
 //----------------------------------------------------------------------------------------
 
-void adbl_scanJson (AdblManager self, const EcString configpath, const EcString execpath)
+void adbl_scanJsonFromFile (const EcString configpath, EcUdc* pdata)
 {
-  EcUdc data = NULL;
+  EcString filename = ecfs_mergeToPath (configpath, "adbl.json");
   
+  eclogger_fmt (LL_TRACE, MODULE, "scan", "using config '%s'", filename);
+  
+  int res = ecjson_readFromFile (filename, pdata);
+  if (res != ENTC_RESCODE_OK)
   {
-    EcString filename = ecfs_mergeToPath (configpath, "adbl.json");
-    
-    eclogger_fmt (LL_TRACE, MODULE, "scan", "using config '%s'", filename);
-    
-    int res = ecjson_readFromFile (filename, &data);
-    if (res != ENTC_RESCODE_OK)
-    {
-      eclogger_fmt (LL_WARN, MODULE, "scan", "can't read json file '%s'", filename);
-      return;
-    }
-    
-    ecstr_delete(&filename);
+    eclogger_fmt (LL_WARN, MODULE, "scan", "can't read json file '%s'", filename);
+    return;
   }
-    
+  
+  ecstr_delete(&filename);
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath, const EcString execpath)
+{
   ecstr_replace (&(self->path), ecudc_get_asString(data, "path", NULL));
-
+  
   adbl_validate_config (self, configpath, execpath);
-
+  
   EcUdc databases = ecudc_node(data, "databases");
   if (databases == NULL)
   {
@@ -616,12 +617,12 @@ void adbl_scanJson (AdblManager self, const EcString configpath, const EcString 
     const EcString dbtype = ecudc_get_asString(item, "type", NULL);
     
     eclogger_fmt (LL_TRACE, MODULE, "scan", "found name = '%s', type = '%s'", dbname, dbtype);
-
+    
     if (dbname && dbtype)
     {
       ADBLModuleProperties* pp;
       EcMapNode node;
-
+      
       node = ecmap_find(self->modules, dbtype);
       if (node == ecmap_end (self->modules))
       {
@@ -630,7 +631,7 @@ void adbl_scanJson (AdblManager self, const EcString configpath, const EcString 
       }
       
       pp = ecmap_data (node);
-
+      
       node = ecmap_find(self->credentials, dbname);
       if( node != ecmap_end (self->credentials) )
       {
@@ -645,15 +646,15 @@ void adbl_scanJson (AdblManager self, const EcString configpath, const EcString 
         //add to map
         ecmap_append(self->credentials, dbname, pc);
         //parse the other stuff
-
+        
         eclogger_fmt (LL_TRACE, MODULE, "scan", "added '%s'", dbname);
         
         pc->properties.host = ecstr_copy (ecudc_get_asString(item, "host", NULL));
         pc->properties.port = ecudc_get_asInt32 (item, "port", 0);
-
+        
         pc->properties.username = ecstr_copy (ecudc_get_asString(item, "user", NULL));
         pc->properties.password = ecstr_copy (ecudc_get_asString(item, "pass", NULL));
-
+        
         pc->properties.schema = ecstr_copy (ecudc_get_asString(item, "schema", NULL));
         
         EcUdc file = ecudc_node (item, "file");
@@ -691,6 +692,22 @@ void adbl_scanJson (AdblManager self, const EcString configpath, const EcString 
         }
       }
     }
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+void adbl_scanJson (AdblManager self, const EcString configpath, const EcString execpath)
+{
+  EcUdc data = NULL;
+  
+  adbl_scanJsonFromFile (configpath, &data);
+
+  if (data)
+  {
+    adbl_scanJsonParse (self, data, configpath, execpath);
+    
+    ecudc_destroy(EC_ALLOC, &data);
   }
 }
 
