@@ -933,11 +933,14 @@ int ecstr_split (const EcString source, EcString* s1, EcString* s2, char c)
   const char * pos = strchr ( source, c );
   if (pos != NULL)
   {
-    ecstr_replaceTO (s1, ecstr_part(source, pos - source));
+    EcString h = ecstr_part(source, pos - source);
+  
+    ecstr_replaceTO (s1, h);
     ecstr_replace (s2, pos + 1);
     
     return TRUE;
   }
+  
   return FALSE;
 }
 

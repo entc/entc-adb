@@ -58,7 +58,8 @@ void* ecthread_run(void* params)
     {
       wait(0);
     }
-  }  
+  }
+  
   pthread_exit(0);
 }
 
