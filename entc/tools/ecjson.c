@@ -605,7 +605,10 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_INT32:
     {
-      ecstream_appends (stream, ecudc_asInt32 (node));
+      int res = TRUE;
+      int32_t h = ecudc_asInt32 (node, &res);
+      
+      ecstream_appendu (stream, h);
     }
     break;
     case ENTC_UDC_UINT32:

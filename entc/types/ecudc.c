@@ -995,7 +995,7 @@ EcString ecudc_getString (EcUdc self)
     case ENTC_UDC_UBYTE:   return ecstr_long (ecudc_asUByte (self));
     case ENTC_UDC_INT16:   return ecstr_long (ecudc_asInt16 (self));
     case ENTC_UDC_UINT16:  return ecstr_long (ecudc_asUInt16 (self));
-    case ENTC_UDC_INT32:   return ecstr_long (ecudc_asInt32 (self));
+    case ENTC_UDC_INT32:   return ecstr_long (*((int32_t*)self->extension));
     case ENTC_UDC_UINT32:  return ecstr_long (ecudc_asUInt32 (self));
     case ENTC_UDC_INT64:   return ecstr_long (ecudc_asInt64 (self));
     case ENTC_UDC_UINT64:  return ecstr_long (ecudc_asUInt64 (self));
@@ -1078,14 +1078,16 @@ uint16_t ecudc_asUInt16 (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
-int32_t ecudc_asInt32 (EcUdc self)
+int32_t ecudc_asInt32 (EcUdc self, int* res)
 {
+  *res = TRUE;
+  
   switch (self->type) 
   {
     case ENTC_UDC_INT32: return *((int32_t*)self->extension); 
     case ENTC_UDC_STRING:
     {
-      const EcString h = ecudc_asString (self);
+      const EcString h = ecudc_sitem_asString (self->extension);
       if (isAssigned (h))
       {
         // can be transformed ?
@@ -1093,6 +1095,8 @@ int32_t ecudc_asInt32 (EcUdc self)
       }
     }
   }        
+
+  *res = FALSE;
   return 0;
 }
 
@@ -1396,14 +1400,15 @@ int32_t ecudc_get_asInt32 (const EcUdc self, const EcString name, int32_t alt)
   const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
-    int32_t ret = ecudc_asInt32 (res);
-    if (ret == 0)
+    int h = TRUE;
+    int32_t ret = ecudc_asInt32 (res, &h);
+    if (h)
     {
-      return alt;
+      return ret;
     }
     else
     {
-      return ret;
+      return alt;
     }
   }
   else

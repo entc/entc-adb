@@ -226,7 +226,8 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
     break;
     case ENTC_UDC_INT32:
     {
-      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asInt32 (item));
+      int res;
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asInt32 (item, &res));
     }
     break;
     case ENTC_UDC_UINT64:
@@ -908,11 +909,13 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
     break;
     case ENTC_UDC_INT32:
     {
-      adbl_attrs_addLong (attrs, columnName, ecudc_asInt32 (dataItem));
+      int res;
+      adbl_attrs_addLong (attrs, columnName, ecudc_asInt32 (dataItem, &res));
       
       if (isAssigned(values))
       {
-        ecudc_add_asInt32 (EC_ALLOC, values, columnName, ecudc_asInt32 (dataItem));
+        int res;
+        ecudc_add_asInt32 (EC_ALLOC, values, columnName, ecudc_asInt32 (dataItem, &res));
       }
     }
     break;

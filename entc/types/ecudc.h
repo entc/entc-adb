@@ -199,7 +199,7 @@ __LIB_EXPORT int16_t ecudc_asInt16 (EcUdc);
 
 __LIB_EXPORT uint16_t ecudc_asUInt16 (EcUdc);
 
-__LIB_EXPORT int32_t ecudc_asInt32 (EcUdc);
+__LIB_EXPORT int32_t ecudc_asInt32 (EcUdc, int* res);
 
 __LIB_EXPORT uint32_t ecudc_asUInt32 (EcUdc);
 

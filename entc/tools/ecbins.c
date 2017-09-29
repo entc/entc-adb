@@ -158,7 +158,8 @@ EcUdc ecbins_readNode (EcBuffer posbuf, const EcString name)
     break;
     case ENTC_BINSTYPE_INT:
     {
-      size = ecudc_asInt32(j);
+      int res = TRUE;
+      size = ecudc_asInt32(j, &res);
     }
     break;
     case ENTC_BINSTYPE_UINT:
@@ -328,7 +329,7 @@ EcUdc ecbins_readInt32 (EcBuffer posbuf, const EcString name)
     posbuf->buffer += 4;
     posbuf->size -= 4;
     
-    eclogger_fmt (LL_TRACE, "ENTC", "bins", "int32 %i", ecudc_asInt32(udc));
+    //eclogger_fmt (LL_TRACE, "ENTC", "bins", "int32 %i", ecudc_asInt32(udc));
     
     return udc;
   }
@@ -692,7 +693,8 @@ void ecbins_writeUInt16 (EcStream stream, const EcUdc udc)
 
 void ecbins_writeInt32 (EcStream stream, const EcUdc udc)
 {
-  int32_t h = ecudc_asInt32(udc);
+  int res = TRUE;
+  int32_t h = ecudc_asInt32(udc, &res);
   
   // write datatype identifier
   ecstream_appendc(stream, ENTC_BINSTYPE_INT);
