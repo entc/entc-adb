@@ -205,8 +205,9 @@ int ecexec_run (EcExec self)
       
       close(outfd[PIPE_READ]);
       close(errfd[PIPE_READ]);
+
+      return status;
     }
-    break;
   }
   return 0;
 }

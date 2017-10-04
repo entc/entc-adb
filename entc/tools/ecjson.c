@@ -478,14 +478,34 @@ void jsonwriter_escape (EcStream stream, const EcString source)
     const char* c;
     for (c = source; *c; c++)
     {
-      if (*c == '"')
+      switch (*c)
       {
-        ecstream_appendc (stream, '\\');
-        ecstream_appendc (stream, *c);
-      }
-      else if (*c <= 0x7e)
-      {
-        ecstream_appendc (stream, *c);
+        case '"':
+        case '\\':
+        {
+          ecstream_appendc (stream, '\\');
+          ecstream_appendc (stream, *c);
+        }
+        break;
+        case '\r':
+        {
+          ecstream_appendc (stream, '\\');
+          ecstream_appendc (stream, 'r');
+        }
+        break;
+        case '\n':
+        {
+          ecstream_appendc (stream, '\\');
+          ecstream_appendc (stream, 'n');
+        }
+        break;
+        default:
+        {
+          if (*c <= 0x7e)
+          {
+            ecstream_appendc (stream, *c);
+          }
+        }
       }
     }
   }

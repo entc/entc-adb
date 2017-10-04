@@ -724,6 +724,42 @@ uint_t ecudc_type (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+void ecudc_merge (EcUdc* dest, EcUdc* part)
+{
+  if (*part)
+  {
+    if (*dest == NULL)
+    {
+      *dest = *part;
+      *part = NULL;
+    }
+    else
+    {
+      // merge params
+      void* cursor = NULL;
+      EcUdc item;
+      
+      for (item = ecudc_cursor_e (*part, &cursor); item; item = ecudc_cursor_e (*part, &cursor))
+      {
+        // try to avoid conflicts
+        EcUdc hnode = ecudc_node (*dest, ecudc_name(item));
+        if (hnode == NULL)
+        {
+          ecudc_add (*dest, &item);
+        }
+        else
+        {
+          ecudc_destroy(EC_ALLOC, &item);
+        }
+      }
+      
+      ecudc_destroy(EC_ALLOC, part);
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_setS (EcUdc self, const EcString value)
 {
   switch (self->type) 
