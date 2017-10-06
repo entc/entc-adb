@@ -194,6 +194,13 @@ EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
+uint32_t ecudc_node_size (EcUdcNode* self)
+{
+  return ecmap_size (self->map);
+}
+
+//----------------------------------------------------------------------------------------
+
 EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
 {
   EcMapNode node;
@@ -326,6 +333,13 @@ EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
   
   *cursor = eclist_erase (EC_ALLOC, self->list, node);
   return ret;
+}
+
+//----------------------------------------------------------------------------------------
+
+uint32_t ecudc_list_size (EcUdcList* self)
+{
+  return eclist_size (self->list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -756,6 +770,19 @@ void ecudc_merge (EcUdc* dest, EcUdc* part)
       ecudc_destroy(EC_ALLOC, part);
     }
   }
+}
+
+//----------------------------------------------------------------------------------------
+
+uint32_t ecudc_size (EcUdc self)
+{
+  switch (self->type)
+  {
+    case ENTC_UDC_NODE: return ecudc_node_size (self->extension);
+    case ENTC_UDC_LIST: return ecudc_list_size (self->extension);
+  }
+  
+  return 0;
 }
 
 //----------------------------------------------------------------------------------------

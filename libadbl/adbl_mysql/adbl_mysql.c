@@ -669,11 +669,109 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   
   ret = adblmodule_dbquery_create (self, query, stmt, bv);
   
+  // clean up
   bindvars_destroy (&bv);
+  //mysql_stmt_close (stmt);
   
   ecmutex_unlock (self->mutex);
 
   return ret;
+}
+
+//------------------------------------------------------------------------------------------------------
+
+int adblmodule_dbprocedure_create (AdblMysqlConnection self, AdblProcedure* proc, MYSQL_STMT* stmt, AdblMysqlBindVars* bv)
+{
+  int res;
+  
+  EcStream stream = ecstream_new ();
+  
+  ecstream_append (stream, "CALL ");
+  ecstream_append (stream, proc->procedure);
+  ecstream_appendc (stream, '(');
+  
+  {
+    void* cursor = NULL;
+    EcUdc item;
+    int pos = 0;
+    
+    for (item = ecudc_next (proc->values, &cursor); item; item = ecudc_next (proc->values, &cursor), pos++)
+    {
+      ecstream_appendc (stream, '?');
+     
+      if (pos > 0)
+      {
+        ecstream_appendc (stream, ',');
+      }
+      
+      bindvars_add (bv, item);
+
+      eclogger_fmt (LL_DEBUG, "MYSQ", "bind", "bound item");
+    }
+  }
+
+  ecstream_appendc (stream, ')');
+  
+  eclogger_fmt (LL_DEBUG, "MYSQ", "stmt", ecstream_buffer(stream));
+  
+  res = adblmodule_prepared_statement (stmt, bv, stream);
+
+  ecstream_delete (&stream);
+
+  if (!res)
+  {
+    return FALSE;
+  }
+
+  // execute
+  if (mysql_stmt_execute (stmt) != 0)
+  {
+    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#3", mysql_stmt_error(stmt));
+    
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+//------------------------------------------------------------------------------------------------------
+
+int adblmodule_dbprocedure (void* ptr, AdblProcedure* proc)
+{
+  int res;
+  MYSQL_STMT* stmt;
+  AdblMysqlBindVars* bv;
+  
+  AdblMysqlConnection self = ptr;
+  
+  ecmutex_lock (self->mutex);
+
+  stmt = mysql_stmt_init (self->conn);
+  if (isNotAssigned (stmt))
+  {
+    ecmutex_unlock (self->mutex);
+    
+    eclogger_msg  (LL_ERROR, C_MODDESC, "proc#1", mysql_stmt_error(stmt));
+    return FALSE;
+  }
+  
+  uint32_t size = ecudc_size (proc->values);
+  
+  eclogger_fmt (LL_TRACE, "MYSQ", "size", "bind var size %i", size);
+  
+  bv = bindvars_create (size);
+
+  eclogger_fmt (LL_TRACE, "MYSQ", "size", "create");
+
+  res = adblmodule_dbprocedure_create (self, proc, stmt, bv);
+  
+  // clean up
+  bindvars_destroy (&bv);
+  //mysql_stmt_close (stmt);
+
+  ecmutex_unlock (self->mutex);
+  
+  return res;
 }
 
 //------------------------------------------------------------------------------------------------------

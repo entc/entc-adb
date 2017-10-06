@@ -201,7 +201,7 @@ int adbo_clear (EcUdc node)
 
 struct Adbo_s
 {
-  AdboContext adbo;
+  AdboContext adboctx;
   
   EcUdc root;
   
@@ -214,7 +214,7 @@ Adbo adbo_create (const EcString confPath, const EcString binPath, const EcStrin
 {
   Adbo self = ENTC_NEW (struct Adbo_s);
   
-  self->adbo = adbo_context_createJson (confPath, binPath);
+  self->adboctx = adbo_context_createJson (confPath, binPath);
   self->root = NULL;
   self->mutex = ecmutex_new ();
   
@@ -227,7 +227,7 @@ Adbo adbo_create (const EcString confPath, const EcString binPath, const EcStrin
     {
       if( ecxmlstream_isBegin( xmlstream, "nodes" ) )
       {
-        self->root = adbo_structure_fromXml (self->adbo, xmlstream, "root", "nodes");
+        self->root = adbo_structure_fromXml (self->adboctx, xmlstream, "root", "nodes");
       }
     }
     
@@ -248,7 +248,7 @@ void adbo_destroy (Adbo* pself)
     ecudc_destroy(EC_ALLOC, &(self->root));
   }
   
-  adbo_context_destroy(&(self->adbo));
+  adbo_context_destroy(&(self->adboctx));
   ecmutex_delete(&(self->mutex));
   
   ENTC_DEL (pself, struct Adbo_s);
@@ -304,7 +304,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
     params = caseNode;
   }
   
-  res = adbo_update (tableNode, params, self->adbo, dataNode);
+  res = adbo_update (tableNode, params, self->adboctx, dataNode);
 
   eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] done -> %i", table, res);
 
@@ -350,13 +350,20 @@ EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
     return NULL;
   }
   
-  adbo_item_fetch (tableNode, params, self->adbo);
+  adbo_item_fetch (tableNode, params, self->adboctx);
   
   values = adbo_item_values (tableNode);
 
   ecmutex_unlock (self->mutex);
 
   return values;
+}
+
+//----------------------------------------------------------------------------------------
+
+struct AdblManager_s* adbo_db_adbl (Adbo self)
+{
+  return self->adboctx->adblm;
 }
 
 //----------------------------------------------------------------------------------------

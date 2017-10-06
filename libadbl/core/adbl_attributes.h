@@ -40,7 +40,9 @@ __LIB_EXPORT void adbl_attrs_addLong (AdblAttributes*, const EcString column, ui
 __LIB_EXPORT const EcString adbl_attrs_get (AdblAttributes*, const EcString column);
   
 __LIB_EXPORT int adbl_attrs_empty (AdblAttributes*);
-  
+
+__LIB_EXPORT uint32_t adbl_attrs_size (AdblAttributes*);
+
   // security methods
 __LIB_EXPORT void adbl_attrs_sec (AdblAttributes*, AdblSecurity*);
   

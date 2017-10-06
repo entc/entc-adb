@@ -106,6 +106,17 @@ typedef struct
 
 //------------------------------------------
 
+typedef struct
+{
+  
+  EcString procedure;
+  
+  EcUdc values;
+  
+} AdblProcedure;
+
+//------------------------------------------
+
 typedef struct 
 {
   

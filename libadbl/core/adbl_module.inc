@@ -5,6 +5,7 @@
 void*        adblmodule_dbconnect (AdblConnectionProperties* properties);
 void         adblmodule_dbdisconnect (void* ptr);
 void*        adblmodule_dbquery (void* ptr, AdblQuery* query);
+int          adblmodule_dbprocedure (void* ptr, AdblProcedure* proc);
 uint_t       adblmodule_dbtable_size (void* ptr, const EcString name);
 int          adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert);
 int          adblmodule_dbinsert (void* ptr, AdblInsert* insert);
@@ -61,6 +62,16 @@ void _STDCALL dbdisconnect (void* ptr)
 void* _STDCALL dbquery (void* ptr, AdblQuery* query)
 {
   return adblmodule_dbquery (ptr, query);
+}
+
+//________________________________________________________________________________________
+
+#if defined _WIN64 || defined _WIN32
+#pragma comment(linker, "/EXPORT:dbprocedure=_dbprocedure@8")
+#endif
+void* _STDCALL dbprocedure (void* ptr, AdblProcedure* procedure)
+{
+  return adblmodule_dbprocedure (ptr, procedure);
 }
 
 //________________________________________________________________________________________

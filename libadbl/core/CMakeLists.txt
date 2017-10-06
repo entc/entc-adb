@@ -2,13 +2,16 @@ cmake_minimum_required(VERSION 2.4)
 
 SET (CORE_SOURCES  
   adbl.h
-  ocadbl.h
+
+ocadbl.h
 
   adbl_module.inc
 
   adbl_manager.c
   adbl_manager.h
+  adbl_attributes.h
   adbl_attributes.c
+  adbl_query.h
   adbl_query.c
   adbl_constraint.c
   adbl_insert.c
@@ -19,6 +22,8 @@ SET (CORE_SOURCES
   adbl_security.h
   adbl_table.h
   adbl_table.c
+  adbl_procedure.h
+  adbl_procedure.c
 )
 
 ADD_LIBRARY( adbl SHARED ${CORE_SOURCES} )

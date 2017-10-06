@@ -442,6 +442,16 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   return 0;
 }
 
+//------------------------------------------------------------------------------------------------------
+
+int adblmodule_dbprocedure (void* ptr, AdblProcedure* proc)
+{
+  // todo: SQLITE doesn't support stored procedures
+  // -> solution, just have extra implementation for stored procedures, reading external scripts etc
+
+  return FALSE;
+}
+
 //------------------------------------------------------------------------
 
 uint_t adblmodule_dbtable_size (void* ptr, const char* table)

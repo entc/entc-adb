@@ -48,6 +48,8 @@ typedef struct
   
   adbl_dbquery_t dbquery;
   
+  adbl_dbprocedure_t dbprocedure;
+  
   adbl_dbtable_size_t dbtable_size;
   
   adbl_dbupdate_t dbupdate;
@@ -462,6 +464,7 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   properties->dbconnect          = (adbl_dbconnect_t)          ecdl_method (handle, "dbconnect");
   properties->dbdisconnect       = (adbl_dbdisconnect_t)       ecdl_method (handle, "dbdisconnect");
   properties->dbquery            = (adbl_dbquery_t)            ecdl_method (handle, "dbquery");
+  properties->dbprocedure        = (adbl_dbprocedure_t)        ecdl_method (handle, "dbprocedure");
   properties->dbtable_size       = (adbl_dbtable_size_t)       ecdl_method (handle, "dbtable_size");
   properties->dbupdate           = (adbl_dbupdate_t)           ecdl_method (handle, "dbupdate");
   properties->dbinsert           = (adbl_dbinsert_t)           ecdl_method (handle, "dbinsert");
@@ -833,6 +836,42 @@ AdblCursor* adbl_dbquery (AdblSession session, AdblQuery* query, AdblSecurity* s
   cursor->pp = pc->pp;
   
   return cursor;
+}
+
+/*------------------------------------------------------------------------*/
+
+int adbl_dbprocedure (AdblSession session, AdblProcedure* procedure, AdblSecurity* security)
+{
+  AdblCredentials* pc = session->credentials;
+
+  if (isNotAssigned (pc->pp))
+  {
+    eclogger_msg (LL_ERROR, MODULE, "dbquery", "credentials without database" );
+    return NULL;
+  }
+
+  if (isNotAssigned(pc->connection))
+  {
+    eclogger_msg (LL_WARN, MODULE, "dbquery", "no active database connection" );
+    return 0;
+  }
+
+  if (isNotAssigned (pc->pp->dbprocedure))
+  {
+    eclogger_msg (LL_WARN, MODULE, "dbquery", "procedure method in matrix is not defined" );
+    return 0;
+  }
+
+  // TODO
+  
+  /*
+  if( security->inicident )
+  {
+    return 0;
+  }
+   */
+
+  return pc->pp->dbprocedure (pc->connection, procedure);
 }
 
 /*------------------------------------------------------------------------*/

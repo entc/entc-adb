@@ -21,6 +21,7 @@
 #define ADBL_ADBL_H
 
 #include "adbl_query.h"
+#include "adbl_procedure.h"
 #include "adbl_constraint.h"
 #include "adbl_attributes.h"
 
@@ -68,6 +69,8 @@ typedef void          (_STDCALL *adbl_dbdisconnect_t)       (void*);
 
 typedef void*         (_STDCALL *adbl_dbquery_t)            (void*, AdblQuery*);
 
+typedef int           (_STDCALL *adbl_dbprocedure_t)        (void*, AdblProcedure*);
+
 typedef uint_t        (_STDCALL *adbl_dbtable_size_t)       (void*, const EcString);
 
 typedef int           (_STDCALL *adbl_dbupdate_t)           (void*, AdblUpdate*, int);
@@ -111,6 +114,8 @@ extern "C" {
   
 __LIB_EXPORT AdblCursor* adbl_dbquery( AdblSession, AdblQuery*, AdblSecurity* );
   
+__LIB_EXPORT int adbl_dbprocedure (AdblSession, AdblProcedure*, AdblSecurity*);
+
 __LIB_EXPORT uint_t adbl_table_size( AdblSession, const EcString table );
   
   /* sequence operations */

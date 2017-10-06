@@ -90,6 +90,13 @@ int adbl_attrs_empty (AdblAttributes* self)
 
 //------------------------------------------------------------------------
 
+uint32_t adbl_attrs_size (AdblAttributes* self)
+{
+  return ecmapchar_count (self->columns);
+}
+
+//------------------------------------------------------------------------
+
 void adbl_attrs_sec (AdblAttributes* self, AdblSecurity* security)
 {
   //EcMapCharNode node;

@@ -149,6 +149,8 @@ __LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);
 
 __LIB_EXPORT void ecudc_merge (EcUdc* dest, EcUdc* part);
 
+__LIB_EXPORT uint32_t ecudc_size (EcUdc);
+
 // setter
 
 __LIB_EXPORT void ecudc_refUInt32 (EcUdc, uint32_t** ref);
