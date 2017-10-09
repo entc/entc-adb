@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2017 "Alexander Kalkhof" [email:alex@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -20,68 +20,70 @@
 #ifndef ENTC_TYPES_STREAM_H
 #define ENTC_TYPES_STREAM_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+//=============================================================================
 
-#include "ecstring.h"
-#include "ecbuffer.h"
+#include "system/ecdefs.h"
+#include "types/ecstring.h"
+#include "types/ecbuffer.h"
 
-typedef void (*stream_callback_fct)(void* ptr, const void* buffer, uint_t nbyte);
+//=============================================================================
 
 struct EcStream_s; typedef struct EcStream_s* EcStream;
 
+//-----------------------------------------------------------------------------
+
+__LIBEX EcStream ecstream_create (void);
+
+__LIBEX void ecstream_destroy (EcStream*);
+
+__LIBEX void ecstream_clear (EcStream);
+
+__LIBEX const char* ecstream_get (EcStream);
+
+__LIBEX unsigned long ecstream_size (EcStream);
+
+__LIBEX EcBuffer ecstream_tobuf (EcStream*);
+
+//-----------------------------------------------------------------------------
+
+__LIBEX void ecstream_append_str (EcStream, const char*);
+
+__LIBEX void ecstream_append_buf (EcStream, const char*, unsigned long size);
+
+__LIBEX void ecstream_append_fmt (EcStream, const char*, ...);
+
+__LIBEX void ecstream_append_c (EcStream, char);
+
+__LIBEX void ecstream_append_u (EcStream, unsigned long);
+
+__LIBEX void ecstream_append_i (EcStream, long);
+
+__LIBEX void ecstream_append_stream (EcStream, EcStream);
+
+//=============================================================================
+
 struct EcDevStream_s; typedef struct EcDevStream_s* EcDevStream;
 
-__CPP_EXTERN______________________________________________________________________________START
-    
-__LIB_EXPORT EcStream ecstream_new (void);
+typedef void (*stream_callback_fct)(void* ptr, const void* buffer, uint_t nbyte);
 
-__LIB_EXPORT void ecstream_delete (EcStream*);
-  
-__LIB_EXPORT void ecstream_clear( EcStream );
-  
-__LIB_EXPORT const EcString ecstream_buffer( EcStream );
-  
-__LIB_EXPORT void ecstream_appendd(EcStream, const EcString source, uint_t size);
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT void ecstream_appendStream (EcStream, EcStream);
+__LIBEX EcDevStream ecdevstream_new (uint_t size, stream_callback_fct, void*);
 
-__LIB_EXPORT void ecstream_append( EcStream, const EcString );
+__LIBEX void ecdevstream_delete (EcDevStream*);
 
-__LIB_EXPORT void ecstream_appendc( EcStream, char );
+__LIBEX void ecdevstream_flush (EcDevStream);
 
-__LIB_EXPORT void ecstream_appends (EcStream, int64_t);
+__LIBEX void ecdevstream_append (EcDevStream, void*, uint_t size);
 
-__LIB_EXPORT void ecstream_appendu (EcStream, uint64_t);
+__LIBEX void ecdevstream_appends (EcDevStream, const EcString);
 
-__LIB_EXPORT void ecstream_appendt (EcStream, const time_t*);
-  
-__LIB_EXPORT uint_t ecstream_size( EcStream );
+__LIBEX void ecdevstream_appendc (EcDevStream, char);
 
-__LIB_EXPORT EcBuffer ecstream_trans (EcStream*);
+__LIBEX void ecdevstream_appendu (EcDevStream, uint_t);
 
-__LIB_EXPORT ulong_t ecstream_registerOffset (EcStream, ulong_t size);
+__LIBEX void ecdevstream_appendfile (EcDevStream, const EcString filename);
 
-__LIB_EXPORT void ecstream_fillOffset (EcStream, ulong_t offset, const EcString source, ulong_t size);
-
-//------ dev stream ----
-
-__LIB_EXPORT EcDevStream ecdevstream_new (uint_t size, stream_callback_fct, void*);
-
-__LIB_EXPORT void ecdevstream_delete (EcDevStream*);
-
-__LIB_EXPORT void ecdevstream_flush (EcDevStream);
-
-__LIB_EXPORT void ecdevstream_append (EcDevStream, void*, uint_t size);
-
-__LIB_EXPORT void ecdevstream_appends (EcDevStream, const EcString);
-
-__LIB_EXPORT void ecdevstream_appendc (EcDevStream, char);
-
-__LIB_EXPORT void ecdevstream_appendu (EcDevStream, uint_t);
-
-__LIB_EXPORT void ecdevstream_appendfile (EcDevStream, const EcString filename);
-
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif

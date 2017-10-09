@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.4)
 
 PROJECT(adbl)
 
-find_package(Entc)
+find_package(Entc_1_3)
 
 MESSAGE(STATUS "+---- ADBL ----+")
 

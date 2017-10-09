@@ -57,8 +57,8 @@ EcExec ecexec_new (const EcString script)
     self->arguments[i] = NULL;
   }
   
-  self->stdout = ecstream_new();
-  self->stderr = ecstream_new();
+  self->stdout = ecstream_create ();
+  self->stderr = ecstream_create ();
   
   return self;
 }
@@ -75,8 +75,8 @@ void ecexec_delete (EcExec* pself)
     ecstr_delete(&(self->arguments[i]));
   }
   
-  ecstream_delete(&(self->stdout));
-  ecstream_delete(&(self->stderr));
+  ecstream_destroy (&(self->stdout));
+  ecstream_destroy (&(self->stderr));
   
   ENTC_DEL (pself, struct EcExec_s);
 }
@@ -180,7 +180,7 @@ int ecexec_run (EcExec self)
           {
             eclogger_fmt (LL_TRACE, "_SYS", "exec", "stdout: got data %i", res02);    
             
-            ecstream_appendd (self->stdout, buffer, res02);
+            ecstream_append_buf (self->stdout, buffer, res02);
             res02 = fread(buffer, 1, 20, stdout);
           }
         }
@@ -192,7 +192,7 @@ int ecexec_run (EcExec self)
           {
             eclogger_fmt (LL_TRACE, "_SYS", "exec", "stderr: got data %i", res02);    
 
-            ecstream_appendd (self->stderr, buffer, res02);
+            ecstream_append_buf (self->stderr, buffer, res02);
             res02 = fread(buffer, 1, 20, stderr);
           }
         }        
@@ -217,14 +217,14 @@ int ecexec_run (EcExec self)
 
 const EcString ecexec_stdout (EcExec self)
 {
-  return ecstream_buffer(self->stdout);
+  return ecstream_get (self->stdout);
 }
 
 //-----------------------------------------------------------------------------------
 
 const EcString ecexec_stderr (EcExec self)
 {
-  return ecstream_buffer(self->stderr);
+  return ecstream_get (self->stderr);
 }
 
 //-----------------------------------------------------------------------------------

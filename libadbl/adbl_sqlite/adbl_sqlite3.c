@@ -135,7 +135,7 @@ int adbl_preparexec1 (sqlite3* db, const char* statement)
 
 int adbl_preparexec2 (sqlite3* db, EcStream statement)
 {
-  return adbl_preparexec1 (db, ecstream_buffer (statement));
+  return adbl_preparexec1 (db, ecstream_get (statement));
 }
 
 /*------------------------------------------------------------------------*/
@@ -145,27 +145,27 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
   if( qc->table && qc->ref && qc->value )
   {
     /* add subquery */
-    ecstream_append( statement, "( SELECT " );
-    ecstream_append( statement, qc->table );
-    ecstream_append( statement, "." );
-    ecstream_append( statement, qc->value );
-    ecstream_append( statement, " FROM " );
-    ecstream_append( statement, qc->table );
-    ecstream_append( statement, " WHERE " );
-    ecstream_append( statement, qc->table );
-    ecstream_append( statement, "." );
-    ecstream_append( statement, qc->ref );
-    ecstream_append( statement, " = " );
-    ecstream_append( statement, table );
-    ecstream_append( statement, "." );
-    ecstream_append( statement, qc->column );
-    ecstream_append( statement, " )" );      
+    ecstream_append_str( statement, "( SELECT " );
+    ecstream_append_str( statement, qc->table );
+    ecstream_append_str( statement, "." );
+    ecstream_append_str( statement, qc->value );
+    ecstream_append_str( statement, " FROM " );
+    ecstream_append_str( statement, qc->table );
+    ecstream_append_str( statement, " WHERE " );
+    ecstream_append_str( statement, qc->table );
+    ecstream_append_str( statement, "." );
+    ecstream_append_str( statement, qc->ref );
+    ecstream_append_str( statement, " = " );
+    ecstream_append_str( statement, table );
+    ecstream_append_str( statement, "." );
+    ecstream_append_str( statement, qc->column );
+    ecstream_append_str( statement, " )" );
   }
   else
   {
-    ecstream_append( statement, table );
-    ecstream_append( statement, "." );
-    ecstream_append( statement, qc->column );    
+    ecstream_append_str( statement, table );
+    ecstream_append_str( statement, "." );
+    ecstream_append_str( statement, qc->column );
   }
   
   if( qc->orderno != 0 )
@@ -175,8 +175,8 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
     EcBuffer buffer = ecbuf_create (10);
     ecbuf_format (buffer, 10, "C%u", abs_orderno );      
     
-    ecstream_append( statement, " AS ");
-    ecstream_append( statement, ecbuf_const_str (buffer) );
+    ecstream_append_str( statement, " AS ");
+    ecstream_append_str( statement, ecbuf_const_str (buffer) );
         
     if( qc->orderno > 0 )
     {
@@ -205,14 +205,14 @@ void adbl_constructListWithTable( EcStream statement, EcList columns, const EcSt
     
     while (eclist_cursor_next (&cursor))
     {
-      ecstream_append( statement, ", " );
+      ecstream_append_str( statement, ", " );
       
       adbl_constructListWithTable_Column( statement, eclist_data (cursor.node), table, orders );
     }
   }
   else
   {
-    ecstream_append( statement, "*" );
+    ecstream_append_str( statement, "*" );
   }
 }
 
@@ -228,18 +228,18 @@ void adbl_constructConstraintElement( EcStream statement, AdblConstraintElement*
     
     if (isAssigned (subelement))
     {
-      ecstream_append( statement, "(" );
+      ecstream_append_str( statement, "(" );
       adbl_constructContraintNode (statement, subelement);
-      ecstream_append( statement, ")" );
+      ecstream_append_str( statement, ")" );
     }
     else
     {
       EcString val = ecudc_getString (element->data);
       
-      ecstream_append( statement, ecudc_name(element->data) );
-      ecstream_append( statement, " = \'" );
-      ecstream_append( statement, val );
-      ecstream_append( statement, "\'" );
+      ecstream_append_str( statement, ecudc_name(element->data) );
+      ecstream_append_str( statement, " = \'" );
+      ecstream_append_str( statement, val );
+      ecstream_append_str( statement, "\'" );
       
       ecstr_delete(&val);
     }    
@@ -263,7 +263,7 @@ void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint
         
         while (eclist_cursor_next (&cursor))
         {
-          ecstream_append (statement, " AND ");
+          ecstream_append_str (statement, " AND ");
           adbl_constructConstraintElement (statement, eclist_data (cursor.node));
         }
       }
@@ -285,10 +285,10 @@ void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint
           {
             EcString val = ecudc_getString (element->data);
             
-            ecstream_append( statement, ecudc_name(element->data) );
-            ecstream_append( statement, " IN (\'" );
-            ecstream_append( statement, val );
-            ecstream_append( statement, "\'" );
+            ecstream_append_str( statement, ecudc_name(element->data) );
+            ecstream_append_str( statement, " IN (\'" );
+            ecstream_append_str( statement, val );
+            ecstream_append_str( statement, "\'" );
             
             ecstr_delete(&val);
           }
@@ -298,14 +298,14 @@ void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint
             EcString val = ecudc_getString (element->data);
 
             element = eclist_data (cursor.node);
-            ecstream_append( statement, ",\'");
-            ecstream_append( statement, val );
-            ecstream_append( statement, "\'" );
+            ecstream_append_str( statement, ",\'");
+            ecstream_append_str( statement, val );
+            ecstream_append_str( statement, "\'" );
             
             ecstr_delete(&val);            
           }
 
-          ecstream_append( statement, ")" );
+          ecstream_append_str( statement, ")" );
         }
       }            
     }
@@ -319,7 +319,7 @@ void adbl_constructConstraint( EcStream statement, AdblConstraint* constraint )
 {
   if (eclist_hasContent (constraint->list))
   {
-    ecstream_append( statement, " WHERE " );
+    ecstream_append_str( statement, " WHERE " );
     
     adbl_constructContraintNode( statement, constraint );
   }
@@ -349,14 +349,14 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   ecmutex_lock(conn->mutex);
   
   /* create the stream */
-  statement = ecstream_new();
+  statement = ecstream_create ();
   /* construct the stream */
-  ecstream_append( statement, "SELECT " );
+  ecstream_append_str( statement, "SELECT " );
 
   adbl_constructListWithTable( statement, query->columns, query->table, orders );
 
-  ecstream_append( statement, " FROM " );
-  ecstream_append( statement, query->table );
+  ecstream_append_str( statement, " FROM " );
+  ecstream_append_str( statement, query->table );
   
   if(query->constraint)
   {
@@ -372,9 +372,9 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     
     EcString alias = ecintmap_data(orders_node);
     
-    ecstream_append( statement, " ORDER BY " );
+    ecstream_append_str( statement, " ORDER BY " );
     
-    ecstream_append( statement, alias );
+    ecstream_append_str( statement, alias );
     
     ecstr_delete(&alias);
     
@@ -384,9 +384,9 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     {
       alias = ecintmap_data(orders_node);
       
-      ecstream_append( statement, ", " );
+      ecstream_append_str( statement, ", " );
       
-      ecstream_append( statement, alias );      
+      ecstream_append_str( statement, alias );
       
       ecstr_delete(&alias);
     }    
@@ -396,26 +396,26 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   
   if(query->limit > 0)
   {
-    ecstream_append( statement, " LIMIT " );
-    ecstream_appendu( statement, query->limit );
+    ecstream_append_str( statement, " LIMIT " );
+    ecstream_append_u( statement, query->limit );
 
     if(query->offset > 0)
     {
-      ecstream_append( statement, " OFFSET " );
-      ecstream_appendu( statement, query->offset );
+      ecstream_append_str( statement, " OFFSET " );
+      ecstream_append_u( statement, query->offset );
     }
   }
   
-  eclogger_msg (LL_TRACE, MODULE, "query", ecstream_buffer (statement));    
+  eclogger_msg (LL_TRACE, MODULE, "query", ecstream_get (statement));
   
   res = sqlite3_prepare_v2( conn->handle,
-                            ecstream_buffer( statement ),
+                            ecstream_get( statement ),
                             ecstream_size( statement ),
                             &stmt,
                             &p );
                    
   
-  ecstream_delete(&statement);
+  ecstream_destroy(&statement);
   
   if( res == SQLITE_OK )
   {
@@ -471,20 +471,20 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table)
     return 0;
   }
   /* create the stream */
-  statement = ecstream_new();
+  statement = ecstream_create ();
   /* construct the stream */
-  ecstream_append( statement, "SELECT COUNT(*) FROM " );  
-  ecstream_append( statement, table );
+  ecstream_append_str ( statement, "SELECT COUNT(*) FROM " );
+  ecstream_append_str ( statement, table );
 
-  eclogger_msg (LL_ERROR, "SQLT", "size", ecstream_buffer (statement));
+  eclogger_msg (LL_ERROR, "SQLT", "size", ecstream_get (statement));
   
   res = sqlite3_prepare_v2( conn->handle,
-                            ecstream_buffer( statement ),
+                            ecstream_get( statement ),
                             ecstream_size( statement ),
                             &stmt,
                             &p );
   
-  ecstream_delete(&statement);
+  ecstream_destroy (&statement);
   
   if( res != SQLITE_OK )
   {
@@ -518,20 +518,20 @@ int adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs)
   
   if( node != ecmapchar_end(attrs->columns) )
   {
-    ecstream_append( statement, ecmapchar_key(node) );
-    ecstream_append( statement, " = \'" );
-    ecstream_append( statement, ecmapchar_data(node) );
-    ecstream_append( statement, "\'" );
+    ecstream_append_str( statement, ecmapchar_key(node) );
+    ecstream_append_str( statement, " = \'" );
+    ecstream_append_str( statement, ecmapchar_data(node) );
+    ecstream_append_str( statement, "\'" );
         
     node = ecmapchar_next(node);
     
     for(; node != ecmapchar_end(attrs->columns); node = ecmapchar_next(node) )
     {
-      ecstream_append( statement, ", " );
-      ecstream_append( statement, ecmapchar_key(node) );
-      ecstream_append( statement, " = \'" );
-      ecstream_append( statement, ecmapchar_data(node) );
-      ecstream_append( statement, "\'" );
+      ecstream_append_str( statement, ", " );
+      ecstream_append_str( statement, ecmapchar_key(node) );
+      ecstream_append_str( statement, " = \'" );
+      ecstream_append_str( statement, ecmapchar_data(node) );
+      ecstream_append_str( statement, "\'" );
     }
     
     return TRUE;
@@ -547,38 +547,38 @@ void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
   
   if( node != ecmapchar_end(attrs->columns) )
   {
-    EcStream cols = ecstream_new();
-    EcStream values = ecstream_new();
+    EcStream cols = ecstream_create();
+    EcStream values = ecstream_create();
     
-    ecstream_append( cols, ecmapchar_key(node) );
+    ecstream_append_str( cols, ecmapchar_key(node) );
     
-    ecstream_append( values, "\"" );
-    ecstream_append( values, ecmapchar_data(node) );
-    ecstream_append( values, "\"" );      
+    ecstream_append_str( values, "\"" );
+    ecstream_append_str( values, ecmapchar_data(node) );
+    ecstream_append_str( values, "\"" );
     
     node = ecmapchar_next(node);
     
     for(; node != ecmapchar_end(attrs->columns); node = ecmapchar_next(node) )
     {
-      ecstream_append( cols, ", " );
-      ecstream_append( cols, ecmapchar_key(node) );
+      ecstream_append_str( cols, ", " );
+      ecstream_append_str( cols, ecmapchar_key(node) );
       
-      ecstream_append( values, ", \"" );
-      ecstream_append( values, ecmapchar_data(node) );
-      ecstream_append( values, "\"" );      
+      ecstream_append_str( values, ", \"" );
+      ecstream_append_str( values, ecmapchar_data(node) );
+      ecstream_append_str( values, "\"" );
     }
-    ecstream_append( statement, " (" );
-    ecstream_append( statement, ecstream_buffer( cols ) );
-    ecstream_append( statement, ") VALUES (" );
-    ecstream_append( statement, ecstream_buffer( values ) );
-    ecstream_append( statement, ")" );
+    ecstream_append_str( statement, " (" );
+    ecstream_append_stream( statement, cols);
+    ecstream_append_str( statement, ") VALUES (" );
+    ecstream_append_stream( statement, values);
+    ecstream_append_str( statement, ")" );
     
-    ecstream_delete( &cols );
-    ecstream_delete( &values );
+    ecstream_destroy( &cols );
+    ecstream_destroy( &values );
   }
   else
   {
-    ecstream_append( statement, " VALUES( NULL )" );
+    ecstream_append_str( statement, " VALUES( NULL )" );
   }  
 }
 
@@ -586,8 +586,8 @@ void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
 
 void adbl_constructAttributesInsertOrReplace (EcStream statement, AdblConstraint* constraint, AdblAttributes* attrs)
 {
-  EcStream cols = ecstream_new();
-  EcStream values = ecstream_new();
+  EcStream cols = ecstream_create();
+  EcStream values = ecstream_create();
 
   int cnt = 0;
   
@@ -606,17 +606,17 @@ void adbl_constructAttributesInsertOrReplace (EcStream statement, AdblConstraint
         {
           if (cnt > 0)
           {
-            ecstream_append( cols, ", " );
-            ecstream_append( values, ", " );
+            ecstream_append_str( cols, ", " );
+            ecstream_append_str( values, ", " );
           }
           
           {
             EcString val = ecudc_getString (element->data);
  
-            ecstream_append (cols, ecudc_name(element->data));
-            ecstream_append( values, "\"" );
-            ecstream_append( values, val);
-            ecstream_append( values, "\"" );  
+            ecstream_append_str (cols, ecudc_name(element->data));
+            ecstream_append_str( values, "\"" );
+            ecstream_append_str( values, val);
+            ecstream_append_str( values, "\"" );
 
             ecstr_delete(&val);
           }
@@ -632,26 +632,26 @@ void adbl_constructAttributesInsertOrReplace (EcStream statement, AdblConstraint
     {
       if (cnt > 0)
       {
-        ecstream_append( cols, ", " );
-        ecstream_append( values, ", " );
+        ecstream_append_str( cols, ", " );
+        ecstream_append_str( values, ", " );
       }
 
-      ecstream_append( cols, ecmapchar_key(node) );
+      ecstream_append_str( cols, ecmapchar_key(node) );
       
-      ecstream_append( values, "\"" );
-      ecstream_append( values, ecmapchar_data(node) );
-      ecstream_append( values, "\"" );      
+      ecstream_append_str( values, "\"" );
+      ecstream_append_str( values, ecmapchar_data(node) );
+      ecstream_append_str( values, "\"" );
     }
   }
   
-  ecstream_append( statement, " (" );
-  ecstream_append( statement, ecstream_buffer( cols ) );
-  ecstream_append( statement, ") VALUES (" );
-  ecstream_append( statement, ecstream_buffer( values ) );
-  ecstream_append( statement, ")" );
+  ecstream_append_str( statement, " (" );
+  ecstream_append_stream( statement, cols);
+  ecstream_append_str( statement, ") VALUES (" );
+  ecstream_append_stream( statement, values);
+  ecstream_append_str( statement, ")" );
   
-  ecstream_delete( &cols );
-  ecstream_delete( &values );
+  ecstream_destroy( &cols );
+  ecstream_destroy( &values );
 }
 
 /*------------------------------------------------------------------------*/
@@ -659,10 +659,10 @@ void adbl_constructAttributesInsertOrReplace (EcStream statement, AdblConstraint
 int adblmodule_dbupdate_insert (struct AdblSqlite3Connection* conn, AdblUpdate* update)
 {
   // create the stream
-  EcStream statement = ecstream_new();
+  EcStream statement = ecstream_create ();
   // construct the stream 
-  ecstream_append( statement, "INSERT OR IGNORE INTO " );
-  ecstream_append( statement, update->table );
+  ecstream_append_str( statement, "INSERT OR IGNORE INTO " );
+  ecstream_append_str( statement, update->table );
   
   adbl_constructAttributesInsertOrReplace (statement, update->constraint, update->attrs );
   
@@ -678,7 +678,7 @@ int adblmodule_dbupdate_insert (struct AdblSqlite3Connection* conn, AdblUpdate* 
       res = -1;
     }
     /* clean up */
-    ecstream_delete( &statement );
+    ecstream_destroy( &statement );
     
     return res;
   }
@@ -692,15 +692,15 @@ int adblmodule_dbupdate_update (struct AdblSqlite3Connection* conn, AdblUpdate* 
 {
   EcStream statement;
   /* create the stream */
-  statement = ecstream_new();
+  statement = ecstream_create ();
   /* construct the stream */
-  ecstream_append( statement, "UPDATE " );
-  ecstream_append( statement, update->table );
-  ecstream_append( statement, " SET " );
+  ecstream_append_str( statement, "UPDATE " );
+  ecstream_append_str( statement, update->table );
+  ecstream_append_str( statement, " SET " );
   
   if (!adbl_constructAttributesUpdate(statement, update->attrs) )
   {
-    ecstream_delete(&statement);
+    ecstream_destroy(&statement);
     return 0;
   }
   
@@ -718,7 +718,7 @@ int adblmodule_dbupdate_update (struct AdblSqlite3Connection* conn, AdblUpdate* 
       res = -1;
     }
     /* clean up */
-    ecstream_delete( &statement );
+    ecstream_destroy( &statement );
     
     return res;
   }
@@ -784,10 +784,10 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
     return FALSE;
   }  
   /* create the stream */
-  statement = ecstream_new();
+  statement = ecstream_create();
   /* construct the stream */
-  ecstream_append( statement, "INSERT INTO " );
-  ecstream_append( statement, insert->table );
+  ecstream_append_str( statement, "INSERT INTO " );
+  ecstream_append_str( statement, insert->table );
   
   adbl_constructAttributesInsert(statement, insert->attrs );
     
@@ -803,7 +803,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
       res = -1;
     }
     /* clean up */
-    ecstream_delete( &statement );
+    ecstream_destroy( &statement );
     
     return res;
   }
@@ -833,10 +833,10 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del)
   }
   
   /* create the stream */
-  statement = ecstream_new();
+  statement = ecstream_create();
   /* construct the stream */  
-  ecstream_append( statement, "DELETE FROM " );
-  ecstream_append( statement, del->table );
+  ecstream_append_str( statement, "DELETE FROM " );
+  ecstream_append_str( statement, del->table );
   
   if( del->constraint )
   {
@@ -856,7 +856,7 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del)
       res = -1;
     }
     /* clean up */
-    ecstream_delete( &statement );
+    ecstream_destroy( &statement );
     
     return res;
   }
@@ -986,24 +986,24 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
     return 0;
   }
   
-  statement = ecstream_new();
+  statement = ecstream_create();
   
   /* construct the stream */
-  ecstream_append( statement, "PRAGMA TABLE_INFO(" );  
-  ecstream_append( statement, table );
-  ecstream_append( statement, ")" );
+  ecstream_append_str( statement, "PRAGMA TABLE_INFO(" );
+  ecstream_append_str( statement, table );
+  ecstream_append_str( statement, ")" );
 
-  eclogger_msg (LL_TRACE, "SQLT", "dbsequence", ecstream_buffer (statement));
+  eclogger_msg (LL_TRACE, "SQLT", "dbsequence", ecstream_get (statement));
   
   
   res = sqlite3_prepare_v2( conn->handle,
-                           ecstream_buffer( statement ),
+                           ecstream_get( statement ),
                            ecstream_size( statement ),
                            &stmt,
                            &p );
   
   /* clean */
-  ecstream_delete( &statement );
+  ecstream_destroy( &statement );
   
   if (res != SQLITE_OK)
   {
@@ -1053,23 +1053,23 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
   }
   
   /* create new statement to get the last value */
-  statement = ecstream_new();
+  statement = ecstream_create ();
   /* construct the stream */
-  ecstream_append( statement, "SELECT MAX(" );  
-  ecstream_append( statement, column );
-  ecstream_append( statement, ") FROM " );
-  ecstream_append( statement, table );
+  ecstream_append_str( statement, "SELECT MAX(" );
+  ecstream_append_str( statement, column );
+  ecstream_append_str( statement, ") FROM " );
+  ecstream_append_str( statement, table );
   
-  eclogger_msg (LL_TRACE, "SQLT", "dbsequence", ecstream_buffer (statement));
+  eclogger_msg (LL_TRACE, "SQLT", "dbsequence", ecstream_get (statement));
   
   res = sqlite3_prepare_v2( conn->handle,
-                           ecstream_buffer( statement ),
+                           ecstream_get( statement ),
                            ecstream_size( statement ),
                            &stmt,
                            &p );
   
   /* clean */
-  ecstream_delete( &statement );
+  ecstream_destroy( &statement );
   ecstr_delete( &column );
   
   if( res != SQLITE_OK )
@@ -1156,20 +1156,20 @@ EcList adblmodule_dbschema (void* ptr)
     return 0;
   }
   
-  statement = ecstream_new ();
+  statement = ecstream_create ();
   
-  ecstream_append (statement, "SELECT name FROM sqlite_master WHERE type='table'");  
+  ecstream_append_str (statement, "SELECT name FROM sqlite_master WHERE type='table'");
 
-  eclogger_msg (LL_TRACE, "SQLT", "dbschema", ecstream_buffer (statement));
+  eclogger_msg (LL_TRACE, "SQLT", "dbschema", ecstream_get (statement));
   
   res = sqlite3_prepare_v2 (conn->handle,
-                            ecstream_buffer( statement ),
+                            ecstream_get( statement ),
                             ecstream_size( statement ),
                             &stmt,
                             &p);
   
   // clean up
-  ecstream_delete (&statement);
+  ecstream_destroy (&statement);
   
   if( res != SQLITE_OK )
   {
@@ -1366,22 +1366,22 @@ AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename)
     return ret;
   }
   
-  statement = ecstream_new ();
+  statement = ecstream_create ();
   
-  ecstream_append (statement, "SELECT sql FROM sqlite_master WHERE type = 'table' and name='");
-  ecstream_append (statement, tablename);
-  ecstream_append (statement, "'");  
+  ecstream_append_str (statement, "SELECT sql FROM sqlite_master WHERE type = 'table' and name='");
+  ecstream_append_str (statement, tablename);
+  ecstream_append_str (statement, "'");
   
-  eclogger_msg (LL_TRACE, "SQLT", "dbtable", ecstream_buffer (statement));
+  eclogger_msg (LL_TRACE, "SQLT", "dbtable", ecstream_get (statement));
   
   res = sqlite3_prepare_v2 (conn->handle,
-                            ecstream_buffer( statement ),
+                            ecstream_get( statement ),
                             ecstream_size( statement ),
                             &stmt,
                             &p);
   
   // clean up
-  ecstream_delete (&statement);
+  ecstream_destroy (&statement);
   
   if (res != SQLITE_OK)
   {

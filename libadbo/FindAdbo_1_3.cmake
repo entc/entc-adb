@@ -1,13 +1,13 @@
-# - Find entc
-# Find the native ENTC headers and libraries.
+# - Find adbo
+# Find the native ADBO headers and libraries.
 #
-#  ENTC_INCLUDE_DIRS - where to find headers
-#  ENTC_LIBRARIES    - where to find the library
-#  ENTC_FOUND        - true if entc dependencies found
+#  ADBO_INCLUDE_DIRS - where to find headers
+#  ADBO_LIBRARIES    - where to find the library
+#  ADBO_FOUND        - true if entc dependencies found
 
 #=============================================================================
 #
-# Copyright (c) 2010-2015 "Alexander Kalkhof" [email:alex@kalkhof.org]
+# Copyright (c) 2010-2015 "Alexander Kalkhof" [email:adbl@kalkhof.org]
 #
 # This file is part of the extension n' tools (entc-base) framework for C.
 #
@@ -28,36 +28,35 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-SET(ENTC_VERSION "1.3.0")
+SET( ADBO_VERSION 1.3.0 )
 
-# Look for the header file.
-FIND_LIBRARY( ENTC_LIBRARY NAMES entc
+FIND_LIBRARY(ADBO_LIBRARY NAMES adbo      
   HINTS
   "/usr/lib/"
   "/usr/local/lib/"
   "/opt/local/lib/"
-  "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/lib/"
+  "$ENV{PROGRAMFILES}/quom/adbo/${ADBO_VERSION}/lib/"
 )
-MARK_AS_ADVANCED(ENTC_LIBRARY)
+MARK_AS_ADVANCED(ADBO_LIBRARY)
 
-FIND_PATH(ENTC_INCLUDE_DIR
-  NAMES system/macros.h
-  PATHS
-  # linux
-  "/usr/include/entc-${ENTC_VERSION}/"
-  # macosx
-  "/usr/local/include/entc-${ENTC_VERSION}/"
-  # windows
-  "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/include/"
+# Look for the header file.
+FIND_PATH(ADBO_INCLUDE_DIR NAMES adbo_types.h
+  PATHS 
+  # on Linux/Unix 
+  "/usr/include/libadbo-${ADBO_VERSION}/"
+  # on Mac OSX
+  "/usr/local/include/libadbo-${ADBO_VERSION}/"
+  # on windows
+  "$ENV{PROGRAMFILES}/quom/adbo/${ADBO_VERSION}/include/"
 )
-MARK_AS_ADVANCED(ENTC_INCLUDE_DIR)
+MARK_AS_ADVANCED(ADBO_INCLUDE_DIR)
 
-# handle the QUIETLY and REQUIRED arguments and set ENTC_FOUND to TRUE if
+# handle the QUIETLY and REQUIRED arguments and set ADBO_FOUND to TRUE if 
 # all listed variables are TRUE
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(ENTC DEFAULT_MSG ENTC_LIBRARY ENTC_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(ADBO DEFAULT_MSG ADBO_LIBRARY ADBO_INCLUDE_DIR)
 
-IF(ENTC_FOUND)
-  SET(ENTC_LIBRARIES ${ENTC_LIBRARY})
-  SET(ENTC_INCLUDE_DIRS ${ENTC_INCLUDE_DIR})
-ENDIF(ENTC_FOUND)
+IF(ADBO_FOUND)
+  SET(ADBO_LIBRARIES ${ADBO_LIBRARY})
+  SET(ADBO_INCLUDE_DIRS ${ADBO_INCLUDE_DIR})
+ENDIF(ADBO_FOUND)

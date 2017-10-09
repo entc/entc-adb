@@ -917,7 +917,7 @@ int ecbufit_readln_2breaks (EcBufferIterator* bufit, EcStream stream)
       }
       else
       {
-        ecstream_appendc (stream, c);      
+        ecstream_append_c (stream, c);
       }                  
     }
     
@@ -948,7 +948,7 @@ int ecbufit_readln_1breaks (EcBufferIterator* bufit, EcStream stream)
     }
     else
     {
-      ecstream_appendc (stream, c);      
+      ecstream_append_c (stream, c);
     } 
     
     bufit->pos++;
@@ -999,7 +999,7 @@ int ecbufit_readln_getbreaks (EcBufferIterator* bufit, EcStream stream)
       }
       else
       {
-        ecstream_appendc (stream, c);      
+        ecstream_append_c (stream, c);
       }                  
     }
     
@@ -1013,7 +1013,7 @@ int ecbufit_readln_getbreaks (EcBufferIterator* bufit, EcStream stream)
 
 int ecbufit_readln (EcBufferIterator* bufit)
 {
-  EcStream stream = ecstream_new ();
+  EcStream stream = ecstream_create ();
   int res;
   
   if (bufit->b1 && bufit->b2)
@@ -1030,7 +1030,7 @@ int ecbufit_readln (EcBufferIterator* bufit)
   } 
 
   {  
-    EcBuffer buf = ecstream_trans (&stream);
+    EcBuffer buf = ecstream_tobuf (&stream);
     ecbuf_replace (&(bufit->line), &buf);
   } 
   return res;

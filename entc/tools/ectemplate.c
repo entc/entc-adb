@@ -69,10 +69,10 @@ void ectemplate_newPart (EcTemplate self, EcTemplateStateData sd, int type)
   EcTemplatePart part = ENTC_NEW(struct EcTemplatePart_s);
   
   part->type = type;
-  part->text = ecstream_trans (&(sd->sb));
+  part->text = ecstream_tobuf (&(sd->sb));
   part->parts = eclist_create (ectemplate_create_parts_onDestroy);
 
-  sd->sb = ecstream_new ();
+  sd->sb = ecstream_create ();
   
   eclist_push_back (self->parts, part);
 }
@@ -100,7 +100,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         }
         else
         {
-          ecstream_appendc(sd->sb, *c);
+          ecstream_append_c (sd->sb, *c);
         }
       }
       break;
@@ -114,7 +114,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         else
         {
           sd->state01 = 0;
-          ecstream_appendc(sd->sb, '{');
+          ecstream_append_c (sd->sb, '{');
         }
       }
       break;
@@ -126,7 +126,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         }
         else
         {
-          ecstream_appendc(sd->sb, *c);
+          ecstream_append_c (sd->sb, *c);
         }
       }
       break;
@@ -140,7 +140,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         else
         {
           sd->state01 = 2;
-          ecstream_appendc(sd->sb, '}');
+          ecstream_append_c (sd->sb, '}');
         }
       }
       break;
@@ -154,7 +154,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         else
         {
           sd->state01 = 0;
-          ecstream_appendc(sd->sb, '[');
+          ecstream_append_c (sd->sb, '[');
         }
       }
       break;
@@ -166,7 +166,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         }
         else
         {
-          ecstream_appendc(sd->sb, *c);
+          ecstream_append_c (sd->sb, *c);
         }
       }
       break;
@@ -187,12 +187,12 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if ((*c == '\n')||(*c == '\r'))
         {
-          ecstream_appendc(sd->sb, *c);
+          ecstream_append_c (sd->sb, *c);
           ectemplate_newPart (self, sd, PART_TYPE_CR);
         }
         else
         {
-          ecstream_appendc(sd->sb, *c);
+          ecstream_append_c (sd->sb, *c);
         }
         
         sd->state01 = 0;
@@ -337,14 +337,14 @@ int ectemplate_compile (EcTemplate self, EcErr err)
     EcBuffer buffer;
     struct EcTemplateStateData_s sd;
     sd.state01 = 0;
-    sd.sb = ecstream_new ();
+    sd.sb = ecstream_create ();
 
     buffer = ecbuf_create (1024);
     
     res = q6template_read (self, fh, buffer, &sd, err);
     
     ecbuf_destroy (&buffer);
-    ecstream_delete (&(sd.sb));
+    ecstream_destroy (&(sd.sb));
   }
   
   ecfh_close(&fh);

@@ -110,6 +110,8 @@ SET (CORE_SOURCES_SYS
   system/ecsignal_dos.c
   system/ecdl.h
   system/ecdl.c
+  system/ecdlib.h
+  system/ecdlib.c
   system/ectime.h
   system/ectime.c
   system/ecexec.h
@@ -178,8 +180,6 @@ SET (CORE_SOURCES_TOOLS
   tools/ecxmlstream.c
   tools/ecjson.h
   tools/ecjson.c
-  tools/ecbins.h
-  tools/ecbins.c
   tools/ecmime.h
   tools/ecmime.c
   tools/eclparser.h
@@ -209,6 +209,13 @@ ADD_LIBRARY( entc SHARED ${CORE_SOURCES_SYS} ${CORE_SOURCES_TYPES} ${CORE_SOURCE
 TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 set_target_properties(entc PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
+
+#------------------------------------------------------------------------------
+
+#ADD_EXECUTABLE( ectestapp tests/ectest_app.c )
+#TARGET_LINK_LIBRARIES( ectestapp entc )
+
+#------------------------------------------------------------------------------
 
 SUBDIRS(tests)
 

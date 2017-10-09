@@ -36,7 +36,7 @@ EcLineParser eclineparser_create (fct_eclineparser_onLine onLine, void* ptr)
   
   self->state = SLP_STATE_TEXT;
   
-  self->stream = ecstream_new();
+  self->stream = ecstream_create ();
   
   return self;
 }
@@ -47,7 +47,7 @@ void eclineparser_destroy (EcLineParser* pself)
 {
   EcLineParser self = *pself;
 
-  ecstream_delete(&(self->stream));
+  ecstream_destroy (&(self->stream));
   
   ENTC_DEL(pself, struct EcLineParser_s);
 }
@@ -60,7 +60,7 @@ void eclineparser_recordLineBreak (EcLineParser self)
   {
     if (self->onLine)
     {
-      self->onLine (self->ptr, ecstream_buffer (self->stream));
+      self->onLine (self->ptr, ecstream_get (self->stream));
     }
     
     ecstream_clear (self->stream);
@@ -164,7 +164,7 @@ void eclineparser_parse (EcLineParser self, const char* buffer, int size)
         }
         
         // record char
-        ecstream_appendc(self->stream, *c);
+        ecstream_append_c (self->stream, *c);
         
         break;
       }

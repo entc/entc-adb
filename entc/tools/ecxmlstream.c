@@ -592,7 +592,7 @@ int ecxmlstream_isValue (EcXMLStream self)
 
 int ecxmlstream_checkValue( EcXMLStream self, EcStream stream_tag )
 {
-  EcString value = ecstr_trim( ecstream_buffer(stream_tag) );
+  EcString value = ecstr_trim( ecstream_get (stream_tag) );
   
   ecstream_clear( stream_tag );
 
@@ -654,7 +654,7 @@ void ecxmlstream_logError( EcXMLStream self )
 int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
 {
   /* get the current node name */
-  const EcString node = ecstream_buffer( stream_tag );
+  const EcString node = ecstream_get ( stream_tag );
   
   uint_t lpos = ecstream_size(stream_tag);
   
@@ -782,7 +782,7 @@ int ecxmlstream_do1( EcXMLStream self, EcStream stream_tag )
         else
         {
           /* accumulate all characters for the value */
-          ecstream_appendc( stream_tag, c );
+          ecstream_append_c( stream_tag, c );
         }        
 
         break;
@@ -792,7 +792,7 @@ int ecxmlstream_do1( EcXMLStream self, EcStream stream_tag )
         if( c == '<' )
         {
           /* *** ERROR *** */
-          eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error, found '<' inside node '%s'", ecstream_buffer( stream_tag ));
+          eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error, found '<' inside node '%s'", ecstream_get( stream_tag ));
           
           ecxmlstream_logError(self);
 
@@ -811,7 +811,7 @@ int ecxmlstream_do1( EcXMLStream self, EcStream stream_tag )
         else
         {
           /* accumulate all characters for the node */
-          ecstream_appendc( stream_tag, c );
+          ecstream_append_c( stream_tag, c );
         }
         
       break;
@@ -829,7 +829,7 @@ int ecxmlstream_do1( EcXMLStream self, EcStream stream_tag )
         }
         
         /* accumulate all characters for the value */
-        ecstream_appendc( stream_tag, c );        
+        ecstream_append_c( stream_tag, c );
       }
       break;
       /* ?xml */ 
@@ -861,11 +861,11 @@ int ecxmlstream_do1( EcXMLStream self, EcStream stream_tag )
 
 int ecxmlstream_nextNode( EcXMLStream self )
 {
-  EcStream stream_tag = ecstream_new();
+  EcStream stream_tag = ecstream_create();
   
   int res = ecxmlstream_do1(self, stream_tag);
   
-  ecstream_delete( &stream_tag ); 
+  ecstream_destroy( &stream_tag );
   
   return res;
 }

@@ -483,27 +483,27 @@ void jsonwriter_escape (EcStream stream, const EcString source)
         case '"':
         case '\\':
         {
-          ecstream_appendc (stream, '\\');
-          ecstream_appendc (stream, *c);
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, *c);
         }
         break;
         case '\r':
         {
-          ecstream_appendc (stream, '\\');
-          ecstream_appendc (stream, 'r');
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, 'r');
         }
         break;
         case '\n':
         {
-          ecstream_appendc (stream, '\\');
-          ecstream_appendc (stream, 'n');
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, 'n');
         }
         break;
         default:
         {
           if (*c <= 0x7e)
           {
-            ecstream_appendc (stream, *c);
+            ecstream_append_c (stream, *c);
           }
         }
       }
@@ -511,7 +511,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
   }
   else
   {
-    ecstream_append (stream, "");    
+    ecstream_append_str (stream, "");
   }
 }
 
@@ -527,18 +527,18 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       EcUdc item;
       uint_t counter = 0;
       
-      ecstream_append (stream, "[");
+      ecstream_append_c (stream, '[');
       
       for (item  = ecudc_next (node, &cursor); isAssigned (item); item = ecudc_next (node, &cursor), counter++)
       {
         if (counter > 0)
         {
-          ecstream_appendc (stream, ',');
+          ecstream_append_c (stream, ',');
         }
         jsonwriter_fill (stream, item);
       }
       
-      ecstream_appendc (stream, ']');     
+      ecstream_append_c (stream, ']');
     }
     break;
     case ENTC_UDC_NODE:
@@ -547,21 +547,21 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       EcUdc item;
       uint_t counter = 0;
       
-      ecstream_append (stream, "{");
+      ecstream_append_c (stream, '{');
       
       for (item  = ecudc_next (node, &cursor); isAssigned (item); item = ecudc_next (node, &cursor), counter++)
       {
         if (counter > 0)
         {
-          ecstream_appendc (stream, ',');
+          ecstream_append_c (stream, ',');
         }
-        ecstream_appendc (stream, '"');
+        ecstream_append_c (stream, '"');
         jsonwriter_escape (stream, ecudc_name (item));
-        ecstream_append (stream, "\":");
+        ecstream_append_str (stream, "\":");
         jsonwriter_fill (stream, item);
       }
       
-      ecstream_appendc (stream, '}');     
+      ecstream_append_c (stream, '}');
     }
     break;
     case ENTC_UDC_REF:
@@ -569,9 +569,9 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       EcBuffer buffer = ecbuf_create (64);
       ecbuf_format (buffer, 64, "%p", ecudc_asP (node)); 
       
-      ecstream_appendc (stream, '"');
-      ecstream_append (stream, ecbuf_const_str (buffer));
-      ecstream_appendc (stream, '"');
+      ecstream_append_c (stream, '"');
+      ecstream_append_str (stream, ecbuf_const_str (buffer));
+      ecstream_append_c (stream, '"');
       
       ecbuf_destroy (&buffer);
     }
@@ -583,44 +583,44 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       if (ecstr_leading (text, "##J"))
       {
         // already json encoded
-        ecstream_append (stream, text + 3);
+        ecstream_append_str (stream, text + 3);
       }
       else
       {
-        ecstream_appendc (stream, '"');
+        ecstream_append_c (stream, '"');
         jsonwriter_escape (stream, text);
-        ecstream_appendc (stream, '"');        
+        ecstream_append_c (stream, '"');
       }
     }
     break;
     case ENTC_UDC_BOOL:
     {
-      ecstream_append (stream, ecudc_asBool (node) ? "true" : "false");
+      ecstream_append_str (stream, ecudc_asBool (node) ? "true" : "false");
     }
     break;
     case ENTC_UDC_NONE:
     {
-      ecstream_append (stream, "null");
+      ecstream_append_str (stream, "null");
     }
     break;
     case ENTC_UDC_BYTE:
     {
-      ecstream_appends (stream, ecudc_asByte (node));
+      ecstream_append_i (stream, ecudc_asByte (node));
     }
     break;
     case ENTC_UDC_UBYTE:
     {
-      ecstream_appendu (stream, ecudc_asUByte (node));
+      ecstream_append_u (stream, ecudc_asUByte (node));
     }
     break;
     case ENTC_UDC_INT16:
     {
-      ecstream_appends (stream, ecudc_asInt16 (node));
+      ecstream_append_i (stream, ecudc_asInt16 (node));
     }
     break;
     case ENTC_UDC_UINT16:
     {
-      ecstream_appendu (stream, ecudc_asUInt16 (node));
+      ecstream_append_u (stream, ecudc_asUInt16 (node));
     }
     break;
     case ENTC_UDC_INT32:
@@ -628,34 +628,34 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       int res = TRUE;
       int32_t h = ecudc_asInt32 (node, &res);
       
-      ecstream_appendu (stream, h);
+      ecstream_append_u (stream, h);
     }
     break;
     case ENTC_UDC_UINT32:
     {
-      ecstream_appendu (stream, ecudc_asUInt32 (node));
+      ecstream_append_u (stream, ecudc_asUInt32 (node));
     }
     break;
     case ENTC_UDC_INT64:
     {
-      ecstream_appends (stream, ecudc_asInt64 (node));
+      ecstream_append_i (stream, ecudc_asInt64 (node));
     }
     break;
     case ENTC_UDC_UINT64:
     {
-      ecstream_appendu (stream, ecudc_asUInt64 (node));
+      ecstream_append_u (stream, ecudc_asUInt64 (node));
     }
     break;
     case ENTC_UDC_TIME:
     {
-      ecstream_appendt (stream, ecudc_asTime (node));
+      ecstream_append_u (stream, ecudc_asTime (node));
     }
     break;
     case ENTC_UDC_DOUBLE:
     {
       EcString h = ecstr_float (ecudc_asDouble(node), 10);
       
-      ecstream_append (stream, h);
+      ecstream_append_str (stream, h);
       
       ecstr_delete(&h);
     }
@@ -669,11 +669,11 @@ EcString ecjson_write (const EcUdc source)
 {
   EcBuffer buffer;
   
-  EcStream stream = ecstream_new ();
+  EcStream stream = ecstream_create ();
   
   jsonwriter_fill (stream, source);
   
-  buffer = ecstream_trans (&stream);
+  buffer = ecstream_tobuf (&stream);
   
   return ecbuf_str (&buffer);  
 }

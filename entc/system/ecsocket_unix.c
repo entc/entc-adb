@@ -447,7 +447,7 @@ int ecsocket_writeStream (EcSocket self, EcStream stream)
 {
   uint_t size = ecstream_size( stream );
   
-  return ecsocket_write(self, ecstream_buffer(stream), size);    
+  return ecsocket_write(self, ecstream_get (stream), size);
 }
 
 //-----------------------------------------------------------------------------------

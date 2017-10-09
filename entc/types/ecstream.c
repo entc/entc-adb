@@ -1,260 +1,247 @@
-/*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
- *
- * This file is part of the extension n' tools (entc-base) framework for C.
- *
- * entc-base is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * entc-base is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ecstream.h"
 
-#include <system/ecfile.h>
+// entc includes
+#include "system/macros.h"
+#include "system/ecfile.h"
 
+// c includes
+#include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
-#include <fcntl.h>
+#include <memory.h>
+#include <limits.h>
+
+//-----------------------------------------------------------------------------
 
 struct EcStream_s
 {
-  EcBuffer buffer;
   
-  unsigned char* pos;
+  unsigned long size;
+  
+  char* buffer;
+  
+  char* pos;
+  
 };
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-EcStream ecstream_new(void)
+unsigned long ecstream_size (EcStream self)
+{
+  return self->pos - self->buffer;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecstream_allocate (EcStream self, unsigned long amount)
+{
+  // safe how much we have used from the buffer
+  unsigned long usedBytes = ecstream_size (self);
+  
+  // use realloc to minimalize coping the buffer
+  self->size += amount;
+  self->buffer = realloc(self->buffer, self->size);
+  
+  // reset the position
+  self->pos = self->buffer + usedBytes;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecstream_reserve (EcStream self, unsigned long amount)
+{
+  unsigned long diffBytes = ecstream_size (self) + amount + 1;
+  
+  if (diffBytes > self->size)
+  {
+    if (amount > self->size)
+    {
+      ecstream_allocate (self, amount);
+    }
+    else
+    {
+      ecstream_allocate (self, self->size + self->size);
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+EcStream ecstream_create ()
 {
   EcStream self = ENTC_NEW(struct EcStream_s);
-
-  self->buffer = ecbuf_create (1000);
-  self->pos = self->buffer->buffer;
+  
+  self->size = 0;
+  self->buffer = 0;
+  self->pos = self->buffer;
+  
+  // initial alloc
+  ecstream_allocate (self, 1024);
+  
+  // clean
+  ecstream_clear (self);
   
   return self;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_flush(EcStream self)
-{
-  
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstream_delete(EcStream* pself)
+void ecstream_destroy (EcStream* pself)
 {
   EcStream self = *pself;
   
-  ecstream_flush(self);
+  free (self->buffer);
   
-  ecbuf_destroy (&(self->buffer));
-  
-  ENTC_DEL(pself, struct EcStream_s);
+  ENTC_DEL (pself, struct EcStream_s);
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_clear( EcStream self )
-{
-  // reset the position pointer
-  self->pos = self->buffer->buffer;
-  *(self->pos) = 0;
-}
-
-/*------------------------------------------------------------------------*/
-
-EcBuffer ecstream_trans (EcStream* pself)
+EcBuffer ecstream_tobuf (EcStream* pself)
 {
   EcStream self = *pself;
+  EcBuffer ret = ENTC_NEW (EcBuffer_s);
   
-  EcBuffer ret = self->buffer;
-  
-  ecstream_flush(self);
   ret->size = ecstream_size (self);
+  ret->buffer = (unsigned char*)self->buffer;
   
   ENTC_DEL(pself, struct EcStream_s);
   
   return ret;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-const EcString ecstream_buffer( EcStream self )
+void ecstream_clear (EcStream self)
 {
-  return (EcString)self->buffer->buffer;
+  self->pos = self->buffer;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_check (EcStream self, uint_t size)
+const char* ecstream_get (EcStream self)
 {
-  // already filled bytes
-  uint_t filled = ecstream_size (self);
-
-  // calculate the minimum size we need
-  uint_t minSize = filled + size;
-  
-  // calculate how many free bytes we still have in the buffer
-  uint_t bytesRemain = self->buffer->size - filled - 1;
-  
-  if (minSize > bytesRemain)
-  {
-    uint_t newSize = minSize + self->buffer->size;
-
-    //printf("*** resize (%p) *** %u -> %u (%u) [%u]\n", self, self->buffer->size, newSize, size, filled);
-    
-    ecbuf_resize (self->buffer, newSize);  
-    
-    // set new position in possible new buffer
-    self->pos = self->buffer->buffer + filled;          
-  }
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstream_appendStream (EcStream self, EcStream source)
-{
-  uint_t size = ecstream_size (source);
-  
-  if (size > 0)
-  {
-    ecstream_check (self, size);
-    
-    // copy the source to the buffer
-    memcpy (self->pos, source->buffer->buffer, size);
-    
-    self->pos = self->pos + size;
-    
-    // terminate
-    *(self->pos) = 0;
-  }  
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstream_appendd (EcStream self, const EcString source, uint_t size)
-{
-  if (size > 0)
-  {
-    ecstream_check (self, size);
-    
-    // copy the source to the buffer
-    memcpy (self->pos, source, size);
-    
-    self->pos = self->pos + size;
-    // terminate
-    *(self->pos) = 0;
-  }
-}
-
-/*------------------------------------------------------------------------*/
-
-ulong_t ecstream_registerOffset (EcStream self, ulong_t size)
-{
-  ulong_t pos = self->pos - self->buffer->buffer;
-  
-  ecstream_check(self, size);
-
-  self->pos = self->pos + size;
+  // set terminator
   *(self->pos) = 0;
   
-  return pos;
+  return self->buffer;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_fillOffset (EcStream self, ulong_t offset, const EcString source, ulong_t size)
+void ecstream_append_str (EcStream self, const char* s)
 {
-  memcpy(self->buffer->buffer + offset, source, size);  
+  if (s)
+  {
+    // need to find the length
+    ecstream_append_buf (self, s, strlen(s));
+  }
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_append( EcStream self, const EcString source )
+void ecstream_append_buf (EcStream self, const char* buffer, unsigned long size)
+{
+  if (size > 0)
+  {
+    ecstream_reserve (self, size);
+    
+    memcpy (self->pos, buffer, size);
+    self->pos += size;
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+void ecstream_append_fmt (EcStream self, const char* format, ...)
 {
   // variables
-  uint_t size = 0;
-
-  // check the value
-  if( ecstr_empty(source) )
+  va_list valist;
+  va_start (valist, format);
+  
+#ifdef _MSC_VER
+  
   {
-    return;  
+    int len = _vscprintf (format, valist) + 1;
+    
+    ecstream_reserve (self, len);
+    
+    len = vsprintf_s (self->pos, len, format, valist);
+    
+    self->pos += len;
   }
-  // size of the source
-  size = strlen(source);
   
-  ecstream_appendd(self, source, size);
+#elif _GCC
+  
+  {
+    char* strp;
+    
+    int bytesWritten = vasprintf (&strp, format, valist);
+    if ((bytesWritten > 0) && strp)
+    {
+      ecstream_append_buf (self, strp, bytesWritten);
+      free(strp);
+    }
+  }
+  
+#elif __BORLANDC__
+  
+  {
+    int len = 1024;
+    
+    ecstream_reserve (self, len);
+    
+    len = vsnprintf (self->pos, len, format, valist);
+    
+    self->pos += len;
+  }
+  
+#endif
+  
+  va_end(valist);
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_appendc ( EcStream self, char c )
+void ecstream_append_c (EcStream self, char c)
 {
-  ecstream_check(self, 1);  
-  // copy the source to the buffer
+  ecstream_reserve (self, 1);
+  
   *(self->pos) = c;
-  (self->pos)++;
-  // add termination at the end
-  *(self->pos) = 0;   
+  self->pos++;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_appends (EcStream self, int64_t val)
+void ecstream_append_u (EcStream self, unsigned long val)
 {
-  // create buffer with size 12
-  EcBuffer buffer = ecbuf_create (12);
-  // transform unsigned value into string */  
-  ecbuf_format (buffer, 11, "%i", val);
-
-  ecstream_append (self, (const char*)buffer->buffer);
+  ecstream_reserve (self, 26);  // for very long intergers
   
-  ecbuf_destroy(&buffer);
+  self->pos += snprintf(self->pos, 24, "%u", val);
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
 
-void ecstream_appendu( EcStream self, uint64_t value )
+void ecstream_append_i (EcStream self, long val)
 {
-  EcString h = ecstr_long(value);
-  /* add */
-  ecstream_append( self, h );
+  ecstream_reserve (self, 26);  // for very long intergers
   
-  ecstr_delete(&h);
+  self->pos += snprintf(self->pos, 24, "%i", val);
 }
 
-//---------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-void ecstream_appendt (EcStream self, const time_t* value)
+void ecstream_append_stream (EcStream self, EcStream stream)
 {
-  char buffer [32];
-#ifdef _WIN32
-  _snprintf_s (buffer, 30, _TRUNCATE, "%lu", (unsigned long)*value);
-#else
-  snprintf(buffer, 30, "%lu", (unsigned long)*value);
-#endif  
-  ecstream_append (self, buffer);
+  unsigned long usedBytes = stream->pos - stream->buffer;
+  
+  ecstream_reserve (self, usedBytes);
+  
+  memcpy (self->pos, stream->buffer, usedBytes);
+  self->pos += usedBytes;
 }
 
-/*------------------------------------------------------------------------*/
-
-uint_t ecstream_size( EcStream self )
-{
-  return self->pos - self->buffer->buffer;
-}
-
-//---------------------------------------------------------------------------------------
+//=======================================================================================
 
 struct EcDevStream_s
 {
@@ -280,7 +267,7 @@ EcDevStream ecdevstream_new (uint_t size, stream_callback_fct fct, void* ptr)
   self->fct = fct;
   self->ptr = ptr;
   
-  return self;  
+  return self;
 }
 
 //---------------------------------------------------------------------------------------
@@ -293,7 +280,7 @@ void ecdevstream_delete (EcDevStream* pself)
   
   ecbuf_destroy (&(self->buffer));
   
-  ENTC_DEL(pself, struct EcDevStream_s);  
+  ENTC_DEL(pself, struct EcDevStream_s);
 }
 
 //---------------------------------------------------------------------------------------
@@ -346,7 +333,7 @@ void ecdevstream_appends (EcDevStream self, const EcString source)
   // check the value
   if( ecstr_empty(source) )
   {
-    return;  
+    return;
   }
   
   ecdevstream_append (self, (void*)source, strlen(source));
@@ -367,7 +354,7 @@ void ecdevstream_appendu (EcDevStream self, uint_t value)
   /* add */
   ecdevstream_appends ( self, h );
   
-  ecstr_delete(&h);  
+  ecstr_delete(&h);
 }
 
 //---------------------------------------------------------------------------------------
@@ -375,9 +362,10 @@ void ecdevstream_appendu (EcDevStream self, uint_t value)
 void ecdevstream_appendfile (EcDevStream self, const EcString filename)
 {
   EcFileHandle fh = ecfh_open(filename, O_RDONLY);
-  if (fh) {
+  if (fh)
+  {
     EcBuffer buffer = ecbuf_create (1024);
-
+    
     uint_t res = ecfh_readBuffer(fh, buffer);
     while (res > 0)
     {
@@ -387,11 +375,12 @@ void ecdevstream_appendfile (EcDevStream self, const EcString filename)
     
     ecfh_close(&fh);
     
-    ecbuf_destroy (&buffer);    
-  } else {
+    ecbuf_destroy (&buffer);
+  }
+  else
+  {
     ecdevstream_appends (self, "fle read error");
   }
 }
 
 //---------------------------------------------------------------------------------------
-

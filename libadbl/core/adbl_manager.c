@@ -226,34 +226,34 @@ void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char*
         //create the filename
         if( isfile == TRUE )
         {
-          EcStream file = ecstream_new();
+          EcStream file = ecstream_create ();
           
           if( fileprefix )
           {
-            ecstream_append( file, fileprefix );
-            ecstream_append( file, "_" );
+            ecstream_append_str ( file, fileprefix );
+            ecstream_append_str ( file, "_" );
             ecstr_delete (&fileprefix );  
           }
 
           if( pc->properties.schema )
           {
-            ecstream_append( file, pc->properties.schema );
+            ecstream_append_str ( file, pc->properties.schema );
           }
 
           if( filextension )
           {
-            ecstream_append( file, filextension );
+            ecstream_append_str ( file, filextension );
             ecstr_delete (&filextension);  
           }
           else
           {
-            ecstream_append( file, ".db" );
+            ecstream_append_str ( file, ".db" );
           }
           
-          pc->properties.file = ecfs_mergeToPath(confpath, ecstream_buffer( file ));
+          pc->properties.file = ecfs_mergeToPath(confpath, ecstream_get( file ));
           
           /* clean up */
-          ecstream_delete(&file);
+          ecstream_destroy(&file);
         }
       }
       else
@@ -679,32 +679,32 @@ void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath
           const EcString fileprefix = ecudc_get_asString(item, "prefix", NULL);
           const EcString filextension = ecudc_get_asString(item, "ext", NULL);
           
-          EcStream file = ecstream_new();
+          EcStream file = ecstream_create ();
           
           if( fileprefix )
           {
-            ecstream_append( file, fileprefix );
-            ecstream_append( file, "_" );
+            ecstream_append_str ( file, fileprefix );
+            ecstream_append_str ( file, "_" );
           }
           
           if( pc->properties.schema )
           {
-            ecstream_append( file, pc->properties.schema );
+            ecstream_append_str ( file, pc->properties.schema );
           }
           
           if( filextension )
           {
-            ecstream_append( file, filextension );
+            ecstream_append_str ( file, filextension );
           }
           else
           {
-            ecstream_append( file, ".db" );
+            ecstream_append_str ( file, ".db" );
           }
           
-          pc->properties.file = ecfs_mergeToPath (configpath, ecstream_buffer( file ));
+          pc->properties.file = ecfs_mergeToPath (configpath, ecstream_get( file ));
           
           /* clean up */
-          ecstream_delete(&file);
+          ecstream_destroy (&file);
         }
       }
     }
