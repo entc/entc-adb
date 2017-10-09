@@ -91,10 +91,6 @@ SET (CORE_SOURCES_SYS
   system/ecmutex_win.c
   system/ecmutex_unix.c
   system/ecmutex_dos.c
-  system/ecsocket.h
-  system/ecsocket_win.c
-  system/ecsocket_unix.c
-  system/ecsocket_dos.c
   system/ecevents.h
   system/ecevents_win.c
   system/ecevents_bsd.c
@@ -119,6 +115,18 @@ SET (CORE_SOURCES_SYS
   system/ecexec_win.c
   system/ecrefcnt.h
   system/ecrefcnt.c
+  system/ecaio.h
+  system/ecaio.c
+  system/ecaio_ctx.h
+  system/ecaio_ctx.c
+  system/ecaio_notify.h
+  system/ecaio_notify.c
+  system/ecaio_file.h
+  system/ecaio_file.c
+  system/ecaio_socket.h
+  system/ecaio_socket.c
+  system/ecaio_sendf.h
+  system/ecaio_sendf.c
 )
 
 SET (CORE_SOURCES_TYPES
@@ -163,8 +171,6 @@ SET (CORE_SOURCES_UTILS
   utils/ecreadbuffer.c
   utils/ecsmartbuffer.h
   utils/ecsmartbuffer.c
-  utils/ecstreambuffer.h
-  utils/ecstreambuffer.c
   utils/ecobserver.h
   utils/ecobserver.c
   utils/ecsecfile.h
@@ -172,10 +178,6 @@ SET (CORE_SOURCES_UTILS
 )
 
 SET (CORE_SOURCES_TOOLS
-  tools/echttp.h
-  tools/echttp.c
-  tools/echtml.h
-  tools/echtml.c
   tools/ecxmlstream.h
   tools/ecxmlstream.c
   tools/ecjson.h
@@ -184,6 +186,8 @@ SET (CORE_SOURCES_TOOLS
   tools/ecmime.c
   tools/eclparser.h
   tools/eclparser.c
+  tools/ecjparser.h
+  tools/ecjparser.c
   tools/ectokenizer.h
   tools/ectokenizer.c
 
@@ -212,8 +216,24 @@ set_target_properties(entc PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
 
 #------------------------------------------------------------------------------
 
-#ADD_EXECUTABLE( ectestapp tests/ectest_app.c )
-#TARGET_LINK_LIBRARIES( ectestapp entc )
+find_package(Lua)
+
+IF(LUA_LIBRARIES)
+
+MESSAGE(STATUS "lua library found at ${LUA_LIBRARIES}" )
+
+INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
+
+SET (CORE_SOURCES_TESTAPP
+  tests/eclua.h
+  tests/eclua.c
+  tests/ectest_app.c
+)
+
+ADD_EXECUTABLE( ectestapp ${CORE_SOURCES_TESTAPP} )
+TARGET_LINK_LIBRARIES( ectestapp entc ${LUA_LIBRARIES})
+
+ENDIF(LUA_LIBRARIES )
 
 #------------------------------------------------------------------------------
 

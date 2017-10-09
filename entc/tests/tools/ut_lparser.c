@@ -49,6 +49,8 @@ static void __STDCALL test_stdlparser_done (void* ptr)
 
 static int __STDCALL test_stdlparser_test1 (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  EcLineParser slp;
+
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   
   // test1
@@ -61,7 +63,7 @@ static int __STDCALL test_stdlparser_test1 (void* ptr, TestEnvContext tctx, EcEr
   
   ctx->tctx = tctx;
   
-  EcLineParser slp = ctx->slp;
+  slp = ctx->slp;
   
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);
@@ -75,6 +77,8 @@ static int __STDCALL test_stdlparser_test1 (void* ptr, TestEnvContext tctx, EcEr
 
 static int __STDCALL test_stdlparser_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  EcLineParser slp;
+
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   
   // test1
@@ -90,7 +94,7 @@ static int __STDCALL test_stdlparser_test2 (void* ptr, TestEnvContext tctx, EcEr
   
   ctx->tctx = tctx;
   
-  EcLineParser slp = ctx->slp;
+  slp = ctx->slp;
   
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);
@@ -104,6 +108,8 @@ static int __STDCALL test_stdlparser_test2 (void* ptr, TestEnvContext tctx, EcEr
 
 static int __STDCALL test_stdlparser_test3 (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  EcLineParser slp;
+
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   
   // test1
@@ -118,7 +124,7 @@ static int __STDCALL test_stdlparser_test3 (void* ptr, TestEnvContext tctx, EcEr
   
   ctx->tctx = tctx;
   
-  EcLineParser slp = ctx->slp;
+  slp = ctx->slp;
   
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);
@@ -132,6 +138,8 @@ static int __STDCALL test_stdlparser_test3 (void* ptr, TestEnvContext tctx, EcEr
 
 static int __STDCALL test_stdlparser_test4 (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  EcLineParser slp;
+
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   
   // test1
@@ -146,7 +154,7 @@ static int __STDCALL test_stdlparser_test4 (void* ptr, TestEnvContext tctx, EcEr
   
   ctx->tctx = tctx;
   
-  EcLineParser slp = ctx->slp;
+  slp = ctx->slp;
   
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);

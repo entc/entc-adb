@@ -34,8 +34,9 @@ static void __STDCALL test_stdlist_done (void* ptr)
 static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
   EcList h = ptr;
+  int i;
   
-  for (int i = 0; i < 10; i++)
+  for (i = 0; i < 10; i++)
   {
     void* data = malloc(42);
     
@@ -47,7 +48,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   eclist_clear (h);
   
   // prepare compare values
-  for (int i = 0; i < 5; i++)
+  for (i = 0; i < 5; i++)
   {
     void* data = malloc(42);
     sprintf((char*)data, "hello world [%i]", i);
@@ -90,14 +91,15 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   // combine
   {
     EcListCursor* cursor = eclist_cursor_create (h, 1);
-    
+    void* data;    
+
     eclist_cursor_next (cursor);    // 0
     eclist_cursor_next (cursor);    // 1
     eclist_cursor_next (cursor);    // 2
     
     eclist_cursor_prev (cursor);    // 1
     
-    void* data = eclist_data (cursor->node);
+    data = eclist_data (cursor->node);
     
     printf ("comb: %s\n", data);
     
@@ -112,13 +114,14 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
 static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcList h = ptr;
+  int i;
   
   eclist_clear (h);
   
   // check ************
   testctx_assert (tctx, eclist_size (h) == 0, "check size #1");
   
-  for (int i = 0; i < 5; i++)
+  for (i = 0; i < 5; i++)
   {
     void* data = malloc(42);
     eclist_push_back (h, data);
@@ -154,24 +157,25 @@ static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx, EcErr e
 static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcList h = ptr;
+  int i;
+  EcListNode fpos;
+  EcListNode lpos;
   
   eclist_clear (h);
   
   // check ************
   testctx_assert (tctx, eclist_size (h) == 0, "check size #1");
   
-  for (int i = 0; i < 10; i++)
+  for (i = 0; i < 10; i++)
   {
     void* data = malloc(42);
     sprintf((char*)data, "cloud [%i]", i);
     
     eclist_push_back (h, data);
   }
-  
-  EcListNode fpos;
-  EcListNode lpos;
-  
+    
   {
+    EcList slice;
     EcListCursor cursor;
     
     eclist_cursor_init (h, &cursor, LIST_DIR_NEXT);
@@ -196,7 +200,7 @@ static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx, EcErr e
     
     testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #7");
     
-    EcList slice = eclist_slice (h, fpos, lpos);
+    slice = eclist_slice (h, fpos, lpos);
     
     testctx_assert (tctx, eclist_size (slice) == 4, "check size slice");
     testctx_assert (tctx, eclist_size (h) == 6, "check rest slice");

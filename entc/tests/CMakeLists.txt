@@ -8,6 +8,20 @@ enable_testing()
 
 set(CTEST_PROJECT_NAME "entc tests")
 
+#----------- system ----------------------------------------------
+
+ADD_EXECUTABLE( ut_ecfile system/ut_ecfile.c )
+TARGET_LINK_LIBRARIES( ut_ecfile entc )
+add_test(ut_ecfile tests/Debug/ut_ecfile)
+
+ADD_EXECUTABLE( ut_ecaio system/ut_ecaio.c )
+TARGET_LINK_LIBRARIES( ut_ecaio entc )
+add_test(ut_ecaio tests/Debug/ut_ecaio)
+
+ADD_EXECUTABLE( ut_ecexec system/ut_ecexec.c )
+TARGET_LINK_LIBRARIES( ut_ecexec entc )
+add_test(ut_ecexec tests/Debug/ut_ecexec)
+
 #----------- types -----------------------------------------------
 
 ADD_EXECUTABLE( ut_ecmap types/ut_ecmap.c )
@@ -44,16 +58,15 @@ ADD_EXECUTABLE( ut_ectemplate tools/ut_ectemplate.c )
 TARGET_LINK_LIBRARIES( ut_ectemplate entc )
 add_test(ut_ectemplate tests/Debug/ut_ectemplate)
 
-#----------- types -----------------------------------------------
+ADD_EXECUTABLE( ut_ecjparser tools/ut_ecjparser.c )
+TARGET_LINK_LIBRARIES( ut_ecjparser entc )
+add_test(ut_ecjparser tests/Debug/ut_ecjparser)
 
-ADD_EXECUTABLE( ut_ecfile system/ut_ecfile.c )
-TARGET_LINK_LIBRARIES( ut_ecfile entc )
-add_test(ut_ecfile tests/Debug/ut_ecfile)
+ADD_EXECUTABLE( ut_ecjson tools/ut_ecjson )
+TARGET_LINK_LIBRARIES( ut_ecjson entc )
+add_test(ut_ecjson tests/Debug/ut_ecjson)
 
-ADD_EXECUTABLE( ut_ecexec system/ut_ecexec.c )
-TARGET_LINK_LIBRARIES( ut_ecexec entc )
-add_test(ut_ecexec tests/Debug/ut_ecexec)
-
+#-----------------------------------------------------------------
 
 
 #ADD_EXECUTABLE( unittest_exec system/unittest_exec.c )

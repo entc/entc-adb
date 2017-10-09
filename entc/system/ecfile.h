@@ -20,11 +20,13 @@
 #ifndef ENTC_SYSTEM_FILE_H
 #define ENTC_SYSTEM_FILE_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "system/macros.h"
+#include "system/types.h"
 
-#include "../types/ecstring.h"
-#include "../types/ecbuffer.h"
+#include "types/ecstring.h"
+#include "types/ecbuffer.h"
+
+#include "types/ecerr.h"
 
 /* definitions for all platforms */
 #define ENTC_FILETYPE_ISNONE  0
@@ -134,6 +136,8 @@ __CPP_EXTERN____________________________________________________________________
 __LIB_EXPORT int ecfs_move (const EcString source, const EcString dest);
 
 __LIB_EXPORT int ecfs_copy (const EcString source, const EcString dest);
+
+__LIB_EXPORT int ecfs_cpdir (const EcString source, const EcString dest, EcErr err);
 
 __LIB_EXPORT int ecfs_mkdir (const EcString source);
 

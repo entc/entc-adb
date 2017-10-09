@@ -73,8 +73,8 @@ EcExec ecexec_new (const EcString script)
   self->outPipe.hr = NULL;
   self->outPipe.hw = NULL;
 
-  self->outPipe.stream = ecstream_new();
-  self->errPipe.stream = ecstream_new();
+  self->outPipe.stream = ecstream_create ();
+  self->errPipe.stream = ecstream_create ();
   
   return self;
 }
@@ -175,7 +175,7 @@ void ecexec_loop (EcExec self, HANDLE processh)
 	  pipe->buffer[cbRet] = 0;
   	  eclogger_fmt (LL_TRACE, "ENTC", "exec", "recv '%s'", pipe->buffer);
 
-	  ecstream_appendd (pipe->stream, pipe->buffer, cbRet);
+	  ecstream_append_buf (pipe->stream, pipe->buffer, cbRet);
 
 	}
 
@@ -280,14 +280,14 @@ int ecexec_run (EcExec self)
 
 const EcString ecexec_stdout (EcExec self)
 {
-  return ecstream_buffer(self->outPipe.stream);
+  return ecstream_get (self->outPipe.stream);
 }
 
 //-----------------------------------------------------------------------------------
 
 const EcString ecexec_stderr (EcExec self)
 {
-  return ecstream_buffer(self->errPipe.stream);
+  return ecstream_get (self->errPipe.stream);
 }
 
 //-----------------------------------------------------------------------------------

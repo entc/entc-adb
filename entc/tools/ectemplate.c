@@ -239,12 +239,13 @@ void ectemplate_sections_tag (EcTemplate self, EcTemplatePart part, EcMap sectio
             partFrom->type = PART_TYPE_NONE;
           }
         }
+        {
+          // extract a part
+          EcList slice = eclist_slice (self->parts, iFrom, node);
         
-        // extract a part
-        EcList slice = eclist_slice (self->parts, iFrom, node);
-        
-        eclist_insert_slice (part->parts, cursor, &slice);
-        
+          eclist_insert_slice (part->parts, cursor, &slice);
+        }        
+
         //node = eclist_splice (self->parts, iFrom, node, part->parts);
         
         // override part content

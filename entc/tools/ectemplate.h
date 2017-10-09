@@ -20,6 +20,8 @@
 #ifndef ENTC_TOOLS_TEMPLATE_H
 #define ENTC_TOOLS_TEMPLATE_H 1
 
+//-----------------------------------------------------------------------------
+
 // entc includes
 #include <types/ecerr.h>
 #include "types/ecstring.h"
@@ -29,15 +31,19 @@
 
 struct EcTemplate_s; typedef struct EcTemplate_s* EcTemplate;
 
+//-----------------------------------------------------------------------------
+
 typedef int (__STDCALL *fct_ectemplate_onText) (void* ptr, const char* text);
 typedef int (__STDCALL *fct_ectemplate_onFile) (void* ptr, const char* file);
 
-EcTemplate ectemplate_create (const char* path, const char* name, const char* lang, EcErr);
+//-----------------------------------------------------------------------------
 
-void ectemplate_destroy (EcTemplate*);
+__LIBEX EcTemplate ectemplate_create (const char* path, const char* name, const char* lang, EcErr);
 
-int ectemplate_apply (EcTemplate, EcUdc node, void* ptr, fct_ectemplate_onText, fct_ectemplate_onFile, EcErr);
+__LIBEX void ectemplate_destroy (EcTemplate*);
 
-//=============================================================================
+__LIBEX int ectemplate_apply (EcTemplate, EcUdc node, void* ptr, fct_ectemplate_onText, fct_ectemplate_onFile, EcErr);
+
+//-----------------------------------------------------------------------------
 
 #endif

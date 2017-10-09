@@ -363,6 +363,15 @@ int ecfs_copy (const EcString source, const EcString dest)
 
 //--------------------------------------------------------------------------------
 
+int ecfs_cpdir (const EcString source, const EcString dest, EcErr err)
+{
+  
+  
+  return ENTC_ERR_NONE;
+}
+
+//--------------------------------------------------------------------------------
+
 int ecfs_mkdir (const EcString source)
 {
   return mkdir (source, 0770) == 0;

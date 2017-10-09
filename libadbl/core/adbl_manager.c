@@ -595,11 +595,12 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
 
 void adbl_scanJsonFromFile (const EcString configpath, EcUdc* pdata)
 {
+  int res;
   EcString filename = ecfs_mergeToPath (configpath, "adbl.json");
   
   eclogger_fmt (LL_TRACE, MODULE, "scan", "using config '%s'", filename);
   
-  int res = ecjson_readFromFile (filename, pdata);
+  res = ecjson_readFromFile (filename, pdata);
   if (res != ENTC_RESCODE_OK)
   {
     eclogger_fmt (LL_WARN, MODULE, "scan", "can't read json file '%s'", filename);
@@ -613,19 +614,20 @@ void adbl_scanJsonFromFile (const EcString configpath, EcUdc* pdata)
 
 void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath, const EcString execpath)
 {
+  EcUdc databases;
+  void* cursor = NULL;
+  EcUdc item;
+
   ecstr_replace (&(self->path), ecudc_get_asString(data, "path", NULL));
   
   adbl_validate_config (self, configpath, execpath);
   
-  EcUdc databases = ecudc_node(data, "databases");
+  databases = ecudc_node(data, "databases");
   if (databases == NULL)
   {
     eclogger_fmt (LL_WARN, MODULE, "scan", "can't find databases in json");
     return;
   }
-  
-  void* cursor = NULL;
-  EcUdc item;
   
   for (item = ecudc_next(databases, &cursor); item; item = ecudc_next(databases, &cursor))
   {
@@ -656,6 +658,8 @@ void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath
       }
       
       {
+        EcUdc file;
+
         //create new credential
         AdblCredentials* pc = adbl_credentials_new (dbtype);
         pc->pp = pp;
@@ -673,7 +677,7 @@ void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath
         
         pc->properties.schema = ecstr_copy (ecudc_get_asString(item, "schema", NULL));
         
-        EcUdc file = ecudc_node (item, "file");
+        file = ecudc_node (item, "file");
         if (file)
         {
           const EcString fileprefix = ecudc_get_asString(item, "prefix", NULL);
@@ -860,7 +864,7 @@ int adbl_dbprocedure (AdblSession session, AdblProcedure* procedure, AdblSecurit
   if (isNotAssigned (pc->pp))
   {
     eclogger_msg (LL_ERROR, MODULE, "dbquery", "credentials without database" );
-    return NULL;
+    return 0;
   }
 
   if (isNotAssigned(pc->connection))
