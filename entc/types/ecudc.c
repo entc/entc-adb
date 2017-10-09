@@ -452,25 +452,9 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       break;
     case ENTC_UDC_STRING: self->extension = ecudc_sitem_new (alloc); 
       break;
-    case ENTC_UDC_BYTE: self->extension = ECMM_NEW (byte_t);
+    case ENTC_UDC_NUMBER: self->extension = ECMM_NEW (int64_t);
       break;
-    case ENTC_UDC_UBYTE: self->extension = ECMM_NEW (ubyte_t);
-      break;
-    case ENTC_UDC_INT16: self->extension = ECMM_NEW (int16_t); 
-      break;
-    case ENTC_UDC_UINT16: self->extension = ECMM_NEW (uint16_t); 
-      break;
-    case ENTC_UDC_INT32: self->extension = ECMM_NEW (int32_t); 
-      break;
-    case ENTC_UDC_UINT32: self->extension = ECMM_NEW (uint32_t); 
-      break;
-    case ENTC_UDC_INT64: self->extension = ECMM_NEW (int64_t); 
-      break;
-    case ENTC_UDC_UINT64: self->extension = ECMM_NEW (uint64_t); 
-      break;
-    case ENTC_UDC_FLOAT: self->extension = ECMM_NEW (float);
-      break;
-    case ENTC_UDC_DOUBLE: self->extension = ECMM_NEW (double); 
+    case ENTC_UDC_DOUBLE: self->extension = ECMM_NEW (double);
       break;
     case ENTC_UDC_TIME: self->extension = ECMM_NEW (time_t);
       break;
@@ -575,23 +559,7 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
       break;
     case ENTC_UDC_REF: self->extension = NULL;
       break;
-    case ENTC_UDC_BYTE: ENTC_DEL (&(self->extension), byte_t);
-      break;
-    case ENTC_UDC_UBYTE: ENTC_DEL (&(self->extension), ubyte_t);
-      break;
-    case ENTC_UDC_INT16: ENTC_DEL (&(self->extension), int16_t);
-      break;
-    case ENTC_UDC_UINT16: ENTC_DEL (&(self->extension), uint16_t);
-      break;
-    case ENTC_UDC_INT32: ENTC_DEL (&(self->extension), int32_t);
-      break;
-    case ENTC_UDC_UINT32: ENTC_DEL (&(self->extension), uint32_t);
-      break;
-    case ENTC_UDC_INT64: ENTC_DEL (&(self->extension), int64_t);
-      break;
-    case ENTC_UDC_UINT64: ENTC_DEL (&(self->extension), uint64_t);
-      break;
-    case ENTC_UDC_FLOAT: ENTC_DEL (&(self->extension), float);
+    case ENTC_UDC_NUMBER: ENTC_DEL (&(self->extension), int64_t);
       break;
     case ENTC_UDC_DOUBLE: ENTC_DEL (&(self->extension), double);
       break;
@@ -739,49 +707,9 @@ EcUdc ecudc_clone (EcAlloc alloc, const EcUdc orig)
       self->extension = orig->extension;
       break;
     }
-    case ENTC_UDC_BYTE:
-    {
-      self->extension = ECMM_NEW (byte_t); memcpy(self->extension, orig->extension, sizeof(byte_t));
-      break;
-    }
-    case ENTC_UDC_UBYTE:
-    {
-      self->extension = ECMM_NEW (ubyte_t); memcpy(self->extension, orig->extension, sizeof(ubyte_t));
-      break;
-    }
-    case ENTC_UDC_INT16:
-    {
-      self->extension = ECMM_NEW (int16_t); memcpy(self->extension, orig->extension, sizeof(int16_t));
-      break;
-    }
-    case ENTC_UDC_UINT16:
-    {
-      self->extension = ECMM_NEW (uint16_t); memcpy(self->extension, orig->extension, sizeof(uint16_t));
-      break;
-    }
-    case ENTC_UDC_INT32:
-    {
-      self->extension = ECMM_NEW (int32_t); memcpy(self->extension, orig->extension, sizeof(int32_t));
-      break;
-    }
-    case ENTC_UDC_UINT32:
-    {
-      self->extension = ECMM_NEW (uint32_t); memcpy(self->extension, orig->extension, sizeof(uint32_t));
-      break;
-    }
-    case ENTC_UDC_INT64:
+    case ENTC_UDC_NUMBER:
     {
       self->extension = ECMM_NEW (int64_t); memcpy(self->extension, orig->extension, sizeof(int64_t));
-      break;
-    }
-    case ENTC_UDC_UINT64:
-    {
-      self->extension = ECMM_NEW (uint64_t); memcpy(self->extension, orig->extension, sizeof(uint64_t));
-      break;
-    }
-    case ENTC_UDC_FLOAT:
-    {
-      self->extension = ECMM_NEW (float); memcpy(self->extension, orig->extension, sizeof(float));
       break;
     }
     case ENTC_UDC_DOUBLE:
@@ -972,6 +900,20 @@ uint32_t ecudc_size (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
+void ecudc_refNumber (EcUdc self, int64_t** ref)
+{
+  switch (self->type)
+  {
+    case ENTC_UDC_NUMBER:
+    {
+      *ref = self->extension;
+      break;
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_setS (EcUdc self, const EcString value)
 {
   switch (self->type) 
@@ -1113,91 +1055,11 @@ void ecudc_setP (EcUdc self, void* ptr)
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_setByte (EcUdc self, byte_t value)
+void ecudc_setNumber (EcUdc self, int64_t value)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_BYTE: memcpy(self->extension, &value, sizeof(byte_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setUByte (EcUdc self, ubyte_t value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UBYTE: memcpy(self->extension, &value, sizeof(ubyte_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setInt16 (EcUdc self, int16_t value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_INT16: memcpy(self->extension, &value, sizeof(int16_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setUInt16 (EcUdc self, uint16_t value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UINT16: memcpy(self->extension, &value, sizeof(uint16_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setInt32 (EcUdc self, int32_t value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_INT32: memcpy(self->extension, &value, sizeof(int32_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setUInt32 (EcUdc self, uint32_t value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UINT32: memcpy(self->extension, &value, sizeof(uint32_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setInt64 (EcUdc self, int64_t value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_INT64: memcpy(self->extension, &value, sizeof(int64_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setUInt64 (EcUdc self, uint64_t value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UINT64: memcpy(self->extension, &value, sizeof(uint64_t)); break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_setFloat (EcUdc self, float value)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_FLOAT: memcpy(self->extension, &value, sizeof(float)); break;
+    case ENTC_UDC_NUMBER: memcpy(self->extension, &value, sizeof(int64_t)); break;
   }
 }
 
@@ -1238,16 +1100,9 @@ EcString ecudc_getString (EcUdc self)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_STRING:  return ecstr_copy (ecudc_sitem_asString (self->extension)); 
-    case ENTC_UDC_BYTE:    return ecstr_long (ecudc_asByte (self));
-    case ENTC_UDC_UBYTE:   return ecstr_long (ecudc_asUByte (self));
-    case ENTC_UDC_INT16:   return ecstr_long (ecudc_asInt16 (self));
-    case ENTC_UDC_UINT16:  return ecstr_long (ecudc_asUInt16 (self));
-    case ENTC_UDC_INT32:   return ecstr_long (*((int32_t*)self->extension));
-    case ENTC_UDC_UINT32:  return ecstr_long (ecudc_asUInt32 (self));
-    case ENTC_UDC_INT64:   return ecstr_long (ecudc_asInt64 (self));
-    case ENTC_UDC_UINT64:  return ecstr_long (ecudc_asUInt64 (self));
-  } 
+    case ENTC_UDC_STRING: return ecstr_copy (ecudc_sitem_asString (self->extension));
+    case ENTC_UDC_NUMBER: return ecstr_long (ecudc_asNumber (self));
+  }
   return ecstr_init ();
 }
 
@@ -1264,33 +1119,11 @@ void* ecudc_asP (EcUdc self)
 
 //----------------------------------------------------------------------------------------
 
-byte_t ecudc_asByte (EcUdc self)
+int64_t ecudc_asNumber (EcUdc self)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_BYTE: return *((byte_t*)self->extension);
-  }
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-ubyte_t ecudc_asUByte (EcUdc self)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UBYTE: return *((ubyte_t*)self->extension); 
-  }        
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-int16_t ecudc_asInt16 (EcUdc self)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_INT16: return *((int16_t*)self->extension); 
+    case ENTC_UDC_NUMBER: return *((int64_t*)self->extension);
     case ENTC_UDC_STRING:
     {
       const EcString h = ecudc_asString (self);
@@ -1298,156 +1131,6 @@ int16_t ecudc_asInt16 (EcUdc self)
       {
         // can be transformed ?
         return atoi(h);
-      }
-    }
-  }        
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-uint16_t ecudc_asUInt16 (EcUdc self)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UINT16: return *((uint16_t*)self->extension); 
-    case ENTC_UDC_STRING:
-    {
-      const EcString h = ecudc_asString (self);
-      if (isAssigned (h))
-      {
-        // can be transformed ?
-        return atoi(h);
-      }
-    }
-  }        
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-int32_t ecudc_asInt32 (EcUdc self, int* res)
-{
-  *res = TRUE;
-  
-  switch (self->type) 
-  {
-    case ENTC_UDC_INT32: return *((int32_t*)self->extension); 
-    case ENTC_UDC_STRING:
-    {
-      const EcString h = ecudc_sitem_asString (self->extension);
-      if (isAssigned (h))
-      {
-        // can be transformed ?
-        return atoi(h);
-      }
-    }
-  }        
-
-  *res = FALSE;
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_refUInt32 (EcUdc self, uint32_t** ref)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UINT32:
-    {
-      *ref = self->extension;
-    }
-    break;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-uint32_t ecudc_asUInt32 (EcUdc self)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension); 
-    case ENTC_UDC_STRING:
-    {
-      const EcString h = ecudc_asString (self);
-      if (isAssigned (h))
-      {
-        // can be transformed ?
-        return atoi(h);
-      }
-    }
-  }        
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-int64_t ecudc_asInt64 (EcUdc self)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_INT64: return *((int64_t*)self->extension); 
-    case ENTC_UDC_STRING:
-    {
-      const EcString h = ecudc_asString (self);
-      if (isAssigned (h))
-      {
-        // can be transformed ?
-        return atoi(h);
-      }
-    }
-  }        
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-uint64_t ecudc_asUInt64 (EcUdc self)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_INT32: return *((int32_t*)self->extension);
-    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension);
-    case ENTC_UDC_INT64: return *((int64_t*)self->extension);
-    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension);
-    case ENTC_UDC_STRING:
-    {
-      const EcString h = ecudc_asString (self);
-      if (isAssigned (h))
-      {
-        // can be transformed ?
-        return atoi(h);
-      }
-    }
-  }        
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-float ecudc_asFloat (EcUdc self)
-{
-  switch (self->type) 
-  {
-    case ENTC_UDC_FLOAT: return *((float*)self->extension); 
-    case ENTC_UDC_INT16: return *((int16_t*)self->extension);
-    case ENTC_UDC_UINT16: return *((uint16_t*)self->extension);
-    case ENTC_UDC_INT32: return *((int32_t*)self->extension);
-    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension);
-    case ENTC_UDC_INT64: return *((int64_t*)self->extension);
-    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension);
-    case ENTC_UDC_STRING:
-    {
-      const EcString h = ecudc_asString (self);
-      if (isAssigned (h))
-      {
-        // can be transformed ?
-#pragma warning( push )
-#pragma warning( disable : 4244)
-        return atof(h);
-#pragma warning( pop )
       }
     }
   }        
@@ -1461,12 +1144,7 @@ double ecudc_asDouble (EcUdc self)
   switch (self->type) 
   {
     case ENTC_UDC_DOUBLE: return *((double*)self->extension); 
-    case ENTC_UDC_INT16: return *((int16_t*)self->extension);
-    case ENTC_UDC_UINT16: return *((uint16_t*)self->extension);
-    case ENTC_UDC_INT32: return *((int32_t*)self->extension);
-    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension);
-    case ENTC_UDC_INT64: return *((int64_t*)self->extension);
-    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension);
+    case ENTC_UDC_NUMBER: return *((int64_t*)self->extension);
     case ENTC_UDC_STRING:
     {
       const EcString h = ecudc_asString (self);
@@ -1570,181 +1248,12 @@ const EcString ecudc_get_asString (const EcUdc data, const EcString name, const 
 
 //----------------------------------------------------------------------------------------
 
-byte_t ecudc_get_asByte (const EcUdc self, const EcString name, byte_t alt)
+int64_t ecudc_get_asNumber (const EcUdc self, const EcString name, int64_t alt)
 {
   const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
-    return ecudc_asByte (res);
-  }
-  else
-  {
-    return alt;
-  }  
-}
-
-//----------------------------------------------------------------------------------------
-
-ubyte_t ecudc_get_asUByte (const EcUdc self, const EcString name, ubyte_t alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    return ecudc_asUByte (res);
-  }
-  else
-  {
-    return alt;
-  }  
-}
-
-//----------------------------------------------------------------------------------------
-
-int16_t ecudc_get_asInt16 (const EcUdc self, const EcString name, int16_t alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    int16_t ret = ecudc_asInt16 (res);
-    if (ret == 0)
-    {
-      return alt;
-    }
-    else
-    {
-      return ret;
-    }
-  }
-  else
-  {
-    return alt;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-uint16_t ecudc_get_asUInt16 (const EcUdc self, const EcString name, uint16_t alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    uint16_t ret = ecudc_asUInt16 (res);
-    if (ret == 0)
-    {
-      return alt;
-    }
-    else
-    {
-      return ret;
-    }
-  }
-  else
-  {
-    return alt;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-int32_t ecudc_get_asInt32 (const EcUdc self, const EcString name, int32_t alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    int h = TRUE;
-    int32_t ret = ecudc_asInt32 (res, &h);
-    if (h)
-    {
-      return ret;
-    }
-    else
-    {
-      return alt;
-    }
-  }
-  else
-  {
-    return alt;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-uint32_t ecudc_get_asUInt32 (const EcUdc self, const EcString name, uint32_t alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    uint32_t ret = ecudc_asUInt32 (res);
-    if (ret == 0)
-    {
-      return alt;
-    }
-    else
-    {
-      return ret;
-    }
-  }
-  else
-  {
-    return alt;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-int64_t ecudc_get_asInt64 (const EcUdc self, const EcString name, int64_t alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    int64_t ret = ecudc_asInt64 (res);
-    if (ret == 0)
-    {
-      return alt;
-    }
-    else
-    {
-      return ret;
-    }
-  }
-  else
-  {
-    return alt;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-uint64_t ecudc_get_asUInt64 (const EcUdc self, const EcString name, uint64_t alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    uint64_t ret = ecudc_asUInt64 (res);
-    if (ret == 0)
-    {
-      return alt;
-    }
-    else
-    {
-      return ret;
-    }
-  }
-  else
-  {
-    return alt;
-  }
-}
-
-//----------------------------------------------------------------------------------------
-
-float ecudc_get_asFloat (const EcUdc self, const EcString name, float alt)
-{
-  const EcUdc res = ecudc_node (self, name);
-  if (isAssigned (res))
-  {
-    float ret = ecudc_asFloat (res);
+    int64_t ret = ecudc_asNumber (res);
     if (ret == 0)
     {
       return alt;
@@ -1879,99 +1388,11 @@ void ecudc_add_asB_o (EcAlloc alloc, EcUdc node, const EcString name, EcBuffer* 
 
 //----------------------------------------------------------------------------------------
 
-void ecudc_add_asByte (EcAlloc alloc, EcUdc node, const EcString name, byte_t value)
+void ecudc_add_asNumber (EcAlloc alloc, EcUdc node, const EcString name, int64_t value)
 {
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_BYTE, name);
+  EcUdc item = ecudc_create (alloc, ENTC_UDC_NUMBER, name);
   // set new value to item
-  ecudc_setByte (item, value);
-  // add item to node 
-  ecudc_add (node, &item);
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asUByte (EcAlloc alloc, EcUdc node, const EcString name, ubyte_t value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_UBYTE, name);
-  // set new value to item
-  ecudc_setUByte (item, value);
-  // add item to node 
-  ecudc_add (node, &item);
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asInt16 (EcAlloc alloc, EcUdc node, const EcString name, int16_t value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_INT16, name);
-  // set new value to item
-  ecudc_setInt16 (item, value);
-  // add item to node 
-  ecudc_add (node, &item);  
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asUInt16 (EcAlloc alloc, EcUdc node, const EcString name, uint16_t value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_UINT16, name);
-  // set new value to item
-  ecudc_setUInt16 (item, value);
-  // add item to node 
-  ecudc_add (node, &item);  
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asInt32 (EcAlloc alloc, EcUdc node, const EcString name, int32_t value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_INT32, name);
-  // set new value to item
-  ecudc_setInt32 (item, value);
-  // add item to node 
-  ecudc_add (node, &item);  
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asUInt32 (EcAlloc alloc, EcUdc node, const EcString name, uint32_t value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_UINT32, name);
-  // set new value to item
-  ecudc_setUInt32 (item, value);
-  // add item to node 
-  ecudc_add (node, &item);  
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asInt64 (EcAlloc alloc, EcUdc node, const EcString name, int64_t value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_INT64, name);
-  // set new value to item
-  ecudc_setInt64 (item, value);
-  // add item to node 
-  ecudc_add (node, &item);    
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asUInt64 (EcAlloc alloc, EcUdc node, const EcString name, uint64_t value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_UINT64, name);
-  // set new value to item
-  ecudc_setUInt64 (item, value);
-  // add item to node 
-  ecudc_add (node, &item);    
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecudc_add_asFloat (EcAlloc alloc, EcUdc node, const EcString name, float value)
-{
-  EcUdc item = ecudc_create (alloc, ENTC_UDC_FLOAT, name);
-  // set new value to item
-  ecudc_setFloat (item, value);
+  ecudc_setNumber (item, value);
   // add item to node 
   ecudc_add (node, &item);    
 }
@@ -2003,9 +1424,9 @@ void ecudc_add_asTime (EcAlloc alloc, EcUdc node, const EcString name, const tim
 EcUdc ecudc_errcode (EcAlloc alloc, uint_t errcode)
 {
   // create the default error code node
-  EcUdc error = ecudc_create (alloc, ENTC_UDC_BYTE, "ErrorCode");
+  EcUdc error = ecudc_create (alloc, ENTC_UDC_NUMBER, "ErrorCode");
   // set the value
-  ecudc_setByte (error, errcode);
+  ecudc_setNumber (error, errcode);
   // return
   return error;  
 }

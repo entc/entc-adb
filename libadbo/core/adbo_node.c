@@ -214,30 +214,9 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
       adbl_constraint_addChar(constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, h);            
     }
     break;
-    case ENTC_UDC_BYTE:
+    case ENTC_UDC_NUMBER:
     {
-      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asByte (item));
-    }
-    break;
-    case ENTC_UDC_UINT32:
-    {
-      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asUInt32 (item));
-    }
-    break;
-    case ENTC_UDC_INT32:
-    {
-      int res;
-      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asInt32 (item, &res));
-    }
-    break;
-    case ENTC_UDC_UINT64:
-    {
-      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asUInt64 (item));
-    }
-    break;
-    case ENTC_UDC_INT64:
-    {
-      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asInt64 (item));
+      adbl_constraint_addLong (constraint, dbcolumn, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asNumber (item));
     }
     break;
     default:
@@ -380,8 +359,8 @@ void adbo_node_primary_sequence (EcUdc node, AdblSession dbsession, const EcStri
         
         adbl_attrs_addLong(attrs, dbcolumn, id);
         
-        ecudc_add_asUInt32(EC_ALLOC, values, dbcolumn, id);        
-        ecudc_add_asUInt32(EC_ALLOC, filter, dbcolumn, id);
+        ecudc_add_asNumber (EC_ALLOC, values, dbcolumn, id);
+        ecudc_add_asNumber (EC_ALLOC, filter, dbcolumn, id);
       }
     }
   }
@@ -709,7 +688,7 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
     return FALSE;
   }
 
-  dbmin = ecudc_get_asUInt32(node, ".dbmin", 1);
+  dbmin = ecudc_get_asNumber (node, ".dbmin", 1);
 
   dbsource = ecudc_get_asString(node, ".dbsource", "default");  
   dbsession = adbl_openSession (context->adblm, dbsource);
@@ -784,7 +763,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   
   values = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, ECDATA_ROWS);
   
-  dbmin = ecudc_get_asUInt32(node, ".dbmin", 1);
+  dbmin = ecudc_get_asNumber (node, ".dbmin", 1);
   
   
   query = adbl_query_new ();
@@ -889,65 +868,13 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
       eclogger_fmt (LL_TRACE, "ADBO", "attr", "add time type");
     }
     break;
-    case ENTC_UDC_INT64:
+    case ENTC_UDC_NUMBER:
     {
-      adbl_attrs_addLong (attrs, columnName, ecudc_asInt64 (dataItem));
+      adbl_attrs_addLong (attrs, columnName, ecudc_asNumber (dataItem));
 
       if (isAssigned(values))
       {
-        ecudc_add_asInt64 (EC_ALLOC, values, columnName, ecudc_asInt64 (dataItem));
-      }
-    }
-    break;
-    case ENTC_UDC_UINT64:
-    {
-      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt64 (dataItem));
-      
-      if (isAssigned(values))
-      {
-        ecudc_add_asUInt64 (EC_ALLOC, values, columnName, ecudc_asUInt64 (dataItem));
-      }
-    }
-    break;
-    case ENTC_UDC_INT32:
-    {
-      int res;
-      adbl_attrs_addLong (attrs, columnName, ecudc_asInt32 (dataItem, &res));
-      
-      if (isAssigned(values))
-      {
-        int res;
-        ecudc_add_asInt32 (EC_ALLOC, values, columnName, ecudc_asInt32 (dataItem, &res));
-      }
-    }
-    break;
-    case ENTC_UDC_UINT32:
-    {
-      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt32 (dataItem));
-      
-      if (isAssigned(values))
-      {
-        ecudc_add_asUInt32 (EC_ALLOC, values, columnName, ecudc_asUInt32 (dataItem));
-      }
-    }
-    break;
-    case ENTC_UDC_INT16:
-    {
-      adbl_attrs_addLong (attrs, columnName, ecudc_asInt16 (dataItem));
-      
-      if (isAssigned(values))
-      {
-        ecudc_add_asInt16 (EC_ALLOC, values, columnName, ecudc_asInt16 (dataItem));
-      }
-    }
-    break;
-    case ENTC_UDC_UINT16:
-    {
-      adbl_attrs_addLong (attrs, columnName, ecudc_asUInt16 (dataItem));
-      
-      if (isAssigned(values))
-      {
-        ecudc_add_asUInt16 (EC_ALLOC, values, columnName, ecudc_asUInt16 (dataItem));
+        ecudc_add_asNumber (EC_ALLOC, values, columnName, ecudc_asNumber (dataItem));
       }
     }
     break;
@@ -1407,11 +1334,11 @@ void adbo_node_updateSize (EcUdc node, AdboContext context)
 
   if (isAssigned (size))
   {
-    ecudc_setUInt64 (size, adbl_table_size (dbsession, ecudc_name (node)));
+    ecudc_setNumber (size, adbl_table_size (dbsession, ecudc_name (node)));
   }
   else
   {
-    ecudc_add_asUInt64 (EC_ALLOC, node, ECDATA_SIZE, adbl_table_size (dbsession, ecudc_name (node)));
+    ecudc_add_asNumber (EC_ALLOC, node, ECDATA_SIZE, adbl_table_size (dbsession, ecudc_name (node)));
   }
 }
 

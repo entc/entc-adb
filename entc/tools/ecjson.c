@@ -137,8 +137,8 @@ EcUdc json_parse_type (JsonParser* parser, const EcString key, int len, int offs
   }
   else
   {
-    udc = ecudc_create(EC_ALLOC, ENTC_UDC_INT32, key);    
-    ecudc_setInt32(udc, atoi(h2));
+    udc = ecudc_create(EC_ALLOC, ENTC_UDC_NUMBER, key);
+    ecudc_setNumber (udc, atoi(h2));
   }
   
   ecstr_delete(&h2);
@@ -486,10 +486,10 @@ static void __STDCALL ecjson_read_onItem (void* ptr, void* obj, int type, void* 
     }
     case ENTC_JPARSER_OBJECT_NUMBER:
     {
-      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_INT64, key);
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NUMBER, key);
       
       unsigned long* dat = val;
-      ecudc_setInt64(h, *dat);
+      ecudc_setNumber(h, *dat);
       
       ecudc_add (obj, &h);
       break;
@@ -555,19 +555,45 @@ static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
 
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
+  EcUdc ret;
+ 
   /*
   JsonParser parser;
   
   parser.pos = (unsigned char*)source;
   
-  return json_parse (&parser, name);  
+  printf("*************\n");
+  
+  printf("%s\n", source);
+  
+  printf("-------------\n");
+
+  ret = json_parse (&parser, name);
+
+  {
+    EcString text = ecjson_write(ret);
+    
+    printf("%s\n", text);
+    
+    ecstr_delete(&text);
+  }
+
+  printf("*************\n");
+  
    */
   
-  EcUdc ret = NULL;
   EcErr err = ecerr_create();
   
   EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
-
+  
+  /*
+  printf("*************\n");
+  
+  printf("%s\n", source);
+  
+  printf("-------------\n");
+  */
+  
   int res = ecjsonparser_parse (jparser, source, strlen(source), err);
   if (res)
   {
@@ -578,6 +604,20 @@ EcUdc ecjson_read (const EcString source, const EcString name)
     ret = ecjsonparser_lastObject(jparser);
   }
   
+  // set name
+  ecudc_setName (ret, name);
+  
+  /*
+  {
+    EcString text = ecjson_write(ret);
+    
+    printf("%s\n", text);
+    
+    ecstr_delete(&text);
+  }
+
+  printf("*************\n");
+  */
   // clean up
   ecjsonparser_destroy (&jparser);
   ecerr_destroy(&err);
@@ -719,47 +759,9 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       ecstream_append_str (stream, "null");
     }
     break;
-    case ENTC_UDC_BYTE:
+    case ENTC_UDC_NUMBER:
     {
-      ecstream_append_i (stream, ecudc_asByte (node));
-    }
-    break;
-    case ENTC_UDC_UBYTE:
-    {
-      ecstream_append_u (stream, ecudc_asUByte (node));
-    }
-    break;
-    case ENTC_UDC_INT16:
-    {
-      ecstream_append_i (stream, ecudc_asInt16 (node));
-    }
-    break;
-    case ENTC_UDC_UINT16:
-    {
-      ecstream_append_u (stream, ecudc_asUInt16 (node));
-    }
-    break;
-    case ENTC_UDC_INT32:
-    {
-      int res = TRUE;
-      int32_t h = ecudc_asInt32 (node, &res);
-      
-      ecstream_append_u (stream, h);
-    }
-    break;
-    case ENTC_UDC_UINT32:
-    {
-      ecstream_append_u (stream, ecudc_asUInt32 (node));
-    }
-    break;
-    case ENTC_UDC_INT64:
-    {
-      ecstream_append_i64 (stream, ecudc_asInt64 (node));
-    }
-    break;
-    case ENTC_UDC_UINT64:
-    {
-      ecstream_append_u64 (stream, ecudc_asUInt64 (node));
+      ecstream_append_i64 (stream, ecudc_asNumber (node));
     }
     break;
     case ENTC_UDC_TIME:

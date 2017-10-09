@@ -30,7 +30,7 @@
 
 SET( ADBO_VERSION 1.3.0 )
 
-FIND_LIBRARY(ADBO_LIBRARY NAMES adbo      
+FIND_LIBRARY(ADBO_LIBRARY NAMES adbo
   HINTS
   "/usr/lib/"
   "/usr/local/lib/"

@@ -169,17 +169,17 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
         self->pos++;
       }
       break;
-      case ENTC_UDC_UINT32:
+      case ENTC_UDC_NUMBER:
       {
         bind->buffer_type = MYSQL_TYPE_LONG;
         
-        ecudc_refUInt32 (value, (void*)&(bind->buffer));
+        ecudc_refNumber (value, (void*)&(bind->buffer));
         
         bind->buffer_length = 0;
         bind->is_null = 0;
         bind->length = 0;
         bind->error = 0; 
-        bind->is_unsigned = 1;
+        bind->is_unsigned = 0;
         
         //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%i' as integer", self->pos, *((uint32_t*)bind->buffer));
         
