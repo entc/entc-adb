@@ -1,6 +1,6 @@
 #/bin/bash
 
-VERSION=1.2.0
+VERSION=1.3.0
 
 cp libentc.so /usr/lib/libentc.so.$VERSION
 rm /usr/lib/libentc.so
