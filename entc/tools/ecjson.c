@@ -648,7 +648,7 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_TIME:
     {
-      ecstream_append_u (stream, ecudc_asTime (node));
+      ecstream_append_time (stream, ecudc_asTime (node));
     }
     break;
     case ENTC_UDC_DOUBLE:
