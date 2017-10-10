@@ -207,7 +207,10 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
   
   // settings
   mysql_options (self->conn, MYSQL_OPT_COMPRESS, 0);
-  mysql_options (self->conn, MYSQL_OPT_RECONNECT, 1);
+  
+  my_bool reconnect = TRUE;
+  mysql_options (self->conn, MYSQL_OPT_RECONNECT, &reconnect);
+  
   mysql_options (self->conn, MYSQL_INIT_COMMAND, "SET autocommit=0");
 
   // connect
