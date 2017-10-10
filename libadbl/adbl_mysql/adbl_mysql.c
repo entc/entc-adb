@@ -164,7 +164,7 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
         bind->length = 0;
         bind->error = 0; 
 
-        //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);      
+        eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);
 
         self->pos++;
       }
@@ -181,7 +181,7 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
         bind->error = 0; 
         bind->is_unsigned = 1;
         
-        //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%i' as integer", self->pos, *((uint32_t*)bind->buffer));      
+        eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%i' as integer", self->pos, *((uint32_t*)bind->buffer));
         
         self->pos++;
       }
