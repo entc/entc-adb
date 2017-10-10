@@ -672,8 +672,6 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   ret = adblmodule_dbquery_create (self, query, stmt, bv);
   
   // clean up
-  mysql_stmt_close (stmt);
-
   bindvars_destroy (&bv);
   
   ecmutex_unlock (self->mutex);
