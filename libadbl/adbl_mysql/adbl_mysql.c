@@ -206,10 +206,12 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
   self->conn = mysql_init (NULL);
   
   // settings
-  mysql_options (self->conn, MYSQL_OPT_RECONNECT, "1");
+  mysql_options (self->conn, MYSQL_OPT_COMPRESS, 0);
+  mysql_options (self->conn, MYSQL_OPT_RECONNECT, 1);
+  mysql_options (self->conn, MYSQL_INIT_COMMAND, "SET autocommit=0");
 
   // connect
-  if(!mysql_real_connect(self->conn, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, 0))
+  if(!mysql_real_connect(self->conn, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, CLIENT_MULTI_RESULTS))
   {
     //eclogger_msg (LL_ERROR, "MYSQ", "connect", mysql_error(self->conn) );
     
@@ -233,9 +235,6 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
     mysql_free_result(res);
   }
   
-  // deactivate autocommit
-  mysql_autocommit (self->conn, 0);
-
   eclogger_msg (LL_DEBUG, "MYSQ", "connect", "Successful connected to Mysql database" );
 
   return self;
