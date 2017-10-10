@@ -770,8 +770,9 @@ int adblmodule_dbprocedure (void* ptr, AdblProcedure* proc)
   res = adblmodule_dbprocedure_create (self, proc, stmt, bv);
   
   // clean up
+  mysql_stmt_close (stmt);
+  
   bindvars_destroy (&bv);
-  //mysql_stmt_close (stmt);
 
   ecmutex_unlock (self->mutex);
   
