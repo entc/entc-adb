@@ -732,6 +732,8 @@ int adblmodule_dbprocedure_create (AdblMysqlConnection self, AdblProcedure* proc
     
     return FALSE;
   }
+  
+  eclogger_fmt (LL_DEBUG, "MYSQ", "stmt", "done");
 
   return TRUE;
 }
@@ -1260,7 +1262,7 @@ void adblmodule_dbcommit (void* ptr)
 {
   AdblMysqlConnection self = ptr;
   
-  mysql_query(self->conn, "COMMIT");
+  mysql_query (self->conn, "COMMIT");
 
   if (mysql_errno (self->conn))
   {
