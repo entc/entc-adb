@@ -4,6 +4,7 @@
 // entc include
 #include "system/macros.h"
 #include "types/ecstream.h"
+#include "types/eclist.h"
 
 //-----------------------------------------------------------------------------
 

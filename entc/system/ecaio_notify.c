@@ -347,7 +347,7 @@ int ecaio_notify_assign (EcAioNotify* pself, EcAio aio, EcErr err)
 
 //*****************************************************************************
 
-void ecaio_notify_setCallback(EcAioNotify self, void* ptr, fct_ecaio_context_onNotify onNotify, fct_ecaio_context_destroy onDestroy)
+void ecaio_notify_setCallback (EcAioNotify self, void* ptr, fct_ecaio_context_onNotify onNotify, fct_ecaio_context_destroy onDestroy)
 {
   self->ptr = ptr;
   self->onDestroy = onDestroy;

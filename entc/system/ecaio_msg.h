@@ -17,50 +17,41 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_SYSTEM_AIO_H
-#define ENTC_SYSTEM_AIO_H 1
+#ifndef ENTC_SYSTEM_AIO_MSG_H
+#define ENTC_SYSTEM_AIO_MSG_H 1
 
 //-----------------------------------------------------------------------------
 
 #include "types/ecerr.h"
 #include "types/ecbuffer.h"
-#include "system/ecaio_ctx.h"
+#include "system/ecaio.h"
 
 //=============================================================================
 
-struct EcAio_s; typedef struct EcAio_s* EcAio;
+struct EcMsgChannel_s; typedef struct EcMsgChannel_s* EcMsgChannel;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAio ecaio_create (void);
+__LIBEX EcMsgChannel ecmsg_channel_create ();
 
-__LIBEX void ecaio_destroy (EcAio*);
+__LIBEX void ecmsg_channel_destroy (EcMsgChannel*);
 
-__LIBEX int ecaio_init (EcAio, EcErr);
+__LIBEX int ecmsg_channel_init (EcMsgChannel, const EcString name, EcErr err);
 
-__LIBEX int ecaio_append (EcAio, void* handle, EcAioContext ctx, EcErr);
+__LIBEX void* ecmsg_channel_handle (EcMsgChannel);
 
-__LIBEX int ecaio_abort (EcAio, EcErr);
+//=============================================================================
 
-__LIBEX int ecaio_addQueueEvent (EcAio, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
-
-__LIBEX int ecaio_wait (EcAio, unsigned long timeout, EcErr);
-
-__LIBEX int ecaio_wait_abortOnSignal (EcAio, int onlyTerm, EcErr);
-
-__LIBEX int ecaio_addContextToEvent (EcAio, EcAioContext ctx, EcErr err);
+struct EcAioMsgReader_s; typedef struct EcAioMsgReader_s* EcAioMsgReader;
 
 //-----------------------------------------------------------------------------
-// special events
 
-__LIBEX int ecaio_appendVNode (EcAio, int fd, void* data, EcErr err);
+__LIBEX EcAioMsgReader ecaio_msgreader_create (void* channelHandle);
 
-__LIBEX int ecaio_appendPNode (EcAio, int pid, void* data, EcErr err);
+__LIBEX int ecaio_msgreader_assign (EcAioMsgReader*, EcAio aio, EcErr err);
 
-__LIBEX int ecaio_appendENode (EcAio, EcAioContext ctx, void** eh, EcErr err);
+__LIBEX void ecaio_msgreader_setCallback (EcAioMsgReader, void*, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
 
-__LIBEX int ecaio_triggerENode (EcAio, void* eh, EcErr err);
-
-//-----------------------------------------------------------------------------
+//=============================================================================
 
 #endif

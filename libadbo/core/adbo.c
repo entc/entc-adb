@@ -148,7 +148,7 @@ int adbo_update (EcUdc udc, EcUdc filter, AdboContext context, EcUdc data)
     break;
     case ENTC_UDC_NODE:
     {
-      ret = adbo_node_update (udc, filter, context, data, TRUE);
+      ret = adbo_node_update (udc, filter, context, data, FALSE);
     }
     break;
   }
@@ -357,6 +357,40 @@ EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
   ecmutex_unlock (self->mutex);
 
   return values;
+}
+
+//----------------------------------------------------------------------------------------
+
+int adbo_db_delete (Adbo self, const EcString table, EcUdc params)
+{
+  EcUdc tableNode;
+
+  ecmutex_lock (self->mutex);
+
+  if (self->root == NULL)
+  {
+    ecmutex_unlock (self->mutex);
+    
+    eclogger_fmt (LL_ERROR, "ADBO", "delete", "[%s] root is NULL", table);
+    
+    return NULL;
+  }
+
+  tableNode = adbo_get_table (self->root, table);
+  if (isNotAssigned (tableNode))
+  {
+    ecmutex_unlock (self->mutex);
+    
+    eclogger_fmt (LL_ERROR, "ADBO", "delete", "[%s] table node is NULL", table);
+    
+    return NULL;
+  }
+
+  adbo_delete (tableNode, params, self->adboctx);
+
+  ecmutex_unlock (self->mutex);
+  
+  return ENTC_ERR_NONE;
 }
 
 //----------------------------------------------------------------------------------------

@@ -87,12 +87,7 @@ static int __STDCALL ecmap_onDestroy (void* ptr)
 {
   EcMapNode node = ptr;
 
-  if (node->map->onDestroy)
-  {
-    node->map->onDestroy (node->key, node->val);
-  }
-
-  ecmap_node_destroy (&node);
+  ecmap_destroy_node (node->map, &node);
 
   return 0;
 }
@@ -179,6 +174,20 @@ EcMapNode ecmap_find (EcMap self, void* key)
 
 //----------------------------------------------------------------------------------------
 
+void ecmap_destroy_node (EcMap self, EcMapNode* pnode)
+{
+  EcMapNode node = *pnode;
+  
+  if (self->onDestroy)
+  {
+    self->onDestroy (node->key, node->val);
+  }
+  
+  ecmap_node_destroy (pnode);
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecmap_erase (EcMap self, EcMapNode node)
 {
   EcListCursor cursor;
@@ -191,7 +200,7 @@ void ecmap_erase (EcMap self, EcMapNode node)
 
     if (h == node)
     {
-      eclist_cursor_erase(self->list, &cursor);
+      eclist_cursor_erase (self->list, &cursor);
       return;
     }
   }
