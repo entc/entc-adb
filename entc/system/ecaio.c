@@ -512,6 +512,8 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   int n;
   struct epoll_event *events;
   
+  sigset_t sigmask;
+  
   events = calloc (Q6_EPOLL_MAXEVENTS, sizeof(struct epoll_event));
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for lock");
@@ -520,7 +522,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for event");
   
-  n = epoll_wait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1);
+  n = epoll_pwait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1, &sigmask);
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got event %i", n);
   
