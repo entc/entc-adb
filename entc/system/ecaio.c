@@ -653,7 +653,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-static void ecaio_dummy_signalhandler (int signum)
+static void ecaio_dummy_signalhandler (int sig)
 {
   uint64_t u = TRUE;
   write (tfd, &u, sizeof(uint64_t));
@@ -672,11 +672,29 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   int res;
   EcAioContext ctx;
   
+  struct sigaction act;
+  
   // add terminator
   tfd = eventfd (0, 0);
   if (tfd == -1)
   {
     
+  }
+  
+  memset (&act, 0, sizeof(act));
+  act.sa_handler = ecaio_dummy_signalhandler;
+  
+  if (sigaction(SIGTERM, &act, 0))
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  if (onlyTerm == FALSE)
+  {
+    if (sigaction(SIGINT, &act, 0))
+    {
+      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    }
   }
   
   sigset_t mask;
