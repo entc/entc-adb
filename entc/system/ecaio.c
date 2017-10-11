@@ -16,13 +16,13 @@
 
 struct EcAio_s
 {
-  
+
   HANDLE port;
-  
+
   HANDLE sema;
-  
+
   EcMutex mutex;
-  
+
 };
 
 //-----------------------------------------------------------------------------
@@ -301,21 +301,21 @@ int tfd;
 
 struct EcAio_s
 {
-  
+
   int efd;
-  
+
   int ufd;
-  
+
   EcAioContext ctx;
-  
+
   EcMutex mutex;
-  
+
   EcMutex iom;
-  
+
   //int pfd[2];
-  
+
   EcList ctxs;
-  
+
 };
 
 //-----------------------------------------------------------------------------
@@ -323,21 +323,21 @@ struct EcAio_s
 EcAio ecaio_create ()
 {
   EcAio self = ENTC_NEW(struct EcAio_s);
-  
+
   self->efd = 0;
   self->ufd = 0;
   self->ctx = NULL;
-  
+
   self->ctxs = eclist_create (NULL);
-  
+
   /*
    self->pfd[0] = NULL;
    self->pfd[1] = NULL;
    */
-  
+
   self->mutex = ecmutex_new();
   self->iom = ecmutex_new ();
-  
+
   return self;
 }
 
@@ -376,9 +376,9 @@ int ecaio_init (EcAio self, EcErr err)
   self->efd = epoll_create1 (0);
   if (self->efd == -1)
   {
-    
+
   }
-  
+
   /*
    {
    pipe (self->pfd);
@@ -507,53 +507,97 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
 
 //-----------------------------------------------------------------------------
 
+int ecaio_handle_event (EcAio self)
+{
+  EcAioContext ctx = NULL;
+
+  ecmutex_lock (self->mutex);
+
+  EcListCursor c;
+  eclist_cursor_init (self->ctxs, &c, LIST_DIR_NEXT);
+
+  if (eclist_cursor_next (&c))
+  {
+    ctx = eclist_data(c.node);
+
+    eclist_cursor_erase (self->ctxs, &c);
+  }
+
+  ecmutex_unlock (self->mutex);
+
+  if (ctx)
+  {
+    // trigger next event
+    uint64_t u = 1;
+
+    write (self->ufd, &u, sizeof(uint64_t));
+
+    //eclogger_fmt (LL_TRACE, "Q6_AIO", "event", "context %p", ctx);
+
+    int res = ecaio_context_process (ctx, 0, 0);
+
+    if (res == ENTC_AIO_CODE_ABORTALL)
+    {
+      // send again for other threads
+      ecaio_abort (self, NULL);
+
+      // abort
+      return ENTC_ERR_NONE_CONTINUE;
+    }
+  }
+
+  return ENTC_ERR_NOT_FOUND;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcErr err)
 {
   int n;
   struct epoll_event *events;
-  
+
   events = calloc (Q6_EPOLL_MAXEVENTS, sizeof(struct epoll_event));
-  
+
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for lock");
-  
+
   ecmutex_lock (self->iom);
-  
+
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for event");
-  
+
   n = epoll_pwait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1, sigmask);
-  
+
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got event %i", n);
-  
+
   if (n < 0)
   {
     ecmutex_unlock (self->iom);
-    
+
     free (events);
-    
+
     eclogger_fmt (LL_ERROR, "Q6_AIO", "wait", "error on epoll");
-    
+
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
-  
+
   if (n > 0)
   {
     int i = 0;
-    
+
     EcAioContext ctx;
-    
+
     ctx = events[i].data.ptr;
-    
+
     if (ctx)
     {
       // save the handle, because ctx got freed in the process call
       void* handle = ecaio_context_getHandle (ctx);
-      
+
       //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got ctx from IO event %p", ctx);
-      
+
       int cont = ecaio_context_process (ctx, 0, 0);
-      
+
       //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "return %i", cont);
-      
+
       if (cont == ENTC_AIO_CODE_CONTINUE)
       {
         epoll_ctl (self->efd, EPOLL_CTL_MOD, handle, &(events[i]));
@@ -562,68 +606,39 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcE
       else if (cont == ENTC_AIO_CODE_ABORTALL)
       {
         ecmutex_unlock (self->iom);
-        free (events);
+
+	free (events);
+
+	ecaio_abort (self, NULL);
+
         // abort
         return ENTC_ERR_NONE_CONTINUE;
       }
       else
       {
         //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "remove %i %p", ctx->handle, ctx);
-        
         // remove
         struct epoll_event event = {0}; // see bugs
         int s = epoll_ctl (self->efd, EPOLL_CTL_DEL, handle, &event);
         if (s < 0)
         {
-          
-          
+
+
           //eclogger_fmt (LL_ERROR, "Q6_AIO", "wait", "failed to remove file descriptor %i", ctx->handle);
         }
       }
-      
+
       ecmutex_unlock (self->iom);
     }
     else
     {
       ecmutex_unlock (self->iom);
-      
-      EcAioContext ctx = NULL;
-      
-      ecmutex_lock (self->mutex);
-      
-      EcListCursor c;
-      eclist_cursor_init (self->ctxs, &c, LIST_DIR_NEXT);
-      
-      if (eclist_cursor_next (&c))
-      {
-        ctx = eclist_data(c.node);
-        
-        eclist_cursor_erase (self->ctxs, &c);
-      }
-      
-      //  int res = read (self->ufd, &u, sizeof(uint64_t));
-      //int res = read (self->pfd[0], &u, sizeof(uint64_t));
-      
-      ecmutex_unlock (self->mutex);
-      
-      if (ctx)
-      {
-        // trigger next event
-        uint64_t u = 1;
-        //write (self->ufd, &u, sizeof(uint64_t));
-        write (self->ufd, &u, sizeof(uint64_t));
-        
-        //eclogger_fmt (LL_TRACE, "Q6_AIO", "event", "context %p", ctx);
-        
-        int res = ecaio_context_process (ctx, 0, 0);
-        
-        if (res == ENTC_AIO_CODE_ABORTALL)
-        {
-          free (events);
-          // abort
-          return ENTC_ERR_NONE_CONTINUE;
-        }
-      }
+
+      int res = ecaio_handle_event (self);
+
+      free (events);
+
+      return res;
     }
   }
   else
@@ -653,7 +668,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-static void ecaio_dummy_signalhandler (int sig)
+static void ecaio_abort_signalhandler (int sig)
 {
   uint64_t u = TRUE;
   write (tfd, &u, sizeof(uint64_t));
@@ -667,74 +682,93 @@ static void ecaio_empty_signalhandler (int signum)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
+int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* orig_mask, EcErr err)
 {
-  int res;
-  EcAioContext ctx;
-  
-  struct sigaction act;
-  
-  // add terminator
-  tfd = eventfd (0, 0);
-  if (tfd == -1)
+  // re-route the signal SIGTERM
   {
-    
+    struct sigaction act;
+
+    memset (&act, 0, sizeof(act));
+    act.sa_handler = ecaio_abort_signalhandler;
+
+    if (sigaction(SIGTERM, &act, 0))
+    {
+      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    }
   }
-  
-  memset (&act, 0, sizeof(act));
-  act.sa_handler = ecaio_dummy_signalhandler;
-  
-  if (sigaction(SIGTERM, &act, 0))
+
+  // re-route the signal SIGINT
   {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-  
-  if (onlyTerm == FALSE)
-  {
+    struct sigaction act;
+
+    memset (&act, 0, sizeof(act));
+    act.sa_handler = onlyTerm ? ecaio_empty_signalhandler : ecaio_abort_signalhandler;
+
     if (sigaction(SIGINT, &act, 0))
     {
       return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
     }
   }
-  
-  sigset_t mask;
-  //sigset_t orig_mask;
-  
-  sigemptyset (&mask);
-  
+
+  // define the mask
+  sigemptyset (mask);
+
   if (onlyTerm == FALSE)
   {
-    sigaddset (&mask, SIGINT);
+    sigaddset (mask, SIGINT);
   }
-    
-  sigaddset (&mask, SIGTERM);
-  
-  /*
-  if (sigprocmask (SIG_BLOCK, &mask, &orig_mask) < 0)
+
+  sigaddset (mask, SIGTERM);
+
+  if (sigprocmask(SIG_BLOCK, &mask, &orig_mask) < 0) 
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
-  */
-  
+
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
+{
+  int res;
+  EcAioContext ctx;
+  sigset_t mask;
+  sigset_t orig_mask;
+
+  res = ecaio_reset_signals (self, onlyTerm, &mask, &orig_mask, err);
+  if (res)
+  {
+    return res;
+  }
+
+  // add terminator
+  tfd = eventfd (0, 0);
+  if (tfd == -1)
+  {
+
+  }
+
   {
     // create a new aio context
     ctx = ecaio_context_create ();
-    
+
     ecaio_context_setCallbacks (ctx, NULL, ecaio_term_process, NULL);
-    
+
     ecaio_append (self, tfd, ctx, err);
   }
-  
+
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)
   {
-    res = ecaio_wait_signal (self, ENTC_INFINITE, &mask, err);
+    res = ecaio_wait_signal (self, ENTC_INFINITE, &orig_mask, err);
   }
-  
+
   close (tfd);
-  
+
   ecaio_context_destroy(&ctx);
-  
+
   return res;
 }
 

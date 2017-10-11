@@ -178,10 +178,14 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
 
 #else
 
+    printf ("send SIGINT\n");
+
     // this should not trigger
     kill(getpid(), SIGINT);
  
     ece_sleep (1000);
+
+    printf ("send SIGTERM\n");
  
     // this will abort
     kill(getpid(), SIGTERM);
