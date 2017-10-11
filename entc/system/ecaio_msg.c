@@ -1,6 +1,6 @@
 #include "ecaio_msg.h"
 
-#if defined __MS_IOCP
+#if defined __MS_IOCP && defined __MS_MQRT
 
 //*****************************************************************************
 

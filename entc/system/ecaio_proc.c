@@ -35,7 +35,6 @@ struct EcAioProc_s
 static int __STDCALL ecaio_proc_thread (void* ptr)
 {
   EcAioProc self = ptr;
-  int res;
   
   // wait here until something happens
   WaitForSingleObject (self->handle, INFINITE);
@@ -80,7 +79,7 @@ EcAioProc ecaio_proc_create (uint64_t pid)
 {
   EcAioProc self = ENTC_NEW(struct EcAioProc_s);
   
-  self->handle = pid;
+  self->handle = (void*)pid;
   
   self->onNotify = NULL;
   self->onDestroy = NULL;

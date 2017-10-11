@@ -165,6 +165,16 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     {
       DWORD lastError = GetLastError ();
       
+	  {
+        EcErr err = ecerr_create ();
+
+        ecerr_formatErrorOS (err, ENTC_LVL_ERROR, lastError);
+
+		eclogger_fmt (LL_WARN, "Q6_AIO", "wait", "error on io completion port: %s", err->text);
+
+        ecerr_destroy (&err);
+	  }
+
       if (ecaio_context_continue (ovl, FALSE, numOfBytes))
       {        
         return ecerr_set (err, ENTC_LVL_EXPECTED, ENTC_ERR_PROCESS_ABORT, "wait abborted");
@@ -205,9 +215,13 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
   {
     case CTRL_C_EVENT:
 	{
-      abort = (g_termOnly == FALSE);
+      if (g_termOnly == FALSE)
+	  {
+        abort = TRUE;
 
-	  eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+  	    eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+	  }
+
 	  break;
 	}
     case CTRL_SHUTDOWN_EVENT:
