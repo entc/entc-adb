@@ -565,7 +565,7 @@ int ecaio_handle_event (EcAio self)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcErr err)
+int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int onAbort, EcErr err)
 {
   int n;
   struct epoll_event *events;
@@ -588,9 +588,13 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcE
 
     free (events);
 
-    eclogger_fmt (LL_ERROR, "Q6_AIO", "wait", "error on epoll");
+    eclogger_fmt (LL_WARN, "Q6_AIO", "wait", "error on epoll [%i]", onAbort);
 
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    //ecaio_abort (self, NULL);
+
+    //return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+
+    return ENTC_ERR_NONE;
   }
 
   if (n > 0)
@@ -683,7 +687,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  return ecaio_wait_signal (self, timeout, &orig_mask, err);
+  return ecaio_wait_signal (self, timeout, &orig_mask, 1, err);
 }
 
 //-----------------------------------------------------------------------------
@@ -750,6 +754,7 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* ori
   sigaddset (mask, SIGINT);
   sigaddset (mask, SIGTERM);
 
+
   if (sigprocmask(SIG_BLOCK, &mask, &orig_mask) < 0) 
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
@@ -764,8 +769,12 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
   EcAioContext ctx;
+
   sigset_t mask;
   sigset_t orig_mask;
+
+  memset(&mask, 0, sizeof(sigset_t));
+  memset(&orig_mask, 0, sizeof(sigset_t));
 
   res = ecaio_reset_signals (self, onlyTerm, &mask, &orig_mask, err);
   if (res)
@@ -791,13 +800,12 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)
+
   {
-    res = ecaio_wait_signal (self, ENTC_INFINITE, &orig_mask, err);
+    res = ecaio_wait_signal (self, ENTC_INFINITE, &orig_mask, 2, err);
   }
 
   close (tfd);
-
-  ecaio_context_destroy(&ctx);
 
   return res;
 }
