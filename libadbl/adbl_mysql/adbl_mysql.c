@@ -164,7 +164,7 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
         bind->length = 0;
         bind->error = 0; 
 
-        eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);
+        //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);
 
         self->pos++;
       }
@@ -181,7 +181,7 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
         bind->error = 0; 
         bind->is_unsigned = 1;
         
-        eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%i' as integer", self->pos, *((uint32_t*)bind->buffer));
+        //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%i' as integer", self->pos, *((uint32_t*)bind->buffer));
         
         self->pos++;
       }
@@ -238,7 +238,7 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
     mysql_free_result(res);
   }
   
-  eclogger_msg (LL_DEBUG, "MYSQ", "connect", "Successful connected to Mysql database" );
+  //eclogger_msg (LL_DEBUG, "MYSQ", "connect", "Successful connected to Mysql database" );
 
   return self;
 }
@@ -707,13 +707,13 @@ int adblmodule_dbprocedure_create (AdblMysqlConnection self, AdblProcedure* proc
       
       bindvars_add (bv, item);
 
-      eclogger_fmt (LL_DEBUG, "MYSQ", "bind", "bound item");
+      //eclogger_fmt (LL_DEBUG, "MYSQ", "bind", "bound item");
     }
   }
 
   ecstream_appendc (stream, ')');
   
-  eclogger_fmt (LL_DEBUG, "MYSQ", "stmt", ecstream_buffer(stream));
+  //eclogger_fmt (LL_DEBUG, "MYSQ", "stmt", ecstream_buffer(stream));
   
   res = adblmodule_prepared_statement (stmt, bv, stream);
 
@@ -732,7 +732,7 @@ int adblmodule_dbprocedure_create (AdblMysqlConnection self, AdblProcedure* proc
     return FALSE;
   }
   
-  eclogger_fmt (LL_DEBUG, "MYSQ", "stmt", "done");
+  //eclogger_fmt (LL_DEBUG, "MYSQ", "stmt", "done");
 
   return TRUE;
 }
@@ -760,11 +760,11 @@ int adblmodule_dbprocedure (void* ptr, AdblProcedure* proc)
   
   uint32_t size = ecudc_size (proc->values);
   
-  eclogger_fmt (LL_TRACE, "MYSQ", "size", "bind var size %i", size);
+  //eclogger_fmt (LL_TRACE, "MYSQ", "size", "bind var size %i", size);
   
   bv = bindvars_create (size);
 
-  eclogger_fmt (LL_TRACE, "MYSQ", "size", "create");
+  //eclogger_fmt (LL_TRACE, "MYSQ", "size", "create");
 
   res = adblmodule_dbprocedure_create (self, proc, stmt, bv);
   
