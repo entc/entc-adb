@@ -80,6 +80,7 @@ ADD_DEFINITIONS(-ggdb)
 
 SET (CORE_SOURCES_SYS
   system/types.h
+  system/ecdefs.h
   system/macros.h
   system/platform.h
   system/ecfile.h
@@ -126,6 +127,8 @@ SET (CORE_SOURCES_SYS
 )
 
 SET (CORE_SOURCES_TYPES
+  types/ecerr.h
+  types/ecerr.c
   types/ecalloc.h
   types/ecalloc.c
   types/ecarray.c
@@ -196,6 +199,8 @@ SET (CORE_SOURCES_TOOLS
   tools/ecdata.c
   tools/ecmime.h
   tools/ecmime.c
+  tools/eclparser.h
+  tools/eclparser.c
 )
 
 
