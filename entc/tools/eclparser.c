@@ -15,7 +15,7 @@
 
 struct EcLineParser_s
 {
-  fct_stdlineparser_onLine onLine;
+  fct_eclineparser_onLine onLine;
   
   void* ptr;
   
@@ -27,7 +27,7 @@ struct EcLineParser_s
 
 //-----------------------------------------------------------------------------
 
-EcLineParser eclineparser_create (fct_stdlineparser_onLine onLine, void* ptr)
+EcLineParser eclineparser_create (fct_eclineparser_onLine onLine, void* ptr)
 {
   EcLineParser self = ENTC_NEW(struct EcLineParser_s);
   

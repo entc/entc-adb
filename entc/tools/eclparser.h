@@ -29,13 +29,13 @@
 
 struct EcLineParser_s; typedef struct EcLineParser_s* EcLineParser;
 
-typedef void (__STDCALL *fct_stdlineparser_onLine) (void* ptr, const EcString line);
+typedef void (__STDCALL *fct_eclineparser_onLine) (void* ptr, const EcString line);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcLineParser eclineparser_create (fct_stdlineparser_onLine onLine, void* ptr);
+__LIBEX EcLineParser eclineparser_create (fct_eclineparser_onLine onLine, void* ptr);
 
-__LIBEX void stdlineparser_destroy (EcLineParser* pself);
+__LIBEX void eclineparser_destroy (EcLineParser* pself);
 
 __LIBEX void eclineparser_parse (EcLineParser, const char* buffer, int size);
 
