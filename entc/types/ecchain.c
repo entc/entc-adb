@@ -39,11 +39,22 @@ struct EcChain_s
 
 //----------------------------------------------------------------------------------------
 
+static int __STDCALL ecchain_onDestroy (void* ptr)
+{
+  uint_t* pindex = ptr;
+  
+  ENTC_DEL (&pindex, uint_t);
+
+  return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcChain ecchain_create (EcAlloc alloc)
 {
   EcChain self = ENTC_NEW(struct EcChain_s);
   
-  self->stack = eclist_create_ex (alloc);
+  self->stack = eclist_create (ecchain_onDestroy);
   self->length = 200;
   self->buffer = ENTC_MALLOC(sizeof(void*) * self->length);
   
@@ -56,17 +67,8 @@ EcChain ecchain_create (EcAlloc alloc)
 
 void ecchain_clear(EcChain self)
 {
-  EcListNode node;
-  
-  memset(self->buffer, 0x00, sizeof(void*) * self->length);  
+  memset(self->buffer, 0x00, sizeof(void*) * self->length);
   self->nextempty = 0;
-
-  for (node = eclist_first(self->stack); node != eclist_end(self->stack); node = eclist_next(node))
-  {
-    uint_t* pindex = eclist_data(node);
-
-    ENTC_DEL (&pindex, uint_t);
-  }
   
   eclist_clear(self->stack);
   self->stacklen = 0;
@@ -80,7 +82,7 @@ void ecchain_destroy (EcAlloc alloc, EcChain* pself)
   
   ecchain_clear (self);
   
-  eclist_free_ex (EC_ALLOC, &(self->stack));
+  eclist_destroy (&(self->stack));
   
   ENTC_FREE(self->buffer);
   
@@ -98,11 +100,10 @@ uint_t ecchain_getNextIndex(EcChain self)
     uint_t* pindex;
     
     self->stacklen--;
-    pindex = eclist_data(eclist_first(self->stack));
+    
+    pindex = eclist_pop_front (self->stack);
     
     res = *pindex;
-    
-    eclist_erase (EC_ALLOC, self->stack, eclist_first (self->stack));
     
     ENTC_DEL(&pindex, uint_t);
   }
@@ -155,7 +156,7 @@ void ecchain_del(EcChain self, uint_t index)
   
   pindex = ENTC_NEW(uint_t);  
   *pindex = index;
-  eclist_append_ex (EC_ALLOC, self->stack, pindex);
+  eclist_push_back (self->stack, pindex);
   self->stacklen++;
   
   pp = self->buffer + index;
@@ -241,6 +242,7 @@ uint_t ecchain_next(const EcChain self, uint_t index)
 
 //----------------------------------------------------------------------------------------
 
+/*
 void printInfo(const EcChain self)
 {
   printf("[%p] length %u, free (%u, %u)\n", self, self->length, eclist_size(self->stack), self->nextempty);
@@ -285,5 +287,6 @@ void ecchain_dumpArray(const EcChain self)
   }
   printf("\n");
 }
+ */
 
 //----------------------------------------------------------------------------------------

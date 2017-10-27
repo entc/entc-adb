@@ -4,7 +4,6 @@ PROJECT(entc-base)
 
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 
-
 SET( SYSTEM_LIBRARIES )
 
 find_package(OpenSSL)
@@ -118,12 +117,6 @@ SET (CORE_SOURCES_SYS
   system/ecexec_win.c
   system/ecrefcnt.h
   system/ecrefcnt.c
-  system/ecasyncio.h
-  system/ecasyncio.c
-  system/ecipc.h
-  system/ecipc.c
-  system/ecnotify.h
-  system/ecnotify.c
 )
 
 SET (CORE_SOURCES_TYPES
@@ -132,13 +125,15 @@ SET (CORE_SOURCES_TYPES
   types/ecalloc.h
   types/ecalloc.c
   types/ecarray.c
-  types/ecintmap.c
-  types/eclist.c
-  types/ecmap.c
-  types/ecmapchar.c
-  types/ecptrmap.c
-  types/ecstack.c
-  types/ecvector.c
+types/ecintmap.h
+types/ecintmap.c
+types/eclist.h
+types/eclist.c
+types/ecmap.h
+types/ecmap.c
+types/ecmapchar.h
+types/ecmapchar.c
+types/ecstack.c
   types/ectable.c
   types/ecchain.c
   types/ecchain.h
@@ -175,34 +170,28 @@ SET (CORE_SOURCES_UTILS
 )
 
 SET (CORE_SOURCES_TOOLS
-  tools/ecserver.h
-  tools/ecserver.c
   tools/echttp.h
   tools/echttp.c
   tools/echtml.h
   tools/echtml.c
-  tools/eclocale.h
-  tools/eclocale.c
-  tools/ecmail.h
-  tools/ecmail.c
   tools/ecxmlstream.h
   tools/ecxmlstream.c
-  tools/ecxmldom.h
-  tools/ecxmldom.c
   tools/ecjson.h
   tools/ecjson.c
   tools/ecbins.h
   tools/ecbins.c
-  tools/ecasyncvc.h
-  tools/ecasyncvc.c
-  tools/ecdata.h
-  tools/ecdata.c
   tools/ecmime.h
   tools/ecmime.c
   tools/eclparser.h
   tools/eclparser.c
+  tools/ectokenizer.h
+  tools/ectokenizer.c
 )
 
+SET (CORE_SOURCES_TESTS
+  tests/ecenv.h
+  tests/ecenv.c
+)
 
 INCLUDE_DIRECTORIES("." ${OPENSSL_INCLUDE_DIR})
 
@@ -210,11 +199,13 @@ source_group("System" FILES ${CORE_SOURCES_SYS})
 source_group("Types" FILES ${CORE_SOURCES_TYPES})
 source_group("Utils" FILES ${CORE_SOURCES_UTILS})
 source_group("Tools" FILES ${CORE_SOURCES_TOOLS})
+source_group("Tests" FILES ${CORE_SOURCES_TESTS})
 
-ADD_LIBRARY( entc SHARED ${CORE_SOURCES_SYS} ${CORE_SOURCES_TYPES} ${CORE_SOURCES_UTILS} ${CORE_SOURCES_TOOLS})
+ADD_LIBRARY( entc SHARED ${CORE_SOURCES_SYS} ${CORE_SOURCES_TYPES} ${CORE_SOURCES_UTILS} ${CORE_SOURCES_TOOLS} ${CORE_SOURCES_TESTS})
 
 TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 set_target_properties(entc PROPERTIES VERSION 1.2.0 SOVERSION 1.2.0)
 
 SUBDIRS(tests)
+

@@ -34,13 +34,24 @@ typedef struct
   
 } EcIntMapDataNode;
 
+//----------------------------------------------------------------------------------------
+
+static int __STDCALL ecintmap_onDestroy (void* ptr)
+{
+  EcIntMapDataNode* mapnode = ptr;
+  
+  ENTC_DEL (&mapnode, EcIntMapDataNode);
+  
+  return 0;
+}
+
 /*------------------------------------------------------------------------*/
 
 EcIntMap ecintmap_create (EcAlloc alloc)
 {
   EcIntMap self = ECMM_NEW(struct EcIntMap_s);
   
-  self->list = eclist_create_ex (alloc);
+  self->list = eclist_create (ecintmap_onDestroy);
   
   return self;
 }
@@ -53,7 +64,7 @@ void ecintmap_destroy (EcAlloc alloc, EcIntMap* pself)
   
   ecintmap_clear(self);
   
-  eclist_free_ex (EC_ALLOC, &(self->list));
+  eclist_destroy (&(self->list));
   
   ECMM_DEL(pself, struct EcIntMap_s);
 }
@@ -62,16 +73,7 @@ void ecintmap_destroy (EcAlloc alloc, EcIntMap* pself)
 
 void ecintmap_clear (EcIntMap self)
 {
-  /* iterate through all list members */
-  EcListNode node;
-  for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
-  {
-    EcIntMapDataNode* mapnode = eclist_data (node);
-    
-    ENTC_DEL (&mapnode, EcIntMapDataNode);
-  }
-  
-  eclist_clear (self->list);    
+  eclist_clear (self->list);
 }
 
 /*------------------------------------------------------------------------*/
@@ -82,44 +84,60 @@ void ecintmap_append(EcIntMap self, uint_t key, void* data)
   mapnode->key = key;
   mapnode->data = data;
   
-  eclist_append_ex (EC_ALLOC, self->list, mapnode);  
+  eclist_push_back (self->list, mapnode);
 }
 
 /*------------------------------------------------------------------------*/
 
 EcIntMapNode ecintmap_find (EcIntMap self, uint_t key)
 {
-  /* iterate through all list members */
-  EcListNode node;
-  for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
+  EcListCursor cursor;
+  
+  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    EcIntMapDataNode* mapnode = eclist_data(node);
-    /* compare the stored name with the name we got */
-    if(mapnode->key == key)
-      return node;
+    EcIntMapDataNode* mapnode = eclist_data (cursor.node);
+
+    if (mapnode->key == key)
+    {
+      return cursor.node;
+    }
   }
-  return (EcIntMapNode)eclist_end(self->list);
+  
+  return NULL;
 }
 
 /*------------------------------------------------------------------------*/
 
-EcIntMapNode ecintmap_first(const EcIntMap self)
+EcIntMapNode ecintmap_first (const EcIntMap self)
 {
-  return eclist_first(self->list);  
+  EcListCursor cursor;
+  
+  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  
+  if (eclist_cursor_next (&cursor))
+  {
+    return cursor.node;
+  }
+  else
+  {
+    return NULL;
+  }
 }
 
 /*------------------------------------------------------------------------*/
 
 EcIntMapNode ecintmap_next (const EcIntMapNode node)
 {
-  return eclist_next((EcListNode)node);  
+  return eclist_next (node);
 }
 
 /*------------------------------------------------------------------------*/
 
-EcIntMapNode ecintmap_end(EcIntMap self)
+EcIntMapNode ecintmap_end (EcIntMap self)
 {
-  return eclist_end(self->list);  
+  return NULL;
 }
 
 /*------------------------------------------------------------------------*/
@@ -135,11 +153,13 @@ uint_t ecintmap_key (const EcIntMapNode node)
 
 EcIntMapNode ecintmap_erase (EcIntMap self, EcIntMapNode node)
 {
-  EcIntMapDataNode* mapnode = eclist_data (node);
-    
-  ENTC_DEL (&mapnode, EcIntMapDataNode);
+  EcListCursor cursor;
   
-  return eclist_erase (EC_ALLOC, self->list, node);
+  cursor.node = node;
+  
+  eclist_erase (self->list, &cursor);
+  
+  return cursor.node;
 }
 
 /*------------------------------------------------------------------------*/
@@ -154,19 +174,25 @@ void* ecintmap_data(const EcIntMapNode node)
 
 void ecintmap_orderAll(EcIntMap self)
 {
-  /* iterate through all list members */
-  EcListNode node01;
-  EcListNode node02;
-
-  for(node01 = eclist_first(self->list); node01 != eclist_end(self->list); node01 = eclist_next(node01))
+  EcListCursor cursor01;
+  
+  eclist_cursor_init (self->list, &cursor01, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor01))
   {
-    EcIntMapDataNode* mapnode01 = eclist_data(node01);
+    EcIntMapDataNode* mapnode01 = eclist_data(cursor01.node);
 
     uint_t min_key = mapnode01->key;
     
-    for(node02 = eclist_next(node01); node02 != eclist_end(self->list); node02 = eclist_next(node02))
+    EcListCursor cursor02;
+
+    cursor02.node = cursor01.node;
+    cursor02.position = cursor01.position;
+    cursor02.direction = cursor01.direction;
+    
+    while (eclist_cursor_next (&cursor02))
     {
-      EcIntMapDataNode* mapnode02 = eclist_data(node02);
+      EcIntMapDataNode* mapnode02 = eclist_data(cursor02.node);
 
       if( mapnode02->key < min_key )
       {
@@ -180,7 +206,6 @@ void ecintmap_orderAll(EcIntMap self)
         mapnode01->key = min_key;
       }
     }
-    
   }
 }
 

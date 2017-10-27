@@ -73,7 +73,7 @@ EcString ecstr_copy( const EcString source )
 
 /*------------------------------------------------------------------------*/
 
-EcString ecstr_part( const EcString source, uint_t length )
+EcString ecstr_part (const EcString source, uint_t length)
 {
   char* ret;
   
@@ -942,82 +942,6 @@ int ecstr_split (const EcString source, EcString* s1, EcString* s2, char c)
   }
   
   return FALSE;
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_tokenizer_clear(EcList list)
-{
-  EcListNode node;
-  for(node = eclist_first(list); node != eclist_end(list); node = eclist_next(node))
-  {
-    EcString h = eclist_data(node);
-    
-    ecstr_delete( &h );
-  }
-  eclist_clear( list );
-}
-
-/*------------------------------------------------------------------------*/
-
-EcString ecstr_tokenizer_get (EcList list, EcListNode node)
-{
-  if (node != eclist_end(list))
-  {
-	return eclist_data (node);
-  }
-  return ecstr_init();
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecstr_tokenizer(EcList list, const EcString source, char delimeter)
-{
-  const char* posR = source;
-  const char* posL = source;
-
-  if (ecstr_empty(source)) {
-    return;
-  }
-  
-  ecstr_tokenizer_clear(list);
-  
-  while (*posR)
-  {
-    if (*posR == delimeter)
-    {
-      // calculate the length of the last segment
-      uint_t diff = posR - posL;
-      if (diff > 0)
-      {
-        // allocate memory for the segment
-        char* buffer = (char*)ENTC_MALLOC(diff + 2);
-        memcpy(buffer, posL, diff);
-        // set termination
-        buffer[diff] = 0;
-        // add to list      
-        eclist_append (list, buffer);
-      }
-      posL = posR + 1;
-    }
-    posR++;
-  }
-  
- 
-  {
-    // calculate the length of the last segment
-    uint_t diff = posR - posL;
-    if (diff > 0)
-    {
-      // allocate memory for the segment
-      char* buffer = (char*)ENTC_MALLOC(diff + 1);      
-      memcpy(buffer, posL, diff);
-      // set termination
-      buffer[diff] = 0;
-      // add to list      
-      eclist_append_ex (EC_ALLOC, list, buffer);      
-    }
-  }
 }
 
 /*------------------------------------------------------------------------*/

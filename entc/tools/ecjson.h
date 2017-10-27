@@ -20,22 +20,22 @@
 #ifndef ENTC_TOOLS_JSON_H
 #define ENTC_TOOLS_JSON_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+//=============================================================================
 
-#include "../types/ecudc.h"
-#include "../types/ecstring.h"
+#include "system/ecdefs.h"
+#include "types/ecudc.h"
+#include "types/ecstring.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT EcUdc ecjson_read (const EcString, const EcString name);
+__LIBEX EcUdc ecjson_read (const EcString, const EcString name);
 
-__LIB_EXPORT EcString ecjson_write (const EcUdc);
+__LIBEX EcString ecjson_write (const EcUdc);
 
-__LIB_EXPORT int ecjson_readFromFile (const EcString filename, EcUdc*);
+__LIBEX int ecjson_readFromFile (const EcString filename, EcUdc*);
 
-__LIB_EXPORT int ecjson_writeToFile (const EcString filename, const EcUdc);
+__LIBEX int ecjson_writeToFile (const EcString filename, const EcUdc);
 
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif

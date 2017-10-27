@@ -21,6 +21,7 @@
 
 #include "types/ecbuffer.h"
 #include "types/ecmapchar.h"
+#include "tools/ectokenizer.h"
 
 //------------------------------------------------------------------------------------------------------
 
@@ -688,16 +689,18 @@ int ecmultipartparser_process (EcMultipartParser self, ulong_t size)
 
 EcString echttpheader_parseLine (const EcString line, const EcString key)
 {
-  EcListNode node;
-  EcList tokens = eclist_create ();
+  EcListCursor cursor;
+  EcList tokens;
   EcString ret = NULL;
   int run = TRUE;
   
-  ecstr_tokenizer(tokens, line, ';');
+  tokens = ectokenizer_parse (line, ';');
   
-  for (node = eclist_first(tokens); run && node != eclist_end(tokens); node = eclist_next(node))
+  eclist_cursor_init (tokens, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    EcString token = ecstr_trim(ecstr_tokenizer_get (tokens, node));
+    EcString token = ecstr_trim(eclist_data(cursor.node));
     EcString left = NULL;
     EcString right = NULL;
     
@@ -716,7 +719,7 @@ EcString echttpheader_parseLine (const EcString line, const EcString key)
     ecstr_delete(&right);
   }
   
-  ecstr_tokenizer_clear (tokens);
+  eclist_destroy (&tokens);
   
   return ret;
 }

@@ -133,7 +133,7 @@ EcEventContext ece_context_new ()
   EcEventContext self = ENTC_NEW(struct EcEventContext_s);
   
   self->mutex = ecmutex_new ();
-  self->lists = eclist_create_ex (EC_ALLOC);
+  self->lists = eclist_create (NULL);
   
   return self;  
 }
@@ -145,7 +145,7 @@ void ece_context_delete (EcEventContext* pself)
   EcEventContext self = *pself;
 
   ecmutex_delete (&(self->mutex));
-  eclist_free_ex (EC_ALLOC, &(self->lists));
+  eclist_destroy (&(self->lists));
   
   ENTC_DEL(pself, struct EcEventContext_s);
 }
@@ -185,17 +185,20 @@ int ece_context_waitforAbort (EcEventContext self, uint_t timeout)
 
 void ece_context_setAbort (EcEventContext self)
 {
-  EcListNode node;
-    
-  ecmutex_lock (self->mutex);
+  EcListCursor cursor;
 
-  for (node = eclist_first(self->lists); node != eclist_end(self->lists); node = eclist_next(node))
+  ecmutex_lock (self->mutex);
+  
+  eclist_cursor_init (self->lists, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    EcEventQueue list = eclist_data (node);
-    // trigger termination in queue    
+    EcEventQueue list = eclist_data (cursor.node);
+    
+    // trigger termination in queue
     ece_list_set (list, ECELIST_ABORT_HANDLENO);
   }
-
+  
   ecmutex_unlock (self->mutex);
 }
 
@@ -203,17 +206,18 @@ void ece_context_setAbort (EcEventContext self)
 
 void ece_context_resetAbort (EcEventContext self)
 {
-  EcListNode node;
+  EcListCursor cursor;
   
   ecmutex_lock (self->mutex);
   
-  for (node = eclist_first(self->lists); node != eclist_end(self->lists); node = eclist_next(node))
+  eclist_cursor_init (self->lists, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    //EcEventQueue list = eclist_data (node);
 
   }
   
-  ecmutex_unlock (self->mutex);  
+  ecmutex_unlock (self->mutex);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -262,7 +266,7 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
   ecmutex_lock (self->ecmutex);
 
   self->eclist = ec->lists;
-  self->ecnode = eclist_append (ec->lists, self);
+  self->ecnode = eclist_push_back (ec->lists, self);
   
   ecmutex_unlock (self->ecmutex);
 
@@ -270,7 +274,7 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
     
   memset (self->data, 0x0, sizeof(char) * 200);
   
-  self->ptrs = eclist_create_ex (EC_ALLOC);
+  self->ptrs = eclist_create (NULL);
   
   return self;
 }
@@ -279,12 +283,12 @@ EcEventQueue ece_list_create (EcEventContext ec, ece_list_ondel_fct fct)
 
 void ece_list_clear (EcEventQueue self)
 {
-  EcListCursor cursor; eclist_cursor (self->ptrs, &cursor);
+  EcListCursor cursor; eclist_cursor_init (self->ptrs, &cursor, LIST_DIR_NEXT);
   
-  while (eclist_cnext (&cursor))
+  while (eclist_cursor_next (&cursor))
   {
-    EcEventData* pdata = cursor.value;
-
+    EcEventData* pdata = eclist_data(cursor.node);
+    
     ece_kevent_delHandle (self->kq, pdata->handle);
     
     if (self->fct)
@@ -312,11 +316,11 @@ void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* 
   
   ecmutex_lock (self->ecmutex);
 
-  eclist_cursor (self->ptrs, &cursor);
+  eclist_cursor_init (self->ptrs, &cursor, LIST_DIR_NEXT);
   
-  while (eclist_cnext (&cursor))
+  while (eclist_cursor_next (&cursor))
   {
-    EcEventData* pdata = cursor.value;
+    EcEventData* pdata = eclist_data(cursor.node);
 
     // if true this entry must be removed
     if (isAssigned (pdata->ptr) && callback (pdata->ptr, ptr))
@@ -329,7 +333,7 @@ void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* 
         self->fct (&(pdata->ptr));
       }
       
-      eclist_cerase (EC_ALLOC, &cursor);
+      eclist_erase (self->ptrs, &cursor);
     }
   }
 
@@ -344,13 +348,19 @@ void ece_list_destroy (EcEventQueue* sptr)
 
   ecmutex_lock (self->ecmutex);
   
-  eclist_erase (EC_ALLOC, self->eclist, self->ecnode);
+  {
+    EcListCursor cursor;
+    
+    cursor.node = self->ecnode;
+    
+    eclist_erase (self->eclist, &cursor);
+  }
   
   ecmutex_unlock (self->ecmutex);
   
   // cleanup
   ece_list_clear (self);
-  eclist_free_ex (EC_ALLOC, &(self->ptrs));
+  eclist_destroy (&(self->ptrs));
       
   close (self->kq);
   
@@ -368,7 +378,7 @@ void ece_list_data_add (EcEventQueue self, EcHandle handle, void* ptr)
     pdata->handle = handle;
     pdata->ptr = ptr;
     
-    eclist_append (self->ptrs, pdata);  
+    eclist_push_back (self->ptrs, pdata);
   }
 }
 
@@ -376,11 +386,14 @@ void ece_list_data_add (EcEventQueue self, EcHandle handle, void* ptr)
 
 void* ece_list_data_get (EcEventQueue self, EcHandle handle, int remove)
 {
-  EcListCursor cursor; eclist_cursor (self->ptrs, &cursor);
+  EcListCursor cursor;
   
-  while (eclist_cnext (&cursor))
+  eclist_cursor_init (self->ptrs, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    EcEventData* pdata = cursor.value;
+  
+    EcEventData* pdata = eclist_data(cursor.node);
     
     if (pdata->handle == handle)
     {
@@ -388,7 +401,7 @@ void* ece_list_data_get (EcEventQueue self, EcHandle handle, int remove)
       {
         void* ptr = pdata->ptr;
         
-        eclist_erase (EC_ALLOC, self->ptrs, cursor.node);
+        eclist_erase (self->ptrs, &cursor);
         
         ENTC_DEL (&pdata, EcEventData);
         

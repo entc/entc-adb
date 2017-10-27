@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:alex@kalkhof.org]
+ * Copyright (c) 2010-2017 "Alexander Kalkhof" [email:alex@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -20,70 +20,77 @@
 #ifndef ENTC_TYPES_LIST_H
 #define ENTC_TYPES_LIST_H 1
 
-#include "types/ecalloc.h"
+//=============================================================================
+
+#include "system/ecdefs.h"
+#include "types/ecstring.h"
+
+//-----------------------------------------------------------------------------
 
 struct EcList_s; typedef struct EcList_s* EcList;
 
 struct EcListNode_s; typedef struct EcListNode_s* EcListNode;
 
-typedef struct {
+typedef int (__STDCALL *fct_eclist_onDestroy) (void* ptr);
+
+//-----------------------------------------------------------------------------
+
+__LIBEX EcList eclist_create (fct_eclist_onDestroy);
+
+__LIBEX void eclist_destroy (EcList*);
+
+__LIBEX void eclist_clear (EcList);
+
+__LIBEX EcListNode eclist_push_back (EcList, void* data);
+
+__LIBEX EcListNode eclist_push_front (EcList, void* data);
+
+__LIBEX void* eclist_pop_front (EcList);
+
+__LIBEX void* eclist_pop_back (EcList);
+
+__LIBEX unsigned long eclist_size (EcList);
+
+__LIBEX void eclist_replace (EcList, EcListNode, void* data);
+
+__LIBEX void* eclist_data (EcListNode);
+
+__LIBEX EcListNode eclist_next (EcListNode);
+
+//-----------------------------------------------------------------------------
+
+typedef struct
+{
   
   EcListNode node;
   
-  EcList list;
+  int position;
   
-  void* value;
+  int direction;
   
 } EcListCursor;
 
-__CPP_EXTERN______________________________________________________________________________START
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT EcList eclist_create (void);
-  
-__LIB_EXPORT void eclist_free (EcList*);
+#define LIST_DIR_NEXT 1
+#define LIST_DIR_PREV 0
 
-__LIB_EXPORT EcList eclist_create_ex (EcAlloc);
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT void eclist_free_ex (EcAlloc, EcList*);
-  
-__LIB_EXPORT EcListNode eclist_append (EcList, void* data);
+__LIBEX EcListCursor* eclist_cursor_create (EcList, int direction);
 
-__LIB_EXPORT EcListNode eclist_append_ex (EcAlloc, EcList, void* data);
+__LIBEX void eclist_cursor_destroy (EcListCursor**);
 
-__LIB_EXPORT void eclist_swap (EcListNode node1, EcListNode node2);
-  
-__LIB_EXPORT void eclist_set(EcListNode, void* data);
+__LIBEX void eclist_cursor_init (EcList, EcListCursor*, int direction);
 
-__LIB_EXPORT EcListNode eclist_erase (EcAlloc, EcList, EcListNode);
-  
-__LIB_EXPORT EcListNode eclist_splice (EcList, EcListNode from, EcListNode to, EcList);
+__LIBEX int eclist_cursor_next (EcListCursor*);
 
-__LIB_EXPORT EcListNode eclist_first(const EcList);
+__LIBEX int eclist_cursor_prev (EcListCursor*);
 
-__LIB_EXPORT EcListNode eclist_last(const EcList);
+__LIBEX void eclist_erase (EcList, EcListCursor*);
 
-__LIB_EXPORT EcListNode eclist_end(const EcList);
+__LIBEX void* eclist_extract (EcList, EcListCursor*);
 
-__LIB_EXPORT EcListNode eclist_next(const EcListNode);
-
-__LIB_EXPORT EcListNode eclist_back(const EcListNode);
-  
-__LIB_EXPORT void* eclist_data(const EcListNode);
-  
-__LIB_EXPORT void eclist_clear(EcList);
-  
-__LIB_EXPORT uint_t eclist_size(const EcList);
-  
-__LIB_EXPORT void eclist_remove (EcAlloc alloc, EcList, void*);
-  
-// cursor
-
-__LIB_EXPORT void eclist_cursor (EcList, EcListCursor*);
-
-__LIB_EXPORT int eclist_cnext (EcListCursor* c);
-
-__LIB_EXPORT void eclist_cerase (EcAlloc alloc, EcListCursor* c);
-
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif

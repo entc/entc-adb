@@ -37,11 +37,24 @@ struct EcMapDataNode
 
 //----------------------------------------------------------------------------------------
 
+static int __STDCALL ecmap_onDestroy (void* ptr)
+{
+  struct EcMapDataNode* mapnode = ptr;
+  
+  ecstr_delete(&(mapnode->key));
+  
+  ENTC_DEL(&mapnode, struct EcMapDataNode);
+  
+  return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcMap ecmap_create (EcAlloc alloc)
 {
   EcMap self = ECMM_NEW(struct EcMap_s);
 
-  self->list = eclist_create_ex (alloc);
+  self->list = eclist_create (ecmap_onDestroy);
 
   return self;
 }
@@ -50,17 +63,7 @@ EcMap ecmap_create (EcAlloc alloc)
 
 void ecmap_clear (EcAlloc alloc, EcMap self)
 {
-  // iterate through all list members 
-  EcListNode node;
-  for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
-  {
-    struct EcMapDataNode* mapnode = eclist_data(node);
-    
-    ecstr_delete(&(mapnode->key));
-
-    ECMM_DEL(&mapnode, struct EcMapDataNode);
-  }
-  eclist_clear(self->list);
+  eclist_clear (self->list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -73,7 +76,7 @@ void ecmap_destroy (EcAlloc alloc, EcMap* pself)
   ecmap_clear (alloc, self);
 
   // delete the list
-  eclist_free_ex (EC_ALLOC, &(self->list));
+  eclist_destroy (&(self->list));
   
   ECMM_DEL(pself, struct EcMap_s);
 }
@@ -86,60 +89,74 @@ EcMapNode ecmap_append (EcMap self, const EcString key, void* data)
   mapnode->key = ecstr_copy(key);
   mapnode->data = data;
   
-  return eclist_append_ex (EC_ALLOC, self->list, mapnode);
+  return eclist_push_back (self->list, mapnode);
 }
 
 //----------------------------------------------------------------------------------------
 
 EcMapNode ecmap_erase (EcMap self, EcMapNode node)
 {
-  struct EcMapDataNode* mapnode = (struct EcMapDataNode*)eclist_data(node);
-  free(mapnode->key);
-  free(mapnode);
+  EcListCursor cursor;
+
+  cursor.node = node;
   
-  return eclist_erase (EC_ALLOC, self->list, node);
+  eclist_erase (self->list, &cursor);
+  
+  return cursor.node;
 }
 
 //----------------------------------------------------------------------------------------
 
 EcMapNode ecmap_find (EcMap self, const EcString key)
 {
-  EcListNode node;
-
-  //iterate through all list members
-  for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
+  EcListCursor cursor;
+  
+  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    struct EcMapDataNode* mapnode = (struct EcMapDataNode*)eclist_data(node);
+    struct EcMapDataNode* mapnode = eclist_data(cursor.node);
     
     //compare the stored name with the name we got
     if(ecstr_equal(mapnode->key, key))
     {
-      return node;
+      return cursor.node;
     }
   }
   
-  return eclist_end(self->list);
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------
 
 EcMapNode ecmap_first (const EcMap self)
 {
-  return eclist_first(self->list);
+  EcListCursor cursor;
+  
+  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  
+  if (eclist_cursor_next (&cursor))
+  {
+    return cursor.node;
+  }
+  else
+  {
+    return NULL;
+  }
 }
 
 //----------------------------------------------------------------------------------------
 
 EcMapNode ecmap_end (const EcMap self)
 {
-  return eclist_end(self->list);  
+  return NULL;
 }
 
 //----------------------------------------------------------------------------------------
 
 EcMapNode ecmap_next (const EcMapNode node)
 {
-  return eclist_next((EcListNode)node);
+  return eclist_next (node);
 }
 
 //----------------------------------------------------------------------------------------
@@ -170,15 +187,15 @@ uint_t ecmap_size (const EcMap self)
 void ecmap_cursor (EcMap self, EcMapCursor* cursor)
 {
   cursor->map = self;
-  cursor->node = eclist_first (self->list);
+  cursor->node = ecmap_first (self);
 }
 
 //----------------------------------------------------------------------------------------
 
 int ecmap_cnext (EcMapCursor* cursor)
 {
-  cursor->node = eclist_next(cursor->node);
-  return cursor->node != eclist_end (cursor->map->list);
+  cursor->node = ecmap_next(cursor->node);
+  return cursor->node != ecmap_end (cursor->map);
 }
 
 //----------------------------------------------------------------------------------------

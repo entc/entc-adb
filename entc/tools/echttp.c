@@ -25,6 +25,7 @@
 #include <types/ecmapchar.h>
 #include <system/ectime.h>
 #include "ecmime.h"
+#include "tools/ectokenizer.h"
 
 #include <string.h>
 #include <fcntl.h>
@@ -986,9 +987,9 @@ void echttp_header_clear (EcHttpHeader* header)
   
   if (isAssigned (header->tokens))
   {
-    ecstr_tokenizer_clear(header->tokens);
-    eclist_free_ex (EC_ALLOC, &(header->tokens));
-  }  
+    eclist_destroy(&(header->tokens));
+  }
+  
   ecstr_delete(&(header->urlpath));
   
   if (isAssigned (header->content))
@@ -1122,29 +1123,33 @@ void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString ur
 void echttp_header_title (EcHttpHeader* header)
 {
   // variables
-  EcListNode node;
   EcStream stream = ecstream_new ();
   // cast
   EcString url_unescaped = ecstr_copy (header->request_url);
   // unescape html url
   echttp_unescape (url_unescaped);
   
-  header->tokens = eclist_create_ex (EC_ALLOC);
-  // split url into parts
-  ecstr_tokenizer (header->tokens, url_unescaped, '/');
+  header->tokens = ectokenizer_parse (url_unescaped, '/');
+  
   // clean up
   ecstr_delete (&url_unescaped);  
   
-  for (node = eclist_first(header->tokens); node != eclist_end(header->tokens); node = eclist_next(node))
   {
-    EcString token = eclist_data (node);
-
-    if (node != eclist_first(header->tokens))
-    {
-      ecstream_append(stream, " - ");
-    }
+    EcListCursor cursor;
     
-    ecstream_append(stream, token);
+    eclist_cursor_init (header->tokens, &cursor, LIST_DIR_NEXT);
+    
+    while (eclist_cursor_next (&cursor))
+    {
+      EcString token = eclist_data (cursor.node);
+      
+      if (cursor.position > 0)
+      {
+        ecstream_append(stream, " - ");
+      }
+      
+      ecstream_append(stream, token);
+    }
   }
   
   {
@@ -1376,38 +1381,38 @@ void echttp_parse_cookies_next (EcHttpHeader* header, const EcString cookie)
 
 void echttp_parse_cookies (EcHttpHeader* header, const EcString s)
 {
-  EcList list = eclist_create_ex (EC_ALLOC);
-  EcListNode node;
+  EcList list = ectokenizer_parse (s, ';');
   
-  ecstr_tokenizer(list, s, ';');
+  EcListCursor cursor;
   
-  for(node = eclist_first(list); node != eclist_end(list); node = eclist_next(node))
+  eclist_cursor_init (list, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    EcString token = eclist_data(node);
+    const EcString token = eclist_data(cursor.node);
+    
     echttp_parse_cookies_next (header, token);
-    ecstr_delete( &token );
   }
   
-  eclist_free_ex (EC_ALLOC, &list);
+  eclist_destroy (&list);
 }
 
 //---------------------------------------------------------------------------------------
 
 void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 {
-  EcList list = eclist_create_ex (EC_ALLOC);
-  EcListNode node;
+  EcList list = ectokenizer_parse (s, ';');
   
-  ecstr_tokenizer(list, s, ';');
+  EcListCursor cursor;
   
-  node = eclist_first(list);
-  if (node != eclist_end(list))
+  eclist_cursor_init (list, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    
+
   }
   
-  ecstr_tokenizer_clear(list);  
-  eclist_free_ex (EC_ALLOC, &list);
+  eclist_destroy (&list);
 }
 
 //---------------------------------------------------------------------------------------
@@ -1801,17 +1806,16 @@ EcUdc echttp_getParams (EcHttpHeader* header)
     EcUdc ret = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
     
     EcListCursor cursor;
-    EcList tokens = eclist_create ();
+    EcList tokens = ectokenizer_parse (header->request_params, '&');
     
-    ecstr_tokenizer(tokens, header->request_params, '&');
+    eclist_cursor_init (tokens, &cursor, LIST_DIR_NEXT);
     
-    eclist_cursor (tokens, &cursor);
-    while (eclist_cnext (&cursor))
+    while (eclist_cursor_next (&cursor))
     {
       EcString key = ecstr_init ();
       EcString val = ecstr_init ();
       
-      if (ecstr_split (cursor.value, &key, &val, '='))
+      if (ecstr_split (eclist_data(cursor.node), &key, &val, '='))
       {
         EcString value;
 
@@ -1825,6 +1829,8 @@ EcUdc echttp_getParams (EcHttpHeader* header)
       ecstr_delete (&key);
       ecstr_delete (&val);
     }
+    
+    eclist_destroy(&tokens);
     
     return ret;
   }

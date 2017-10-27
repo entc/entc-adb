@@ -234,11 +234,22 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
 
 //----------------------------------------------------------------------------------------
 
+static int __STDCALL ecudc_list_onDestroy (void* ptr)
+{
+  EcUdc h = ptr;
+  
+  ecudc_destroy (EC_ALLOC, &h);
+  
+  return 0;
+}
+
+//----------------------------------------------------------------------------------------
+
 void* ecudc_list_new (EcAlloc alloc)
 {
   EcUdcList* self = ECMM_NEW (EcUdcList);
 
-  self->list = eclist_create_ex (alloc);
+  self->list = eclist_create (ecudc_list_onDestroy);
   
   return self;
 }
@@ -247,14 +258,7 @@ void* ecudc_list_new (EcAlloc alloc)
 
 void ecudc_list_clear (EcAlloc alloc, EcUdcList* self)
 {
-  EcListCursor cursor; eclist_cursor(self->list, &cursor);
-  
-  while (eclist_cnext (&cursor))
-  {
-    ecudc_destroy (alloc, (EcUdc*)&(cursor.value));    
-  }
-  
-  eclist_clear(self->list);
+  eclist_clear (self->list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -265,7 +269,7 @@ void ecudc_list_destroy (EcAlloc alloc, void** pself)
   // if protected dont delete
   ecudc_list_clear (alloc, self);
   
-  eclist_free_ex (EC_ALLOC, &(self->list));
+  eclist_destroy (&(self->list));
   
   ECMM_DEL (pself, EcUdcList);    
 }
@@ -276,7 +280,7 @@ void ecudc_list_add (EcUdcList* self, EcUdc* pnode)
 {
   EcUdc node = *pnode;
   
-  eclist_append_ex (EC_ALLOC, self->list, node);
+  eclist_push_back (self->list, node);
   
   *pnode = NULL;
 }
@@ -285,54 +289,52 @@ void ecudc_list_add (EcUdcList* self, EcUdc* pnode)
 
 EcUdc ecudc_list_next (EcUdcList* self, void** cursor)
 {
-  EcListNode node;
-  
   if (isNotAssigned (cursor))
   {
     return NULL;
   }
   
-  if (isAssigned (*cursor))
+  if (*cursor == NULL)
   {
-    node = eclist_next(*cursor);
+    *cursor = eclist_cursor_create (self->list, LIST_DIR_NEXT);
+  }
+  
+  if (eclist_cursor_next (*cursor))
+  {
+    return eclist_data(((EcListCursor*)(*cursor))->node);
   }
   else
   {
-    node = eclist_first(self->list);
-  }
-  
-  if (node == eclist_end(self->list))
-  {
+    eclist_cursor_destroy ((EcListCursor**)cursor);
+    
     return NULL;
   }
-  
-  *cursor = node;
-  return eclist_data(node);
 }
 
 //----------------------------------------------------------------------------------------
 
 EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
 {
-  EcListNode node;
-  EcUdc ret = NULL;
-  
   if (isNotAssigned (cursor))
   {
     return NULL;
   }
   
-  node = *cursor;
-  
-  if (node == eclist_end(self->list))
+  if (*cursor == NULL)
   {
-    return NULL;
+    *cursor = eclist_cursor_create (self->list, LIST_DIR_NEXT);
   }
   
-  ret = eclist_data (node);
-  
-  *cursor = eclist_erase (EC_ALLOC, self->list, node);
-  return ret;
+  if (eclist_cursor_next (*cursor))
+  {
+    return eclist_extract (self->list, *cursor);
+  }
+  else
+  {
+    eclist_cursor_destroy ((EcListCursor**)cursor);
+    
+    return NULL;
+  }
 }
 
 //----------------------------------------------------------------------------------------

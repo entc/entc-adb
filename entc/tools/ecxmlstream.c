@@ -86,7 +86,7 @@ EcXMLStream ecxmlstream_new (void)
   self->value = 0; 
   self->filename = 0;
   
-  self->namespaces = ecmap_create (EC_ALLOC);
+  self->namespaces = ecmap_create (NULL);
   
   return self;
 }

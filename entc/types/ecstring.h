@@ -139,17 +139,19 @@ __LIB_EXPORT void ecstr_toLower(EcString);
 __LIB_EXPORT void ecstr_toUpper(EcString);
 
   /* **** misc methods **** */
-    
+
+__LIB_EXPORT int ecstr_empty(const EcString);
+
+/*
 __LIB_EXPORT void ecstr_tokenizer(EcList, const EcString source, char delimeter);
   
 __LIB_EXPORT void ecstr_tokenizer_clear(EcList);
 
 __LIB_EXPORT EcString ecstr_tokenizer_get (EcList, EcListNode);
   
-__LIB_EXPORT int ecstr_empty(const EcString);
-
 __LIB_EXPORT EcString ecstr_extractParameter(char pn, int argc, char *argv[]);
-
+*/
+ 
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif
