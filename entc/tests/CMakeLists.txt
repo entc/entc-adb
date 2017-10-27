@@ -8,15 +8,49 @@ enable_testing()
 
 set(CTEST_PROJECT_NAME "entc tests")
 
+#----------- types -----------------------------------------------
+
+ADD_EXECUTABLE( ut_ecmap types/ut_ecmap.c )
+TARGET_LINK_LIBRARIES( ut_ecmap entc )
+add_test(ut_ecmap tests/Debug/ut_ecmap)
+
 ADD_EXECUTABLE( ut_eclist types/ut_eclist.c )
 TARGET_LINK_LIBRARIES( ut_eclist entc )
-
 add_test(ut_eclist tests/Debug/ut_eclist)
+
+ADD_EXECUTABLE( ut_ecmap types/ut_ecmap.c )
+TARGET_LINK_LIBRARIES( ut_ecmap entc )
+add_test(ut_ecmap tests/Debug/ut_ecmap)
+
+ADD_EXECUTABLE( ut_ecstream types/ut_ecstream.c )
+TARGET_LINK_LIBRARIES( ut_ecstream entc )
+add_test(ut_ecstream tests/Debug/ut_ecstream)
+
+ADD_EXECUTABLE( ut_ecstring types/ut_ecstring.c )
+TARGET_LINK_LIBRARIES( ut_ecstring entc )
+add_test(ut_ecstring tests/Debug/ut_ecstring)
+
+ADD_EXECUTABLE( ut_ecudc types/ut_ecudc.c )
+TARGET_LINK_LIBRARIES( ut_ecudc entc )
+add_test(ut_ecudc tests/Debug/ut_ecudc)
+
+#----------- tools -----------------------------------------------
 
 ADD_EXECUTABLE( ut_lparser tools/ut_lparser.c )
 TARGET_LINK_LIBRARIES( ut_lparser entc )
-
 add_test(ut_lparser tests/Debug/ut_lparser)
+
+#----------- types -----------------------------------------------
+
+ADD_EXECUTABLE( ut_ecfile system/ut_ecfile.c )
+TARGET_LINK_LIBRARIES( ut_ecfile entc )
+add_test(ut_ecfile tests/Debug/ut_ecfile)
+
+ADD_EXECUTABLE( ut_ecexec system/ut_ecexec.c )
+TARGET_LINK_LIBRARIES( ut_ecexec entc )
+add_test(ut_ecexec tests/Debug/ut_ecexec)
+
+
 
 #ADD_EXECUTABLE( unittest_exec system/unittest_exec.c )
 #TARGET_LINK_LIBRARIES( unittest_exec entc )
