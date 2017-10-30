@@ -57,6 +57,20 @@ __LIBEX void* eclist_data (EcListNode);
 
 __LIBEX EcListNode eclist_next (EcListNode);
 
+__LIBEX EcListNode eclist_begin (EcList);
+
+//-----------------------------------------------------------------------------
+
+__LIBEX EcList eclist_slice (EcList, EcListNode nodeFrom, EcListNode nodeTo);
+
+__LIBEX void eclist_swap (EcListNode, EcListNode);
+
+//-----------------------------------------------------------------------------
+
+typedef int (__STDCALL *fct_eclist_onCompare) (void* ptr1, void* ptr2);
+
+__LIBEX void eclist_sort (EcList, fct_eclist_onCompare);
+
 //-----------------------------------------------------------------------------
 
 typedef struct
@@ -90,6 +104,8 @@ __LIBEX int eclist_cursor_prev (EcListCursor*);
 __LIBEX void eclist_erase (EcList, EcListCursor*);
 
 __LIBEX void* eclist_extract (EcList, EcListCursor*);
+
+__LIBEX void eclist_insert_slice (EcList, EcListCursor*, EcList* pslice);
 
 //-----------------------------------------------------------------------------
 
