@@ -17,17 +17,15 @@ static int __STDCALL ectokenizer_token_onDestroy (void* ptr)
 
 EcList ectokenizer_parse (const EcString source, char delimeter)
 {
-  EcList tokens;
+  EcList tokens = eclist_create (ectokenizer_token_onDestroy);
   
   const char* posR = source;
   const char* posL = source;
   
   if (ecstr_empty (source))
   {
-    return NULL;
+    return tokens;
   }
-
-  tokens = eclist_create (ectokenizer_token_onDestroy);
   
   while (*posR)
   {
