@@ -459,13 +459,15 @@ int adbo_node_dbquery_cursor (EcUdc node, EcUdc values, ulong_t dbmin, AdboConte
   while (adbl_dbcursor_next (cursor)) 
   {
     int colno = 0;
-    EcListNode c;
 
     EcUdc items = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
 
-    for (c = eclist_first(query->columns); c != eclist_end(query->columns); c = eclist_next(c), colno++)
+    EcListCursor c;
+    eclist_cursor_init (query->columns, &c, LIST_DIR_NEXT);
+    
+    for (; eclist_cursor_next (&c); colno++)
     {
-      AdblQueryColumn* qc = eclist_data(c);      
+      AdblQueryColumn* qc = eclist_data(c.node);
       ecudc_add_asString (EC_ALLOC, items, qc->column, adbl_dbcursor_data(cursor, colno));          
     }
     
@@ -570,11 +572,13 @@ AdboCursorData* adbo_cursordata_create (AdblSession* dbsession, AdblQuery** dbqu
   // fill header of the table
   {
     int n = 0;
-    EcListNode c;
     
-    for (c = eclist_first (self->dbquery->columns); c != eclist_end (self->dbquery->columns); c = eclist_next(c), n++)
+    EcListCursor c;
+    eclist_cursor_init (self->dbquery->columns, &c, LIST_DIR_NEXT);
+    
+    for (; eclist_cursor_next (&c); n++)
     {
-      AdblQueryColumn* qc = eclist_data(c);      
+      AdblQueryColumn* qc = eclist_data(c.node);
       ectable_set (self->data, 0, n, ecstr_copy(qc->column));
     }    
   }
