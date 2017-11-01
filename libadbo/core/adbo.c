@@ -20,7 +20,7 @@
 #include "adbo.h"
 #include "adbo_node.h"
 #include "adbo_context_intern.h"
-#include <tools/ecdata.h>
+#include "adbo_data.h"
 #include <tools/ecjson.h>
 #include "adbo_context.h"
 

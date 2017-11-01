@@ -9,7 +9,10 @@ SET (CORE_SOURCES
   adbo_value.h
   adbo_value.c
   adbo_item.c
-  
+
+  adbo_data.h
+  adbo_data.c
+
   adbo.h
   adbo.c
 )

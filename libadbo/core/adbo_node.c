@@ -28,8 +28,8 @@
 
 #include <system/macros.h>
 #include "adbo_types.h"
+#include "adbo_data.h"
 
-#include <tools/ecdata.h>
 #include <tools/ecjson.h>
 
 #include <system/ectime.h>

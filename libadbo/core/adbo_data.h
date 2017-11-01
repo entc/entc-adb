@@ -17,14 +17,14 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_TOOLS_DATA_H
-#define ENTC_TOOLS_DATA_H 1
+#ifndef ADBO_DATA_H
+#define ADBO_DATA_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "system/macros.h"
+#include "system/types.h"
 
-#include "../types/ecudc.h"
-#include "../types/ecstring.h"
+#include "types/ecudc.h"
+#include "types/ecstring.h"
 
 #define ECDATE_TYPE      ".t"
 #define ECDATA_ROOT      ".root"
