@@ -538,8 +538,6 @@ static int __STDCALL adbl_validate_config_engines_onDestroy (void* ptr)
 
 void adbl_validate_config (AdblManager self, const EcString configpath, const EcString execpath)
 {
-  EcListNode node;
-  
   // check some things
   if (ecstr_empty(self->path))
   {

@@ -355,23 +355,24 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
 
 void adbl_constructListWithTable (EcStream statement, EcList columns, const char* table, int ansi, EcIntMap orders, AdblMysqlCursor* cursor)
 {
-  EcListNode node = eclist_first(columns);
+  EcListCursor c;
+  eclist_cursor_init (columns, &c, LIST_DIR_NEXT);
   
-  if( node != eclist_end(columns) ) // more than one entry
+  if (eclist_cursor_next (&c))
   {
     int index = 0;
     
     // first column
-    adbl_constructListWithTable_Column( statement, eclist_data(node), table, ansi, orders, cursor, index);
+    adbl_constructListWithTable_Column( statement, eclist_data(c.node), table, ansi, orders, cursor, index);
     
     index++;
     
     // next columns
-    for(node = eclist_next(node); node != eclist_end(columns); node = eclist_next(node), index++)
+    for(; eclist_cursor_next (&c); index++)
     {
       ecstream_append( statement, ", " );
 
-      adbl_constructListWithTable_Column( statement, eclist_data(node), table, ansi, orders, cursor, index);
+      adbl_constructListWithTable_Column( statement, eclist_data(c.node), table, ansi, orders, cursor, index);
     }
   }
   else
@@ -413,22 +414,21 @@ void adbl_constructConstraintElement (EcStream statement, AdblConstraintElement*
 
 void adbl_constructContraintNode (EcStream statement, AdblConstraint* constraint, int ansi, AdblMysqlBindVars* bv)
 {
-  EcListNode node = eclist_first(constraint->list);
+  EcListCursor c;
+  eclist_cursor_init (constraint->list, &c, LIST_DIR_NEXT);
   
-  if( node != eclist_end(constraint->list) )
+  if (eclist_cursor_next (&c))
   {
-    adbl_constructConstraintElement( statement, eclist_data(node), ansi, bv);
+    adbl_constructConstraintElement( statement, eclist_data(c.node), ansi, bv);
     
-    node = eclist_next(node);
-    
-    for(; node != eclist_end(constraint->list); node = eclist_next(node) )
+    while (eclist_cursor_next (&c))
     {
       if( constraint->type == QUOMADBL_CONSTRAINT_AND )
       {
         ecstream_append( statement, " AND " );
       }
         
-      adbl_constructConstraintElement( statement, eclist_data(node), ansi, bv);
+      adbl_constructConstraintElement( statement, eclist_data(c.node), ansi, bv);
     }
   }
 }
@@ -437,9 +437,7 @@ void adbl_constructContraintNode (EcStream statement, AdblConstraint* constraint
 
 void adbl_constructConstraint (EcStream statement, AdblConstraint* constraint, int ansi, AdblMysqlBindVars* bv)
 {
-  EcListNode node = eclist_first(constraint->list);
-  
-  if( node != eclist_end(constraint->list) )
+  if (eclist_hasContent (constraint->list))
   {
     ecstream_append( statement, " WHERE " );
     
