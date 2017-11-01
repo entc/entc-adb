@@ -149,6 +149,80 @@ static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx)
   return 0;
 }
 
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx)
+{
+  EcList h = ptr;
+  
+  eclist_clear (h);
+  
+  // check ************
+  testctx_assert (tctx, eclist_size (h) == 0, "check size #1");
+  
+  for (int i = 0; i < 10; i++)
+  {
+    void* data = malloc(42);
+    sprintf((char*)data, "cloud [%i]", i);
+    
+    eclist_push_back (h, data);
+  }
+  
+  EcListNode fpos;
+  EcListNode lpos;
+  
+  {
+    EcListCursor cursor;
+    
+    eclist_cursor_init (h, &cursor, LIST_DIR_NEXT);
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #0");
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #1");
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #2");
+    
+    fpos = cursor.node;
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #3");
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #4");
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #5");
+    
+    lpos = cursor.node;
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #6");
+    
+    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #7");
+    
+    EcList slice = eclist_slice (h, fpos, lpos);
+    
+    testctx_assert (tctx, eclist_size (slice) == 4, "check size slice");
+    testctx_assert (tctx, eclist_size (h) == 6, "check rest slice");
+    
+    eclist_insert_slice (h, &cursor, &slice);
+    
+    testctx_assert (tctx, slice == NULL, "del slice");
+    
+    testctx_assert (tctx, eclist_size (h) == 10, "check size slice #2");
+  }
+  
+  {
+    EcListCursor cursor;
+    
+    eclist_cursor_init (h, &cursor, LIST_DIR_NEXT);
+    
+    while (eclist_cursor_next (&cursor))
+    {
+      void* data = eclist_data(cursor.node);
+      printf ("data: %s\n", data);
+    }
+  }
+  
+  return 0;
+}
+
 //=============================================================================
 
 int main(int argc, char* argv[])
@@ -157,6 +231,7 @@ int main(int argc, char* argv[])
   
   testenv_reg (te, "List Test1", test_stdlist_init, test_stdlist_done, test_stdlist_test1);
   testenv_reg (te, "List Test2", test_stdlist_init, test_stdlist_done, test_stdlist_test2);
+  testenv_reg (te, "List Test3", test_stdlist_init, test_stdlist_done, test_stdlist_test3);
   
   testenv_run (te);
   

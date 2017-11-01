@@ -22,6 +22,10 @@ static void __STDCALL test_stdlist_done (void* ptr)
 
 static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx)
 {
+  EcMap map01 = ecmap_create (EC_ALLOC);
+  
+  
+  ecmap_destroy(EC_ALLOC, &map01);
   
   return 0;
 }

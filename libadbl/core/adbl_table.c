@@ -19,16 +19,49 @@
 
 #include "adbl_table.h"
 
+//-----------------------------------------------------------------------------
+
+static int __STDCALL adbl_table_columns_onDestroy (void* ptr)
+{
+  EcString column = ptr;
+  
+  ecstr_delete (&column);
+
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+static int __STDCALL adbl_table_prikeys_onDestroy (void* ptr)
+{
+  EcString prikey = ptr;
+
+  ecstr_delete (&prikey);
+
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+static int __STDCALL adbl_table_forkeys_onDestroy (void* ptr)
+{
+  AdblForeignKeyConstraint* fkconstraint = ptr;
+  
+  ENTC_DEL (&fkconstraint, AdblForeignKeyConstraint);
+
+  return 0;
+}
+
 //----------------------------------------------------------------------------------------
 
 AdblTable* adbl_table_new (const EcString tablename)
 {
   AdblTable* self = ENTC_NEW (AdblTable);
   
-  self->name = ecstr_copy(tablename);
-  self->columns = eclist_create_ex (EC_ALLOC);
-  self->primary_keys = eclist_create_ex (EC_ALLOC);
-  self->foreign_keys = eclist_create_ex (EC_ALLOC);
+  self->name = ecstr_copy (tablename);
+  self->columns = eclist_create (adbl_table_columns_onDestroy);
+  self->primary_keys = eclist_create (adbl_table_prikeys_onDestroy);
+  self->foreign_keys = eclist_create (adbl_table_forkeys_onDestroy);
   
   return self;
 }
@@ -38,54 +71,16 @@ AdblTable* adbl_table_new (const EcString tablename)
 void adbl_table_del (AdblTable** pself)
 {
   AdblTable* self = *pself;
-  // variables
-  EcListNode node;
   
-  ecstr_delete(&(self->name));
+  ecstr_delete (&(self->name));
   
-  for (node = eclist_first(self->columns); node != eclist_end(self->columns); node = eclist_next(node))
-  {
-    EcString column = eclist_data (node);
-    ecstr_delete(&column);
-  }
+  eclist_destroy (&(self->columns));
   
-  eclist_free_ex (EC_ALLOC, &(self->columns));
+  eclist_destroy (&(self->primary_keys));
   
-  for (node = eclist_first(self->primary_keys); node != eclist_end(self->primary_keys); node = eclist_next(node))
-  {
-    EcString prikey = eclist_data (node);
-    ecstr_delete(&prikey);
-  }
-  
-  eclist_free_ex (EC_ALLOC, &(self->primary_keys));
-
-  for (node = eclist_first(self->foreign_keys); node != eclist_end(self->foreign_keys); node = eclist_next(node))
-  {
-    AdblForeignKeyConstraint* fkconstraint = eclist_data (node);
-
-    ENTC_DEL (&fkconstraint, AdblForeignKeyConstraint);
-  }
-  
-  eclist_free_ex (EC_ALLOC, &(self->foreign_keys));
+  eclist_destroy (&(self->foreign_keys));
 
   ENTC_DEL (pself, AdblTable);
-}
-
-//----------------------------------------------------------------------------------------
-
-void adbl_schema_del (EcList* pself)
-{
-  // variables
-  EcListNode node;
-
-  EcList list = *pself;
-  for (node = eclist_first(list); node != eclist_end(list); node = eclist_next(node))
-  {
-    EcString value = eclist_data(node);
-    ecstr_delete(&value);
-  }
-  
-  eclist_free_ex (EC_ALLOC, pself);
 }
 
 //----------------------------------------------------------------------------------------

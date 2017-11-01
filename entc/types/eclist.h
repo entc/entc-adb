@@ -51,6 +51,10 @@ __LIBEX void* eclist_pop_back (EcList);
 
 __LIBEX unsigned long eclist_size (EcList);
 
+__LIBEX int eclist_empty (EcList);
+
+__LIBEX int eclist_hasContent (EcList);
+
 __LIBEX void eclist_replace (EcList, EcListNode, void* data);
 
 __LIBEX void* eclist_data (EcListNode);

@@ -523,6 +523,17 @@ void adbl_scanPlugin (AdblManager self, const EcString filename)
   }
 }
 
+//-----------------------------------------------------------------------------
+
+static int __STDCALL adbl_validate_config_engines_onDestroy (void* ptr)
+{
+  EcString filename = ptr;
+
+  ecstr_delete (&filename);
+  
+  return 0;
+}
+
 //----------------------------------------------------------------------------------------
 
 void adbl_validate_config (AdblManager self, const EcString configpath, const EcString execpath)
@@ -546,7 +557,7 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
   
   if (ecstr_valid(self->path))
   {
-    EcList engines = eclist_create_ex (EC_ALLOC);
+    EcList engines = eclist_create (adbl_validate_config_engines_onDestroy);
     
     eclogger_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);
     
@@ -556,16 +567,20 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
       eclogger_fmt (LL_ERROR, MODULE, "scan", "can't find path '%s'", ecstr_cstring(self->path) );
     }
     
-    for (node = eclist_first(engines); node != eclist_end(engines); node = eclist_next(node))
     {
-      EcString filename = eclist_data(node);
-      // scan the library
-      adbl_scanPlugin (self, filename);
-      // clean up
-      ecstr_delete(&filename);
+      EcListCursor cursor;
+      eclist_cursor_init (engines, &cursor, LIST_DIR_NEXT);
+      
+      while (eclist_cursor_next (&cursor))
+      {
+        EcString filename = eclist_data (cursor.node);
+        // scan the library
+        adbl_scanPlugin (self, filename);
+      }
     }
+    
     // clean up
-    eclist_free_ex (EC_ALLOC, &engines);
+    eclist_destroy (&engines);
     
     if (self->observer)
     {

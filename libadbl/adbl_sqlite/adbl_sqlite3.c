@@ -6,6 +6,7 @@
 #include <types/eclist.h>
 #include <types/ecintmap.h>
 #include <utils/ecmessages.h>
+#include <tools/ectokenizer.h>
 
 #include "sqlite3.h"
 
@@ -193,19 +194,20 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
 
 void adbl_constructListWithTable( EcStream statement, EcList columns, const EcString table, EcIntMap orders )
 {
-  EcListNode node = eclist_first(columns);
+  EcListCursor cursor;
+  eclist_cursor_init (columns, &cursor, LIST_DIR_NEXT);
   
-  if( node != eclist_end(columns) )
-  /* more than one entry */
+  if (eclist_cursor_next (&cursor))
   {
     /* first column */
-    adbl_constructListWithTable_Column( statement, eclist_data(node), table, orders );
+    adbl_constructListWithTable_Column( statement, eclist_data (cursor.node), table, orders );
     /* next columns */
-    for(node = eclist_next(node); node != eclist_end(columns); node = eclist_next(node) )
+    
+    while (eclist_cursor_next (&cursor))
     {
       ecstream_append( statement, ", " );
       
-      adbl_constructListWithTable_Column( statement, eclist_data(node), table, orders );
+      adbl_constructListWithTable_Column( statement, eclist_data (cursor.node), table, orders );
     }
   }
   else
@@ -252,28 +254,30 @@ void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint
   {
     case QUOMADBL_CONSTRAINT_AND:
     {
-      EcListNode node = eclist_first(constraint->list);
+      EcListCursor cursor;
+      eclist_cursor_init (constraint->list, &cursor, LIST_DIR_NEXT);
       
-      if( node != eclist_end(constraint->list) )
+      if (eclist_cursor_next (&cursor))
       {
-        adbl_constructConstraintElement( statement, eclist_data(node) );
+        adbl_constructConstraintElement (statement, eclist_data (cursor.node));
         
-        node = eclist_next(node);
-        
-        for(; node != eclist_end(constraint->list); node = eclist_next(node) )
+        while (eclist_cursor_next (&cursor))
         {
-          ecstream_append( statement, " AND " );          
-          adbl_constructConstraintElement( statement, eclist_data(node) );
+          ecstream_append (statement, " AND ");
+          adbl_constructConstraintElement (statement, eclist_data (cursor.node));
         }
-      }      
+      }
+      
+      break;
     }
-    break;
     case QUOMADBL_CONSTRAINT_IN:
     {
-      EcListNode node = eclist_first (constraint->list);      
-      if( node != eclist_end(constraint->list) )
+      EcListCursor cursor;
+      eclist_cursor_init (constraint->list, &cursor, LIST_DIR_NEXT);
+
+      if (eclist_cursor_next (&cursor))
       {
-        AdblConstraintElement* element = eclist_data (node);
+        AdblConstraintElement* element = eclist_data (cursor.node);
         
         // TODO
         if( element->type == QUOMADBL_CONSTRAINT_EQUAL )
@@ -288,14 +292,12 @@ void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint
             
             ecstr_delete(&val);
           }
-            
-          node = eclist_next(node);
           
-          for(; node != eclist_end(constraint->list); node = eclist_next(node) )
+          while (eclist_cursor_next (&cursor))
           {
             EcString val = ecudc_getString (element->data);
 
-            element = eclist_data (node);
+            element = eclist_data (cursor.node);
             ecstream_append( statement, ",\'");
             ecstream_append( statement, val );
             ecstream_append( statement, "\'" );
@@ -315,14 +317,12 @@ void adbl_constructContraintNode( EcStream statement, AdblConstraint* constraint
 
 void adbl_constructConstraint( EcStream statement, AdblConstraint* constraint )
 {
-  EcListNode node = eclist_first(constraint->list);
-  
-  if( node != eclist_end(constraint->list) )
+  if (eclist_hasContent (constraint->list))
   {
     ecstream_append( statement, " WHERE " );
     
     adbl_constructContraintNode( statement, constraint );
-  }  
+  }
 }
 
 //------------------------------------------------------------------------
@@ -592,10 +592,12 @@ void adbl_constructAttributesInsertOrReplace (EcStream statement, AdblConstraint
   int cnt = 0;
   
   {
-    EcListNode node;
-    for (node = eclist_first (constraint->list); node != eclist_end(constraint->list); node = eclist_next(node))
+    EcListCursor cursor;
+    eclist_cursor_init (constraint->list, &cursor, LIST_DIR_NEXT);
+    
+    while (eclist_cursor_next (&cursor))
     {
-      AdblConstraintElement* element = eclist_data (node); 
+      AdblConstraintElement* element = eclist_data (cursor.node);
       
       if( element->type == QUOMADBL_CONSTRAINT_EQUAL )
       {
@@ -1124,6 +1126,16 @@ uint_t adblmodule_dbsequence_next (void* ptr)
   return 0;
 }
 
+//-----------------------------------------------------------------------------
+
+static int __STDCALL adblmodule_dbschema_onDestroy (void* ptr)
+{
+  EcString h = ptr;
+  ecstr_delete (&h);
+  
+  return 0;
+}
+
 //----------------------------------------------------------------------------------------
 
 EcList adblmodule_dbschema (void* ptr)
@@ -1171,11 +1183,11 @@ EcList adblmodule_dbschema (void* ptr)
   ecmutex_unlock(conn->mutex);
   
   // so far so good
-  ret = eclist_create_ex (EC_ALLOC);
+  ret = eclist_create (adblmodule_dbschema_onDestroy);
   
   while( res == SQLITE_ROW )
   {
-    eclist_append (ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
+    eclist_push_back (ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
     // get next row
     ecmutex_lock(conn->mutex);
     res = sqlite3_step(stmt);
@@ -1188,9 +1200,8 @@ EcList adblmodule_dbschema (void* ptr)
   {
     eclogger_msg (LL_ERROR, "SQLT", "dbschema", "Error in finalize" );
     
-    adbl_schema_del (&ret);
-    
-    return 0;  
+    eclist_destroy (&ret);
+    return 0;
   }  
   
   return ret;
@@ -1200,108 +1211,87 @@ EcList adblmodule_dbschema (void* ptr)
 
 void adblmodule_parseColumn (AdblTable* table, const EcString statement)
 {
-  EcListNode node;
-  EcList list = eclist_create_ex (EC_ALLOC);
-  
   EcString column;
-
-  ecstr_tokenizer(list, statement, ' ');
+  EcList list = ectokenizer_parse (statement, ' ');
   
-  node = eclist_first(list);
+  EcListCursor cursor;
+  eclist_cursor_init (list, &cursor, LIST_DIR_NEXT);
   
-  if (node == eclist_end(list))
+  if (!eclist_cursor_next (&cursor))
   {
-    ecstr_tokenizer_clear (list);
-    eclist_free_ex (EC_ALLOC, &list);
-    
+    eclist_destroy (&list);
     return;
   }
   
-  column = ecstr_trim (eclist_data (node));
+  column = ecstr_trim (eclist_data (cursor.node));
 
-  node = eclist_next(node);
-  if (node == eclist_end(list))
+  if (!eclist_cursor_next (&cursor))
   {
-    ecstr_tokenizer_clear (list);
-    eclist_free_ex (EC_ALLOC, &list);
+    eclist_destroy (&list);
     ecstr_delete (&column);
-    
     return;
   }
   
-  node = eclist_next(node);
-  if (node == eclist_end(list))
+  if (eclist_cursor_next (&cursor))
   {
-    eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added column: %s", column);          
-
-    eclist_append (table->columns, column);
-  }
-  else
-  {
-    if (ecstr_equal(eclist_data (node), "PRIMARY"))
+    if (ecstr_equal(eclist_data (cursor.node), "PRIMARY"))
     {
-      eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added primary key: %s", column);          
+      eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added primary key: %s", column);
       
-      eclist_append (table->primary_keys, column);      
+      eclist_push_back (table->primary_keys, column);
     }
     else
     {
       ecstr_delete(&column);
     }
   }
-
-  ecstr_tokenizer_clear (list);
-  eclist_free_ex (EC_ALLOC, &list);
+  else
+  {
+    eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "added column: %s", column);
+    
+    eclist_push_back (table->columns, column);
+  }
+  
+  eclist_destroy (&list);
 }
 
 //----------------------------------------------------------------------------------------
 
 void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
 {
-  
-  EcListNode node;
-  EcList list = eclist_create_ex (EC_ALLOC);
-  
   EcString column;
   EcString tablename;
   EcString reference;
   
-  ecstr_tokenizer(list, statement, ' ');
+  EcList list = ectokenizer_parse (statement, ' ');
 
-  node = eclist_first(list);
+  EcListCursor cursor;
+  eclist_cursor_init (list, &cursor, LIST_DIR_NEXT);
   
-  if (node == eclist_end(list))
+  if (!eclist_cursor_next (&cursor))
   {
-    ecstr_tokenizer_clear (list);
-    eclist_free_ex (EC_ALLOC,&list);
-    
+    eclist_destroy (&list);
     return;
   }
-  
-  column = ecstr_shrink (eclist_data (node), '(', ')');
 
-  node = eclist_next(node);
-  if (node == eclist_end(list))
+  column = ecstr_shrink (eclist_data (cursor.node), '(', ')');
+
+  if (!eclist_cursor_next (&cursor))
   {
-    ecstr_tokenizer_clear (list);
-    eclist_free_ex (EC_ALLOC, &list);
+    eclist_destroy (&list);
     ecstr_delete (&column);
-    
-    return;
-  }
-  
-  node = eclist_next(node);
-  if (node == eclist_end(list))
-  {
-    ecstr_tokenizer_clear (list);
-    eclist_free_ex (EC_ALLOC, &list);
-    ecstr_delete (&column);
-    
     return;
   }
 
-  tablename = ecstr_extractf (eclist_data (node), '(');
-  reference = ecstr_shrink (eclist_data (node), '(', ')');
+  if (!eclist_cursor_next (&cursor))
+  {
+    eclist_destroy (&list);
+    ecstr_delete (&column);
+    return;
+  }
+
+  tablename = ecstr_extractf (eclist_data (cursor.node), '(');
+  reference = ecstr_shrink (eclist_data (cursor.node), '(', ')');
   
   eclogger_fmt (LL_TRACE, "SQLT", "dbtable", "add foreign key: %s with reference %s.%s", column, tablename, reference);          
   
@@ -1313,29 +1303,28 @@ void adblmodule_parseForeignKey (AdblTable* table, const EcString statement)
     fkconstraint->table = tablename;
     fkconstraint->reference = reference;
     
-    eclist_append (table->foreign_keys, fkconstraint);
+    eclist_push_back (table->foreign_keys, fkconstraint);
   }
   
-  ecstr_tokenizer_clear (list);
-  eclist_free_ex (EC_ALLOC, &list);
+  eclist_destroy (&list);
 }
 
 //----------------------------------------------------------------------------------------
 
 AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcString statement)
 {
-  EcListNode node;
-  EcList list = eclist_create_ex (EC_ALLOC);
-  
   AdblTable* table = adbl_table_new (tablename);
     
   EcString s1 = ecstr_shrink (statement, '(', ')');
   
-  ecstr_tokenizer(list, s1, ',');
+  EcList list = ectokenizer_parse (s1, ',');
+
+  EcListCursor cursor;
+  eclist_cursor_init (list, &cursor, LIST_DIR_NEXT);
   
-  for (node = eclist_first(list); node != eclist_end(list); node = eclist_next(node))
+  while (eclist_cursor_next (&cursor))
   {
-    EcString part = eclist_data(node);
+    EcString part = eclist_data(cursor.node);
     EcString token = ecstr_trim (part);
     // check for foreign keys
     if (ecstr_leading(token, "FOREIGN KEY "))
@@ -1350,7 +1339,7 @@ AdblTable* adblmodule_parseCreateStatement (const EcString tablename, const EcSt
     ecstr_delete(&part);
   }
   
-  eclist_free_ex (EC_ALLOC, &list);
+  eclist_destroy (&list);
   
   ecstr_delete(&s1);
   

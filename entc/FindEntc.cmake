@@ -28,7 +28,7 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-SET(ENTC_VERSION "1.2.0")
+SET(ENTC_VERSION "1.3.0")
 
 # Look for the header file.
 FIND_LIBRARY( ENTC_LIBRARY NAMES entc      

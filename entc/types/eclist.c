@@ -141,6 +141,20 @@ unsigned long eclist_size (EcList self)
 
 //-----------------------------------------------------------------------------
 
+int eclist_empty (EcList self)
+{
+  return self->fpos == NULL;
+}
+
+//-----------------------------------------------------------------------------
+
+int eclist_hasContent (EcList self)
+{
+  return self->fpos != NULL;
+}
+
+//-----------------------------------------------------------------------------
+
 void* eclist_data (EcListNode node)
 {
   return node->data;

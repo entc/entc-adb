@@ -30,8 +30,6 @@ __LIB_EXPORT AdblTable* adbl_table_new (const EcString tablename);
 
 __LIB_EXPORT void adbl_table_del (AdblTable**);
 
-__LIB_EXPORT void adbl_schema_del (EcList*);
-
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

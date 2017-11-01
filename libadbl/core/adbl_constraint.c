@@ -26,6 +26,19 @@
 
 #include <stdio.h>
 
+//-----------------------------------------------------------------------------
+
+static int __STDCALL adbl_constraint_list_onDestroy (void* ptr)
+{
+  AdblConstraintElement* element = ptr;
+  
+  ecudc_destroy (EC_ALLOC, &(element->data));
+  
+  ENTC_DEL(&element, AdblConstraintElement);
+
+  return 0;
+}
+
 /*------------------------------------------------------------------------*/
 
 AdblConstraint* adbl_constraint_new (ubyte_t type)
@@ -33,7 +46,7 @@ AdblConstraint* adbl_constraint_new (ubyte_t type)
   AdblConstraint* self = ENTC_NEW(AdblConstraint);
   
   self->type = type;
-  self->list = eclist_create_ex (EC_ALLOC);
+  self->list = eclist_create (adbl_constraint_list_onDestroy);
   
   return self;
 }
@@ -46,7 +59,7 @@ void adbl_constraint_delete (AdblConstraint** ptr)
   
   adbl_constraint_clear(self);
   
-  eclist_free_ex (EC_ALLOC, &(self->list));
+  eclist_destroy (&(self->list));
   
   ENTC_DEL( ptr, AdblConstraint );
 }
@@ -55,23 +68,14 @@ void adbl_constraint_delete (AdblConstraint** ptr)
 
 int adbl_constraint_empty (AdblConstraint* self)
 {
-  return eclist_first(self->list) == eclist_end(self->list);
+  return eclist_begin (self->list) == NULL;
 }
 
 /*------------------------------------------------------------------------*/
 
 void adbl_constraint_clear (AdblConstraint* self)
 {
-  EcListNode node;
-  for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
-  {
-    AdblConstraintElement* element = eclist_data(node);
-    
-    ecudc_destroy (EC_ALLOC, &(element->data));
-    
-    ENTC_DEL(&element, AdblConstraintElement);
-  }
-  eclist_clear( self->list );
+  eclist_clear (self->list);
 }
 
 /*------------------------------------------------------------------------*/
@@ -80,7 +84,7 @@ void adbl_constraint_addChar (AdblConstraint* self, const EcString column, ubyte
 {
   AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
   
-  eclist_append (self->list, element);
+  eclist_push_back (self->list, element);
   
   element->type = type;
   
@@ -97,7 +101,7 @@ void adbl_constraint_addLong (AdblConstraint* self, const EcString column, ubyte
 {
 	AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
 
-	eclist_append (self->list, element);
+	eclist_push_back (self->list, element);
 
 	element->type = type;
   
@@ -114,7 +118,7 @@ void adbl_constraint_addConstraint (AdblConstraint* self, AdblConstraint* value)
 {
   AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
   
-  eclist_append (self->list, element);
+  eclist_push_back (self->list, element);
   
   element->type = 0;
   
@@ -128,29 +132,33 @@ void adbl_constraint_addConstraint (AdblConstraint* self, AdblConstraint* value)
 
 void adbl_constraint_attrs (AdblConstraint* self, AdblAttributes* attrs)
 {
-  EcListNode node;
-  for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
+  EcListCursor cursor;
+  
+  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
   {
-    AdblConstraintElement* element = eclist_data(node);
-
+    AdblConstraintElement* element = eclist_data (cursor.node);
+    
     EcString val = ecudc_getString (element->data);
     
     adbl_attrs_addChar( attrs, ecudc_name(element->data), val );
     
     ecstr_delete(&val);
-  }  
+  }
 }
 
 /*------------------------------------------------------------------------*/
 
 void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
 {
+  /*
   EcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
     //AdblConstraintElement* element = eclist_data(node);
     
-    /*
+   
     if( adbl_security_checkValue( ecudc_name(element->data) ) )
     {
       security->inicident = 1;
@@ -173,9 +181,10 @@ void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
       
       return;  
     }
-     */
+     
     
   }
+     */
 }
 
 /*------------------------------------------------------------------------*/
