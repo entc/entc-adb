@@ -24,7 +24,7 @@ static void __STDCALL onLine (void* ptr, const char* line)
 
 //---------------------------------------------------------------------------
 
-static void* __STDCALL test_stdlparser_init ()
+static void* __STDCALL test_stdlparser_init (EcErr err)
 {
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)malloc (sizeof(TestStdlparserCtx));
   
@@ -47,7 +47,7 @@ static void __STDCALL test_stdlparser_done (void* ptr)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlparser_test1 (void* ptr, TestEnvContext tctx)
+static int __STDCALL test_stdlparser_test1 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   
@@ -73,7 +73,7 @@ static int __STDCALL test_stdlparser_test1 (void* ptr, TestEnvContext tctx)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlparser_test2 (void* ptr, TestEnvContext tctx)
+static int __STDCALL test_stdlparser_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   
@@ -102,7 +102,7 @@ static int __STDCALL test_stdlparser_test2 (void* ptr, TestEnvContext tctx)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlparser_test3 (void* ptr, TestEnvContext tctx)
+static int __STDCALL test_stdlparser_test3 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   
@@ -130,7 +130,7 @@ static int __STDCALL test_stdlparser_test3 (void* ptr, TestEnvContext tctx)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlparser_test4 (void* ptr, TestEnvContext tctx)
+static int __STDCALL test_stdlparser_test4 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   TestStdlparserCtx* ctx = (TestStdlparserCtx*)ptr;
   

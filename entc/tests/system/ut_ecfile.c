@@ -20,7 +20,7 @@ static void __STDCALL test_stdlist_done (void* ptr)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx)
+static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
   
   return 0;
