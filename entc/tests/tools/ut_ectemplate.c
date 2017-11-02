@@ -23,6 +23,7 @@ static void __STDCALL test_ectemplate_done (void* ptr)
 
 static int __STDCALL test_ectemplate_test1_onText (void* ptr, const char* text)
 {
+  printf ("'%s'", text);
   
   return ENTC_ERR_NONE;
 }
@@ -42,6 +43,8 @@ static int __STDCALL test_ectemplate_test1 (void* ptr, TestEnvContext ctx, EcErr
   EcTemplate h = ptr;
   
   EcUdc data = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+  
+  ecudc_add_asString(EC_ALLOC, data, "topic", "Hello");
   
   ectemplate_apply (h, data, NULL, test_ectemplate_test1_onText, test_ectemplate_test1_onFile, err);
   testctx_err (ctx, err);
