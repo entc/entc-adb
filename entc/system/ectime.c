@@ -34,6 +34,7 @@
 #else
 
 #include <time.h>
+#include <sys/time.h>
 
 #endif
 
