@@ -6,7 +6,7 @@
 
 //=============================================================================
 
-static void* __STDCALL test_stdlist_init ()
+static void* __STDCALL test_stdlist_init (EcErr err)
 {
   return NULL;
 }
