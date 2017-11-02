@@ -186,6 +186,9 @@ SET (CORE_SOURCES_TOOLS
   tools/eclparser.c
   tools/ectokenizer.h
   tools/ectokenizer.c
+
+  tools/ectemplate.h
+  tools/ectemplate.c
 )
 
 SET (CORE_SOURCES_TESTS

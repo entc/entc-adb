@@ -15,7 +15,7 @@ static int __STDCALL test_stdlist_onDestroy (void* ptr)
 
 //---------------------------------------------------------------------------
 
-static void* __STDCALL test_stdlist_init ()
+static void* __STDCALL test_stdlist_init (EcErr err)
 {
   return eclist_create (test_stdlist_onDestroy);
 }
@@ -31,7 +31,7 @@ static void __STDCALL test_stdlist_done (void* ptr)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx)
+static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
   EcList h = ptr;
   
@@ -109,7 +109,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx)
+static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcList h = ptr;
   
@@ -151,7 +151,7 @@ static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx)
 
 //---------------------------------------------------------------------------
 
-static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx)
+static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcList h = ptr;
   
@@ -223,6 +223,63 @@ static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx)
   return 0;
 }
 
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_stdlist_test4_onCompare (void* ptr1, void* ptr2)
+{
+  return strcmp(ptr1, ptr2);
+}
+
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_stdlist_test4 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcList h = (EcList)ptr;
+  
+  eclist_clear (h);
+  
+  eclist_push_back (h, ecstr_copy ("Sort 7"));
+  eclist_push_back (h, ecstr_copy ("Sort 4"));
+  eclist_push_back (h, ecstr_copy ("Sort 9"));
+  eclist_push_back (h, ecstr_copy ("Sort 3"));
+  eclist_push_back (h, ecstr_copy ("Sort 1"));
+  eclist_push_back (h, ecstr_copy ("Sort 6"));
+  eclist_push_back (h, ecstr_copy ("Sort 8"));
+  eclist_push_back (h, ecstr_copy ("Sort 2"));
+  eclist_push_back (h, ecstr_copy ("Sort 5"));
+  
+  eclist_sort (h, test_stdlist_test4_onCompare);
+  
+  {
+    EcListCursor* cursor = eclist_cursor_create (h, 1);
+    
+    while (eclist_cursor_next (cursor))
+    {
+      void* data = eclist_data (cursor->node);
+      
+      printf ("data: %s\n", data);
+    }
+    
+    eclist_cursor_destroy (&cursor);
+  }
+  
+  // backwards
+  {
+    EcListCursor* cursor = eclist_cursor_create (h, 0);
+    
+    while (eclist_cursor_prev (cursor))
+    {
+      void* data = eclist_data (cursor->node);
+      
+      printf ("data: %s\n", data);
+    }
+    
+    eclist_cursor_destroy (&cursor);
+  }
+  
+  return 0;
+}
+
 //=============================================================================
 
 int main(int argc, char* argv[])
@@ -232,6 +289,7 @@ int main(int argc, char* argv[])
   testenv_reg (te, "List Test1", test_stdlist_init, test_stdlist_done, test_stdlist_test1);
   testenv_reg (te, "List Test2", test_stdlist_init, test_stdlist_done, test_stdlist_test2);
   testenv_reg (te, "List Test3", test_stdlist_init, test_stdlist_done, test_stdlist_test3);
+  testenv_reg (te, "List Test4", test_stdlist_init, test_stdlist_done, test_stdlist_test4);
   
   testenv_run (te);
   

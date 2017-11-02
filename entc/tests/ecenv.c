@@ -51,6 +51,9 @@ static int __STDCALL testenv_cmpTextes_onDestroy (void* ptr)
 
 static int __STDCALL testenv_errors_onDestroy (void* ptr)
 {
+  EcString h = ptr;
+  ecstr_delete(&h);
+  
   return 0;
 }
 
@@ -96,8 +99,21 @@ void testctx_assert (TestEnvContext self, int cres, const char* comment)
   if (!cres)
   {
     // post some error
-    eclist_push_back (self->errors, (void*)comment);
+    eclist_push_back (self->errors, (void*)ecstr_copy(comment));
   }
+}
+
+//-----------------------------------------------------------------------------
+
+int testctx_err (TestEnvContext self, EcErr err)
+{
+  if (err->code)
+  {
+    // post some error
+    eclist_push_back (self->errors, (void*)ecstr_copy(err->text));
+  }
+
+  return err->code;
 }
 
 //=============================================================================
@@ -160,14 +176,6 @@ void testenv_run (TestEnv self)
 {
   int i;
   
-  // init
-  for (i = 0; i < self->max; i++)
-  {
-    TestEnvContext ctx = self->ctx[i];
-    
-    ctx->ptr = ctx->init ();
-  }
-  
   // run test
   for (i = 0; i < self->max; i++)
   {
@@ -175,12 +183,21 @@ void testenv_run (TestEnv self)
     unsigned long errors;
     TestEnvContext ctx = self->ctx[i];
     
-    eclogger_fmt (LL_INFO, "TEST", "start", "****");
+    EcErr err = ecerr_create();
     
-    res = ctx->test (ctx->ptr, ctx);
-    if (res)
+    ctx->ptr = ctx->init (err);
+    
+    res = testctx_err (ctx, err);
+    
+    if (!res)
     {
+      eclogger_fmt (LL_INFO, "TEST", "start", "****");
       
+      res = ctx->test (ctx->ptr, ctx, err);
+      if (res)
+      {
+        
+      }
     }
     
     errors = eclist_size (ctx->errors);
@@ -200,14 +217,13 @@ void testenv_run (TestEnv self)
     {
       eclogger_fmt (LL_INFO, "TEST", "done", "OK");
     }
-  }
-  
-  // done
-  for (i = 0; i < self->max; i++)
-  {
-    TestEnvContext ctx = self->ctx[i];
     
-    ctx->done (ctx->ptr);
+    if (!res)
+    {
+      ctx->done (ctx->ptr);
+    }
+    
+    ecerr_destroy (&err);
   }
 }
 

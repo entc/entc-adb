@@ -40,6 +40,10 @@ ADD_EXECUTABLE( ut_lparser tools/ut_lparser.c )
 TARGET_LINK_LIBRARIES( ut_lparser entc )
 add_test(ut_lparser tests/Debug/ut_lparser)
 
+ADD_EXECUTABLE( ut_ectemplate tools/ut_ectemplate.c )
+TARGET_LINK_LIBRARIES( ut_ectemplate entc )
+add_test(ut_ectemplate tests/Debug/ut_ectemplate)
+
 #----------- types -----------------------------------------------
 
 ADD_EXECUTABLE( ut_ecfile system/ut_ecfile.c )

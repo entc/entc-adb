@@ -24,6 +24,7 @@
 
 #include "system/ecdefs.h"
 #include "types/ecstring.h"
+#include "types/ecerr.h"
 
 //-----------------------------------------------------------------------------
 
@@ -31,11 +32,11 @@ struct TestEnv_s; typedef struct TestEnv_s* TestEnv;
 
 struct TestEnvContext_s; typedef struct TestEnvContext_s* TestEnvContext;
 
-typedef void* (__STDCALL *fct_testenv_init) (void);
+typedef void* (__STDCALL *fct_testenv_init) (EcErr err);
 
 typedef void (__STDCALL *fct_testenv_done) (void* ptr);
 
-typedef int (__STDCALL *fct_testenv_test) (void* ptr, TestEnvContext ctx);
+typedef int (__STDCALL *fct_testenv_test) (void* ptr, TestEnvContext ctx, EcErr err);
 
 //-----------------------------------------------------------------------------
 
@@ -54,6 +55,8 @@ __LIBEX void testctx_push_string (TestEnvContext, const char* text);
 __LIBEX int testctx_pop_tocomp (TestEnvContext, const char* text);
 
 __LIBEX void testctx_assert (TestEnvContext, int, const char* comment);
+
+__LIBEX int testctx_err (TestEnvContext, EcErr);
 
 //-----------------------------------------------------------------------------
 

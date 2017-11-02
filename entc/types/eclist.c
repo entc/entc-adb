@@ -342,7 +342,110 @@ void eclist_swap (EcListNode node1, EcListNode node2)
 
 void eclist_sort (EcList self, fct_eclist_onCompare onCompare)
 {
-
+  EcListNode list = self->fpos;
+  EcListNode tail;
+  EcListNode p;
+  EcListNode q;
+  EcListNode e;
+  
+  int insize = 1;
+  int psize, qsize;
+  int nmerges;
+  
+  // do some prechecks
+  if (onCompare == NULL)
+  {
+    return;
+  }
+  
+  if (list == NULL)
+  {
+    return;
+  }
+  
+  while (1)
+  {
+    p = list;
+    
+    list = NULL;
+    tail = NULL;
+    
+    nmerges = 0;
+    
+    while (p)
+    {
+      nmerges++;
+      
+      q = p;
+      psize = 0;
+      
+      {
+        int i;
+        for (i = 0; i < insize; i++)
+        {
+          psize++;
+          q = q->next;
+          
+          if (!q) break;
+        }
+      }
+      
+      qsize = insize;
+      
+      while (psize > 0 || (qsize > 0 && q))
+      {
+        if (psize == 0)
+        {
+          e = q;
+          q = q->next;
+          qsize--;
+        }
+        else if (qsize == 0 || !q)
+        {
+          e = p;
+          p = p->next;
+          psize--;
+        }
+        else if (onCompare(p->data, q->data) <= 0)
+        {
+          e = p;
+          p = p->next;
+          psize--;
+        }
+        else
+        {
+          e = q;
+          q = q->next;
+          qsize--;
+        }
+        
+        if (tail)
+        {
+          tail->next = e;
+        }
+        else
+        {
+          list = e;
+        }
+        
+        e->prev = tail;
+        tail = e;
+      }
+      
+      p = q;
+    }
+    
+    tail->next = NULL;
+    
+    if (nmerges <= 1)
+    {
+      self->fpos = list;
+      self->lpos = tail;
+      return;
+    }
+    
+    insize *= 2;
+  }
 }
 
 //-----------------------------------------------------------------------------
