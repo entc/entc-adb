@@ -23,9 +23,19 @@
 
 #include <string.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#ifdef _WIN32
+
+#include <stdio.h>
+
+#else
+
+#define _GNU_SOURCE
+#include <stdio.h>
+
+#endif
 
 /*------------------------------------------------------------------------*/
 
