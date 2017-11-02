@@ -19,7 +19,7 @@
 
 #include "ecexec.h"
 
-#include "../types/ecstream.h"
+#include "types/ecstream.h"
 
 #ifdef __GNUC__
 
@@ -29,6 +29,7 @@
 #include <sys/fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define PIPE_READ   0
 #define PIPE_WRITE  1
