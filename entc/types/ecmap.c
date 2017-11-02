@@ -99,6 +99,8 @@ EcMapNode ecmap_erase (EcMap self, EcMapNode node)
   EcListCursor cursor;
 
   cursor.node = node;
+  cursor.direction = LIST_DIR_NEXT;
+  cursor.position = 0;
   
   eclist_erase (self->list, &cursor);
   
