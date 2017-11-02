@@ -352,7 +352,7 @@ int ecfs_copy (const EcString source, const EcString dest)
   struct stat stat_source;
   fstat(sfd, &stat_source);
   
-  sendfile (dfd, source, 0, stat_source.st_size);
+  sendfile (dfd, sfd, 0, stat_source.st_size);
   
   close (sfd);
   close (dfd);
