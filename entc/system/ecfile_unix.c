@@ -31,9 +31,15 @@
 #include <errno.h>
 
 #ifdef __APPLE_CC__
+
 #include <limits.h>
 #include <copyfile.h>
 #include <mach-o/dyld.h>
+
+#else
+
+#include <sys/sendfile.h>
+
 #endif
 
 struct EcFileHandle_s
