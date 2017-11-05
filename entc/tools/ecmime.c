@@ -250,6 +250,16 @@ void ecmultipartparser_destroy (EcMultipartParser* pself)
   ecbuf_destroy (&(self->buffer));
   ecstream_delete (&(self->line));
   
+  if (self->params)
+  {
+    ecmapchar_destroy(EC_ALLOC, &(self->params));
+  }
+  
+  if (self->content)
+  {
+    ecstream_delete (&(self->content));
+  }
+  
   ENTC_DEL (pself, struct EcMultipartParser_s);
 }
 

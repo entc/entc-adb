@@ -42,6 +42,7 @@
 #define ENTC_ERR_PROCESS_FAILED    10
 #define ENTC_ERR_NO_AUTH           11
 #define ENTC_ERR_NOT_SUPPORTED     12
+#define ENTC_ERR_NO_ROLE           13
 
 //=============================================================================
 
