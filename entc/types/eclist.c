@@ -458,7 +458,7 @@ EcList eclist_clone (EcList orig, fct_eclist_onClone onClone)
   self->fpos = NULL;
   self->lpos = NULL;
   
-  self->size = NULL;
+  self->size = 0;
   
   {
     EcListCursor cursor;
