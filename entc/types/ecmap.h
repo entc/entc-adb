@@ -70,4 +70,12 @@ __LIB_EXPORT int ecmap_cnext (EcMapCursor* c);
 
 __CPP_EXTERN______________________________________________________________________________END
 
+//-----------------------------------------------------------------------------
+
+typedef void* (__STDCALL *fct_ecmap_onClone) (void* ptr);
+
+__LIBEX EcMap ecmap_clone (EcAlloc, const EcMap, fct_ecmap_onClone);
+
+//-----------------------------------------------------------------------------
+
 #endif

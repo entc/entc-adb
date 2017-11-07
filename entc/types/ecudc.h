@@ -143,6 +143,8 @@ __LIB_EXPORT void ecudc_setName (EcUdc, const EcString);
 
 __LIB_EXPORT uint_t ecudc_type (EcUdc);
 
+__LIB_EXPORT EcUdc ecudc_clone (EcAlloc, const EcUdc orig);
+
 __LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
 
 __LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);

@@ -450,6 +450,39 @@ void eclist_sort (EcList self, fct_eclist_onCompare onCompare)
 
 //-----------------------------------------------------------------------------
 
+EcList eclist_clone (EcList orig, fct_eclist_onClone onClone)
+{
+  EcList self = ENTC_NEW(struct EcList_s);
+  
+  self->onDestroy = orig->onDestroy;
+  self->fpos = NULL;
+  self->lpos = NULL;
+  
+  self->size = NULL;
+  
+  {
+    EcListCursor cursor;
+    eclist_cursor_init (orig, &cursor, LIST_DIR_NEXT);
+    
+    // iterate to find the correct size
+    while (eclist_cursor_next (&cursor))
+    {
+      void* data = NULL;
+      
+      if (onClone)  // if not, the value will be null
+      {
+        data = onClone (eclist_data (cursor.node));
+      }
+      
+      eclist_push_back(self, data);
+    }
+  }
+
+  return self;
+}
+
+//-----------------------------------------------------------------------------
+
 void eclist_replace (EcList self, EcListNode node, void* data)
 {
   if (node)

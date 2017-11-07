@@ -67,6 +67,24 @@ void* ecudc_node_new (EcAlloc alloc)
 
 //----------------------------------------------------------------------------------------
 
+void* __STDCALL ecudc_node_onClone (void* ptr)
+{
+  return ecudc_clone(EC_ALLOC, ptr);
+}
+
+//----------------------------------------------------------------------------------------
+
+void* ecudc_node_clone (EcAlloc alloc, EcUdcNode* orig)
+{
+  EcUdcNode* self = ECMM_NEW (EcUdcNode);
+  
+  self->map = ecmap_clone (alloc, orig->map, ecudc_node_onClone);
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_node_clear (EcAlloc alloc, EcUdcNode* self)
 {
   EcMapNode node;
@@ -256,6 +274,24 @@ void* ecudc_list_new (EcAlloc alloc)
 
 //----------------------------------------------------------------------------------------
 
+void* __STDCALL ecudc_list_clone_onClone (void* ptr)
+{
+  return ecudc_clone (EC_ALLOC, ptr);
+}
+
+//----------------------------------------------------------------------------------------
+
+void* ecudc_list_clone (EcAlloc alloc, EcUdcList* orig)
+{
+  EcUdcList* self = ECMM_NEW (EcUdcList);
+  
+  self->list = eclist_clone (orig->list, ecudc_list_clone_onClone);
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_list_clear (EcAlloc alloc, EcUdcList* self)
 {
   eclist_clear (self->list);
@@ -342,6 +378,17 @@ EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
 uint32_t ecudc_list_size (EcUdcList* self)
 {
   return eclist_size (self->list);
+}
+
+//----------------------------------------------------------------------------------------
+
+void* ecudc_sitem_clone (EcAlloc alloc, EcUdcSItem* orig)
+{
+  EcUdcSItem* self = ECMM_NEW (EcUdcSItem);
+  
+  self->value = ecstr_copy(orig->value);
+  
+  return self;
 }
 
 //----------------------------------------------------------------------------------------
@@ -659,6 +706,142 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
     
     ENTC_DEL (pself, struct EcUdc_s);
   }
+}
+
+//----------------------------------------------------------------------------------------
+
+EcUdc ecudc_clone (EcAlloc alloc, const EcUdc orig)
+{
+  EcUdc self = ECMM_NEW (struct EcUdc_s);
+  
+  self->type = orig->type;
+  self->name = ecstr_copy (orig->name);
+
+  switch (orig->type)
+  {
+    case ENTC_UDC_NODE:
+    {
+      self->extension = ecudc_node_clone (alloc, orig->extension);
+      break;
+    }
+    case ENTC_UDC_LIST:
+    {
+      self->extension = ecudc_list_clone (alloc, orig->extension);
+      break;
+    }
+    case ENTC_UDC_STRING:
+    {
+      self->extension = ecudc_sitem_clone (alloc, orig->extension);
+      break;
+    }
+    case ENTC_UDC_REF:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_BYTE:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_UBYTE:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_INT16:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_UINT16:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_INT32:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_UINT32:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_INT64:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_UINT64:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_FLOAT:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_DOUBLE:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_TIME:
+    {
+      self->extension = orig->extension;
+      break;
+    }
+    case ENTC_UDC_CURSOR:
+    {
+      
+      break;
+    }
+    case ENTC_UDC_FILEINFO:
+    {
+      EcFileInfo h = orig->extension;
+      
+      break;
+    }
+    case ENTC_UDC_TABLEINFO:
+    {
+      EcTableInfo h = orig->extension;
+      
+      break;
+    }
+    case ENTC_UDC_SET:
+    {
+      EcSet h = orig->extension;
+      
+      break;
+    }
+    case ENTC_UDC_USERINFO:
+    {
+      EcUserInfo h = orig->extension;
+      
+      break;
+    }
+    case ENTC_UDC_ERROR:
+    {
+      EcError h = orig->extension;
+      
+      break;
+    }
+    case ENTC_UDC_METHOD:
+    {
+      EcMethod h = orig->extension;
+      
+      break;
+    }
+    case ENTC_UDC_BUFFER:
+    {
+      break;
+    }
+  }
+  
+  return self;
 }
 
 //----------------------------------------------------------------------------------------
@@ -1225,7 +1408,10 @@ uint64_t ecudc_asUInt64 (EcUdc self)
 {
   switch (self->type) 
   {
-    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension); 
+    case ENTC_UDC_INT32: return *((int32_t*)self->extension);
+    case ENTC_UDC_UINT32: return *((uint32_t*)self->extension);
+    case ENTC_UDC_INT64: return *((int64_t*)self->extension);
+    case ENTC_UDC_UINT64: return *((uint64_t*)self->extension);
     case ENTC_UDC_STRING:
     {
       const EcString h = ecudc_asString (self);

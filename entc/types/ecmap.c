@@ -201,3 +201,36 @@ int ecmap_cnext (EcMapCursor* cursor)
 }
 
 //----------------------------------------------------------------------------------------
+
+EcMap ecmap_clone (EcAlloc alloc, const EcMap orig, fct_ecmap_onClone onClone)
+{
+  EcMap self = ECMM_NEW(struct EcMap_s);
+  
+  self->list = eclist_create (ecmap_onDestroy);
+  
+  {
+    EcListCursor cursor;
+    eclist_cursor_init (orig->list, &cursor, LIST_DIR_NEXT);
+    
+    // iterate to find the correct size
+    while (eclist_cursor_next (&cursor))
+    {
+      struct EcMapDataNode* orignode = eclist_data (cursor.node);
+      struct EcMapDataNode* selfnode = ENTC_NEW (struct EcMapDataNode);
+      
+      selfnode->key = ecstr_copy (orignode->key);
+      selfnode->data = NULL;
+      
+      if (onClone)  // if not, the value will be null
+      {
+        selfnode->data = onClone (orignode->data);
+      }
+      
+      eclist_push_back (self->list, selfnode);
+    }
+  }
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------

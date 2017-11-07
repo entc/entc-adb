@@ -77,6 +77,12 @@ __LIBEX void eclist_sort (EcList, fct_eclist_onCompare);
 
 //-----------------------------------------------------------------------------
 
+typedef void* (__STDCALL *fct_eclist_onClone) (void* ptr);
+
+__LIBEX EcList eclist_clone (EcList, fct_eclist_onClone);
+
+//-----------------------------------------------------------------------------
+
 typedef struct
 {
   
