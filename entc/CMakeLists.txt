@@ -210,5 +210,12 @@ TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 set_target_properties(entc PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
 
+#------------------------------------------------------------------------------
+
+#ADD_EXECUTABLE( ectestapp tests/ectest_app.c )
+#TARGET_LINK_LIBRARIES( ectestapp entc )
+
+#------------------------------------------------------------------------------
+
 SUBDIRS(tests)
 

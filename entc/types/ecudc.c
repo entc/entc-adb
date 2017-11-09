@@ -741,57 +741,57 @@ EcUdc ecudc_clone (EcAlloc alloc, const EcUdc orig)
     }
     case ENTC_UDC_BYTE:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (byte_t); memcpy(self->extension, orig->extension, sizeof(byte_t));
       break;
     }
     case ENTC_UDC_UBYTE:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (ubyte_t); memcpy(self->extension, orig->extension, sizeof(ubyte_t));
       break;
     }
     case ENTC_UDC_INT16:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (int16_t); memcpy(self->extension, orig->extension, sizeof(int16_t));
       break;
     }
     case ENTC_UDC_UINT16:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (uint16_t); memcpy(self->extension, orig->extension, sizeof(uint16_t));
       break;
     }
     case ENTC_UDC_INT32:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (int32_t); memcpy(self->extension, orig->extension, sizeof(int32_t));
       break;
     }
     case ENTC_UDC_UINT32:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (uint32_t); memcpy(self->extension, orig->extension, sizeof(uint32_t));
       break;
     }
     case ENTC_UDC_INT64:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (int64_t); memcpy(self->extension, orig->extension, sizeof(int64_t));
       break;
     }
     case ENTC_UDC_UINT64:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (uint64_t); memcpy(self->extension, orig->extension, sizeof(uint64_t));
       break;
     }
     case ENTC_UDC_FLOAT:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (float); memcpy(self->extension, orig->extension, sizeof(float));
       break;
     }
     case ENTC_UDC_DOUBLE:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (double); memcpy(self->extension, orig->extension, sizeof(double));
       break;
     }
     case ENTC_UDC_TIME:
     {
-      self->extension = orig->extension;
+      self->extension = ECMM_NEW (time_t); memcpy(self->extension, orig->extension, sizeof(time_t));
       break;
     }
     case ENTC_UDC_CURSOR:
