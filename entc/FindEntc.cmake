@@ -31,7 +31,7 @@
 SET(ENTC_VERSION "1.3.0")
 
 # Look for the header file.
-FIND_LIBRARY( ENTC_LIBRARY NAMES entc      
+FIND_LIBRARY( ENTC_LIBRARY NAMES entc
   HINTS
   "/usr/lib/"
   "/usr/local/lib/"
@@ -42,7 +42,7 @@ MARK_AS_ADVANCED(ENTC_LIBRARY)
 
 FIND_PATH(ENTC_INCLUDE_DIR
   NAMES system/macros.h
-  PATHS 
+  PATHS
   # linux
   "/usr/include/entc-${ENTC_VERSION}/"
   # macosx
@@ -52,7 +52,7 @@ FIND_PATH(ENTC_INCLUDE_DIR
 )
 MARK_AS_ADVANCED(ENTC_INCLUDE_DIR)
 
-# handle the QUIETLY and REQUIRED arguments and set ENTC_FOUND to TRUE if 
+# handle the QUIETLY and REQUIRED arguments and set ENTC_FOUND to TRUE if
 # all listed variables are TRUE
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(ENTC DEFAULT_MSG ENTC_LIBRARY ENTC_INCLUDE_DIR)
