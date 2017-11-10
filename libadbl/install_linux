@@ -16,6 +16,7 @@ rm $INSTALLDIR/libadbl.so
 ln -s $INSTALLDIR/libadbl.so.$VERSION $INSTALLDIR/libadbl.so
 
 cp $PWD/adbl_sqlite/libadbl_sqlite3.so $MODULESDIR
+cp $PWD/adbl_mysql/libadbl_mysql.so $MODULESDIR
 
 rm $INCLUDEDIR/*
 cp $PWD/core/*.h $INCLUDEDIR/
