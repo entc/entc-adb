@@ -1,4 +1,4 @@
-#include "ecdl.h"
+#include "ecdlib.h"
 
 #include "macros.h"
 

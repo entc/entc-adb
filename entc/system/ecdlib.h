@@ -17,8 +17,8 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_SYSTEM_DL_H
-#define ENTC_SYSTEM_DL_H 1
+#ifndef ENTC_SYSTEM_DLIB_H
+#define ENTC_SYSTEM_DLIB_H 1
 
 #include "types/ecerr.h"
 #include "types/ecstring.h"
