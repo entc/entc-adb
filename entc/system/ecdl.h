@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2017 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -20,25 +20,22 @@
 #ifndef ENTC_SYSTEM_DL_H
 #define ENTC_SYSTEM_DL_H 1
 
-#include "types/ecerr.h"
-#include "types/ecstring.h"
+#include "../system/macros.h"
 
-//=============================================================================
+#include "../types/ecstring.h"
 
-struct EcDl_s; typedef struct EcDl_s* EcDl;
+struct EcLibraryHandle_s; typedef struct EcLibraryHandle_s* EcLibraryHandle;
 
-//-----------------------------------------------------------------------------
+__CPP_EXTERN______________________________________________________________________________START
+  
+__LIB_EXPORT EcLibraryHandle ecdl_new(const EcString filename);
 
-__LIBEX EcDl ecdl_create (const EcString name, const EcString path);
+__LIB_EXPORT EcLibraryHandle ecdl_fromName(const EcString path, const EcString name);
 
-__LIBEX void ecdl_destroy (EcDl*);
+__LIB_EXPORT void ecdl_delete(EcLibraryHandle*);
+  
+__LIB_EXPORT void* ecdl_method(EcLibraryHandle, const EcString name);
 
-__LIBEX int ecdl_load (EcDl, EcErr);
-
-__LIBEX int ecdl_unload (EcDl, EcErr);
-
-__LIBEX int ecdl_assign (EcDl, EcErr, void* buffer, int n, ...);
-
-//=============================================================================
+__CPP_EXTERN______________________________________________________________________________END
 
 #endif

@@ -1,186 +1,210 @@
+/*
+ * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ *
+ * This file is part of the extension n' tools (entc-base) framework for C.
+ *
+ * entc-base is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * entc-base is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ecdl.h"
 
-#include "macros.h"
+#include "../system/ecfile.h"
+#include "../utils/eclogger.h"
 
-#if defined _WIN64 || defined _WIN32
-
+#ifdef _WIN32
 #include <windows.h>
 
-//-----------------------------------------------------------------------------
-
-struct EcDl_s
+struct EcLibraryHandle_s
 {
-  char* name;
   
-  char* path;
-  
-  HMODULE ptr;
+  HMODULE handle;
   
 };
 
 #else
-
 #include <dlfcn.h>
 
-//-----------------------------------------------------------------------------
-
-struct EcDl_s
+struct EcLibraryHandle_s
 {
-  char* name;
   
-  char* path;
-  
-  void* ptr;
-  
+  void* handle;
+    
 };
 
-#endif
-
-#include <stdio.h>
+#endif /* _WIN32 */
 
 
-//-----------------------------------------------------------------------------
+/*------------------------------------------------------------------------*/
 
-EcDl ecdl_create (const EcString name, const EcString path)
+EcLibraryHandle ecdl_new (const EcString filename)
 {
-  EcDl self = ENTC_NEW(struct EcDl_s);
+  /* variables */
+  EcLibraryHandle self;
+  const EcString fext;
   
-  self->name = ecstr_copy(name);
-  self->path = ecstr_copy(path);
-  
-  self->ptr = NULL;
-  
-  return self;
-}
-
-//-----------------------------------------------------------------------------
-
-void ecdl_destroy (EcDl* pself)
-{
-  EcDl self = *pself;
-  
-  free (self);
-}
-
-//-----------------------------------------------------------------------------
-
-int ecdl_load (EcDl self, EcErr err)
-{
-  // construct dll name
-  char buffer [1024];
-  
-  if (self->path)
+  if( !ecstr_valid(filename) )
   {
-    snprintf (buffer, 1024, "%s/%s.dll", self->path, self->name);
+    return 0;
   }
+  
+  fext = ecfs_extractFileExtension(filename);
+  
+  if( !ecstr_valid(fext) )
+  {
+    return 0;
+  }
+  
+  /* check the file postfix */
+#ifdef __APPLE_CC__
+  if( !ecstr_equal(fext, "dylib") )
+  {
+    return 0;  
+  }
+#elif __linux__
+  if( !ecstr_equal(fext, "so") )
+  {
+    return 0;  
+  }  
+#elif _WIN32
+  if( !ecstr_equal(fext, "dll") )
+  {
+    return 0;  
+  }  
+#else
+  return 0;
+#endif
+  {
+#ifdef _WIN32
+    HMODULE handle = LoadLibrary(filename);
+#else
+    // clear any existing errors
+//    dlerror();
+    
+    void* handle = dlopen(filename, RTLD_NOW);
+#endif
+  
+    if (isAssigned(handle))
+    {
+      self = ENTC_NEW(struct EcLibraryHandle_s);
+      
+      self->handle = handle;
+      
+      return self;
+    }
+    else
+    {
+#ifdef _WIN32
+      eclogger_errno (LL_WARN, "_SYS", "dl", "can't load library");
+#else
+      eclogger_fmt (LL_WARN, "_SYS", "dl", "can't load library: %s", dlerror());
+#endif
+	}
+    return 0;
+  }
+}
+
+/*------------------------------------------------------------------------*/
+
+EcLibraryHandle ecdl_fromName (const EcString path, const EcString name)
+{
+  EcLibraryHandle ret = 0;
+#ifdef __APPLE_CC__
+  EcString fullname = ecstr_cat3("lib", name, ".dylib");
+#elif __linux__
+  EcString fullname = ecstr_cat3("lib", name, ".so");
+#elif _WIN32
+  EcString fullname = ecstr_cat2(name, ".dll");  
+#else
+  return 0;
+#endif
+  EcString fullpath = ecfs_mergeToPath(path, fullname);
+  
+#ifdef _WIN32
+  HMODULE handle = LoadLibrary(fullpath);
+#else
+  void* handle = dlopen(fullpath, RTLD_NOW | RTLD_GLOBAL);
+#endif
+  
+  if( handle )
+	{
+    EcLibraryHandle self = ENTC_NEW(struct EcLibraryHandle_s);
+    
+    self->handle = handle;
+
+    ecstr_delete(&fullname);
+    ecstr_delete(&fullpath);
+    
+    ret = self;
+	}
   else
   {
-    snprintf (buffer, 1024, "%s.dll", self->name);
-  }
-  
-#if defined _WIN64 || defined _WIN32
-  
-  self->ptr = LoadLibrary (buffer);
-  
+#ifdef _WIN32
+    eclogger_errno (LL_WARN, "_SYS", "dl", "can't load library '%s' from '%s'", name, fullpath);
 #else
-  
-  self->ptr = dlopen (buffer, RTLD_NOW);
-
+    eclogger_fmt (LL_WARN, "_SYS", "dl", "can't load library '%s' : %s", name, dlerror());
 #endif
-
-  if (self->ptr == NULL)
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  return ENTC_ERR_NONE;
+  ecstr_delete(&fullname);
+  ecstr_delete(&fullpath);
+  
+  return ret;
 }
 
-//-----------------------------------------------------------------------------
+/*------------------------------------------------------------------------*/
 
-int ecdl_unload (EcDl self, EcErr err)
+void ecdl_delete(EcLibraryHandle* pself)
 {
-  if (self->ptr == NULL)
-  {
-    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_WRONG_STATE, "library was not loaded");
-  }
+  EcLibraryHandle self = *pself;
   
-#if defined _WIN64 || defined _WIN32
-
-  if(FreeLibrary (self->ptr) == 0)
+  if(self == NULL)
   {
-    // failed
-    return syserr_lastErrorOS (err, __ERRL_ERROR);
+    return;
   }
 
+#ifdef _WIN32
+  FreeLibrary(self->handle);
 #else
-  
-  dlclose (self->ptr);
-  
+  dlclose(self->handle);
 #endif
   
-  self->ptr = NULL;
-  return ENTC_ERR_NONE;
+  ENTC_DEL(pself, struct EcLibraryHandle_s);
 }
 
-//-----------------------------------------------------------------------------
+/*------------------------------------------------------------------------*/
 
-typedef void (*fct_dummy) (void);
-
-int ecdl_assign (EcDl self, EcErr err, void* buffer, int n, ...)
+void* ecdl_method(EcLibraryHandle self, const EcString name)
 {
-  int i;
-  char* method;
-  fct_dummy* fd = buffer;
+  void* ret;
   
-  // variables
-  va_list ptr;
-  
-  va_start(ptr, n);
-  
-  for (i = 0; i < n; i++)
-  {
-    fct_dummy mptr;
-    
-    method = va_arg (ptr, char*);
-    
-    //printf("check for method: '%s'\n", method);
-    
-#if defined _WIN64 || defined _WIN32
-
-    mptr = GetProcAddress(self->ptr, method);
-    if (mptr == NULL)
-    {
-      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_WRONG_STATE, "can't find method in module");
-    }
-
+#ifdef _WIN32
+  ret = GetProcAddress(self->handle, name);
 #else
-    
-    {
-      int res;
-      char* errCode;
-      // clear error code
-      dlerror();
-      
-      res = dlsym (self->ptr, method);
-      
-      errCode = dlerror();
-      // check if an error ocours
-      if (isAssigned(errCode))
-      {
-        return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_WRONG_STATE, "can't find method in module");
-      }
-    }
-    
-#endif
-    
-    *fd = mptr;
-    fd++;
+  char* err;
+  // clear error code  
+  dlerror();
+  
+  ret = dlsym(self->handle, name);
+  
+  err = dlerror();
+  // check if an error ocours
+  if (isAssigned(err)) {
+    ret = 0;
   }
+#endif
   
-  va_end(ptr);
-  
-  return ENTC_ERR_NONE;
+  return ret;
 }
 
-//-----------------------------------------------------------------------------
+/*------------------------------------------------------------------------*/

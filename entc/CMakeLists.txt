@@ -110,6 +110,8 @@ SET (CORE_SOURCES_SYS
   system/ecsignal_dos.c
   system/ecdl.h
   system/ecdl.c
+  system/ecdlib.h
+  system/ecdlib.c
   system/ectime.h
   system/ectime.c
   system/ecexec.h
