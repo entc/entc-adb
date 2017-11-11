@@ -212,8 +212,18 @@ set_target_properties(entc PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
 
 #------------------------------------------------------------------------------
 
-#ADD_EXECUTABLE( ectestapp tests/ectest_app.c )
-#TARGET_LINK_LIBRARIES( ectestapp entc )
+find_package(Lua)
+
+IF(LUA_LIBRARIES)
+
+MESSAGE(STATUS "lua library found at ${LUA_LIBRARIES}" )
+
+INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
+
+ADD_EXECUTABLE( ectestapp tests/ectest_app.c )
+TARGET_LINK_LIBRARIES( ectestapp entc )
+
+ENDIF(LUA_LIBRARIES )
 
 #------------------------------------------------------------------------------
 
