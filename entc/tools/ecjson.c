@@ -638,12 +638,12 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_INT64:
     {
-      ecstream_append_i (stream, ecudc_asInt64 (node));
+      ecstream_append_i64 (stream, ecudc_asInt64 (node));
     }
     break;
     case ENTC_UDC_UINT64:
     {
-      ecstream_append_u (stream, ecudc_asUInt64 (node));
+      ecstream_append_u64 (stream, ecudc_asUInt64 (node));
     }
     break;
     case ENTC_UDC_TIME:

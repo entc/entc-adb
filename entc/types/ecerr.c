@@ -97,14 +97,14 @@ int ecerr_formatErrorOS (EcErr self, int lvl, unsigned long errCode)
     {
       if (res > 0)
       {
-        ecerr_set (self, lvl, Q6ERR_OS_ERROR, buffer);
+        ecerr_set (self, lvl, ENTC_ERR_OS_ERROR, buffer);
       }
       // release buffer
       LocalFree (buffer);
     }
   }
   
-  return Q6ERR_OS_ERROR;
+  return ENTC_ERR_OS_ERROR;
 }
 
 //-----------------------------------------------------------------------------

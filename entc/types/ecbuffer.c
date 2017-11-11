@@ -784,7 +784,7 @@ EcBuffer ecbuf_sha_256 (EcBuffer b1)
   }
   
   {
-    EcStream stream = ecstream_new ();
+    EcStream stream = ecstream_create ();
 
     BYTE hash [32];
     DWORD hashlen;
@@ -796,11 +796,11 @@ EcBuffer ecbuf_sha_256 (EcBuffer b1)
 
       for (i = 0; i < hashlen; i++)
       {
-        ecstream_appendc (stream, (char)(rgbDigits[hash[i] >> 4]));
-        ecstream_appendc (stream, (char)(rgbDigits[hash[i] & 0xf]));
+        ecstream_append_c (stream, (char)(rgbDigits[hash[i] >> 4]));
+        ecstream_append_c (stream, (char)(rgbDigits[hash[i] & 0xf]));
       }
 
-      ret = ecstream_trans (&stream);
+      ret = ecstream_tobuf (&stream);
     }
   }
   

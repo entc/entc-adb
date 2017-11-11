@@ -1133,7 +1133,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           ecstream_append_str (stream, fi->name);
           ecstream_append_str (stream, "\"\r\n");
           ecstream_append_str (stream, "Content-ID: <");
-          ecstream_append_u (stream, fi->inode);
+          ecstream_append_u64 (stream, fi->inode);
           ecstream_append_str (stream, ">");
           ecstream_append_str (stream, "\r\n");
           ecstream_append_str (stream, "Content-Transfer-Encoding: base64");

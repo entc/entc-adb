@@ -422,10 +422,8 @@ int ece_files_nextEventWait (EcEventFiles self, uint_t size, void* eventList, Ec
 int ece_files_nextEvent (EcEventFiles self)
 {
   EcHandle* handlelst;
-  EcEventFilesData** events;
-  
-  EcListNode node;
-  /* create the handle list */
+  EcEventFilesData** events;  
+  EcListCursor cursor;
   
   uint_t size = eclist_size( self->handles );
   uint_t pos = 0;
@@ -435,10 +433,10 @@ int ece_files_nextEvent (EcEventFiles self)
   handlelst = (EcHandle*)malloc( sizeof(EcHandle) * size );
   events = (EcEventFilesData**)malloc( sizeof(EcEventFilesData*) * size );
   
-  /* fill */
-  for(node = eclist_first(self->handles); node != eclist_end(self->handles); node = eclist_next(node))
+  eclist_cursor_init (self->handles, &cursor, LIST_DIR_NEXT);
+  while (eclist_cursor_next (&cursor))
   {
-    EcEventFilesData* eventdata = eclist_data(node);
+    EcEventFilesData* eventdata = eclist_data(cursor.node);
     
     events[pos] = eventdata;
     handlelst[pos] = eventdata->handle;
@@ -525,7 +523,7 @@ void ece_files_register (EcEventFiles self, const EcString filename, events_call
     event->onDeletePtr = onDeletePtr;
     
     //FIXME add mutex
-    eclist_append(self->handles, event);
+    eclist_push_back (self->handles, event);
   }
   else
   {

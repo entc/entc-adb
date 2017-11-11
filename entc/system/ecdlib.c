@@ -1,6 +1,8 @@
 #include "ecdlib.h"
 
 #include "macros.h"
+#include "system/ecfile.h"
+#include "types/ecstream.h"
 
 #if defined _WIN64 || defined _WIN32
 
@@ -67,24 +69,30 @@ void ecdl_destroy (EcDl* pself)
 int ecdl_load (EcDl self, EcErr err)
 {
   // construct dll name
-  char buffer [1024];
+  EcStream stream = ecstream_create ();
   
   if (self->path)
   {
-    snprintf (buffer, 1024, "%s/%s.dll", self->path, self->name);
+    EcString h = ecfs_mergeToPath(self->path, self->name);
+
+    ecstream_append_str (stream, h);
+
+    ecstr_delete (&h);
   }
   else
   {
-    snprintf (buffer, 1024, "%s.dll", self->name);
+    ecstream_append_str (stream, self->name);
   }
+
+  ecstream_append_str (stream, ".dll");
   
 #if defined _WIN64 || defined _WIN32
   
-  self->ptr = LoadLibrary (buffer);
+  self->ptr = LoadLibrary (ecstream_get(stream));
   
 #else
   
-  self->ptr = dlopen (buffer, RTLD_NOW);
+  self->ptr = dlopen (ecstream_get(stream), RTLD_NOW);
 
 #endif
 
@@ -110,7 +118,7 @@ int ecdl_unload (EcDl self, EcErr err)
   if(FreeLibrary (self->ptr) == 0)
   {
     // failed
-    return syserr_lastErrorOS (err, __ERRL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
 
 #else
@@ -148,7 +156,7 @@ int ecdl_assign (EcDl self, EcErr err, void* buffer, int n, ...)
     
 #if defined _WIN64 || defined _WIN32
 
-    mptr = GetProcAddress(self->ptr, method);
+    mptr = (fct_dummy)GetProcAddress(self->ptr, method);
     if (mptr == NULL)
     {
       return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_WRONG_STATE, "can't find method in module");

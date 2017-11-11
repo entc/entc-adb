@@ -220,7 +220,32 @@ void ecstream_append_u (EcStream self, unsigned long val)
 {
   ecstream_reserve (self, 26);  // for very long intergers
   
+#ifdef _MSC_VER
+
+  self->pos += _snprintf_s (self->pos, 24, _TRUNCATE, "%lu", val);
+
+#else
+
   self->pos += snprintf(self->pos, 24, "%lu", val);
+
+#endif
+}
+
+//-----------------------------------------------------------------------------
+
+void ecstream_append_u64 (EcStream self, uint64_t val)
+{
+  ecstream_reserve (self, 26);  // for very long intergers
+  
+#ifdef _MSC_VER
+
+  self->pos += _snprintf_s (self->pos, 24, _TRUNCATE, "%lu", val);
+
+#else
+
+  self->pos += snprintf(self->pos, 24, "%lu", val);
+
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -228,15 +253,40 @@ void ecstream_append_u (EcStream self, unsigned long val)
 void ecstream_append_i (EcStream self, long val)
 {
   ecstream_reserve (self, 26);  // for very long intergers
-  
+ 
+#ifdef _MSC_VER
+
+  self->pos += _snprintf_s (self->pos, 24, _TRUNCATE, "%li", val);
+
+#else
+ 
   self->pos += snprintf(self->pos, 24, "%li", val);
+
+#endif
+}
+
+//-----------------------------------------------------------------------------
+
+void ecstream_append_i64 (EcStream self, int64_t val)
+{
+  ecstream_reserve (self, 26);  // for very long intergers
+ 
+#ifdef _MSC_VER
+
+  self->pos += _snprintf_s (self->pos, 24, _TRUNCATE, "%li", val);
+
+#else
+ 
+  self->pos += snprintf(self->pos, 24, "%li", val);
+
+#endif
 }
 
 //-----------------------------------------------------------------------------
 
 void ecstream_append_time (EcStream self, const time_t* t)
 {
-  ecstream_reserve (self, 30);  // for very long intergers
+  ecstream_reserve (self, 32);  // for very long intergers
 
 #ifdef _WIN32
 
