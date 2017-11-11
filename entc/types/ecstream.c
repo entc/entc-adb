@@ -102,6 +102,9 @@ EcBuffer ecstream_tobuf (EcStream* pself)
   EcStream self = *pself;
   EcBuffer ret = ENTC_NEW (EcBuffer_s);
   
+  // set terminator
+  *(self->pos) = 0;
+
   ret->size = ecstream_size (self);
   ret->buffer = (unsigned char*)self->buffer;
   
