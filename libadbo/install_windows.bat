@@ -1,5 +1,5 @@
-set bconfig=Debug
-set version=1.0.5
+set bconfig=Release
+set version=1.3.0
 set target=%PROGRAMFILES%\quom\adbo\%version%
 
 rem install into windows folder

@@ -1,5 +1,5 @@
-set bconfig=Debug
-set version=1.2.0
+set bconfig=Release
+set version=1.3.0
 set target=%PROGRAMFILES%\quom\entc\%version%
 
 rem install into windows folder
