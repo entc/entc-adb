@@ -76,7 +76,7 @@ EcStream ecstream_create ()
   self->pos = self->buffer;
   
   // initial alloc
-  ecstream_allocate (self, 1024);
+  ecstream_allocate (self, 100);
   
   // clean
   ecstream_clear (self);
@@ -217,7 +217,7 @@ void ecstream_append_u (EcStream self, unsigned long val)
 {
   ecstream_reserve (self, 26);  // for very long intergers
   
-  self->pos += snprintf(self->pos, 24, "%u", val);
+  self->pos += snprintf(self->pos, 24, "%lu", val);
 }
 
 //-----------------------------------------------------------------------------
@@ -226,7 +226,24 @@ void ecstream_append_i (EcStream self, long val)
 {
   ecstream_reserve (self, 26);  // for very long intergers
   
-  self->pos += snprintf(self->pos, 24, "%i", val);
+  self->pos += snprintf(self->pos, 24, "%li", val);
+}
+
+//-----------------------------------------------------------------------------
+
+void ecstream_append_time (EcStream self, const time_t* t)
+{
+  ecstream_reserve (self, 30);  // for very long intergers
+
+#ifdef _WIN32
+
+  self->pos += _snprintf_s (self->pos, 30, _TRUNCATE, "%lu", (unsigned long)*t);
+  
+#else
+
+  self->pos += snprintf(self->pos, 30, "%lu", (unsigned long)*t);
+
+#endif
 }
 
 //-----------------------------------------------------------------------------

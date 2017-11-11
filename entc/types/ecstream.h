@@ -58,6 +58,8 @@ __LIBEX void ecstream_append_u (EcStream, unsigned long);
 
 __LIBEX void ecstream_append_i (EcStream, long);
 
+__LIBEX void ecstream_append_time (EcStream, const time_t*);
+
 __LIBEX void ecstream_append_stream (EcStream, EcStream);
 
 //=============================================================================
