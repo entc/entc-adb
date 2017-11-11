@@ -174,7 +174,7 @@ int ecstreambuffer_readln_1break (EcStreamBuffer self, EcStream stream, char* b1
     }
     else
     {
-      ecstream_appendc (stream, c);      
+      ecstream_append_c (stream, c);
     }            
   }
   
@@ -219,7 +219,7 @@ int ecstreambuffer_readln_2breaks (EcStreamBuffer self, EcStream stream, char* b
       }
       else
       {
-        ecstream_appendc (stream, c);      
+        ecstream_append_c (stream, c);
       }                  
     }
   }
@@ -265,7 +265,7 @@ int ecstreambuffer_readln_getbreaks (EcStreamBuffer self, EcStream stream, char*
       }
       else
       {
-        ecstream_appendc (stream, c);      
+        ecstream_append_c (stream, c);
       }                  
     }
   }
@@ -306,7 +306,7 @@ void ecstreambuffer_read (EcStreamBuffer self, EcStream stream, ulong_t* readSiz
   {
     char c = ecstreambuffer_get (self);
     
-    ecstream_appendc (stream, c);    
+    ecstream_append_c (stream, c);
   }
 }
 

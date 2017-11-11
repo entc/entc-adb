@@ -37,7 +37,7 @@ EcHtmlRequest echtmlreq_new (void)
 {
   EcHtmlRequest self = ENTC_NEW(struct EcHtmlRequest_s);
   
-  self->stream = ecstream_new();
+  self->stream = ecstream_create();
   
   return self;
 }
@@ -48,7 +48,7 @@ void echtmlreq_delete(EcHtmlRequest* ptr)
 {
   EcHtmlRequest self = *ptr;
   
-  ecstream_delete( &(self->stream) );
+  ecstream_destroy ( &(self->stream) );
   
   ENTC_DEL(ptr, struct EcHtmlRequest_s);
 }
@@ -64,15 +64,15 @@ void echtmlreq_escapeUrl(EcStream stream, const EcString source)
   {
     if( *pos01 == ' ' )
     {
-      ecstream_append(stream, "%20");
+      ecstream_append_str (stream, "%20");
     }
     else if( *pos01 == '#' )
     {
-      ecstream_append(stream, "%23");
+      ecstream_append_str (stream, "%23");
     }    
     else
     {
-      ecstream_appendc(stream, *pos01);
+      ecstream_append_c (stream, *pos01);
     }
     pos01++;
   }
@@ -88,19 +88,19 @@ int echtmlreq_process_post (EcHtmlRequest self, EcSocket socket, const EcString 
   char b1 = 0;
   char b2 = 0;
 
-  ecstream_append(stream, "POST ");
+  ecstream_append_str (stream, "POST ");
   
   echtmlreq_escapeUrl(stream, url);
 
-  ecstream_append(stream, " HTTP/1.0\r\n");
-  ecstream_append(stream, "User-Agent: entc\r\n");
-  ecstream_append(stream, "Content-Length: ");
-  ecstream_appendu(stream, ecstr_len(message));
-  ecstream_append(stream, "\r\n\r\n");
+  ecstream_append_str (stream, " HTTP/1.0\r\n");
+  ecstream_append_str (stream, "User-Agent: entc\r\n");
+  ecstream_append_str (stream, "Content-Length: ");
+  ecstream_append_u (stream, ecstr_len(message));
+  ecstream_append_str (stream, "\r\n\r\n");
   
-  ecstream_append(stream, message);
+  ecstream_append_str (stream, message);
 
-  ecstream_append(stream, "\r\n\r\n");
+  ecstream_append_str (stream, "\r\n\r\n");
 
   ecsocket_writeStream(socket, stream);
   
@@ -112,7 +112,7 @@ int echtmlreq_process_post (EcHtmlRequest self, EcSocket socket, const EcString 
     return FALSE;
   }  
   /* get the first line */
-  line = ecstream_buffer(stream);  
+  line = ecstream_get (stream);
   /* is the first line 'HTTP/1.0 200 OK' ?? */
   if( !(line[0] == 'H' && line[9] == '2' && line[10] == '0' && line[11] == '0') )
   {
@@ -136,13 +136,13 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
   /* set to none blocking socket */
 //  ecsocket_setNoneBlocking( socket );
   
-  ecstream_append(stream, "GET ");
+  ecstream_append_str (stream, "GET ");
 
   echtmlreq_escapeUrl(stream, url);
 
-  ecstream_append(stream, " HTTP/1.0\r\nUser-Agent: entc\r\nAccept: */*\r\nHost: ");
-  ecstream_append(stream, host);
-  ecstream_append(stream, "\r\nConnection: Keep-Alive\r\n\r\n");
+  ecstream_append_str (stream, " HTTP/1.0\r\nUser-Agent: entc\r\nAccept: */*\r\nHost: ");
+  ecstream_append_str (stream, host);
+  ecstream_append_str (stream, "\r\nConnection: Keep-Alive\r\n\r\n");
   
   /* send the request */
   ecsocket_writeStream(socket, stream);
@@ -153,7 +153,7 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
     return FALSE;
   }
   /* get the first line */
-  line = ecstream_buffer(stream);  
+  line = ecstream_get (stream);
   /* is the first line 'HTTP/1.0 200 OK' ?? */
   if( !(line[0] == 'H' && line[9] == '2' && line[10] == '0' && line[11] == '0') )
   {
@@ -163,7 +163,7 @@ int echtmlreq_process(EcHtmlRequest self, EcSocket socket, const EcString host, 
   /* read all header lines */
   while( ecstreambuffer_readln(sbuffer, stream, &b1, &b2) )
   {
-    line = ecstream_buffer(stream);
+    line = ecstream_get (stream);
     if( !*line )
     {
       break;
@@ -194,7 +194,7 @@ int echtmlreq_get(EcHtmlRequest self, const EcString host, uint_t port, const Ec
     EcString cport = ecstr_long(port);
     EcString chost = ecstr_cat3(host, ":", cport);
     
-    EcStream stream = ecstream_new();    
+    EcStream stream = ecstream_create ();
     EcStreamBuffer sbuffer = ecstreambuffer_create (socket);
     
     if (echtmlreq_process (self, socket, chost, url, stream, sbuffer))
@@ -203,7 +203,7 @@ int echtmlreq_get(EcHtmlRequest self, const EcString host, uint_t port, const Ec
     }
     
     ecstreambuffer_destroy (&sbuffer);
-    ecstream_delete(&stream);
+    ecstream_destroy (&stream);
     
     ecstr_delete(&chost);
     ecstr_delete(&cport);
@@ -234,13 +234,13 @@ int echtmlreq_post (EcHtmlRequest self, const EcString host, uint_t port, const 
     EcString chost = ecstr_cat4("http://", host, ":", cport);
     EcString curl = ecstr_cat2(chost, url);
 
-    EcStream stream = ecstream_new();    
+    EcStream stream = ecstream_create ();
     EcStreamBuffer sbuffer = ecstreambuffer_create (socket);
 
     echtmlreq_process_post (self, socket, curl, message, stream, sbuffer);
 
     ecstreambuffer_destroy (&sbuffer);
-    ecstream_delete(&stream);
+    ecstream_destroy (&stream);
 
     ecstr_delete(&chost);
     ecstr_delete(&cport);
@@ -260,7 +260,7 @@ int echtmlreq_post (EcHtmlRequest self, const EcString host, uint_t port, const 
 
 const EcString echtmlreq_data(EcHtmlRequest self)
 {
-  return ecstream_buffer( self->stream );
+  return ecstream_get (self->stream);
 }
 
 /*------------------------------------------------------------------------*/

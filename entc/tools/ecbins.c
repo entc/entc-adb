@@ -567,7 +567,7 @@ EcUdc ecbins_read (const EcBuffer buf, const EcString name)
 void ecbins_writeEcString (EcStream stream, const EcString s)
 {
   // depending on the length of the string handle differently
-  ecstream_append (stream, s);
+  ecstream_append_str (stream, s);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -578,7 +578,7 @@ void ecbins_writeNode (EcStream stream, const EcUdc udc)
   EcUdc item;
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_MAP);
+  ecstream_append_c (stream, ENTC_BINSTYPE_MAP);
   
   {
     ulong_t offsetSize = ecstream_registerOffset (stream, 4);
@@ -613,7 +613,7 @@ void ecbins_writeList (EcStream stream, const EcUdc udc)
   EcUdc item;
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_VECTOR);
+  ecstream_append_c (stream, ENTC_BINSTYPE_VECTOR);
 
   {
     ulong_t offsetSize = ecstream_registerOffset (stream, 4);
@@ -640,7 +640,7 @@ void ecbins_writeString (EcStream stream, const EcUdc udc)
   }
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_STRING);
+  ecstream_append_c (stream, ENTC_BINSTYPE_STRING);
 
   ecbins_writeEcString (stream, s);
 }
@@ -674,7 +674,7 @@ void ecbins_writeInt16 (EcStream stream, const EcUdc udc)
   int16_t h = ecudc_asInt16(udc);
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_SHORT);
+  ecstream_append_c (stream, ENTC_BINSTYPE_SHORT);
   ecstream_appendd(stream, (const char*)&h, 2);    
 }
 
@@ -685,7 +685,7 @@ void ecbins_writeUInt16 (EcStream stream, const EcUdc udc)
   uint16_t h = ecudc_asUInt16(udc);
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_USHORT);
+  ecstream_append_c (stream, ENTC_BINSTYPE_USHORT);
   ecstream_appendd(stream, (const char*)&h, 2);    
 }
 
@@ -697,7 +697,7 @@ void ecbins_writeInt32 (EcStream stream, const EcUdc udc)
   int32_t h = ecudc_asInt32(udc, &res);
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_INT);
+  ecstream_append_c (stream, ENTC_BINSTYPE_INT);
   ecstream_appendd(stream, (const char*)&h, 4);    
 }
 
@@ -708,7 +708,7 @@ void ecbins_writeUInt32 (EcStream stream, const EcUdc udc)
   uint32_t h = ecudc_asUInt32(udc);
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_UINT);
+  ecstream_append_c (stream, ENTC_BINSTYPE_UINT);
   ecstream_appendd(stream, (const char*)&h, 4);    
 }
 
@@ -719,7 +719,7 @@ void ecbins_writeInt64 (EcStream stream, const EcUdc udc)
   int64_t h = ecudc_asInt64(udc);
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_LONG);
+  ecstream_append_c (stream, ENTC_BINSTYPE_LONG);
   ecstream_appendd(stream, (const char*)&h, 8);  
 }  
 
@@ -730,7 +730,7 @@ void ecbins_writeUInt64 (EcStream stream, const EcUdc udc)
   uint64_t h = ecudc_asUInt64(udc);
   
   // write datatype identifier
-  ecstream_appendc(stream, ENTC_BINSTYPE_ULONG);
+  ecstream_append_c (stream, ENTC_BINSTYPE_ULONG);
   ecstream_appendd(stream, (const char*)&h, 8);    
 }  
   
@@ -837,7 +837,7 @@ void ecbins_writeElement (EcStream stream, const EcUdc udc)
 
 EcBuffer ecbins_write (const EcUdc udc, const EcBuffer begining)
 {
-  EcStream stream = ecstream_new();
+  EcStream stream = ecstream_create();
   
   if (isAssigned (begining))
   {
@@ -846,7 +846,7 @@ EcBuffer ecbins_write (const EcUdc udc, const EcBuffer begining)
   
   ecbins_writeElement (stream, udc);
   
-  return ecstream_trans(&stream);
+  return ecstream_tobuf(&stream);
 }
 
 //-----------------------------------------------------------------------------------------------------------

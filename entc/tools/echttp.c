@@ -1076,15 +1076,15 @@ void echttp_escape_stream (EcStream stream, const EcString url)
   {
     switch (*pos01)
     {
-      case ' ' : ecstream_append (stream, "%20"); break;
-      case '!' : ecstream_append (stream, "%21"); break;
-      case '"' : ecstream_append (stream, "%22"); break;
-      case '#' : ecstream_append (stream, "%23"); break;
-      case '$' : ecstream_append (stream, "%24"); break;
-      case '%' : ecstream_append (stream, "%25"); break;
-      case '&' : ecstream_append (stream, "%26"); break;
-      case '\'': ecstream_append (stream, "%27"); break;
-      default: ecstream_appendc (stream, *pos01);
+      case ' ' : ecstream_append_str (stream, "%20"); break;
+      case '!' : ecstream_append_str (stream, "%21"); break;
+      case '"' : ecstream_append_str (stream, "%22"); break;
+      case '#' : ecstream_append_str (stream, "%23"); break;
+      case '$' : ecstream_append_str (stream, "%24"); break;
+      case '%' : ecstream_append_str (stream, "%25"); break;
+      case '&' : ecstream_append_str (stream, "%26"); break;
+      case '\'': ecstream_append_str (stream, "%27"); break;
+      default: ecstream_append_c (stream, *pos01);
     }
     pos01++;
   }
@@ -1123,7 +1123,7 @@ void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString ur
 void echttp_header_title (EcHttpHeader* header)
 {
   // variables
-  EcStream stream = ecstream_new ();
+  EcStream stream = ecstream_create ();
   // cast
   EcString url_unescaped = ecstr_copy (header->request_url);
   // unescape html url
@@ -1145,15 +1145,15 @@ void echttp_header_title (EcHttpHeader* header)
       
       if (cursor.position > 0)
       {
-        ecstream_append(stream, " - ");
+        ecstream_append_str (stream, " - ");
       }
       
-      ecstream_append(stream, token);
+      ecstream_append_str (stream, token);
     }
   }
   
   {
-    EcBuffer buffer = ecstream_trans (&stream);
+    EcBuffer buffer = ecstream_tobuf (&stream);
     header->title = ecbuf_str (&buffer);
   }
 }
@@ -1419,14 +1419,14 @@ void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 
 int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
 {
-  EcStream stream = ecstream_new();
+  EcStream stream = ecstream_create ();
   
   char b1 = 0;
   char b2 = 0;
   
   while (ecstreambuffer_readln (buffer, stream, &b1, &b2))
   {      
-    const char* line = ecstream_buffer (stream);
+    const char* line = ecstream_get (stream);
     if( *line )
     {
       //eclogger_msg(LL_TRACE, "ENTC", "http header", line);
@@ -1489,7 +1489,7 @@ int echttp_parse_header (EcHttpHeader* header, EcStreamBuffer buffer)
     }
   }
   
-  ecstream_delete(&stream);
+  ecstream_destroy (&stream);
   
   return TRUE;
 }
@@ -1505,7 +1505,7 @@ int echttp_parse_method (EcHttpHeader* header, EcStreamBuffer buffer, EcStream s
   int res = ecstreambuffer_readln (buffer, streambuffer, &b1, &b2);
   if (res)
   {
-    const char* line = ecstream_buffer(streambuffer);
+    const char* line = ecstream_get (streambuffer);
     if(!ecstr_empty(line))
     {
       const EcString after_method;
@@ -1776,7 +1776,7 @@ void echttp_request_process (EcHttpRequest self, EcSocket socket)
   EcHttpHeader header;
   
   EcStreamBuffer buffer = ecstreambuffer_create (socket);
-  EcStream streambuffer = ecstream_new ();
+  EcStream streambuffer = ecstream_create ();
 
   // initialize the header struct
   echttp_header_init (&header, self->header_on);
@@ -1786,7 +1786,7 @@ void echttp_request_process (EcHttpRequest self, EcSocket socket)
   echttp_header_clear (&header);
   
   ecstreambuffer_destroy (&buffer);
-  ecstream_delete (&streambuffer);
+  ecstream_destroy (&streambuffer);
 }
 
 //---------------------------------------------------------------------------------------
