@@ -117,8 +117,8 @@ SET (CORE_SOURCES_SYS
   system/ecrefcnt.c
   system/ecaio.h
   system/ecaio.c
-  system/ecaio_win.c
-  system/ecaio_unix.c
+  system/ecaio_ctx.h
+  system/ecaio_ctx.c
   system/ecaio_notify.h
   system/ecaio_notify.c
   system/ecaio_file.h

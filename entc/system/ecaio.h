@@ -24,47 +24,7 @@
 
 #include "types/ecerr.h"
 #include "types/ecbuffer.h"
-
-//-----------------------------------------------------------------------------
-
-#define ENTC_AIO_CODE_UNKNOWN        0
-#define ENTC_AIO_CODE_CONTINUE      10
-#define ENTC_AIO_CODE_DONE          11
-#define ENTC_AIO_CODE_ABORTALL      12
-
-//=============================================================================
-
-struct EcAioContext_s; typedef struct EcAioContext_s* EcAioContext;
-
-typedef int  (__STDCALL *fct_ecaio_context_process)  (void* ptr, EcAioContext, unsigned long, unsigned long);
-typedef void (__STDCALL *fct_ecaio_context_destroy)  (void* ptr);
-typedef int  (__STDCALL *fct_ecaio_context_onRead)   (void* ptr, void* handle, const char* buffer, unsigned long);
-typedef int  (__STDCALL *fct_ecaio_context_onInit)   (void* ptr, EcErr);
-typedef int  (__STDCALL *fct_ecaio_context_onNotify) (void* ptr, int action);
-
-//-----------------------------------------------------------------------------
-
-__LIBEX EcAioContext ecaio_context_create (void);
-
-__LIBEX void ecaio_context_destroy (EcAioContext*);
-
-__LIBEX void ecaio_context_setCallbacks (EcAioContext, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy);
-
-//=============================================================================
-
-struct EcAioRefCtx_s; typedef struct EcAioRefCtx_s* EcAioRefCtx;
-
-//-----------------------------------------------------------------------------
-
-__LIBEX EcAioRefCtx ecaio_refctx_create ();
-
-__LIBEX EcAioRefCtx ecaio_refctx_clone (EcAioRefCtx);
-
-__LIBEX void ecaio_refctx_decrease (EcAioRefCtx*);
-
-__LIBEX void ecaio_refctx_setCallbacks (EcAioRefCtx, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy);
-
-__LIBEX int ecaio_refctx_process (EcAioRefCtx, EcAioContext, unsigned long val1, unsigned long val2);
+#include "system/ecaio_ctx.h"
 
 //=============================================================================
 
@@ -93,19 +53,5 @@ __LIBEX int ecaio_appendVNode (EcAio, int fd, void* data, EcErr err);
 __LIBEX int ecaio_addContextToEvent (EcAio, EcAioContext ctx, EcErr err);
 
 //-----------------------------------------------------------------------------
-
-#if defined __APPLE__
-
-#define __BSD_KEVENT
-
-#elif __linux__
-
-#define __LINUX_EPOLL
-
-#elif defined __WIN_OS
-
-#define __MS_IOCP
-
-#endif
 
 #endif
