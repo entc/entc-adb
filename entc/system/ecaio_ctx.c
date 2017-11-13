@@ -13,6 +13,29 @@
 
 //-----------------------------------------------------------------------------
 
+typedef struct _OVERLAPPED_EX
+{
+  ULONG_PTR Internal;
+  ULONG_PTR InternalHigh;
+  union {
+    struct {
+      DWORD Offset;
+      DWORD OffsetHigh;
+    };
+    
+    PVOID Pointer;
+  };
+  
+  HANDLE  hEvent;
+  
+  void* ptr;
+  
+  unsigned int cnt;
+  
+} OVERLAPPED_EX, *LPOVERLAPPED_EX;
+
+//-----------------------------------------------------------------------------
+
 struct EcAioContext_s
 {
   EcAioRefCtx ref;
