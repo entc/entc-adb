@@ -91,10 +91,6 @@ SET (CORE_SOURCES_SYS
   system/ecmutex_win.c
   system/ecmutex_unix.c
   system/ecmutex_dos.c
-  system/ecsocket.h
-  system/ecsocket_win.c
-  system/ecsocket_unix.c
-  system/ecsocket_dos.c
   system/ecevents.h
   system/ecevents_win.c
   system/ecevents_bsd.c
@@ -119,6 +115,16 @@ SET (CORE_SOURCES_SYS
   system/ecexec_win.c
   system/ecrefcnt.h
   system/ecrefcnt.c
+  system/ecaio.h
+  system/ecaio.c
+  system/ecaio_win.c
+  system/ecaio_unix.c
+  system/ecaio_notify.h
+  system/ecaio_notify.c
+  system/ecaio_file.h
+  system/ecaio_file.c
+  system/ecaio_socket.h
+  system/ecaio_socket.c
 )
 
 SET (CORE_SOURCES_TYPES
@@ -163,8 +169,6 @@ SET (CORE_SOURCES_UTILS
   utils/ecreadbuffer.c
   utils/ecsmartbuffer.h
   utils/ecsmartbuffer.c
-  utils/ecstreambuffer.h
-  utils/ecstreambuffer.c
   utils/ecobserver.h
   utils/ecobserver.c
   utils/ecsecfile.h
@@ -172,10 +176,6 @@ SET (CORE_SOURCES_UTILS
 )
 
 SET (CORE_SOURCES_TOOLS
-  tools/echttp.h
-  tools/echttp.c
-  tools/echtml.h
-  tools/echtml.c
   tools/ecxmlstream.h
   tools/ecxmlstream.c
   tools/ecjson.h

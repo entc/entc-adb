@@ -165,12 +165,11 @@ int ecdl_assign (EcDl self, EcErr err, void* buffer, int n, ...)
 #else
     
     {
-      int res;
       char* errCode;
       // clear error code
       dlerror();
       
-      res = dlsym (self->ptr, method);
+      mptr = dlsym (self->ptr, method);
       
       errCode = dlerror();
       // check if an error ocours

@@ -1,27 +1,11 @@
-/*
- * Copyright (c) 2010-2015 "Alexander Kalkhof" [email:entc@kalkhof.org]
- *
- * This file is part of the extension n' tools (entc-base) framework for C.
- *
- * entc-base is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * entc-base is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ecmime.h"
 
 #include "types/ecbuffer.h"
 #include "types/ecmapchar.h"
 #include "tools/ectokenizer.h"
+#include "types/ecstream.h"
+#include "system/ecfile.h"
+#include "utils/eclogger.h"
 
 //------------------------------------------------------------------------------------------------------
 
@@ -120,6 +104,43 @@ const EcString ecmime_getFromExtension (const EcString ext)
   }
 }
 
+//---------------------------------------------------------------------------------------
+
+char x2c (char *what)
+{
+  register char digit;
+  
+  digit = ((what[0] >= 'A') ? ((what[0] & 0xdf) - 'A')+10 : (what[0] - '0'));
+  digit *= 16;
+  digit += (what[1] >= 'A' ? ((what[1] & 0xdf) - 'A')+10 : (what[1] - '0'));
+  return(digit);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ecmime_unescape (EcString url)
+{
+  register int x,y;
+  
+  for(x=0;url[x];x++)
+  {
+    if(url[x] == '%')
+    {
+      url[x+1] = x2c(&url[x+1]);
+    }
+  }
+    
+  for(x=0,y=0;url[y];++x,++y)
+  {
+    if((url[x] = url[y]) == '%')
+    {
+      url[x] = url[y+1];
+      y+=2;
+    }
+  }
+  url[x] = '\0';
+}
+
 //------------------------------------------------------------------------------------------------------
 
 #define C_MAX_BUFSIZE 100
@@ -149,7 +170,7 @@ struct EcMultipartParser_s
   
   EcString path;
   
-  EcHttpContent hc;
+  //EcHttpContent hc;
   
   // binary data direct to file
   
@@ -206,7 +227,7 @@ typedef struct
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString path, http_content_callback cb, void* ptr, EcHttpContent hc, ecmultipartparser_callback dc, void* obj)
+EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString path, http_content_callback cb, void* ptr, ecmultipartparser_callback dc, void* obj)
 {
   EcMultipartParser self = ENTC_NEW (struct EcMultipartParser_s);
   
@@ -216,7 +237,7 @@ EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcStr
   
   self->cb =cb;
   self->ptr = ptr;
-  self->hc = hc;
+  //self->hc = hc;
   
   self->path = ecstr_copy(path);
   
@@ -321,6 +342,7 @@ void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, 
       // recreate an empty map
       self->params = ecmapchar_create (EC_ALLOC);
     }
+    /*
     else if (isAssigned (self->hc))
     {
       // transform stream to buffer
@@ -337,6 +359,7 @@ void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, 
       // recreate an empty map
       self->params = ecmapchar_create (EC_ALLOC); 
     }
+     */
     else
     {
       eclogger_fmt (LL_WARN, "ENTC", "mime", "no hc, content deleted"); 
