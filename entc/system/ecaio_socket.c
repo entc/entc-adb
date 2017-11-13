@@ -1129,7 +1129,7 @@ struct EcAioSocketAccept_s
   
   Q6HANDLE socket;
   
-  fct_aio_socket_accept accept;
+  fct_ecaio_socket_accept accept;
   
   void* ptr;
   
@@ -1163,7 +1163,7 @@ static void __STDCALL ecaio_socketaccept_fct_destroy (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-void ecaio_socketaccept_setCallback (EcAioSocketAccept self, void* ptr, fct_aio_socket_accept accept)
+void ecaio_socketaccept_setCallback (EcAioSocketAccept self, void* ptr, fct_ecaio_socket_accept accept)
 {
   self->accept = accept;
   self->ptr = ptr;
