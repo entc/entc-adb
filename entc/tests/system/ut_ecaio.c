@@ -6,11 +6,20 @@
 
 #include <stdio.h>
 #include <signal.h>
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+#else
+
 #include <unistd.h>
+
+#endif
 
 //=============================================================================
 
-static void* __STDCALL test_ecaio_init ()
+static void* __STDCALL test_ecaio_init (EcErr err)
 {
   return ecaio_create ();
 }
@@ -163,8 +172,16 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     
     ece_sleep (1000);
     
+#ifdef _WIN32
+
+	GenerateConsoleCtrlEvent (CTRL_C_EVENT, 0);
+
+#else
+
     kill(getpid(), SIGTERM);
-    
+
+#endif
+
     for (i = 0; i < 10; i++)
     {
       ecthread_join(thread [i]);

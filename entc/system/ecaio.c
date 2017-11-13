@@ -28,6 +28,10 @@ struct EcAio_s
 
 //-----------------------------------------------------------------------------
 
+static EcAio g_aio = NULL;
+
+//-----------------------------------------------------------------------------
+
 EcAio ecaio_create ()
 {
   EcAio self = ENTC_NEW(struct EcAio_s);
@@ -106,42 +110,9 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
   ecaio_context_setCallbacks (ctx, ptr, process, destroy);
   
   // add the context to the completion port
-  PostQueuedCompletionStatus (self->port, t, ptr2, (LPOVERLAPPED)ctx->overlapped);
+  PostQueuedCompletionStatus (self->port, t, ptr2, (LPOVERLAPPED)ecaio_context_getOverlapped (ctx));
   
   return ENTC_ERR_NONE;
-}
-
-//-----------------------------------------------------------------------------
-
-int ecaio_continue (EcAio self, OVERLAPPED_EX* ovl, int repeat, unsigned long bytes)
-{
-  EcAioContext ctx = NULL;
-  int cont = OVL_PROCESS_CODE_CONTINUE;
-  
-  //ecmutex_lock (self->mutex);
-  
-  if (ovl)
-  {
-    // add locking
-    ctx = (EcAioContext)(ovl->ptr);
-    if (ctx)
-    {
-      cont = ecaio_context_process(ctx, bytes, 0);
-    }
-  }
-  
-  if (repeat && (cont == OVL_PROCESS_CODE_CONTINUE))
-  {
-    
-  }
-  else if (ctx)
-  {
-    
-  }
-  
-  //ecmutex_unlock (self->mutex);
-  
-  return (cont == OVL_PROCESS_CODE_ABORTALL);
 }
 
 //-----------------------------------------------------------------------------
@@ -158,9 +129,9 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   iores = GetQueuedCompletionStatus (self->port, &numOfBytes, &ptr, &ovl, timeout);
   if (iores)
   {
-    if (ecaio_continue (self, (OVERLAPPED_EX*)ovl, TRUE, numOfBytes))
+    if (ecaio_context_continue (ovl, TRUE, numOfBytes))
     {
-      return ecerr_set (err, Q6LVL_EXPECTED, Q6ERR_PROCESS_ABORT, "wait abborted");
+      return ecerr_set (err, ENTC_LVL_EXPECTED, ENTC_ERR_PROCESS_ABORT, "wait abborted");
     }
     else
     {
@@ -177,9 +148,9 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     {
       DWORD lastError = GetLastError ();
       
-      if (ecaio_continue (self, (OVERLAPPED_EX*)ovl, FALSE, numOfBytes))
+      if (ecaio_context_continue (ovl, FALSE, numOfBytes))
       {
-        return ecerr_set (err, Q6LVL_EXPECTED, Q6ERR_PROCESS_ABORT, "wait abborted");
+        return ecerr_set (err, ENTC_LVL_EXPECTED, ENTC_ERR_PROCESS_ABORT, "wait abborted");
       }
       
       switch (lastError)
@@ -190,11 +161,11 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
         }
         case 735: // ERROR_ABANDONED_WAIT_0
         {
-          return q6err_set (err, Q6LVL_ERROR, Q6ERR_OS_ERROR, "wait abborted");
+          return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "wait abborted");
         }
         case ERROR_OPERATION_ABORTED: // ABORT
         {
-          return q6err_set (err, Q6LVL_ERROR, Q6ERR_OS_ERROR, "wait abborted");
+          return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "wait abborted");
         }
         default:
         {
@@ -208,8 +179,6 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 }
 
 //-----------------------------------------------------------------------------
-
-static EcAIo g_aio = NULL;
 
 static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 {
@@ -258,6 +227,11 @@ int ecaio_wait_abortOnSignal (EcAio self, EcErr err)
 
 static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
+  EcAio self = ptr;
+  
+  // send again
+  ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, NULL);
+  
   return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
 }
 
@@ -265,7 +239,7 @@ static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsig
 
 int ecaio_abort (EcAio self, EcErr err)
 {
-  return ecaio_addQueueEvent (self, NULL, ecaio_abort_fct_process, NULL, err);
+  return ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, err);
 }
 
 //*****************************************************************************

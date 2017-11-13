@@ -64,7 +64,7 @@ EcAioContext ecaio_context_create (void)
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_context_setCallbacks (EcAioContext self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy)
+void ecaio_context_setCallbacks (EcAioContext self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy)
 {
   // override callbacks
   ecaio_refctx_setCallbacks (self->ref, ptr, process, destroy);
@@ -72,46 +72,78 @@ void q6sys_aio_context_setCallbacks (EcAioContext self, void* ptr, fct_ecaio_con
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_context_destroy (Q6AIOContext* pself)
+void ecaio_context_destroy (EcAioContext* pself)
 {
-  Q6AIOContext self = *pself;
+  EcAioContext self = *pself;
   
   free (self->overlapped);
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "destroyed %p", self);
   
-  q6sys_aio_refctx_decrease (&(self->ref));
+  ecaio_refctx_decrease (&(self->ref));
   
-  ENTC_DEL(pself, struct Q6AIOContext_s);
+  ENTC_DEL(pself, struct EcAioContext_s);
 }
 
 //-----------------------------------------------------------------------------
 
 void* ecaio_context_getOverlapped (EcAioContext self)
 {
-
+  return self->overlapped;
 }
 
 //-----------------------------------------------------------------------------
 
 void ecaio_context_appendOverlappedOffset (EcAioContext self, int offset)
 {
-
-  //ctx->overlapped->Offset += len;
-
+  self->overlapped->Offset += offset;
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_context_process (Q6AIOContext self, unsigned long val1, unsigned long val2)
+int ecaio_context_process (EcAioContext self, unsigned long val1, unsigned long val2)
 {
-  int res = q6sys_aio_refctx_process (self->ref, self, val1, val2);
+  int res = ecaio_refctx_process (self->ref, self, val1, val2);
   
-  if (res == OVL_PROCESS_CODE_DONE || res == OVL_PROCESS_CODE_ABORTALL)
+  if (res == ENTC_AIO_CODE_DONE || res == ENTC_AIO_CODE_ABORTALL)
   {
-    q6sys_aio_context_destroy (&self);
+    ecaio_context_destroy (&self);
   }
   
   return res;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_context_continue (void* ptr, int repeat, unsigned long bytes)
+{
+  OVERLAPPED_EX* ovl = ptr;
+  EcAioContext ctx = NULL;
+  int cont = ENTC_AIO_CODE_CONTINUE;
+  
+  //ecmutex_lock (self->mutex);
+  
+  if (ovl)
+  {
+    // add locking
+    ctx = (EcAioContext)(ovl->ptr);
+    if (ctx)
+    {
+      cont = ecaio_context_process(ctx, bytes, 0);
+    }
+  }
+  
+  if (repeat && (cont == ENTC_AIO_CODE_CONTINUE))
+  {
+    
+  }
+  else if (ctx)
+  {
+    
+  }
+  
+  //ecmutex_unlock (self->mutex);
+  
+  return (cont == ENTC_AIO_CODE_ABORTALL);
 }
 
 //*****************************************************************************
