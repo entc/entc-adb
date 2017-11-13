@@ -679,10 +679,7 @@ int ecaio_abort (EcAio self, EcErr err)
 
 struct EcAio_s
 {
-  
   int kq;
-  
-  
 };
 
 //-----------------------------------------------------------------------------
@@ -908,6 +905,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
         case 9: signalKind = "SIGKILL (Kill signal)"; break;
         case 11: signalKind = "SIGSEGV (Invalid memory reference)"; break;
         case 13: signalKind = "SIGPIPE (Broken pipe: write to pipe with no readers; see pipe(7))"; break;
+        case 15: signalKind = "SIGTERM (Termination signal)"; break;
       }
       
       if (signalKind)
@@ -919,6 +917,9 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
         eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> unknown signal", event.ident);
       }
       
+      return ecaio_abort (self, err);
+      
+      /*
       if (event.ident == SIGINT || event.ident == SIGTERM)
       {
         return ENTC_ERR_NONE_CONTINUE;
@@ -926,6 +927,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       
       // abort
       return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "wait abborted (signal?)");
+       */
     }
     
     return ENTC_ERR_NONE;
