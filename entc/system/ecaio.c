@@ -252,6 +252,20 @@ int q6sys_aio_wait_abortOnSignal (Q6AIO self, Q6Err err)
   return res;
 }
 
+//-----------------------------------------------------------------------------
+
+static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+{
+  return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_abort (EcAio self, EcErr err)
+{
+  return ecaio_addQueueEvent (self, NULL, ecaio_abort_fct_process, NULL, err);
+}
+
 //*****************************************************************************
 
 #elif defined __LINUX_EPOLL
@@ -638,6 +652,20 @@ int ecaio_wait_abortOnSignal (EcAio self, EcErr err)
   return res;
 }
 
+//-----------------------------------------------------------------------------
+
+static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+{
+  return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_abort (EcAio self, EcErr err)
+{
+  return ecaio_addQueueEvent (self, NULL, ecaio_abort_fct_process, NULL, err);
+}
+
 //*****************************************************************************
 
 #elif defined __BSD_KEVENT
@@ -951,14 +979,15 @@ int ecaio_wait_abortOnSignal (EcAio self, EcErr err)
   return res;
 }
 
-//*****************************************************************************
-
-#endif
-
-//*****************************************************************************
+//-----------------------------------------------------------------------------
 
 static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
+  EcAio self = ptr;
+  
+  // send again
+  ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, NULL);
+  
   return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
 }
 
@@ -966,7 +995,11 @@ static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsig
 
 int ecaio_abort (EcAio self, EcErr err)
 {
-  return ecaio_addQueueEvent (self, NULL, ecaio_abort_fct_process, NULL, err);
+  return ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, err);
 }
 
-//-----------------------------------------------------------------------------
+//*****************************************************************************
+
+#endif
+
+//*****************************************************************************
