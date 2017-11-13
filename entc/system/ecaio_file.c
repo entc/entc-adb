@@ -10,18 +10,20 @@
 
 #if defined __MS_IOCP
 
+#include <windows.h>
+
 //*****************************************************************************
 
-struct Q6AIOFileReader_s
+struct EcAioFileReader_s
 {
   
   HANDLE handle;
   
   char buffer [READ_MAX_BUFFER];
   
-  fct_aio_context_onRead onRead;
+  fct_ecaio_context_onRead onRead;
   
-  fct_aio_context_destroy destroy;
+  fct_ecaio_context_destroy destroy;
   
   void* ptr;
   
@@ -29,39 +31,39 @@ struct Q6AIOFileReader_s
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_filereader_read (Q6AIOFileReader self, Q6AIOContext ctx)
+int ecaio_filereader_read (EcAioFileReader self, EcAioContext ctx)
 {
   DWORD bytesRead;
   DWORD err;
   BOOL readstatus;
   
-  readstatus = ReadFile (self->handle, self->buffer, READ_MAX_BUFFER, &bytesRead, (LPOVERLAPPED)ctx->overlapped);
+  readstatus = ReadFile (self->handle, self->buffer, READ_MAX_BUFFER, &bytesRead, (LPOVERLAPPED)ecaio_context_getOverlapped(ctx));
   if (readstatus > 0)
   {
-    return OVL_PROCESS_CODE_CONTINUE;
+    return ENTC_AIO_CODE_CONTINUE;
   }
   
   err = GetLastError ();
   if (err != ERROR_IO_PENDING)
   {
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
   
-  return OVL_PROCESS_CODE_CONTINUE;
+  return ENTC_AIO_CODE_CONTINUE;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __stdcall q6sys_aio_filereader_fct_process (void* ptr, Q6AIOContext ctx, unsigned long len, unsigned long opt)
+static int __stdcall ecaio_filereader_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
 {
-  Q6AIOFileReader self = (Q6AIOFileReader)ptr;
+  EcAioFileReader self = ptr;
   
   if (len == 0)
   {
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
   
-  ctx->overlapped->Offset += len;
+  ecaio_context_appendOverlappedOffset (ctx, len);
   
   //std::cout << "RECEIVED BYTES: " << len << std::endl;
   
@@ -70,14 +72,14 @@ static int __stdcall q6sys_aio_filereader_fct_process (void* ptr, Q6AIOContext c
     self->onRead (self->ptr, self->handle, self->buffer, len);
   }
   
-  return q6sys_aio_filereader_read (self, ctx);
+  return ecaio_filereader_read (self, ctx);
 }
 
 //-----------------------------------------------------------------------------
 
-Q6AIOFileReader q6sys_aio_filereader_create (void* handle)
+EcAioFileReader ecaio_filereader_create (void* handle)
 {
-  Q6AIOFileReader self = ENTC_NEW (struct Q6AIOFileReader_s);
+  EcAioFileReader self = ENTC_NEW (struct EcAioFileReader_s);
   
   self->handle = handle;
   
@@ -90,27 +92,27 @@ Q6AIOFileReader q6sys_aio_filereader_create (void* handle)
 
 //-----------------------------------------------------------------------------
 
-static void __stdcall q6sys_aio_filereader_fct_destroy (void* ptr)
+static void __stdcall ecaio_filereader_fct_destroy (void* ptr)
 {
-  Q6AIOFileReader self = (Q6AIOFileReader)ptr;
+  EcAioFileReader self = ptr;
   
   if (self->destroy)
   {
     self->destroy (self->ptr);
   }
   
-  ENTC_DEL (&self, struct Q6AIOFileReader_s);
+  ENTC_DEL (&self, struct EcAioFileReader_s);
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_filereader_assign (Q6AIOFileReader* pself, Q6AIO aio, Q6Err err)
+int ecaio_filereader_assign (EcAioFileReader* pself, EcAio aio, EcErr err)
 {
-  Q6AIOFileReader self = *pself;
+  EcAioFileReader self = *pself;
   
   {
     // link file handle with io port
-    int res = q6sys_aio_append (aio, self->handle, NULL, err);
+    int res = ecaio_append (aio, self->handle, NULL, err);
     if (res)
     {
       return res;
@@ -130,22 +132,22 @@ int q6sys_aio_filereader_assign (Q6AIOFileReader* pself, Q6AIO aio, Q6Err err)
   
   {
     // create a async context
-    Q6AIOContext ctx = q6sys_aio_context_create ();
+    EcAioContext ctx = ecaio_context_create ();
     
     // override callbacks
-    q6sys_aio_context_setCallbacks (ctx, self, q6sys_aio_filereader_fct_process, q6sys_aio_filereader_fct_destroy);
+    ecaio_context_setCallbacks (ctx, self, ecaio_filereader_fct_process, ecaio_filereader_fct_destroy);
     
     // assign this and the context to the async system
-    q6sys_aio_filereader_read (self, ctx);
+    ecaio_filereader_read (self, ctx);
   }
   
   *pself = NULL;
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_filereader_setCallback(Q6AIOFileReader self, void* ptr, fct_aio_context_onInit onInit, fct_aio_context_onRead onRead, fct_aio_context_destroy destroy)
+void ecaio_filereader_setCallback(EcAioFileReader self, void* ptr, fct_ecaio_context_onInit onInit, fct_ecaio_context_onRead onRead, fct_ecaio_context_destroy destroy)
 {
   self->ptr = ptr;
   self->onRead = onRead;
@@ -154,11 +156,11 @@ void q6sys_aio_filereader_setCallback(Q6AIOFileReader self, void* ptr, fct_aio_c
 
 //=============================================================================
 
-struct Q6AIOFileWriter_s
+struct EcAioFileWriter_s
 {
   HANDLE handle;
   
-  fct_aio_context_destroy destroy;
+  fct_ecaio_context_destroy destroy;
   
   void* ptr;
   
@@ -172,7 +174,7 @@ struct Q6AIOFileWriter_s
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_filewriter_write (Q6AIOFileWriter self, Q6AIOContext ctx)
+int ecaio_filewriter_write (EcAioFileWriter self, EcAioContext ctx)
 {
   DWORD written;
   DWORD res;
@@ -182,22 +184,26 @@ int q6sys_aio_filewriter_write (Q6AIOFileWriter self, Q6AIOContext ctx)
   if (self->buf == NULL)
   {
     printf ("filewriter error -> buffer not set\r\n");
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
   
-  ctx->overlapped->Offset += self->written;
+  ecaio_context_appendOverlappedOffset (ctx, self->written);
   
-  res = WriteFile (self->handle, self->buf->buffer + self->written, self->buf->size - self->written, &written, (LPOVERLAPPED)ctx->overlapped);
+  res = WriteFile (self->handle, self->buf->buffer + self->written, self->buf->size - self->written, &written, (LPOVERLAPPED)ecaio_context_getOverlapped (ctx));
   if (res == 0)
   {
-    DWORD err = GetLastError ();
-    if (err != ERROR_IO_PENDING)
+    DWORD lastError = GetLastError ();
+    if (lastError != ERROR_IO_PENDING)
     {
-      struct Q6Err_s serr;
-      q6err_formatErrorOS (&serr, Q6LVL_ERROR, err);
+      EcErr err = ecerr_create ();
+
+      ecerr_formatErrorOS (err, ENTC_LVL_ERROR, lastError);
       
-      printf ("filewriter error -> %s\r\n", serr.text);
-      return OVL_PROCESS_CODE_DONE;
+      printf ("filewriter error -> %s\r\n", err->text);
+      
+	  ecerr_destroy (&err);
+	  
+	  return ENTC_AIO_CODE_DONE;
     }
     
   }
@@ -206,14 +212,14 @@ int q6sys_aio_filewriter_write (Q6AIOFileWriter self, Q6AIOContext ctx)
   
   //printf ("filewriter continue\r\n");
   
-  return OVL_PROCESS_CODE_CONTINUE;
+  return ENTC_AIO_CODE_CONTINUE;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __stdcall q6sys_aio_filewriter_fct_process (void* ptr, Q6AIOContext ctx, unsigned long len, unsigned long opt)
+static int __stdcall ecaio_filewriter_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
 {
-  Q6AIOFileWriter self = (Q6AIOFileWriter)ptr;
+  EcAioFileWriter self = ptr;
   
   self->written += len;
   
@@ -221,20 +227,20 @@ static int __stdcall q6sys_aio_filewriter_fct_process (void* ptr, Q6AIOContext c
   
   if (self->written < self->buf->size)
   {
-    return q6sys_aio_filewriter_write (self, ctx);
+    return ecaio_filewriter_write (self, ctx);
   }
   else
   {
     //printf ("filewriter done\r\n");
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
 }
 
 //-----------------------------------------------------------------------------
 
-static void __stdcall q6sys_aio_filewriter_fct_destroy (void* ptr)
+static void __stdcall ecaio_filewriter_fct_destroy (void* ptr)
 {
-  Q6AIOFileWriter self = (Q6AIOFileWriter)ptr;
+  EcAioFileWriter self = ptr;
   
   if (self->destroy)
   {
@@ -246,14 +252,14 @@ static void __stdcall q6sys_aio_filewriter_fct_destroy (void* ptr)
     ecbuf_destroy (&(self->buf));
   }
   
-  ENTC_DEL (&self, struct Q6AIOFileWriter_s);
+  ENTC_DEL (&self, struct EcAioFileWriter_s);
 }
 
 //-----------------------------------------------------------------------------
 
-Q6AIOFileWriter q6sys_aio_filewriter_create (void* handle)
+EcAioFileWriter ecaio_filewriter_create (void* handle)
 {
-  Q6AIOFileWriter self = ENTC_NEW(struct Q6AIOFileWriter_s);
+  EcAioFileWriter self = ENTC_NEW(struct EcAioFileWriter_s);
   
   self->handle = handle;
   self->written = 0;
@@ -270,28 +276,28 @@ Q6AIOFileWriter q6sys_aio_filewriter_create (void* handle)
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_filewriter_assign (Q6AIOFileWriter* pself)
+int ecaio_filewriter_assign (EcAioFileWriter* pself)
 {
-  Q6AIOFileWriter self = *pself;
+  EcAioFileWriter self = *pself;
   
   // create a async context
-  Q6AIOContext ctx = q6sys_aio_context_create ();
+  EcAioContext ctx = ecaio_context_create ();
   
   // override callbacks
-  q6sys_aio_context_setCallbacks (ctx, self, q6sys_aio_filewriter_fct_process, q6sys_aio_filewriter_fct_destroy);
+  ecaio_context_setCallbacks (ctx, self, ecaio_filewriter_fct_process, ecaio_filewriter_fct_destroy);
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "write file", "assign");
   
   // assign this and the context to the async system
-  q6sys_aio_filewriter_write (self, ctx); // == OVL_PROCESS_CODE_CONTINUE;
+  ecaio_filewriter_write (self, ctx); // == OVL_PROCESS_CODE_CONTINUE;
   
   *pself = NULL;
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_filewriter_setBufferCP (Q6AIOFileWriter self, const char* buffer, unsigned long size)
+void ecaio_filewriter_setBufferCP (EcAioFileWriter self, const char* buffer, unsigned long size)
 {
   if (self->buf)
   {
@@ -303,7 +309,7 @@ void q6sys_aio_filewriter_setBufferCP (Q6AIOFileWriter self, const char* buffer,
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_filewriter_setBufferBT (Q6AIOFileWriter self, EcBuffer* pbuf)
+void ecaio_filewriter_setBufferBT (EcAioFileWriter self, EcBuffer* pbuf)
 {
   if (self->buf)
   {

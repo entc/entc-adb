@@ -11,9 +11,11 @@
 
 #include <windows.h>
 
+#include "system/ecmutex.h"
+
 //-----------------------------------------------------------------------------
 
-struct Q6AIO_s
+struct EcAio_s
 {
   
   HANDLE port;
@@ -26,9 +28,9 @@ struct Q6AIO_s
 
 //-----------------------------------------------------------------------------
 
-Q6AIO q6sys_aio_create ()
+EcAio ecaio_create ()
 {
-  Q6AIO self = ENTC_NEW(struct Q6AIO_s);
+  EcAio self = ENTC_NEW(struct EcAio_s);
   
   self->port = INVALID_HANDLE_VALUE;
   self->sema = INVALID_HANDLE_VALUE;
@@ -40,42 +42,42 @@ Q6AIO q6sys_aio_create ()
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_destroy (Q6AIO* pself)
+void ecaio_destroy (EcAio* pself)
 {
-  Q6AIO self = *pself;
+  EcAio self = *pself;
   
   CloseHandle (self->sema);
   CloseHandle (self->port);
   
   ecmutex_delete (&(self->mutex));
   
-  ENTC_DEL(pself, struct Q6AIO_s);
+  ENTC_DEL(pself, struct EcAio_s);
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_init (Q6AIO self, Q6Err err)
+int ecaio_init (EcAio self, EcErr err)
 {
   // initialize the semaphore
   self->sema = CreateSemaphore (NULL, 0, 10000, NULL);
   if (self->sema == INVALID_HANDLE_VALUE)
   {
-    return q6err_lastErrorOS (err, Q6LVL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
   // initialize windows io completion port
   self->port = CreateIoCompletionPort (INVALID_HANDLE_VALUE, NULL, 0, 0);
   if (self->port  == NULL)
   {
-    return q6err_lastErrorOS (err, Q6LVL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_append (Q6AIO self, void* handle, Q6AIOContext ctx, Q6Err err)
+int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
 {
   // add the handle to the overlapping completion port
   HANDLE cportHandle = CreateIoCompletionPort (handle, self->port, 0, 0);
@@ -83,37 +85,37 @@ int q6sys_aio_append (Q6AIO self, void* handle, Q6AIOContext ctx, Q6Err err)
   // cportHandle must return a value
   if (cportHandle == NULL)
   {
-    return q6err_lastErrorOS (err, Q6LVL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
   //printf ("new handle was registered %p\r\n", handle);
   
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_addQueueEvent (Q6AIO self, void* ptr, fct_aio_context_process process, fct_aio_context_destroy destroy, Q6Err err)
+int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy, EcErr err)
 {
   DWORD t = 0;
   ULONG_PTR ptr2 = (ULONG_PTR)NULL;
   
   // create a new aio context
-  Q6AIOContext ctx = q6sys_aio_context_create ();
+  EcAioContext ctx = ecaio_context_create ();
   
-  q6sys_aio_context_setCallbacks (ctx, ptr, process, destroy);
+  ecaio_context_setCallbacks (ctx, ptr, process, destroy);
   
   // add the context to the completion port
   PostQueuedCompletionStatus (self->port, t, ptr2, (LPOVERLAPPED)ctx->overlapped);
   
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_continue (Q6AIO self, OVERLAPPED_EX* ovl, int repeat, unsigned long bytes)
+int ecaio_continue (EcAio self, OVERLAPPED_EX* ovl, int repeat, unsigned long bytes)
 {
-  Q6AIOContext ctx = NULL;
+  EcAioContext ctx = NULL;
   int cont = OVL_PROCESS_CODE_CONTINUE;
   
   //ecmutex_lock (self->mutex);
@@ -121,10 +123,10 @@ int q6sys_aio_continue (Q6AIO self, OVERLAPPED_EX* ovl, int repeat, unsigned lon
   if (ovl)
   {
     // add locking
-    ctx = (Q6AIOContext)(ovl->ptr);
+    ctx = (EcAioContext)(ovl->ptr);
     if (ctx)
     {
-      cont = q6sys_aio_context_process(ctx, bytes, 0);
+      cont = ecaio_context_process(ctx, bytes, 0);
     }
   }
   
@@ -144,7 +146,7 @@ int q6sys_aio_continue (Q6AIO self, OVERLAPPED_EX* ovl, int repeat, unsigned lon
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_wait (Q6AIO self, unsigned long timeout, Q6Err err)
+int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
   DWORD numOfBytes;
   ULONG_PTR ptr;
@@ -156,13 +158,13 @@ int q6sys_aio_wait (Q6AIO self, unsigned long timeout, Q6Err err)
   iores = GetQueuedCompletionStatus (self->port, &numOfBytes, &ptr, &ovl, timeout);
   if (iores)
   {
-    if (q6sys_aio_continue (self, (OVERLAPPED_EX*)ovl, TRUE, numOfBytes))
+    if (ecaio_continue (self, (OVERLAPPED_EX*)ovl, TRUE, numOfBytes))
     {
-      return q6err_set (err, Q6LVL_EXPECTED, Q6ERR_PROCESS_ABORT, "wait abborted");
+      return ecerr_set (err, Q6LVL_EXPECTED, Q6ERR_PROCESS_ABORT, "wait abborted");
     }
     else
     {
-      return Q6ERR_NONE;
+      return ENTC_ERR_NONE;
     }
   }
   else
@@ -175,16 +177,16 @@ int q6sys_aio_wait (Q6AIO self, unsigned long timeout, Q6Err err)
     {
       DWORD lastError = GetLastError ();
       
-      if (q6sys_aio_continue (self, (OVERLAPPED_EX*)ovl, FALSE, numOfBytes))
+      if (ecaio_continue (self, (OVERLAPPED_EX*)ovl, FALSE, numOfBytes))
       {
-        return q6err_set (err, Q6LVL_EXPECTED, Q6ERR_PROCESS_ABORT, "wait abborted");
+        return ecerr_set (err, Q6LVL_EXPECTED, Q6ERR_PROCESS_ABORT, "wait abborted");
       }
       
       switch (lastError)
       {
         case ERROR_HANDLE_EOF:
         {
-          return Q6ERR_NONE;
+          return ENTC_ERR_NONE;
         }
         case 735: // ERROR_ABANDONED_WAIT_0
         {
@@ -201,15 +203,15 @@ int q6sys_aio_wait (Q6AIO self, unsigned long timeout, Q6Err err)
       }
     }
     
-    return Q6ERR_NONE;
+    return ENTC_ERR_NONE;
   }
 }
 
 //-----------------------------------------------------------------------------
 
-static Q6AIO g_aio = NULL;
+static EcAIo g_aio = NULL;
 
-static int q6sys_aio_wait_ctrl_handler (unsigned long ctrlType)
+static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 {
   switch( ctrlType )
   {
@@ -217,11 +219,11 @@ static int q6sys_aio_wait_ctrl_handler (unsigned long ctrlType)
     case CTRL_SHUTDOWN_EVENT:
     case CTRL_CLOSE_EVENT:
     {
-      Q6Err err = q6err_create ();
+      EcErr err = ecerr_create ();
       
-      int res = q6sys_aio_abort (g_aio, err);
+      int res = ecaio_abort (g_aio, err);
       
-      q6err_destroy (&err);
+      ecerr_destroy (&err);
       
       Sleep (5000);
     }
@@ -233,20 +235,20 @@ static int q6sys_aio_wait_ctrl_handler (unsigned long ctrlType)
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_wait_abortOnSignal (Q6AIO self, Q6Err err)
+int ecaio_wait_abortOnSignal (EcAio self, EcErr err)
 {
   int res;
   g_aio = self;
   
-  if( !SetConsoleCtrlHandler ((PHANDLER_ROUTINE)q6sys_aio_wait_ctrl_handler, TRUE ))
+  if( !SetConsoleCtrlHandler ((PHANDLER_ROUTINE)ecaio_wait_ctrl_handler, TRUE ))
   {
-    return Q6ERR_OS_ERROR;
+    return ENTC_ERR_OS_ERROR;
   }
   
-  res = Q6ERR_NONE;
-  while (res == Q6ERR_NONE)
+  res = ENTC_ERR_NONE;
+  while (res == ENTC_ERR_NONE)
   {
-    res = q6sys_aio_wait (self, Q6_INFINITE, err);
+    res = ecaio_wait (self, ENTC_INFINITE, err);
   }
   
   return res;

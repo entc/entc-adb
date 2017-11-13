@@ -4,6 +4,10 @@
 #include <utils/eclogger.h>
 #include <system/ecaio_file.h>
 
+#if defined __WIN_OS
+#include <windows.h>
+#endif
+
 //=============================================================================
 
 struct EcAioSendFile_s
@@ -115,7 +119,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
   {
     ecaio_sendfile_destroy (pself);
     
-    return q6err_lastErrorOS (err, Q6LVL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
   fileSize = GetFileSize (self->fh, NULL);
@@ -123,7 +127,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
   {
     ecaio_sendfile_destroy (pself);
     
-    return ecerr_lastErrorOS (err, Q6LVL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
   handle = self->fh;

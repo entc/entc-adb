@@ -4,17 +4,19 @@
 
 //*****************************************************************************
 
+#include <windows.h>
+
 #define __NOTIFY_BUF_LEN 1024
 
-struct Q6AIONotify_s
+struct EcAioNotify_s
 {
   HANDLE handle;
   
   FILE_NOTIFY_INFORMATION buffer[__NOTIFY_BUF_LEN];
   
-  fct_aio_context_destroy onDestroy;
+  fct_ecaio_context_destroy onDestroy;
   
-  fct_aio_context_onNotify onNotify;
+  fct_ecaio_context_onNotify onNotify;
   
   void* ptr;
   
@@ -22,9 +24,9 @@ struct Q6AIONotify_s
 
 //-----------------------------------------------------------------------------
 
-Q6AIONotify q6sys_aio_notify_create (const char* path)
+EcAioNotify ecaio_notify_create (const char* path)
 {
-  Q6AIONotify self = ENTC_NEW (struct Q6AIONotify_s);
+  EcAioNotify self = ENTC_NEW (struct EcAioNotify_s);
   
   self->handle = NULL;
   
@@ -33,30 +35,30 @@ Q6AIONotify q6sys_aio_notify_create (const char* path)
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_notify_destroy (Q6AIONotify* pself)
+void ecaio_notify_destroy (EcAioNotify* pself)
 {
-  Q6AIONotify self = *pself;
+  EcAioNotify self = *pself;
   
   if (self->onDestroy)
   {
     self->onDestroy (self->ptr);
   }
   
-  ENTC_DEL (&self, struct Q6AIONotify_s);
+  ENTC_DEL (&self, struct EcAioNotify_s);
 }
 
 //-----------------------------------------------------------------------------
 
-static void __STDCALL q6sys_aio_notify_fct_destroy (void* ptr)
+static void __STDCALL ecaio_notify_fct_destroy (void* ptr)
 {
-  Q6AIONotify self = ptr;
+  EcAioNotify self = ptr;
   
-  q6sys_aio_notify_destroy (&self);
+  ecaio_notify_destroy (&self);
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_notify_init (Q6AIONotify self, const char* path, Q6Err err)
+int ecaio_notify_init (EcAioNotify self, const char* path, EcErr err)
 {
   // create the directory if not exists
   if (!CreateDirectory (path, NULL))
@@ -64,7 +66,7 @@ int q6sys_aio_notify_init (Q6AIONotify self, const char* path, Q6Err err)
     DWORD errCode = GetLastError ();
     if (errCode != ERROR_ALREADY_EXISTS)
     {
-      return q6err_formatErrorOS (err, Q6LVL_ERROR, errCode);
+      return ecerr_formatErrorOS (err, ENTC_LVL_ERROR, errCode);
     }
   }
   
@@ -72,38 +74,38 @@ int q6sys_aio_notify_init (Q6AIONotify self, const char* path, Q6Err err)
   self->handle = CreateFile (path, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
   if (self->handle == INVALID_HANDLE_VALUE)
   {
-    return q6err_lastErrorOS (err, Q6LVL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_notify_read (Q6AIONotify self, Q6AIOContext ctx)
+int ecaio_notify_read (EcAioNotify self, EcAioContext ctx)
 {
   DWORD bytesRead;
-  if (!ReadDirectoryChangesW (self->handle, self->buffer, __NOTIFY_BUF_LEN, TRUE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_SECURITY, &bytesRead, (LPOVERLAPPED)ctx->overlapped, NULL))
+  if (!ReadDirectoryChangesW (self->handle, self->buffer, __NOTIFY_BUF_LEN, TRUE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_SECURITY, &bytesRead, (LPOVERLAPPED)ecaio_context_getOverlapped (ctx), NULL))
   {
-    Q6Err err = q6err_create ();
+    EcErr err = ecerr_create ();
     
-    q6err_lastErrorOS (err, Q6LVL_ERROR);
+    ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
     
     printf ("filewriter error -> %s\r\n", err->text);
     
-    q6err_destroy (&err);
+    ecerr_destroy (&err);
     
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
   
-  return OVL_PROCESS_CODE_CONTINUE;
+  return ENTC_AIO_CODE_CONTINUE;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL q6sys_aio_notify_fct_process (void* ptr, Q6AIOContext ctx, unsigned long len, unsigned long opt)
+static int __STDCALL ecaio_notify_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
 {
-  Q6AIONotify self = ptr;
+  EcAioNotify self = ptr;
   
   // first entry
   FILE_NOTIFY_INFORMATION* fni = &(self->buffer[0]);
@@ -119,13 +121,13 @@ static int __STDCALL q6sys_aio_notify_fct_process (void* ptr, Q6AIOContext ctx, 
       //size_t sname = wcstombs (uname, fni->FileName, fni->FileNameLength);
       
       // translate action from windows
-      int action = Q6_NOTIFY_ACTION_NONE;
+      int action = ENTC_AIO_NOTIFY_NONE;
       
-      action |= (fni->Action & FILE_NOTIFY_CHANGE_FILE_NAME) ? Q6_NOTIFY_ACTION_FILE : Q6_NOTIFY_ACTION_NONE;
-      action |= (fni->Action & FILE_NOTIFY_CHANGE_DIR_NAME) ? Q6_NOTIFY_ACTION_DIR : Q6_NOTIFY_ACTION_NONE;
-      action |= (fni->Action & FILE_NOTIFY_CHANGE_ATTRIBUTES) ? Q6_NOTIFY_ACTION_ATTR : Q6_NOTIFY_ACTION_NONE;
-      action |= (fni->Action & FILE_NOTIFY_CHANGE_SIZE) ? Q6_NOTIFY_ACTION_SIZE : Q6_NOTIFY_ACTION_NONE;
-      action |= (fni->Action & FILE_NOTIFY_CHANGE_LAST_WRITE) ? Q6_NOTIFY_ACTION_WRITE : Q6_NOTIFY_ACTION_NONE;
+      action |= (fni->Action & FILE_NOTIFY_CHANGE_FILE_NAME) ? ENTC_AIO_NOTIFY_FILE : ENTC_AIO_NOTIFY_NONE;
+      action |= (fni->Action & FILE_NOTIFY_CHANGE_DIR_NAME) ? ENTC_AIO_NOTIFY_DIR : ENTC_AIO_NOTIFY_NONE;
+      action |= (fni->Action & FILE_NOTIFY_CHANGE_ATTRIBUTES) ? ENTC_AIO_NOTIFY_ATTR : ENTC_AIO_NOTIFY_NONE;
+      action |= (fni->Action & FILE_NOTIFY_CHANGE_SIZE) ? ENTC_AIO_NOTIFY_SIZE : ENTC_AIO_NOTIFY_NONE;
+      action |= (fni->Action & FILE_NOTIFY_CHANGE_LAST_WRITE) ? ENTC_AIO_NOTIFY_WRITE : ENTC_AIO_NOTIFY_NONE;
       
       self->onNotify (self->ptr, action);
       
@@ -141,39 +143,39 @@ static int __STDCALL q6sys_aio_notify_fct_process (void* ptr, Q6AIOContext ctx, 
     fni += nOffset;
   }
   
-  return q6sys_aio_notify_read (self, ctx);
+  return ecaio_notify_read (self, ctx);
 }
 
 //-----------------------------------------------------------------------------
 
-int q6sys_aio_notify_assign (Q6AIONotify* pself, Q6AIO aio, Q6Err err)
+int ecaio_notify_assign (EcAioNotify* pself, EcAio aio, EcErr err)
 {
-  Q6AIONotify self = *pself;
+  EcAioNotify self = *pself;
   
-  int res = q6sys_aio_append (aio, self->handle, NULL, err);
+  int res = ecaio_append (aio, self->handle, NULL, err);
   if (res)
   {
-    q6sys_aio_notify_destroy (&self);
+    ecaio_notify_destroy (&self);
     return res;
   }
   
   {
     // create a async context
-    Q6AIOContext ctx = q6sys_aio_context_create ();
+    EcAioContext ctx = ecaio_context_create ();
     
     // override callbacks
-    q6sys_aio_context_setCallbacks (ctx, self, q6sys_aio_notify_fct_process, q6sys_aio_notify_fct_destroy);
+    ecaio_context_setCallbacks (ctx, self, ecaio_notify_fct_process, ecaio_notify_fct_destroy);
     
     // assign this and the context to the async system
-    q6sys_aio_notify_read (self, ctx);
+    ecaio_notify_read (self, ctx);
   }
   
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_notify_setCallback(Q6AIONotify self, void* ptr, fct_aio_context_onNotify onNotify, fct_aio_context_destroy onDestroy)
+void ecaio_notify_setCallback(EcAioNotify self, void* ptr, fct_ecaio_context_onNotify onNotify, fct_ecaio_context_destroy onDestroy)
 {
   self->ptr = ptr;
   self->onDestroy = onDestroy;

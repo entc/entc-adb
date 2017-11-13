@@ -15,18 +15,19 @@
 
 struct EcAioContext_s
 {
+  EcAioRefCtx ref;
 
-
+  OVERLAPPED_EX* overlapped;
 };
 
 //-----------------------------------------------------------------------------
 
-Q6AIOContext q6sys_aio_context_create (void)
+EcAioContext ecaio_context_create (void)
 {
-  Q6AIOContext self = ENTC_NEW(struct Q6AIOContext_s);
+  EcAioContext self = ENTC_NEW(struct EcAioContext_s);
   
   // create ref counted callback object
-  self->ref = q6sys_aio_refctx_create ();
+  self->ref = ecaio_refctx_create ();
   
   // initialize overlapped structure
   self->overlapped = (OVERLAPPED_EX*)malloc(sizeof(OVERLAPPED_EX));
@@ -40,10 +41,10 @@ Q6AIOContext q6sys_aio_context_create (void)
 
 //-----------------------------------------------------------------------------
 
-void q6sys_aio_context_setCallbacks (Q6AIOContext self, void* ptr, fct_aio_context_process process, fct_aio_context_destroy destroy)
+void q6sys_aio_context_setCallbacks (EcAioContext self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy)
 {
   // override callbacks
-  q6sys_aio_refctx_setCallbacks (self->ref, ptr, process, destroy);
+  ecaio_refctx_setCallbacks (self->ref, ptr, process, destroy);
 }
 
 //-----------------------------------------------------------------------------
@@ -58,6 +59,22 @@ void q6sys_aio_context_destroy (Q6AIOContext* pself)
   q6sys_aio_refctx_decrease (&(self->ref));
   
   ENTC_DEL(pself, struct Q6AIOContext_s);
+}
+
+//-----------------------------------------------------------------------------
+
+void* ecaio_context_getOverlapped (EcAioContext self)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+void ecaio_context_appendOverlappedOffset (EcAioContext self, int offset)
+{
+
+  //ctx->overlapped->Offset += len;
+
 }
 
 //-----------------------------------------------------------------------------

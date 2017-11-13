@@ -83,13 +83,13 @@ __LIBEX void ecaio_socketwriter_setBufferBT (EcAioSocketWriter, EcBuffer*);
 
 struct EcAioSocketAccept_s; typedef struct EcAioSocketAccept_s* EcAioSocketAccept;
 
-typedef int (__STDCALL *fct_aio_socket_accept) (void* ptr, void* socket, const char* remoteAddress);
+typedef int (__STDCALL *fct_ecaio_socket_accept) (void* ptr, void* socket, const char* remoteAddress);
 
 //-----------------------------------------------------------------------------
 
 __LIBEX EcAioSocketAccept ecaio_socketaccept_create (void* socket);
 
-__LIBEX void ecaio_socketaccept_setCallback (EcAioSocketAccept, void*, fct_aio_socket_accept);
+__LIBEX void ecaio_socketaccept_setCallback (EcAioSocketAccept, void*, fct_ecaio_socket_accept);
 
 __LIBEX int ecaio_socketaccept_assign (EcAioSocketAccept*, EcAio aio, EcErr err);
 

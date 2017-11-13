@@ -16,8 +16,6 @@
 #include <WinSock2.h>
 #include <Mswsock.h>
 #include <WS2tcpip.h>
-
-#include "q6sys_sock.h"
 #include <Windows.h>
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -67,7 +65,7 @@ void ecacceptsocket_destroy (EcAcceptSocket* pself)
 
 //-----------------------------------------------------------------------------
 
-int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, Q6Err err)
+int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcErr err)
 {
   struct addrinfo hints;
   struct addrinfo* addr;
@@ -75,7 +73,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, Q6Er
   
   if (!init_wsa ())
   {
-    return q6err_set (err, Q6LVL_FATAL, Q6ERR_OS_ERROR, "can't initialize Windows WSA");
+    return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_OS_ERROR, "can't initialize Windows WSA");
   }
   
   ZeroMemory(&hints, sizeof(hints));
@@ -90,7 +88,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, Q6Er
     
     if (getaddrinfo(host, buffer, &hints, &addr) != 0)
     {
-      return q6err_formatErrorOS (err, Q6LVL_ERROR, WSAGetLastError());
+      return ecerr_formatErrorOS (err, ENTC_LVL_ERROR, WSAGetLastError());
     }
   }
   
@@ -98,7 +96,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, Q6Er
   if (sock == INVALID_SOCKET)
   {
     freeaddrinfo(addr);
-    return q6err_set (err, Q6LVL_ERROR, Q6ERR_OS_ERROR, "can't create socket");
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't create socket");
   }
   
   {
@@ -107,7 +105,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, Q6Er
     
     if (getsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char*)&optVal, &optLen) != 0)
     {
-      return q6err_set (err, Q6LVL_ERROR, Q6ERR_OS_ERROR, "can't apply options");
+      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't apply options");
     }
   }
   
@@ -115,7 +113,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, Q6Er
   {
     freeaddrinfo(addr);
     closesocket(sock);
-    return q6err_set (err, Q6LVL_ERROR, Q6ERR_OS_ERROR, "can't bind");
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't bind");
   }
   
   freeaddrinfo(addr);
@@ -123,12 +121,12 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, Q6Er
   if (listen(sock, SOMAXCONN) == SOCKET_ERROR)
   {
     closesocket(sock);
-    return q6err_set (err, Q6LVL_ERROR, Q6ERR_OS_ERROR, "can't listen");
+    return ecerr_set (err,ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't listen");
   }
   
   self->handle = sock;
   
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -202,9 +200,9 @@ struct EcAioSocketReader_s
   
   char buffer [READ_MAX_BUFFER];
   
-  fct_aio_context_onRead onRead;
+  fct_ecaio_context_onRead onRead;
   
-  fct_aio_context_destroy destroy;
+  fct_ecaio_context_destroy destroy;
   
   void* ptr;
   
@@ -243,7 +241,7 @@ static void __stdcall ecaio_socketreader_fct_destroy (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_socketreader_read (EcAioSocketReader self, Q6AIOContext ctx)
+int ecaio_socketreader_read (EcAioSocketReader self, EcAioContext ctx)
 {
   DWORD dwFlags = 0;
   DWORD dwBytes = 0;
@@ -253,44 +251,44 @@ int ecaio_socketreader_read (EcAioSocketReader self, Q6AIOContext ctx)
   dataBuf.buf = self->buffer;
   dataBuf.len = 1024;
   
-  nBytesRecv = WSARecv((unsigned int)self->handle, &dataBuf, 1, &dwBytes, &dwFlags, (WSAOVERLAPPED*)ctx->overlapped, NULL);
+  nBytesRecv = WSARecv((unsigned int)self->handle, &dataBuf, 1, &dwBytes, &dwFlags, (WSAOVERLAPPED*)ecaio_context_getOverlapped (ctx), NULL);
   if (nBytesRecv == SOCKET_ERROR)
   {
     DWORD res = WSAGetLastError();
     if (res == WSA_IO_PENDING || res == 997)
     {
-      return OVL_PROCESS_CODE_CONTINUE;
+      return ENTC_AIO_CODE_CONTINUE;
     }
     
     //TError err (_ERRCODE_NET__SOCKET_ERROR, "error code: " + IntToStr (::WSAGetLastError()));
     
     //std::cout << err.getText().c_str() << std::endl;
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
   else if (nBytesRecv == 0)
   {
     //std::cout << "connection probably closed" << std::endl;
   }
   
-  return OVL_PROCESS_CODE_CONTINUE;
+  return ENTC_AIO_CODE_CONTINUE;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __stdcall ecaio_socketreader_fct_process (void* ptr, Q6AIOContext ctx, unsigned long len, unsigned long opt)
+static int __stdcall ecaio_socketreader_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
 {
   EcAioSocketReader self = ptr;
   
   if (len == 0)
   {
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
   
   if (self->onRead)
   {
     if (self->onRead (self->ptr, (void*)self->handle, self->buffer, len))
     {
-      return OVL_PROCESS_CODE_DONE;
+      return ENTC_AIO_CODE_DONE;
     }
   }
   
@@ -299,7 +297,7 @@ static int __stdcall ecaio_socketreader_fct_process (void* ptr, Q6AIOContext ctx
 
 //-----------------------------------------------------------------------------
 
-void ecaio_socketreader_setCallback (EcAioSocketReader self, void* ptr, fct_aio_context_onRead onRead, fct_aio_context_destroy destroy)
+void ecaio_socketreader_setCallback (EcAioSocketReader self, void* ptr, fct_ecaio_context_onRead onRead, fct_ecaio_context_destroy destroy)
 {
   self->ptr = ptr;
   self->onRead = onRead;
@@ -308,12 +306,12 @@ void ecaio_socketreader_setCallback (EcAioSocketReader self, void* ptr, fct_aio_
 
 //-----------------------------------------------------------------------------
 
-int ecaio_socketreader_assign (EcAioSocketReader* pself, Q6AIO aio, Q6Err err)
+int ecaio_socketreader_assign (EcAioSocketReader* pself, EcAio aio, EcErr err)
 {
   int res;
   EcAioSocketReader self = *pself;
   
-  res = q6sys_aio_append (aio, (void*)self->handle, NULL, err);
+  res = ecaio_append (aio, (void*)self->handle, NULL, err);
   if (res)
   {
     return res;
@@ -331,7 +329,7 @@ int ecaio_socketreader_assign (EcAioSocketReader* pself, Q6AIO aio, Q6Err err)
   }
   
   *pself = NULL;
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //=============================================================================
@@ -341,7 +339,7 @@ struct EcAioSocketWriter_s
   
   EcRefCountedSocket refSocket;
   
-  fct_aio_context_destroy destroy;
+  fct_ecaio_context_destroy destroy;
   
   void* ptr;
   
@@ -397,7 +395,7 @@ static void __stdcall ecaio_socketwriter_fct_destroy (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_socketwriter_write (EcAioSocketWriter self, Q6AIOContext ctx)
+int ecaio_socketwriter_write (EcAioSocketWriter self, EcAioContext ctx)
 {
   DWORD dwFlags = 0;
   DWORD dwBytes = 0;
@@ -409,7 +407,7 @@ int ecaio_socketwriter_write (EcAioSocketWriter self, Q6AIOContext ctx)
   
   //printf ("sw: '%s'", self->buf->buffer + self->written);
   
-  res = WSASend ((unsigned int)ecrefsocket_socket (self->refSocket), &dataBuf, 1, &dwBytes, dwFlags, (WSAOVERLAPPED*)ctx->overlapped, NULL);
+  res = WSASend ((unsigned int)ecrefsocket_socket (self->refSocket), &dataBuf, 1, &dwBytes, dwFlags, (WSAOVERLAPPED*) ecaio_context_getOverlapped(ctx), NULL);
   if (res == 0)
   {
     //std::cout << "connection probably closed" << std::endl;
@@ -420,7 +418,7 @@ int ecaio_socketwriter_write (EcAioSocketWriter self, Q6AIOContext ctx)
     DWORD err = GetLastError ();
     if (err != ERROR_IO_PENDING)
     {
-      return OVL_PROCESS_CODE_DONE;
+      return ENTC_AIO_CODE_DONE;
     }
   }
   else
@@ -428,12 +426,12 @@ int ecaio_socketwriter_write (EcAioSocketWriter self, Q6AIOContext ctx)
     
   }
   
-  return OVL_PROCESS_CODE_CONTINUE;
+  return ENTC_AIO_CODE_CONTINUE;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __stdcall ecaio_socketwriter_fct_process (void* ptr, Q6AIOContext ctx, unsigned long len, unsigned long opt)
+static int __stdcall ecaio_socketwriter_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
 {
   EcAioSocketWriter self = ptr;
   
@@ -445,27 +443,27 @@ static int __stdcall ecaio_socketwriter_fct_process (void* ptr, Q6AIOContext ctx
   }
   else
   {
-    return OVL_PROCESS_CODE_DONE;
+    return ENTC_AIO_CODE_DONE;
   }
 }
 
 //-----------------------------------------------------------------------------
 
-int ecaio_socketwriter_assign (EcAioSocketWriter* pself, Q6Err err)
+int ecaio_socketwriter_assign (EcAioSocketWriter* pself, EcErr err)
 {
   EcAioSocketWriter self = *pself;
   
   // create a async context
-  Q6AIOContext ctx = q6sys_aio_context_create ();
+  EcAioContext ctx = ecaio_context_create ();
   
   // override callbacks
-  q6sys_aio_context_setCallbacks (ctx, self, ecaio_socketwriter_fct_process, ecaio_socketwriter_fct_destroy);
+  ecaio_context_setCallbacks (ctx, self, ecaio_socketwriter_fct_process, ecaio_socketwriter_fct_destroy);
   
   // assign this and the context to the async system
   ecaio_socketwriter_write (self, ctx); // == OVL_PROCESS_CODE_CONTINUE;
   
   *pself = NULL;
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -499,7 +497,7 @@ struct EcAioSocketAccept_s
 {
   SOCKET handle;
   
-  fct_aio_socket_accept accept;
+  fct_ecaio_socket_accept accept;
   
   void* ptr;
   
@@ -541,7 +539,7 @@ static void __stdcall ecaio_socketaccept_fct_destroy (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-void ecaio_socketaccept_setCallback (EcAioSocketAccept self, void* ptr, fct_aio_socket_accept accept)
+void ecaio_socketaccept_setCallback (EcAioSocketAccept self, void* ptr, fct_ecaio_socket_accept accept)
 {
   self->accept = accept;
   self->ptr = ptr;
@@ -553,7 +551,7 @@ static const DWORD lenAddr = sizeof (struct sockaddr_in) + 16;
 
 //-----------------------------------------------------------------------------
 
-int ecaio_socketaccept_accept (EcAioSocketAccept self, Q6AIOContext ctx)
+int ecaio_socketaccept_accept (EcAioSocketAccept self, EcAioContext ctx)
 {
   DWORD outBUflen = 0; //1024 - ((sizeof (sockaddr_in) + 16) * 2);
   DWORD dwBytes = 0;
@@ -562,21 +560,21 @@ int ecaio_socketaccept_accept (EcAioSocketAccept self, Q6AIOContext ctx)
   self->asock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (self->asock == INVALID_SOCKET)
   {
-    return Q6ERR_OS_ERROR;
+    return ENTC_ERR_OS_ERROR;
     //return TError (_ERRCODE_NET__SOCKET_ERROR, "error code: " + IntToStr (::WSAGetLastError()));
   }
   
   memset (self->buffer, 0, 1024);
   
   // accept connections, client socket will be assigned
-  AcceptEx (self->handle, self->asock, self->buffer, outBUflen, lenAddr, lenAddr, &dwBytes, (LPOVERLAPPED)ctx->overlapped);
+  AcceptEx (self->handle, self->asock, self->buffer, outBUflen, lenAddr, lenAddr, &dwBytes, (LPOVERLAPPED)ecaio_context_getOverlapped(ctx));
   
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __stdcall ecaio_socketaccept_fct_process (void* ptr, Q6AIOContext ctx, unsigned long len, unsigned long opt)
+static int __stdcall ecaio_socketaccept_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
 {
   EcAioSocketAccept self = ptr;
   
@@ -606,36 +604,36 @@ static int __stdcall ecaio_socketaccept_fct_process (void* ptr, Q6AIOContext ctx
   // continue
   ecaio_socketaccept_accept (self, ctx);
   
-  return OVL_PROCESS_CODE_CONTINUE;
+  return ENTC_AIO_CODE_CONTINUE;
 }
 
 //-----------------------------------------------------------------------------
 
-int ecaio_socketaccept_assign (EcAioSocketAccept* pself, Q6AIO aio, Q6Err err)
+int ecaio_socketaccept_assign (EcAioSocketAccept* pself, EcAio aio, EcErr err)
 {
   EcAioSocketAccept self = *pself;
   
   {
     // link socket with io port
-    int res = q6sys_aio_append (aio, (void*)self->handle, NULL, err);
-    if (res != Q6ERR_NONE)
+    int res = ecaio_append (aio, (void*)self->handle, NULL, err);
+    if (res != ENTC_ERR_NONE)
     {
       return res;
     }
   }
   {
     // create a async context
-    Q6AIOContext ctx = q6sys_aio_context_create ();
+    EcAioContext ctx = ecaio_context_create ();
     
     // override callbacks
-    q6sys_aio_context_setCallbacks (ctx, self, ecaio_socketaccept_fct_process, ecaio_socketaccept_fct_destroy);
+    ecaio_context_setCallbacks (ctx, self, ecaio_socketaccept_fct_process, ecaio_socketaccept_fct_destroy);
     
     // assign this and the context to the async system
     ecaio_socketaccept_accept (self, ctx); // == OVL_PROCESS_CODE_CONTINUE;
   }
   
   *pself = NULL;
-  return Q6ERR_NONE;
+  return ENTC_ERR_NONE;
 }
 
 //*****************************************************************************

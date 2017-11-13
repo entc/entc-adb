@@ -51,6 +51,11 @@ __LIBEX void ecaio_context_setCallbacks (EcAioContext, void* ptr, fct_ecaio_cont
 
 __LIBEX int ecaio_context_process (EcAioContext, unsigned long val1, unsigned long val2);
 
+// only for windows
+__LIBEX void* ecaio_context_getOverlapped (EcAioContext);
+
+__LIBEX void ecaio_context_appendOverlappedOffset (EcAioContext, int offset);
+
 //=============================================================================
 
 struct EcAioRefCtx_s; typedef struct EcAioRefCtx_s* EcAioRefCtx;
