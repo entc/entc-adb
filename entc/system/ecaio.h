@@ -52,6 +52,22 @@ __LIBEX void ecaio_context_setCallbacks (EcAioContext, void* ptr, fct_ecaio_cont
 
 //=============================================================================
 
+struct EcAioRefCtx_s; typedef struct EcAioRefCtx_s* EcAioRefCtx;
+
+//-----------------------------------------------------------------------------
+
+__LIBEX EcAioRefCtx ecaio_refctx_create ();
+
+__LIBEX EcAioRefCtx ecaio_refctx_clone (EcAioRefCtx);
+
+__LIBEX void ecaio_refctx_decrease (EcAioRefCtx*);
+
+__LIBEX void ecaio_refctx_setCallbacks (EcAioRefCtx, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy);
+
+__LIBEX int ecaio_refctx_process (EcAioRefCtx, EcAioContext, unsigned long val1, unsigned long val2);
+
+//=============================================================================
+
 struct EcAio_s; typedef struct EcAio_s* EcAio;
 
 //-----------------------------------------------------------------------------
@@ -75,22 +91,6 @@ __LIBEX int ecaio_wait_abortOnSignal (EcAio, EcErr);
 __LIBEX int ecaio_appendVNode (EcAio, int fd, void* data, EcErr err);
 
 __LIBEX int ecaio_addContextToEvent (EcAio, EcAioContext ctx, EcErr err);
-
-//=============================================================================
-
-struct EcAioRefCtx_s; typedef struct EcAioRefCtx_s* EcAioRefCtx;
-
-//-----------------------------------------------------------------------------
-
-__LIBEX EcAioRefCtx ecaio_refctx_create ();
-
-__LIBEX EcAioRefCtx ecaio_refctx_clone (EcAioRefCtx);
-
-__LIBEX void ecaio_refctx_decrease (EcAioRefCtx*);
-
-__LIBEX void ecaio_refctx_setCallbacks (EcAioRefCtx, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy);
-
-__LIBEX int ecaio_refctx_process (EcAioRefCtx, EcAioContext, unsigned long val1, unsigned long val2);
 
 //-----------------------------------------------------------------------------
 

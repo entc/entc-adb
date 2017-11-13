@@ -125,6 +125,8 @@ SET (CORE_SOURCES_SYS
   system/ecaio_file.c
   system/ecaio_socket.h
   system/ecaio_socket.c
+  system/ecaio_sendf.h
+  system/ecaio_sendf.c
 )
 
 SET (CORE_SOURCES_TYPES
