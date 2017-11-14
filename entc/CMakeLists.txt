@@ -186,6 +186,8 @@ SET (CORE_SOURCES_TOOLS
   tools/ecmime.c
   tools/eclparser.h
   tools/eclparser.c
+  tools/ecjparser.h
+  tools/ecjparser.c
   tools/ectokenizer.h
   tools/ectokenizer.c
 
