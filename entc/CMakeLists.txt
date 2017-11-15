@@ -224,8 +224,14 @@ MESSAGE(STATUS "lua library found at ${LUA_LIBRARIES}" )
 
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 
-ADD_EXECUTABLE( ectestapp tests/ectest_app.c )
-TARGET_LINK_LIBRARIES( ectestapp entc )
+SET (CORE_SOURCES_TESTAPP
+  tests/eclua.h
+  tests/eclua.c
+  tests/ectest_app.c
+)
+
+ADD_EXECUTABLE( ectestapp ${CORE_SOURCES_TESTAPP} )
+TARGET_LINK_LIBRARIES( ectestapp entc ${LUA_LIBRARIES})
 
 ENDIF(LUA_LIBRARIES )
 
