@@ -39,6 +39,9 @@ __LIBEX void eclua_destroy (EcLua*);
 
 __LIBEX int eclua_init (EcLua, EcErr err);
 
+__LIBEX int eclua_run (EcLua, const EcString script, EcErr err);
+
+
 //-----------------------------------------------------------------------------
 
 #endif

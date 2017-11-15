@@ -380,10 +380,6 @@ struct EcLua_s
   
   lua_State *L;
   
-  //EcLuaFunctions funct;
-  
-  //EcDl lualib;
-  
 };
 
 //---------------------------------------------------------------------------
@@ -399,7 +395,11 @@ EcLua eclua_create ()
 
 void eclua_destroy (EcLua* pself)
 {
+  EcLua self = *pself;
   
+  lua_close(self->L);
+
+  ENTC_DEL(pself, struct EcLua_s);
 }
 
 //---------------------------------------------------------------------------
@@ -419,6 +419,28 @@ int eclua_init (EcLua self, EcErr err)
   lua_pushcfunction (self->L, eclua_sleep);
   lua_setglobal(self->L, "sleep");
 
+  return ENTC_ERR_NONE;
+}
+
+//---------------------------------------------------------------------------
+
+int eclua_run (EcLua self, const EcString script, EcErr err)
+{
+  int status;
+  
+  // load the file
+  status = luaL_loadfilex (self->L, script, NULL);
+  if (status)
+  {
+    return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, lua_tolstring(self->L, -1, NULL));
+  }
+  
+  status = lua_pcallk (self->L, 0, LUA_MULTRET, 0, 0, NULL);
+  if (status)
+  {
+    return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, lua_tolstring(self->L, -1, NULL));
+  }
+  
   return ENTC_ERR_NONE;
 }
 
