@@ -475,6 +475,15 @@ static void __STDCALL ecjson_read_onItem (void* ptr, void* obj, int type, void* 
       ecudc_add (obj, &h);
       break;
     }
+    case ENTC_JPARSER_OBJECT_TEXT:
+    {
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_STRING, key);
+      
+      ecudc_setS(h, val);
+     
+      ecudc_add (obj, &h);
+      break;
+    }
     case ENTC_JPARSER_OBJECT_NUMBER:
     {
       EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_INT64, key);

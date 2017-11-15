@@ -58,6 +58,14 @@ ADD_EXECUTABLE( ut_ectemplate tools/ut_ectemplate.c )
 TARGET_LINK_LIBRARIES( ut_ectemplate entc )
 add_test(ut_ectemplate tests/Debug/ut_ectemplate)
 
+ADD_EXECUTABLE( ut_ecjparser tools/ut_ecjparser.c )
+TARGET_LINK_LIBRARIES( ut_ecjparser entc )
+add_test(ut_ecjparser tests/Debug/ut_ecjparser)
+
+ADD_EXECUTABLE( ut_ecjson tools/ut_ecjson )
+TARGET_LINK_LIBRARIES( ut_ecjson entc )
+add_test(ut_ecjson tests/Debug/ut_ecjson)
+
 #-----------------------------------------------------------------
 
 

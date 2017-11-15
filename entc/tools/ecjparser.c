@@ -999,7 +999,11 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
 
 void* ecjsonparser_lastObject (EcJsonParser self)
 {
-  return self->valElement->obj;
+  void* obj = self->valElement->obj;
+  
+  self->valElement->obj = NULL;
+  
+  return obj;
 }
 
 //-----------------------------------------------------------------------------
