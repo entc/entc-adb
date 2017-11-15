@@ -385,10 +385,12 @@ void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int i
     {
       const char* val = ecstream_get (self->valElement->stream);
       
+      unsigned long dat = atoi (val);
+      
       if (self->onItem)
       {
         // void* ptr, void* obj, int type, const char* key, void* val
-        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_NUMBER, (void*)val, key, index);
+        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_NUMBER, (void*)&dat, key, index);
       }
       
       ecstream_clear (self->valElement->stream);
@@ -399,17 +401,19 @@ void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int i
     {
       const char* val = ecstream_get (self->valElement->stream);
       
+      double dat = atof (val);
+      
       if (self->onItem)
       {
         // void* ptr, void* obj, int type, const char* key, void* val
-        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_FLOAT, (void*)val, key, index);
+        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_FLOAT, (void*)&dat, key, index);
       }
       
       ecstream_clear (self->valElement->stream);
       
       break;
     }
-    case JPARSER_UNDEFINED:
+    case ENTC_JPARSER_UNDEFINED:
     {
       switch (self->valElement->type)
       {
@@ -418,7 +422,6 @@ void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int i
         {
           if (self->onItem)
           {
-            // void* ptr, void* obj, int type, const char* key, void* val
             self->onItem (self->ptr, self->keyElement->obj, self->valElement->type, self->valElement->obj, key, index);
             
             // assume that the object was transfered
@@ -433,7 +436,42 @@ void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int i
           const char* val = ecstream_get (self->valElement->stream);
           
           // we need to detect the kind of element
-          
+          switch (val[0])
+          {
+            case 't':
+            {
+              if (ecstr_equal("true", val) && self->onItem)
+              {
+                self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_BOLEAN, (void*)TRUE, key, index);
+              }
+              
+              ecstream_clear (self->valElement->stream);
+
+              break;
+            }
+            case 'f':
+            {
+              if (ecstr_equal("false", val) && self->onItem)
+              {
+                self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_BOLEAN, (void*)FALSE, key, index);
+              }
+              
+              ecstream_clear (self->valElement->stream);
+
+              break;
+            }
+            case 'n':
+            {
+              if (ecstr_equal("null", val) && self->onItem)
+              {
+                self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_NULL, NULL, key, index);
+              }
+              
+              ecstream_clear (self->valElement->stream);
+
+              break;
+            }
+          }
           
           ecstream_clear (self->valElement->stream);
           
@@ -477,7 +515,7 @@ int ecjsonparser_item (EcJsonParser self, int type)
 
 //-----------------------------------------------------------------------------
 
-int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
+int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
 {
   const char* c = buffer;
   int i;
@@ -508,7 +546,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 3;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '{'");
           }
         }
         
@@ -536,7 +574,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 3;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '['");
           }
         }
         
@@ -598,7 +636,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 3;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '}'");
           }
         }
         break;
@@ -659,7 +697,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 3;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in ']'");
           }
         }
         break;
@@ -690,7 +728,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 3;                     // error
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '\"'");
           }
         }
         break;
@@ -737,7 +775,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 3;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in ','");
           }
         }
         break;
@@ -755,7 +793,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 3;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in ':'");
           }
         }
         break;
@@ -830,7 +868,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 6;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state by number");
           }
         }
         
@@ -866,7 +904,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 6;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '-'");
           }
         }
         
@@ -908,7 +946,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 7;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '.'");
           }
         }
         
@@ -943,7 +981,7 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
           }
           default:
           {
-            return 4;
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in default");
           }
         }
         
@@ -952,14 +990,16 @@ int stdjson_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
     }
   }
   
-  if (self->keyElement == NULL)
-  {
-    return ENTC_ERR_NONE;
-  }
-  else
-  {
-    return 5;
-  }
+  self->valElement->state = state;
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+void* ecjsonparser_lastObject (EcJsonParser self)
+{
+  return self->valElement->obj;
 }
 
 //-----------------------------------------------------------------------------

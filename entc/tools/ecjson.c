@@ -21,6 +21,8 @@
 #include "types/ecstream.h"
 #include "utils/eclogger.h"
 
+#include "ecjparser.h"
+
 //-----------------------------------------------------------------------------------------------------------
 
 #define STATE_NONE 0
@@ -460,13 +462,118 @@ EcUdc json_parse (JsonParser* parser, const char* name)
 
 //-----------------------------------------------------------------------------------------------------------
 
+static void __STDCALL ecjson_read_onItem (void* ptr, void* obj, int type, void* val, const char* key, int index)
+{
+  switch (type)
+  {
+    case ENTC_JPARSER_OBJECT_NODE:
+    case ENTC_JPARSER_OBJECT_LIST:
+    {
+      EcUdc h = val;
+      ecudc_setName (h, key);
+      
+      ecudc_add (obj, &h);
+      break;
+    }
+    case ENTC_JPARSER_OBJECT_NUMBER:
+    {
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_INT64, key);
+      
+      unsigned long* dat = val;
+      ecudc_setInt64(h, *dat);
+      
+      ecudc_add (obj, &h);
+      break;
+    }
+    case ENTC_JPARSER_OBJECT_FLOAT:
+    {
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_DOUBLE, key);
+      
+      double* dat = val;
+      ecudc_setDouble(h, *dat);
+      
+      ecudc_add (obj, &h);
+      break;
+    }
+    case ENTC_JPARSER_OBJECT_BOLEAN:
+    {
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_BOOL, key);
+      
+      int dat = val;
+      ecudc_setBool(h, dat);
+      
+      ecudc_add (obj, &h);
+      break;
+    }
+    case ENTC_JPARSER_OBJECT_NULL:
+    {
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NONE, key);
+      
+      ecudc_add (obj, &h);
+      break;
+    }      
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static void* __STDCALL ecjson_read_onObjCreate (void* ptr, int type)
+{
+  switch (type)
+  {
+    case ENTC_JPARSER_OBJECT_NODE:
+    {
+      return ecudc_create(EC_ALLOC, ENTC_UDC_NODE, NULL);
+    }
+    case ENTC_JPARSER_OBJECT_LIST:
+    {
+      return ecudc_create(EC_ALLOC, ENTC_UDC_LIST, NULL);
+    }
+  }
+  
+  return NULL;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
+{
+  EcUdc h = obj;
+  ecudc_destroy (EC_ALLOC, &h);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
+  /*
   JsonParser parser;
   
   parser.pos = (unsigned char*)source;
   
   return json_parse (&parser, name);  
+   */
+  
+  EcUdc ret = NULL;
+  EcErr err = ecerr_create();
+  
+  EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
+
+  int res = ecjsonparser_parse (jparser, source, strlen(source), err);
+  if (res)
+  {
+    eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
+  }
+  else
+  {
+    ret = ecjsonparser_lastObject(jparser);
+  }
+  
+  // clean up
+  ecjsonparser_destroy (&jparser);
+  ecerr_destroy(&err);
+  
+  return ret;
 }
 
 //-----------------------------------------------------------------------------------------------------------

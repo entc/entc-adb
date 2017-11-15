@@ -24,6 +24,7 @@
 
 #include "system/ecdefs.h"
 #include "types/ecstring.h"
+#include "types/ecerr.h"
 
 //-----------------------------------------------------------------------------
 
@@ -50,7 +51,9 @@ __LIBEX EcJsonParser ecjsonparser_create (fct_ecjparser_onItem, fct_ecjparser_on
 
 __LIBEX void ecjsonparser_destroy (EcJsonParser* pself);
 
-__LIBEX void ecjsonparser_parse (EcJsonParser, const char* buffer, int size);
+__LIBEX int ecjsonparser_parse (EcJsonParser, const char* buffer, int size, EcErr err);
+
+__LIBEX void* ecjsonparser_lastObject (EcJsonParser);
 
 //-----------------------------------------------------------------------------
 
