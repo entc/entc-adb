@@ -56,26 +56,21 @@ static int __STDCALL test_ecjson_test2 (void* ptr, TestEnvContext tctx, EcErr er
   EcUdc data;
   
   const char* test1 = "{\
-  \"path\": \"files\",\
-  \"filename\": \"6AC881E5-C271-4F7F-B2F4-1BABCDC378BF\",\
-  \"content\": [\
-  [{\
-  \"left\": 2.89532293986637,\
-  \"top\": 7.559055118110236,\
-  \"width\": 67.26057906458797,\
-  \"height\": 17.79527559055118,\
-  \"party\": {}\
-  }]\
-  ],\
-  \"parties\": {\
-  \"5a8ac34e-8bae-4bda-8095-06aaf2bd50bc\": {\
-  \"key\": \"5a8ac34e-8bae-4bda-8095-06aaf2bd50bc\",\
-  \"userid\": 1,\
-  \"name\": \"alex\"\
-  }\
-  }\
+  \"path\" : \"/usr/local/lib/libadbl-1.3.0\",\
+  \"databases\" :\
+  [\
+   {\
+   \"name\" : \"default\",\
+   \"type\" : \"Mysql\",\
+   \"host\" : \"localhost\",\
+   \"port\" : 3306,\
+   \"user\" : \"safesign\",\
+   \"pass\" : \"hadsh56!hsg\",\
+   \"schema\" : \"lobo_esign_01\"\
+   }\
+   ]\
   }";
-  
+
   data = ecjson_read (test1, NULL);
   if (!data)
   {
@@ -98,8 +93,8 @@ int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
   
-  testenv_reg (te, "Json Reader Test1", test_ecjson_init, test_ecjson_done, test_ecjson_test1);
- // testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
+ // testenv_reg (te, "Json Reader Test1", test_ecjson_init, test_ecjson_done, test_ecjson_test1);
+  testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
   
   testenv_run (te);
   
