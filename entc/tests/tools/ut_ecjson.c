@@ -89,12 +89,38 @@ static int __STDCALL test_ecjson_test2 (void* ptr, TestEnvContext tctx, EcErr er
 
 //---------------------------------------------------------------------------
 
+static int __STDCALL test_ecjson_test3 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc data;
+  
+  const char* test1 = "{\"settings\":{\"host\":\"127.0.0.1\",\"port\":\"8084\"}}";
+  
+  data = ecjson_read (test1, NULL);
+  if (!data)
+  {
+    return 1;
+  }
+  
+  EcString text = ecjson_write(data);
+  
+  eclogger_fmt (LL_INFO, "TEST", "data", text);
+  
+  ecstr_delete(&text);
+  ecudc_destroy(EC_ALLOC, &data);
+  
+  return 0;
+}
+
+
+//---------------------------------------------------------------------------
+
 int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
   
  // testenv_reg (te, "Json Reader Test1", test_ecjson_init, test_ecjson_done, test_ecjson_test1);
-  testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
+ // testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
+  testenv_reg (te, "Json Reader Test3", test_ecjson_init, test_ecjson_done, test_ecjson_test3);
   
   testenv_run (te);
   
