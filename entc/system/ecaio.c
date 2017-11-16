@@ -323,7 +323,7 @@ void ecaio_destroy (EcAio* pself)
 
 static int __STDCALL ecaio_term_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
-  return OVL_PROCESS_CODE_ABORTALL;
+  return ENTC_AIO_CODE_ABORTALL;
 }
 
 //-----------------------------------------------------------------------------
@@ -490,12 +490,12 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       
       //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "return %i", cont);
       
-      if (cont == OVL_PROCESS_CODE_CONTINUE)
+      if (cont == ENTC_AIO_CODE_CONTINUE)
       {
         epoll_ctl (self->efd, EPOLL_CTL_MOD, handle, &(events[i]));
         // continue
       }
-      else if (cont == OVL_PROCESS_CODE_ABORTALL)
+      else if (cont == ENTC_AIO_CODE_ABORTALL)
       {
         ecmutex_unlock (self->iom);
         free (events);
@@ -553,7 +553,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
         
         int res = ecaio_context_process (ctx, 0, 0);
         
-        if (res == OVL_PROCESS_CODE_ABORTALL)
+        if (res == ENTC_AIO_CODE_ABORTALL)
         {
           free (events);
           // abort
