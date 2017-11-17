@@ -22,6 +22,7 @@ static void __STDCALL test_ecjson_done (void* ptr)
 static int __STDCALL test_ecjson_test1 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcUdc data;
+  EcString text;
   
   const char* test1 = "{\
   \"Name\":\"Hello World\",\
@@ -39,7 +40,7 @@ static int __STDCALL test_ecjson_test1 (void* ptr, TestEnvContext tctx, EcErr er
     return 1;
   }
   
-  EcString text = ecjson_write(data);
+  text = ecjson_write(data);
   
   eclogger_fmt (LL_INFO, "TEST", "data", text);
   
@@ -54,6 +55,7 @@ static int __STDCALL test_ecjson_test1 (void* ptr, TestEnvContext tctx, EcErr er
 static int __STDCALL test_ecjson_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcUdc data;
+  EcString text;
   
   const char* test1 = "{\
   \"path\" : \"/usr/local/lib/libadbl-1.3.0\",\
@@ -77,7 +79,7 @@ static int __STDCALL test_ecjson_test2 (void* ptr, TestEnvContext tctx, EcErr er
     return 1;
   }
   
-  EcString text = ecjson_write(data);
+  text = ecjson_write(data);
   
   eclogger_fmt (LL_INFO, "TEST", "data", text);
   
