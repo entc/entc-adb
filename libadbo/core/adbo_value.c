@@ -39,7 +39,7 @@ EcUdc adbo_value_fromXml (AdboContext context, EcXMLStream xmlstream)
     size = ecxmlstream_nodeAttribute (xmlstream, "size");
     if (size)
     {
-      ecudc_add_asUInt32(EC_ALLOC, value, "size", atoi(size));
+      ecudc_add_asNumber (EC_ALLOC, value, "size", atoi(size));
     }
   }
   
