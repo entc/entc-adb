@@ -30,6 +30,8 @@
 
 SET(ENTC_VERSION "1.3.0")
 
+MESSAGE( STATUS "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/lib/")
+
 # Look for the header file.
 FIND_LIBRARY( ENTC_LIBRARY NAMES entc
   HINTS
