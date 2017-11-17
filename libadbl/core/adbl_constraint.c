@@ -105,8 +105,8 @@ void adbl_constraint_addLong (AdblConstraint* self, const EcString column, ubyte
 
 	element->type = type;
   
-  element->data = ecudc_create (EC_ALLOC, ENTC_UDC_UINT32, column);
-  ecudc_setUInt32 (element->data, value);
+  element->data = ecudc_create (EC_ALLOC, ENTC_UDC_NUMBER, column);
+  ecudc_setNumber (element->data, value);
 
 	/* no constraint */
 	element->constraint = 0;  

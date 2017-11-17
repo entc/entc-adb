@@ -137,8 +137,8 @@ EcUdc json_parse_type (JsonParser* parser, const EcString key, int len, int offs
   }
   else
   {
-    udc = ecudc_create(EC_ALLOC, ENTC_UDC_INT32, key);    
-    ecudc_setInt32(udc, atoi(h2));
+    udc = ecudc_create(EC_ALLOC, ENTC_UDC_NUMBER, key);
+    ecudc_setNumber (udc, atoi(h2));
   }
   
   ecstr_delete(&h2);
@@ -486,10 +486,10 @@ static void __STDCALL ecjson_read_onItem (void* ptr, void* obj, int type, void* 
     }
     case ENTC_JPARSER_OBJECT_NUMBER:
     {
-      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_INT64, key);
+      EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_NUMBER, key);
       
       unsigned long* dat = val;
-      ecudc_setInt64(h, *dat);
+      ecudc_setNumber(h, *dat);
       
       ecudc_add (obj, &h);
       break;
@@ -555,13 +555,21 @@ static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
 
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
+  
   /*
   JsonParser parser;
   
   parser.pos = (unsigned char*)source;
   
+  printf("*************\n");
+  
+  printf("%s\n", source);
+  
+  printf("*************\n");
+  
+  
   return json_parse (&parser, name);  
-   */
+  */
   
   EcUdc ret = NULL;
   EcErr err = ecerr_create();
@@ -719,47 +727,9 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
       ecstream_append_str (stream, "null");
     }
     break;
-    case ENTC_UDC_BYTE:
+    case ENTC_UDC_NUMBER:
     {
-      ecstream_append_i (stream, ecudc_asByte (node));
-    }
-    break;
-    case ENTC_UDC_UBYTE:
-    {
-      ecstream_append_u (stream, ecudc_asUByte (node));
-    }
-    break;
-    case ENTC_UDC_INT16:
-    {
-      ecstream_append_i (stream, ecudc_asInt16 (node));
-    }
-    break;
-    case ENTC_UDC_UINT16:
-    {
-      ecstream_append_u (stream, ecudc_asUInt16 (node));
-    }
-    break;
-    case ENTC_UDC_INT32:
-    {
-      int res = TRUE;
-      int32_t h = ecudc_asInt32 (node, &res);
-      
-      ecstream_append_u (stream, h);
-    }
-    break;
-    case ENTC_UDC_UINT32:
-    {
-      ecstream_append_u (stream, ecudc_asUInt32 (node));
-    }
-    break;
-    case ENTC_UDC_INT64:
-    {
-      ecstream_append_i64 (stream, ecudc_asInt64 (node));
-    }
-    break;
-    case ENTC_UDC_UINT64:
-    {
-      ecstream_append_u64 (stream, ecudc_asUInt64 (node));
+      ecstream_append_i64 (stream, ecudc_asNumber (node));
     }
     break;
     case ENTC_UDC_TIME:

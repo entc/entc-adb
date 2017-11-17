@@ -111,6 +111,32 @@ static int __STDCALL test_ecjson_test3 (void* ptr, TestEnvContext tctx, EcErr er
   return 0;
 }
 
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc data;
+  
+  const char* test1 = "{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}";
+  
+  data = ecjson_read (test1, NULL);
+  if (!data)
+  {
+    return 1;
+  }
+  
+  EcString text = ecjson_write(data);
+  
+  eclogger_fmt (LL_INFO, "TEST", "data", text);
+  
+  ecstr_delete(&text);
+  ecudc_destroy(EC_ALLOC, &data);
+
+  const char* test2 = "{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}";
+
+  
+  return 0;
+}
 
 //---------------------------------------------------------------------------
 
@@ -120,7 +146,8 @@ int main(int argc, char* argv[])
   
  // testenv_reg (te, "Json Reader Test1", test_ecjson_init, test_ecjson_done, test_ecjson_test1);
  // testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
-  testenv_reg (te, "Json Reader Test3", test_ecjson_init, test_ecjson_done, test_ecjson_test3);
+ // testenv_reg (te, "Json Reader Test3", test_ecjson_init, test_ecjson_done, test_ecjson_test3);
+  testenv_reg (te, "Json Reader Test4", test_ecjson_init, test_ecjson_done, test_ecjson_test4);
   
   testenv_run (te);
   

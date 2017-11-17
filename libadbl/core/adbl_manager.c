@@ -670,7 +670,7 @@ void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath
         eclogger_fmt (LL_TRACE, MODULE, "scan", "added '%s'", dbname);
         
         pc->properties.host = ecstr_copy (ecudc_get_asString(item, "host", NULL));
-        pc->properties.port = ecudc_get_asInt32 (item, "port", 0);
+        pc->properties.port = ecudc_get_asNumber (item, "port", 0);
         
         pc->properties.username = ecstr_copy (ecudc_get_asString(item, "user", NULL));
         pc->properties.password = ecstr_copy (ecudc_get_asString(item, "pass", NULL));

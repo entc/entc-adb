@@ -25,7 +25,7 @@ void ecnode_add_default (EcUdc self)
 {
   time_t t = 0;
   
-  ecudc_add_asUInt64 (EC_ALLOC, self, ECDATA_SIZE, 0);
+  ecudc_add_asNumber (EC_ALLOC, self, ECDATA_SIZE, 0);
   ecudc_add_asTime (EC_ALLOC, self, ECDATA_CDATE, &t);
   ecudc_add_asTime (EC_ALLOC, self, ECDATA_MDATE, &t);
 }
@@ -55,11 +55,11 @@ void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, cons
     EcUdc h = ecudc_node (node, ECDATA_SIZE);
     if (isAssigned (h))
     {
-      ecudc_setUInt64 (h, size);
+      ecudc_setNumber (h, size);
     }
     else
     {
-      ecudc_add_asUInt64 (EC_ALLOC, node, ECDATA_SIZE, size);    
+      ecudc_add_asNumber (EC_ALLOC, node, ECDATA_SIZE, size);
     }
   }
   {

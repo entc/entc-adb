@@ -15,6 +15,9 @@ ENTCDIR=$(dirname $PWD)
 cp $PWD/core/$BCONFIG/libadbo.dylib $INSTALLDIR/libadbo.$VERSION.dylib
 install_name_tool -id $INSTALLDIR/libadbo.$VERSION.dylib $INSTALLDIR/libadbo.$VERSION.dylib
 
+rm $INSTALLDIR/libadbo.dylib
+ln -s $INSTALLDIR/libadbo.$VERSION.dylib $INSTALLDIR/libadbo.dylib
+
 mkdir $INCLUDEDIR
 rm $INCLUDEDIR/*
 cp $PWD/core/*.h $INCLUDEDIR/
