@@ -576,6 +576,14 @@ EcUdc ecjson_read (const EcString source, const EcString name)
   
   EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
 
+  /*
+  printf("*************\n");
+  
+  printf("%s\n", source);
+  
+  printf("*************\n");
+*/
+   
   int res = ecjsonparser_parse (jparser, source, strlen(source), err);
   if (res)
   {
