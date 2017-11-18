@@ -117,24 +117,32 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
 {
   EcUdc data;
   
-  const char* test1 = "{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}";
+  const char* tests [4] =
   
-  data = ecjson_read (test1, NULL);
-  if (!data)
   {
-    return 1;
+     "{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}"
+    ,"{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}"
+    ,"{\"userid\":\"undefined\",\"x\":1,\"y\":0}"
+    ,"{\"userid\":\"undefined\",\"x\":-1,\"y\":-2}"
+  };
+  
+  int i;
+  for (i = 0; i < 4; i++)
+  {
+    data = ecjson_read (tests[i], NULL);
+    if (!data)
+    {
+      return 1;
+    }
+    
+    EcString text = ecjson_write(data);
+    
+    eclogger_fmt (LL_INFO, "TEST", "data", text);
+    
+    ecstr_delete(&text);
+    ecudc_destroy(EC_ALLOC, &data);
   }
-  
-  EcString text = ecjson_write(data);
-  
-  eclogger_fmt (LL_INFO, "TEST", "data", text);
-  
-  ecstr_delete(&text);
-  ecudc_destroy(EC_ALLOC, &data);
-
-  const char* test2 = "{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}";
-
-  
+    
   return 0;
 }
 

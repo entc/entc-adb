@@ -555,7 +555,8 @@ static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
 
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
-  
+  EcUdc ret;
+ 
   /*
   JsonParser parser;
   
@@ -565,25 +566,34 @@ EcUdc ecjson_read (const EcString source, const EcString name)
   
   printf("%s\n", source);
   
+  printf("-------------\n");
+
+  ret = json_parse (&parser, name);
+
+  {
+    EcString text = ecjson_write(ret);
+    
+    printf("%s\n", text);
+    
+    ecstr_delete(&text);
+  }
+
   printf("*************\n");
   
+   */
   
-  return json_parse (&parser, name);  
-  */
-  
-  EcUdc ret = NULL;
   EcErr err = ecerr_create();
   
   EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
-
+  
   /*
   printf("*************\n");
   
   printf("%s\n", source);
   
-  printf("*************\n");
-*/
-   
+  printf("-------------\n");
+  */
+  
   int res = ecjsonparser_parse (jparser, source, strlen(source), err);
   if (res)
   {
@@ -594,6 +604,20 @@ EcUdc ecjson_read (const EcString source, const EcString name)
     ret = ecjsonparser_lastObject(jparser);
   }
   
+  // set name
+  ecudc_setName (ret, name);
+  
+  /*
+  {
+    EcString text = ecjson_write(ret);
+    
+    printf("%s\n", text);
+    
+    ecstr_delete(&text);
+  }
+
+  printf("*************\n");
+  */
   // clean up
   ecjsonparser_destroy (&jparser);
   ecerr_destroy(&err);
