@@ -1,236 +1,704 @@
-/*
- * Copyright (c) 2010-2016 "Alexander Kalkhof" [email:entc@kalkhof.org]
- *
- * This file is part of the extension n' tools (entc-base) framework for C.
- *
- * entc-base is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * entc-base is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ecmap.h"
 
-// TODO: this object must be review in respect of using a real hashtable
+#include "system/macros.h"
 
-//----------------------------------------------------------------------------------------
+//=============================================================================
+
+struct EcMapNode_s
+{
+  int red;                        // Color red (1), black (0)
+  struct EcMapNode_s* link[2];   // Link left [0] and right [1]
+  
+  void* val;
+  void* key;                      // User provided, used indirectly via rb_tree_node_cmp_f.
+  
+}; typedef struct EcMapNode_s* EcMapNode;
+
+//-----------------------------------------------------------------------------
+
+EcMapNode ecmap_node_create (void* key, void* val)
+{
+  EcMapNode self = ENTC_NEW (struct EcMapNode_s);
+  
+  self->red = 1;
+  self->link[0] = self->link[1] = NULL;
+  
+  self->val = val;
+  self->key = key;
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecmap_node_destroy (EcMapNode* pself)
+{
+  ENTC_DEL (pself, struct EcMapNode_s);
+}
+
+//-----------------------------------------------------------------------------
+
+void* ecmap_node_value (EcMapNode self)
+{
+  return self->val;
+}
+
+//-----------------------------------------------------------------------------
+
+void* ecmap_node_key (EcMapNode self)
+{
+  return self->key;
+}
+
+//-----------------------------------------------------------------------------
+
+void* ecmap_node_extract (EcMapNode self)
+{
+  void* data = self->val;
+  
+  self->val = NULL;
+  
+  return data;
+}
+
+//-----------------------------------------------------------------------------
+
+static int ecmap_node_isRed (EcMapNode self)
+{
+  return self ? self->red : 0;
+}
+
+//-----------------------------------------------------------------------------
+
+static EcMapNode ecmap_node_rotate (EcMapNode self, int dir)
+{
+  EcMapNode result = NULL;
+  
+  if (self)
+  {
+    result = self->link[!dir];
+    self->link[!dir] = result->link[dir];
+    result->link[dir] = self;
+    self->red = 1;
+    result->red = 0;
+  }
+  
+  return result;
+}
+
+//-----------------------------------------------------------------------------
+
+static EcMapNode ecmap_node_rotate2 (EcMapNode self, int dir)
+{
+  EcMapNode result = NULL;
+  
+  if (self)
+  {
+    self->link[!dir] = ecmap_node_rotate (self->link[!dir], !dir);
+    result = ecmap_node_rotate (self, dir);
+  }
+  
+  return result;
+}
+
+//-----------------------------------------------------------------------------
+
+static int __STDCALL ecmap_node_cmp (const void* a, const void* b)
+{
+  return strcmp(a, b);
+}
+
+//=============================================================================
 
 struct EcMap_s
 {
-  EcList list;
+  EcMapNode root;
+  
+  fct_ecmap_cmp onCompare;
+  
+  fct_ecmap_destroy onDestroy;
+  
+  size_t             size;
+  
+  //void              *info; // User provided, not used by rb_tree
 };
 
-struct EcMapDataNode
+//-----------------------------------------------------------------------------
+
+EcMap ecmap_create (fct_ecmap_cmp onCompare, fct_ecmap_destroy onDestroy)
 {
-  EcString key;
+  EcMap self = ENTC_NEW (struct EcMap_s);
   
-  void* data;
-};
-
-//----------------------------------------------------------------------------------------
-
-static int __STDCALL ecmap_onDestroy (void* ptr)
-{
-  struct EcMapDataNode* mapnode = ptr;
+  self->root = NULL;
+  self->size = 0;
   
-  ecstr_delete(&(mapnode->key));
+  self->onCompare = onCompare ? onCompare : ecmap_node_cmp;
+  self->onDestroy = onDestroy;
   
-  ENTC_DEL(&mapnode, struct EcMapDataNode);
-  
-  return 0;
-}
-
-//----------------------------------------------------------------------------------------
-
-EcMap ecmap_create (EcAlloc alloc)
-{
-  EcMap self = ECMM_NEW(struct EcMap_s);
-
-  self->list = eclist_create (ecmap_onDestroy);
-
   return self;
 }
 
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-void ecmap_clear (EcAlloc alloc, EcMap self)
+void ecmap_clear (EcMap self)
 {
-  eclist_clear (self->list);
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecmap_destroy (EcAlloc alloc, EcMap* pself)
-{
-  EcMap self = *pself;
+  EcMapNode node = self->root;
+  EcMapNode save = NULL;
   
-  // clear all elements
-  ecmap_clear (alloc, self);
-
-  // delete the list
-  eclist_destroy (&(self->list));
-  
-  ECMM_DEL(pself, struct EcMap_s);
-}
-
-//----------------------------------------------------------------------------------------
-
-EcMapNode ecmap_append (EcMap self, const EcString key, void* data)
-{
-  struct EcMapDataNode* mapnode = ENTC_NEW(struct EcMapDataNode);
-  mapnode->key = ecstr_copy(key);
-  mapnode->data = data;
-  
-  return eclist_push_back (self->list, mapnode);
-}
-
-//----------------------------------------------------------------------------------------
-
-EcMapNode ecmap_erase (EcMap self, EcMapNode node)
-{
-  EcListCursor cursor;
-
-  cursor.node = node;
-  cursor.direction = LIST_DIR_NEXT;
-  cursor.position = 0;
-  
-  eclist_erase (self->list, &cursor);
-  
-  return cursor.node;
-}
-
-//----------------------------------------------------------------------------------------
-
-EcMapNode ecmap_find (EcMap self, const EcString key)
-{
-  EcListCursor cursor;
-  
-  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
-  
-  while (eclist_cursor_next (&cursor))
+  // Rotate away the left links so that
+  // we can treat this like the destruction
+  // of a linked list
+  while (node)
   {
-    struct EcMapDataNode* mapnode = eclist_data(cursor.node);
-    
-    //compare the stored name with the name we got
-    if(ecstr_equal(mapnode->key, key))
+    if (node->link[0] == NULL)
     {
-      return cursor.node;
+      // No left links, just kill the node and move on
+      save = node->link[1];
+      
+      // use user defined destroy
+      if (self->onDestroy)
+      {
+        self->onDestroy (node->key, node->val);
+      }
+      
+      ecmap_node_destroy (&node);
+    }
+    else
+    {
+      // Rotate away the left link and check again
+      save = node->link[0];
+      node->link[0] = save->link[1];
+      save->link[1] = node;
+    }
+    
+    node = save;
+  }
+  
+  self->root = NULL;
+  self->size = 0;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecmap_destroy (EcMap* pself)
+{
+  EcMap self =  *pself;
+  
+  ecmap_clear (self);
+  
+  free (self);
+  *pself = NULL;
+}
+
+//-----------------------------------------------------------------------------
+
+EcMapNode ecmap_find (EcMap self, void* key)
+{
+  EcMapNode it = self->root;
+  
+  while (it)
+  {
+    int cmp = self->onCompare(it->key, key);
+    if (cmp)
+    {
+      // If the tree supports duplicates, they should be
+      // chained to the right subtree for this to work
+      it = it->link[cmp < 0];
+    }
+    else
+    {
+      break;
     }
   }
   
-  return NULL;
+  return it ? it : NULL;
 }
 
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-EcMapNode ecmap_first (const EcMap self)
+EcMapNode ecmap_insert (EcMap self, void* key, void* val)
 {
-  EcListCursor cursor;
+  EcMapNode node = ecmap_node_create (key, val);
   
-  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
-  
-  if (eclist_cursor_next (&cursor))
   {
-    return cursor.node;
+    if (self->root == NULL)
+    {
+      self->root = node;
+    }
+    else
+    {
+      struct EcMapNode_s head = { 0 }; // False tree root
+      EcMapNode g;                     // Grandparent
+      EcMapNode t;                     // parent
+      EcMapNode p;                     // Iterator
+      EcMapNode q;                     // parent
+      
+      int dir = 0, last = 0;
+      
+      // Set up our helpers
+      t = &head;
+      g = p = NULL;
+      q = t->link[1] = self->root;
+      
+      // Search down the tree for a place to insert
+      while (1)
+      {
+        if (q == NULL)
+        {
+          // Insert node at the first null link.
+          p->link[dir] = q = node;
+        }
+        else if (ecmap_node_isRed (q->link[0]) && ecmap_node_isRed (q->link[1]))
+        {
+          // Simple red violation: color flip
+          q->red = 1;
+          q->link[0]->red = 0;
+          q->link[1]->red = 0;
+        }
+        
+        if (ecmap_node_isRed (q) && ecmap_node_isRed (p))
+        {
+          // Hard red violation: rotations necessary
+          int dir2 = t->link[1] == g;
+          if (q == p->link[last])
+          {
+            t->link[dir2] = ecmap_node_rotate (g, !last);
+          }
+          else
+          {
+            t->link[dir2] = ecmap_node_rotate2 (g, !last);
+          }
+        }
+        
+        // Stop working if we inserted a node. This
+        // check also disallows duplicates in the tree
+        if (self->onCompare (q->key, node->key) == 0)
+        {
+          break;
+        }
+        
+        last = dir;
+        dir = self->onCompare (q->key, node->key) < 0;
+        
+        // Move the helpers down
+        if (g != NULL)
+        {
+          t = g;
+        }
+        
+        g = p, p = q;
+        q = q->link[dir];
+      }
+      
+      // Update the root (it may be different)
+      self->root = head.link[1];
+    }
+    
+    // Make the root black for simplified logic
+    self->root->red = 0;
+    ++self->size;
+  }
+  
+  return node;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecmap_erase (EcMap self, EcMapNode node)
+{
+  EcMapNode h = ecmap_extract (self, node);
+  
+  if (self->onDestroy)
+  {
+    self->onDestroy (h->key, h->val);
+  }
+  
+  // delete
+  ecmap_node_destroy (&h);
+}
+
+//-----------------------------------------------------------------------------
+
+EcMapNode ecmap_extract (EcMap self, EcMapNode node)
+{
+  EcMapNode ret = NULL;
+  
+  if (self->root != NULL)
+  {
+    struct EcMapNode_s head = {0};   // False tree root
+    EcMapNode q;
+    EcMapNode p;
+    EcMapNode g;                     // Helpers
+    EcMapNode f = NULL;              // Found item
+    int dir = 1;
+    
+    // Set up our helpers
+    q = &head;
+    g = p = NULL;
+    q->link[1] = self->root;
+    
+    // Search and push a red node down
+    // to fix red violations as we go
+    while (q->link[dir] != NULL)
+    {
+      int last = dir;
+      
+      // Move the helpers down
+      g = p, p = q;
+      q = q->link[dir];
+      dir = self->onCompare (q->key, node->key) < 0;
+      
+      // Save the node with matching value and keep
+      // going; we'll do removal tasks at the end
+      if (self->onCompare (q->key, node->key) == 0)
+      {
+        f = q;
+      }
+      
+      // Push the red node down with rotations and color flips
+      if (!ecmap_node_isRed(q) && !ecmap_node_isRed(q->link[dir]))
+      {
+        if (ecmap_node_isRed(q->link[!dir]))
+        {
+          p = p->link[last] = ecmap_node_rotate (q, dir);
+        }
+        else if (!ecmap_node_isRed (q->link[!dir]))
+        {
+          EcMapNode s = p->link[!last];
+          if (s)
+          {
+            if (!ecmap_node_isRed (s->link[!last]) && !ecmap_node_isRed (s->link[last]))
+            {
+              // Color flip
+              p->red = 0;
+              s->red = 1;
+              q->red = 1;
+            }
+            else
+            {
+              int dir2 = g->link[1] == p;
+              if (ecmap_node_isRed(s->link[last]))
+              {
+                g->link[dir2] = ecmap_node_rotate2 (p, last);
+              }
+              else if (ecmap_node_isRed(s->link[!last]))
+              {
+                g->link[dir2] = ecmap_node_rotate (p, last);
+              }
+              
+              // Ensure correct coloring
+              q->red = g->link[dir2]->red = 1;
+              g->link[dir2]->link[0]->red = 0;
+              g->link[dir2]->link[1]->red = 0;
+            }
+          }
+        }
+      }
+    }
+    
+    // Replace and remove the saved node
+    if (f)
+    {
+      void* h1 = f->key;
+      void* h2 = f->val;
+      
+      f->key = q->key;
+      f->val = q->val;
+      
+      q->key = h1;
+      q->val = h2;
+      
+      p->link[p->link[1] == q] = q->link[q->link[0] == NULL];
+      
+      ret = q;
+      q = NULL;
+    }
+    
+    // Update the root (it may be different)
+    self->root = head.link[1];
+    
+    // Make the root black for simplified logic
+    if (self->root != NULL)
+    {
+      self->root->red = 0;
+    }
+    
+    --self->size;
+  }
+  
+  return ret;
+}
+
+//-----------------------------------------------------------------------------
+
+unsigned long ecmap_size (EcMap self)
+{
+  return self->size;
+}
+
+//=============================================================================
+
+EcMap ecmap_clone (EcMap orig, fct_ecmap_onClone onCloneKey, fct_ecmap_onClone onCloneVal)
+{
+  EcMap self = ecmap_create (orig->onCompare, orig->onDestroy);
+  
+  EcMapCursor* cursor = ecmap_cursor_create (orig, LIST_DIR_NEXT);
+
+  while (ecmap_cursor_next (cursor))
+  {
+    if (onCloneKey && onCloneVal)
+    {
+      void* key = onCloneKey (ecmap_node_key (cursor->node));
+      void* val = onCloneVal (ecmap_node_value (cursor->node));
+      
+      ecmap_insert(self, key, val);
+    }
+  }
+
+  ecmap_cursor_destroy (&cursor);
+  
+  return self;
+}
+
+//=============================================================================
+
+void ecmap_iterator_start (EcMapCursor* cursor, EcMap self, int dir)
+{
+  cursor->node = self->root;
+  cursor->top = 0;
+  
+  // Save the path for later selfersal
+  if (cursor->node != NULL)
+  {
+    while (cursor->node->link[dir] != NULL)
+    {
+      cursor->path[cursor->top++] = cursor->node;
+      cursor->node = cursor->node->link[dir];
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+void cmap_iterator_move (EcMapCursor* cursor, int dir)
+{
+  if (cursor->node->link[dir] != NULL)
+  {
+    // Continue down this branch
+    cursor->path[cursor->top++] = cursor->node;
+    cursor->node = cursor->node->link[dir];
+    
+    while ( cursor->node->link[!dir] != NULL )
+    {
+      cursor->path[cursor->top++] = cursor->node;
+      cursor->node = cursor->node->link[!dir];
+    }
   }
   else
   {
-    return NULL;
+    // Move to the next branch
+    EcMapNode last = NULL;
+    
+    do
+    {
+      if (cursor->top == 0)
+      {
+        cursor->node = NULL;
+        break;
+      }
+      
+      last = cursor->node;
+      cursor->node = cursor->path[--cursor->top];
+      
+    }
+    while (last == cursor->node->link[dir]);
   }
 }
 
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-EcMapNode ecmap_end (const EcMap self)
+EcMapCursor* ecmap_cursor_create (EcMap self, int direction)
 {
-  return NULL;
-}
-
-//----------------------------------------------------------------------------------------
-
-EcMapNode ecmap_next (const EcMapNode node)
-{
-  return eclist_next (node);
-}
-
-//----------------------------------------------------------------------------------------
-
-EcString ecmap_key (const EcMapNode node)
-{
-  struct EcMapDataNode* mapnode = eclist_data((EcListNode)node);
-  return mapnode->key;  
-}
-
-//----------------------------------------------------------------------------------------
-
-void* ecmap_data (const EcMapNode node)
-{
-  struct EcMapDataNode* mapnode = eclist_data((EcListNode)node);
-  return mapnode->data;
-}
-
-//----------------------------------------------------------------------------------------
-
-uint_t ecmap_size (const EcMap self)
-{
-  return eclist_size(self->list);
-}
-
-//----------------------------------------------------------------------------------------
-
-void ecmap_cursor (EcMap self, EcMapCursor* cursor)
-{
-  cursor->map = self;
-  cursor->node = ecmap_first (self);
-}
-
-//----------------------------------------------------------------------------------------
-
-int ecmap_cnext (EcMapCursor* cursor)
-{
-  cursor->node = ecmap_next(cursor->node);
-  return cursor->node != ecmap_end (cursor->map);
-}
-
-//----------------------------------------------------------------------------------------
-
-EcMap ecmap_clone (EcAlloc alloc, const EcMap orig, fct_ecmap_onClone onClone)
-{
-  EcMap self = ECMM_NEW(struct EcMap_s);
+  EcMapCursor* cursor = ENTC_NEW (EcMapCursor);
   
-  self->list = eclist_create (ecmap_onDestroy);
+  ecmap_cursor_init (self, cursor, direction);
   
+  return cursor;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecmap_cursor_destroy (EcMapCursor** pcursor)
+{
+  ENTC_DEL(pcursor, EcMapCursor);
+}
+
+//-----------------------------------------------------------------------------
+
+void ecmap_cursor_init (EcMap self, EcMapCursor* cursor, int direction)
+{
+  // initialize the iterator part
+  cursor->tree = self;
+  cursor->top = 0;
+  cursor->node = NULL;
+  
+  if (direction)
   {
-    EcListCursor cursor;
-    eclist_cursor_init (orig->list, &cursor, LIST_DIR_NEXT);
-    
-    // iterate to find the correct size
-    while (eclist_cursor_next (&cursor))
+    ecmap_iterator_start (cursor, self, 0);
+  }
+  else
+  {
+    ecmap_iterator_start (cursor, self, 1);
+  }
+  
+  cursor->position = -1;
+  cursor->direction = direction;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecmap_cursor_next (EcMapCursor* cursor)
+{
+  if (cursor->position < 0)
+  {
+    cursor->position = 0;
+  }
+  else
+  {
+    cmap_iterator_move (cursor, 1);
+    cursor->position++;
+  }
+  
+  return cursor->node != NULL;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecmap_cursor_prev (EcMapCursor* cursor)
+{
+  if (cursor->position < 0)
+  {
+    cursor->position = 0;
+  }
+  else
+  {
+    cmap_iterator_move (cursor, 0);
+    cursor->position++;
+  }
+  
+  return cursor->node != NULL;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecmap_cursor_erase (EcMap self, EcMapCursor* cursor)
+{
+  // but cursor.node points to invalid node now
+  if (cursor->position < 0)
+  {
+    if (cursor->node)
     {
-      struct EcMapDataNode* orignode = eclist_data (cursor.node);
-      struct EcMapDataNode* selfnode = ENTC_NEW (struct EcMapDataNode);
-      
-      selfnode->key = ecstr_copy (orignode->key);
-      selfnode->data = NULL;
-      
-      if (onClone)  // if not, the value will be null
+      // this will remove the node
+      ecmap_erase (self, cursor->node);
+    }
+    
+    if (cursor->direction)
+    {
+      ecmap_iterator_start (cursor, self, 0);
+    }
+    else
+    {
+      ecmap_iterator_start (cursor, self, 1);
+    }
+  }
+  else
+  {
+    EcMapNode node = cursor->node;
+    if (node)
+    {
+      if (cursor->direction)
       {
-        selfnode->data = onClone (orignode->data);
+        cmap_iterator_move (cursor, 0);
+      }
+      else
+      {
+        cmap_iterator_move (cursor, 1);
+      }
+    
+      // this will remove the node
+      ecmap_erase (self, node);
+    }
+    
+    if (cursor->node == NULL)
+    {
+      if (cursor->direction)
+      {
+        ecmap_iterator_start (cursor, self, 0);
+      }
+      else
+      {
+        ecmap_iterator_start (cursor, self, 1);
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+EcMapNode ecmap_cursor_extract (EcMap self, EcMapCursor* cursor)
+{
+  EcMapNode ret = NULL;
+  
+  // but cursor.node points to invalid node now
+  if (cursor->position < 0)
+  {
+    if (cursor->node)
+    {
+      // this will remove the node
+      ecmap_erase (self, cursor->node);
+    }
+    
+    if (cursor->direction)
+    {
+      ecmap_iterator_start (cursor, self, 0);
+    }
+    else
+    {
+      ecmap_iterator_start (cursor, self, 1);
+    }
+  }
+  else
+  {
+    EcMapNode node = cursor->node;
+    if (node)
+    {
+      if (cursor->direction)
+      {
+        cmap_iterator_move (cursor, 0);
+      }
+      else
+      {
+        cmap_iterator_move (cursor, 1);
       }
       
-      eclist_push_back (self->list, selfnode);
+      // this will remove the node
+      ret = ecmap_extract (self, node);
+    }
+    
+    if (cursor->node == NULL)
+    {
+      if (cursor->direction)
+      {
+        ecmap_iterator_start (cursor, self, 0);
+      }
+      else
+      {
+        ecmap_iterator_start (cursor, self, 1);
+      }
     }
   }
   
-  return self;
+  return ret;
 }
 
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------

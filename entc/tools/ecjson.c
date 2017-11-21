@@ -555,7 +555,7 @@ static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
 
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
-  EcUdc ret;
+  EcUdc ret = NULL;
  
   /*
   JsonParser parser;
