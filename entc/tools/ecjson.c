@@ -604,8 +604,11 @@ EcUdc ecjson_read (const EcString source, const EcString name)
     ret = ecjsonparser_lastObject(jparser);
   }
   
-  // set name
-  ecudc_setName (ret, name);
+  if (ret)
+  {
+    // set name
+    ecudc_setName (ret, name);
+  }
   
   /*
   {
