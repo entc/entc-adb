@@ -378,13 +378,14 @@ int ecaio_init (EcAio self, EcErr err)
 int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
 {
   struct epoll_event event;
+  uint64_t hfd = handle;
   
   event.data.ptr = ctx;
   event.events = EPOLLET | EPOLLONESHOT | EPOLLIN;
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "append %i", (int)handle, ctx);
   
-  int s = epoll_ctl (self->efd, EPOLL_CTL_ADD, (int)handle, &event);
+  int s = epoll_ctl (self->efd, EPOLL_CTL_ADD, hfd, &event);
   if (s < 0)
   {
     int errCode = errno;
@@ -536,7 +537,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       {
         ctx = eclist_data(c.node);
         
-        eclist_erase (self->ctxs, &c);
+        eclist_cursor_erase (self->ctxs, &c);
       }
       
       //  int res = read (self->ufd, &u, sizeof(uint64_t));
