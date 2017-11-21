@@ -587,13 +587,13 @@ EcUdc ecjson_read (const EcString source, const EcString name)
   
   EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
   
-  /*
+  
   printf("*************\n");
   
   printf("%s\n", source);
   
   printf("-------------\n");
-  */
+  
   
   if (source == NULL)
   {
@@ -616,7 +616,7 @@ EcUdc ecjson_read (const EcString source, const EcString name)
     ecudc_setName (ret, name);
   }
   
-  /*
+  
   {
     EcString text = ecjson_write(ret);
     
@@ -626,7 +626,7 @@ EcUdc ecjson_read (const EcString source, const EcString name)
   }
 
   printf("*************\n");
-  */
+  
   // clean up
   ecjsonparser_destroy (&jparser);
   ecerr_destroy(&err);
