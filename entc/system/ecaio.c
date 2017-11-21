@@ -283,8 +283,8 @@ EcAio ecaio_create ()
 {
   EcAio self = ENTC_NEW(struct EcAio_s);
   
-  self->efd = NULL;
-  self->ufd = NULL;
+  self->efd = 0;
+  self->ufd = 0;
   self->ctx = NULL;
   
   self->ctxs = eclist_create (NULL);
