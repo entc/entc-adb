@@ -55,7 +55,7 @@ void eclist_clear (EcList self)
   
   while (eclist_cursor_next (&cursor))
   {
-    eclist_erase (self, &cursor);
+    eclist_cursor_erase (self, &cursor);
   }
 }
 
@@ -587,7 +587,7 @@ int eclist_cursor_prev (EcListCursor* cursor)
 
 //-----------------------------------------------------------------------------
 
-void* eclist_extract (EcList self, EcListCursor* cursor)
+void* eclist_cursor_extract (EcList self, EcListCursor* cursor)
 {
   EcListNode node = cursor->node;
   void* ret = NULL;
@@ -656,9 +656,9 @@ void* eclist_extract (EcList self, EcListCursor* cursor)
 
 //-----------------------------------------------------------------------------
 
-void eclist_erase (EcList self, EcListCursor* cursor)
+void eclist_cursor_erase (EcList self, EcListCursor* cursor)
 {
-  void* data = eclist_extract (self, cursor);
+  void* data = eclist_cursor_extract (self, cursor);
   
   if (data && self->onDestroy)
   {

@@ -135,14 +135,14 @@ static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx, EcErr e
     
     eclist_cursor_init (h, &cursor, LIST_DIR_NEXT);
     
-    eclist_erase (h, &cursor);
+    eclist_cursor_erase (h, &cursor);
     
     // check ************
     testctx_assert (tctx, eclist_size (h) == 4, "check size #3");
     
     while (eclist_cursor_next (&cursor))
     {
-      eclist_erase (h, &cursor);
+      eclist_cursor_erase (h, &cursor);
     }
   }
   

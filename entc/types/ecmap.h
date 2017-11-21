@@ -23,6 +23,7 @@
 //=============================================================================
 
 #include "ecerr.h"
+#include "eclist.h"
 
 //-----------------------------------------------------------------------------
 
@@ -71,10 +72,6 @@ __LIBEX EcMap ecmap_clone (EcMap, fct_ecmap_onClone onCloneKey, fct_ecmap_onClon
 
 //-----------------------------------------------------------------------------
 
-struct EcMapIter_s; typedef struct EcMapIter_s* EcMapIter;
-
-//-----------------------------------------------------------------------------
-
 #ifndef RB_ITER_MAX_HEIGHT
 #define RB_ITER_MAX_HEIGHT 64 // Tallest allowable tree to iterate
 #endif
@@ -84,6 +81,7 @@ typedef struct
   
   EcMapNode node;
   
+  /*
   int position;
   
   int direction;
@@ -92,7 +90,10 @@ typedef struct
   
   EcMapNode path[RB_ITER_MAX_HEIGHT];      // Traversal path
   
-  int top;                                 // Top of stack
+  int top;   // Top of stack
+   */
+  
+  EcListCursor cursor;
 
 } EcMapCursor;
 

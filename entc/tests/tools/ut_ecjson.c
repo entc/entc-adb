@@ -119,7 +119,6 @@ static int __STDCALL test_ecjson_test3 (void* ptr, TestEnvContext tctx, EcErr er
 static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcUdc data;
-  EcString text;
   
   const char* tests [4] =
   
@@ -152,6 +151,23 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
 
 //---------------------------------------------------------------------------
 
+static int __STDCALL test_ecjson_test5 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc data;
+  
+  data = ecjson_read (NULL, NULL);
+  if (data)
+  {
+    return 1;
+  }
+  
+  
+  
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+
 int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
@@ -160,6 +176,7 @@ int main(int argc, char* argv[])
  // testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
  // testenv_reg (te, "Json Reader Test3", test_ecjson_init, test_ecjson_done, test_ecjson_test3);
   testenv_reg (te, "Json Reader Test4", test_ecjson_init, test_ecjson_done, test_ecjson_test4);
+  testenv_reg (te, "Json Reader Test5", test_ecjson_init, test_ecjson_done, test_ecjson_test5);
   
   testenv_run (te);
   

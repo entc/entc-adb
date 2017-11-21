@@ -392,7 +392,7 @@ EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
   
   if (eclist_cursor_next (*cursor))
   {
-    return eclist_extract (self->list, *cursor);
+    return eclist_cursor_extract (self->list, *cursor);
   }
   else
   {
