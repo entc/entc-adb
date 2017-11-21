@@ -181,9 +181,19 @@ EcUdc ecudc_node_ext (EcUdcNode* self, const EcString name)
     return NULL;
   }
   
-  ret = ecmap_node_value (node);
-  
-  ecmap_erase (self->map, node);
+  {
+    EcMapNode h = ecmap_extract (self->map, node);
+    
+    ret = ecmap_node_value (h);
+    
+    {
+      EcString j = ecmap_node_key (h);
+      
+      ecstr_delete(&j);
+    }
+
+    ecmap_node_destroy (&h);
+  }
   
   return ret;
 }
