@@ -484,7 +484,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     if (ctx)
     {
       // save the handle, because ctx got freed in the process call
-      void* handle = ctx->handle;
+      void* handle = ecaio_context_getHandle (ctx);
       
       //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got ctx from IO event %p", ctx);
       

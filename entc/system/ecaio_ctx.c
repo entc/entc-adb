@@ -188,6 +188,13 @@ void ecaio_context_setHandle (EcAioContext self, void* handle)
 
 //-----------------------------------------------------------------------------
 
+void* ecaio_context_getHandle (EcAioContext self)
+{
+  return self->handle;
+}
+
+//-----------------------------------------------------------------------------
+
 void ecaio_context_destroy (EcAioContext* pself)
 {
   EcAioContext self = *pself;
