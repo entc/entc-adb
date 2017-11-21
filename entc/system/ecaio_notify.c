@@ -269,7 +269,7 @@ int ecaio_notify_init (EcAioNotify self, const char* path, EcErr err)
 
 static int __STDCALL ecaio_notify_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
-  return OVL_PROCESS_CODE_CONTINUE;
+  return ENTC_AIO_CODE_CONTINUE;
 }
 
 //-----------------------------------------------------------------------------
