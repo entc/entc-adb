@@ -120,17 +120,18 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
 {
   EcUdc data;
   
-  const char* tests [4] =
+  const char* tests [5] =
   
   {
      "{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}"
     ,"{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}"
     ,"{\"userid\":\"undefined\",\"x\":1,\"y\":0}"
     ,"{\"userid\":\"undefined\",\"x\":-1,\"y\":-2}"
+    ,"{\"_cdata\":{\"type\":\"Crypt4\",\"content\":\"eyJoYSI6IjAwMDE1MTEyOTU4ODkzNDkiLCJpZCI6IjQxMzVhYTlkYzFiODQyYTY1M2RlYTg0NjkwM2RkYjk1YmZiOGM1YTEwYzUwNGE3ZmExNmUxMGJjMzFkMWZkZjAiLCJkYSI6IjdkYWQwZjc0ZGU2NzVkNjZiODIxOWNhMzM1NjIzOWIyOWFlZmYzN2I0Y2IwMmY1NjU3MDJhMzZjNjk1M2U1MDIifQ==\"},\"_ctype\":0}"
   };
   
   int i;
-  for (i = 0; i < 4; i++)
+  for (i = 0; i < 5; i++)
   {
     EcString text;
 
