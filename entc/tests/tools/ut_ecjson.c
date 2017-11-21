@@ -132,13 +132,15 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
   int i;
   for (i = 0; i < 4; i++)
   {
+    EcString text;
+
     data = ecjson_read (tests[i], NULL);
     if (!data)
     {
       return 1;
     }
     
-    EcString text = ecjson_write(data);
+    text = ecjson_write(data);
     
     eclogger_fmt (LL_INFO, "TEST", "data", text);
     

@@ -257,16 +257,18 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** pcursor)
     
     if (ecmap_cursor_next (cursor))
     {
+      EcString key;
+	  EcUdc val;
+
       EcMapNode node = ecmap_cursor_extract (self->map, cursor);
       
       // delete key
-      EcString key = ecmap_node_key (node);
+      key = ecmap_node_key (node);
       ecstr_delete(&key);
-      
-      EcUdc val = ecmap_node_value (node);
-      
+	  
+      val = ecmap_node_value (node);
       ecmap_node_destroy (&node);
-      
+	  
       return val;
     }
     
