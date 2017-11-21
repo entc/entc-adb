@@ -398,7 +398,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
     return ecerr_formatErrorOS(err, ENTC_LVL_ERROR, errCode);
   }
   
-  ctx->handle = handle;
+  ecaio_context_setHandle (ctx, handle);
   
   return ENTC_ERR_NONE;
 }

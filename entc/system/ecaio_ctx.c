@@ -181,6 +181,13 @@ void ecaio_context_setCallbacks (EcAioContext self, void* ptr, fct_ecaio_context
 
 //-----------------------------------------------------------------------------
 
+void ecaio_context_setHandle (EcAioContext self, void* handle)
+{
+  self->handle = handle;
+}
+
+//-----------------------------------------------------------------------------
+
 void ecaio_context_destroy (EcAioContext* pself)
 {
   EcAioContext self = *pself;
