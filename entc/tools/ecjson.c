@@ -556,6 +556,7 @@ static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
   EcUdc ret = NULL;
+  int res;
  
   /*
   JsonParser parser;
@@ -594,7 +595,12 @@ EcUdc ecjson_read (const EcString source, const EcString name)
   printf("-------------\n");
   */
   
-  int res = ecjsonparser_parse (jparser, source, strlen(source), err);
+  if (source == NULL)
+  {
+    return ret;
+  }
+  
+  res = ecjsonparser_parse (jparser, source, strlen(source), err);
   if (res)
   {
     eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
