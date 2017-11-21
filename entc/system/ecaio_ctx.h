@@ -58,6 +58,11 @@ __LIBEX void ecaio_context_appendOverlappedOffset (EcAioContext, int offset);
 
 __LIBEX int ecaio_context_continue (void* ovl, int repeat, unsigned long bytes);
 
+// only for linux
+__LIBEX void ecaio_context_setHandle (EcAioContext, void* handle);
+
+__LIBEX void* ecaio_context_getHandle (EcAioContext);
+
 //=============================================================================
 
 struct EcAioRefCtx_s; typedef struct EcAioRefCtx_s* EcAioRefCtx;

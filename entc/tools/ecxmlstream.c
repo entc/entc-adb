@@ -71,6 +71,17 @@ typedef struct
 
 /*------------------------------------------------------------------------*/
 
+static void __STDCALL ecxmlstream_namespaces_onDestroy (void* key, void* val)
+{
+  EcString keyobj = key;
+  EcString valobj = val;
+
+  ecstr_delete (&keyobj);
+  ecstr_delete (&valobj);
+};
+
+//-----------------------------------------------------------------------------
+
 EcXMLStream ecxmlstream_new (void)
 {
   EcXMLStream self = ENTC_NEW(struct EcXMLStream_s);
@@ -86,7 +97,7 @@ EcXMLStream ecxmlstream_new (void)
   self->value = 0; 
   self->filename = 0;
   
-  self->namespaces = ecmap_create (EC_ALLOC);
+  self->namespaces = ecmap_create (NULL, ecxmlstream_namespaces_onDestroy);
   
   return self;
 }
@@ -177,14 +188,7 @@ void ecxmlstream_clean (EcXMLStream self)
     tag = ecstack_top (self->nodes);
   }
 
-  {
-    EcMapNode node;
-    for (node = ecmap_first (self->namespaces); node != ecmap_end (self->namespaces); node = ecmap_next (node))
-    {
-      EcString val = ecmap_data (node);
-      ecstr_delete (&val);
-    }  
-  }
+  ecmap_clear (self->namespaces);
 }
 
 /*------------------------------------------------------------------------*/
@@ -211,7 +215,7 @@ void ecxmlstream_close( EcXMLStream self )
   
   ecstr_delete( &(self->filename) );
   
-  ecmap_destroy (EC_ALLOC, &(self->namespaces));
+  ecmap_destroy (&(self->namespaces));
 
   ENTC_DEL(&self, struct EcXMLStream_s);
 }
@@ -226,7 +230,7 @@ void ecxmlstream_find_namespace (EcXMLStream self, EcString* tagname, EcString* 
   if (ecstr_split (*tagname, &ns1, &ns2, ':'))
   {
     EcMapNode nsnode = ecmap_find (self->namespaces, ns1);
-    if (nsnode != ecmap_end (self->namespaces))
+    if (nsnode)
     {
       //eclogger_fmt(LL_TRACE, "ENTC", "xml", "found namespace '%s' in tag '%s'", ns1, ns2);
 
@@ -245,14 +249,12 @@ void ecxmlstream_find_namespace (EcXMLStream self, EcString* tagname, EcString* 
 
 const EcString ecxmlstream_getNamespace (EcXMLStream self, const EcString namespace)
 {
-  EcMapNode node;
-  for (node = ecmap_first (self->namespaces); node != ecmap_end (self->namespaces); node = ecmap_next (node))
+  EcMapNode nsnode = ecmap_find (self->namespaces, (void*)namespace);
+  if (nsnode)
   {
-    if (ecstr_equal (namespace, ecmap_data (node)))
-    {
-      return ecmap_key (node);
-    }
+    return ecmap_node_key (nsnode);
   }
+  
   return NULL;
 }
 
@@ -260,11 +262,14 @@ const EcString ecxmlstream_getNamespace (EcXMLStream self, const EcString namesp
 
 void ecxmlstream_mapNamespaces (EcXMLStream self, EcMapChar nsmap)
 {
-  EcMapNode node;
-  for (node = ecmap_first (self->namespaces); node != ecmap_end (self->namespaces); node = ecmap_next (node))
+  EcMapCursor* cursor = ecmap_cursor_create (self->namespaces, LIST_DIR_NEXT);
+  
+  while (ecmap_cursor_next (cursor))
   {
-    ecmapchar_append (nsmap, ecmap_data (node), ecmap_key (node));
+    ecmapchar_append (nsmap, ecmap_node_value (cursor->node), ecmap_node_key (cursor->node));
   }
+ 
+  ecmap_cursor_destroy (&cursor);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -342,7 +347,8 @@ void ecxmlstream_parseNode (EcXMLStream self, const char* node)
           
           if (ecstr_split (key_val, &ns1, &ns2, ':'))
           {
-            ecmap_append (self->namespaces, ns2, value);
+            ecmap_insert (self->namespaces, ns2, value);
+            ns2 = NULL;
           }
           else
           {

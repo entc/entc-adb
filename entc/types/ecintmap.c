@@ -157,7 +157,7 @@ EcIntMapNode ecintmap_erase (EcIntMap self, EcIntMapNode node)
   
   cursor.node = node;
   
-  eclist_erase (self->list, &cursor);
+  eclist_cursor_erase (self->list, &cursor);
   
   return cursor.node;
 }

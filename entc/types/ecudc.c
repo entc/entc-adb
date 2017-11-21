@@ -56,20 +56,39 @@ typedef struct {
 
 //----------------------------------------------------------------------------------------
 
+static void __STDCALL ecudc_node_item_destroy (void* key, void* val)
+{
+  EcUdc item = val;
+  EcString h = key;
+  
+  ecudc_destroy (EC_ALLOC, &item);
+  
+  ecstr_delete (&h);
+}
+
+//----------------------------------------------------------------------------------------
+
 void* ecudc_node_new (EcAlloc alloc)
 {
   EcUdcNode* self = ECMM_NEW (EcUdcNode);
 
-  self->map = ecmap_create (alloc);
+  self->map = ecmap_create (NULL, ecudc_node_item_destroy);
   
   return self;
 }
 
 //----------------------------------------------------------------------------------------
 
-void* __STDCALL ecudc_node_onClone (void* ptr)
+void* __STDCALL ecudc_node_onCloneKey (void* ptr)
 {
-  return ecudc_clone(EC_ALLOC, ptr);
+  return ecstr_copy (ptr);
+}
+
+//----------------------------------------------------------------------------------------
+
+void* __STDCALL ecudc_node_onCloneVal (void* ptr)
+{
+  return ecudc_clone (EC_ALLOC, ptr);
 }
 
 //----------------------------------------------------------------------------------------
@@ -78,7 +97,7 @@ void* ecudc_node_clone (EcAlloc alloc, EcUdcNode* orig)
 {
   EcUdcNode* self = ECMM_NEW (EcUdcNode);
   
-  self->map = ecmap_clone (alloc, orig->map, ecudc_node_onClone);
+  self->map = ecmap_clone (orig->map, ecudc_node_onCloneKey, ecudc_node_onCloneVal);
   
   return self;
 }
@@ -87,15 +106,7 @@ void* ecudc_node_clone (EcAlloc alloc, EcUdcNode* orig)
 
 void ecudc_node_clear (EcAlloc alloc, EcUdcNode* self)
 {
-  EcMapNode node;
-  
-  for (node = ecmap_first(self->map); node != ecmap_end(self->map); node = ecmap_next(node)) 
-  {
-    EcUdc item = ecmap_data(node);
-    ecudc_destroy (alloc, &item);
-  }
-  
-  ecmap_clear (alloc, self->map);
+  ecmap_clear (self->map);
 }
 
 //----------------------------------------------------------------------------------------
@@ -106,7 +117,7 @@ void ecudc_node_destroy (EcAlloc alloc, void** pself)
   // if protected dont delete
   ecudc_node_clear (alloc, self);
   
-  ecmap_destroy (alloc, &(self->map));
+  ecmap_destroy (&(self->map));
   
   ECMM_DEL (pself, EcUdcNode);    
 }
@@ -122,7 +133,8 @@ void ecudc_node_add (EcUdcNode* self, EcUdc* pnode)
     return;
   }
   
-  ecmap_append(self->map, node->name, node);
+  // use string for key type
+  ecmap_insert (self->map, ecstr_copy(node->name), node);
   
   *pnode = NULL;
 }
@@ -131,19 +143,14 @@ void ecudc_node_add (EcUdcNode* self, EcUdc* pnode)
 
 int ecudc_node_del (EcAlloc alloc, EcUdcNode* self, const EcString name)
 {
-  EcUdc item;
-  EcMapNode node = ecmap_find(self->map, name);
+  EcMapNode node = ecmap_find (self->map, (void*)name);
   
-  if (node == ecmap_end(self->map))
+  if (node == NULL)
   {
     return FALSE;
   }
   
-  item = ecmap_data(node);
-  
   ecmap_erase (self->map, node);
-  
-  ecudc_destroy(alloc, &item);
   
   return TRUE;  
 }
@@ -152,62 +159,75 @@ int ecudc_node_del (EcAlloc alloc, EcUdcNode* self, const EcString name)
 
 EcUdc ecudc_node_get (EcUdcNode* self, const EcString name)
 {
-  EcMapNode node = ecmap_find(self->map, name);
+  EcMapNode node = ecmap_find (self->map, (void*)name);
   
-  if (node == ecmap_end(self->map))
+  if (node == NULL)
   {
     return NULL;
   }
   
-  return ecmap_data(node);
+  return ecmap_node_value (node);
 }
 
 //----------------------------------------------------------------------------------------
 
 EcUdc ecudc_node_ext (EcUdcNode* self, const EcString name)
 {
-  EcMapNode node = ecmap_find (self->map, name);
+  EcMapNode node = ecmap_find (self->map, (void*)name);
   EcUdc ret = NULL;
   
-  if (node == ecmap_end(self->map))
+  if (node == NULL)
   {
     return NULL;
   }
   
-  ret = ecmap_data (node);
-  
-  ecmap_erase (self->map, node);
+  {
+    EcMapNode h = ecmap_extract (self->map, node);
+    
+    ret = ecmap_node_value (h);
+    
+    {
+      EcString j = ecmap_node_key (h);
+      
+      ecstr_delete(&j);
+    }
+
+    ecmap_node_destroy (&h);
+  }
   
   return ret;
 }
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_node_next (EcUdcNode* self, void** cursor)
+EcUdc ecudc_node_next (EcUdcNode* self, void** pcursor)
 {
-  EcMapNode node;
-  
-  if (isNotAssigned (cursor))
+  if (pcursor == NULL)
   {
     return NULL;
   }
   
-  if (isAssigned (*cursor))
+  if (*pcursor == NULL)
   {
-    node = ecmap_next(*cursor);
-  }
-  else
-  {
-    node = ecmap_first(self->map);
+    // initialize
+    *pcursor = ecmap_cursor_create (self->map, LIST_DIR_NEXT);
   }
   
-  if (node == ecmap_end(self->map))
   {
+    EcMapCursor* cursor = *pcursor;
+    
+    if (ecmap_cursor_next (cursor))
+    {
+      return ecmap_node_value (cursor->node);
+    }
+    
+    // done
+    ecmap_cursor_destroy (&cursor);
+    
+    *pcursor = NULL;
+    
     return NULL;
   }
-  
-  *cursor = node;
-  return ecmap_data(node);
 }
 
 //----------------------------------------------------------------------------------------
@@ -219,35 +239,44 @@ uint32_t ecudc_node_size (EcUdcNode* self)
 
 //----------------------------------------------------------------------------------------
 
-EcUdc ecudc_map_e (EcUdcNode* self, void** cursor)
+EcUdc ecudc_map_e (EcUdcNode* self, void** pcursor)
 {
-  EcMapNode node;
-  EcUdc ret = NULL;
-  
-  if (isNotAssigned (cursor))
+  if (pcursor == NULL)
   {
     return NULL;
   }
   
-  node = *cursor;
-  
-  if (node == NULL)
+  if (*pcursor == NULL)
   {
-    node = ecmap_first(self->map);
+    // initialize
+    *pcursor = ecmap_cursor_create (self->map, LIST_DIR_NEXT);
   }
   
-  if (node == ecmap_end (self->map))
   {
+    EcMapCursor* cursor = *pcursor;
+    
+    if (ecmap_cursor_next (cursor))
+    {
+      EcMapNode node = ecmap_cursor_extract (self->map, cursor);
+      
+      // delete key
+      EcString key = ecmap_node_key (node);
+      ecstr_delete(&key);
+      
+      EcUdc val = ecmap_node_value (node);
+      
+      ecmap_node_destroy (&node);
+      
+      return val;
+    }
+    
+    // done
+    ecmap_cursor_destroy (&cursor);
+    
+    *pcursor = NULL;
+    
     return NULL;
   }
-  
-  ret = ecmap_data (node);
-  
-  node = ecmap_erase (self->map, node);
-  
-  *cursor = ecmap_next(node);
-
-  return ret;
 }
 
 //----------------------------------------------------------------------------------------
@@ -363,7 +392,7 @@ EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
   
   if (eclist_cursor_next (*cursor))
   {
-    return eclist_extract (self->list, *cursor);
+    return eclist_cursor_extract (self->list, *cursor);
   }
   else
   {

@@ -398,7 +398,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
     return ecerr_formatErrorOS(err, ENTC_LVL_ERROR, errCode);
   }
   
-  ctx->handle = handle;
+  ecaio_context_setHandle (ctx, handle);
   
   return ENTC_ERR_NONE;
 }
@@ -433,7 +433,7 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_addQueueEvent (EcAio self, void* ptr, fct_aio_context_process process, fct_aio_context_destroy destroy, EcErr err)
+int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy, EcErr err)
 {
   // create a new aio context
   EcAioContext ctx = ecaio_context_create ();
@@ -484,7 +484,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     if (ctx)
     {
       // save the handle, because ctx got freed in the process call
-      void* handle = ctx->handle;
+      void* handle = ecaio_context_getHandle (ctx);
       
       //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got ctx from IO event %p", ctx);
       

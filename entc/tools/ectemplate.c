@@ -221,15 +221,17 @@ void ectemplate_sections_tag (EcTemplate self, EcTemplatePart part, EcMap sectio
   {
     case '#':
     {
-      ecmap_append (sections, name, (void*)node);
+      ecmap_insert (sections, name, (void*)node);
+      name = NULL;
+      
+      break;
     }
-    break;
     case '/':
     {
       EcMapNode snode = ecmap_find (sections, name);
       if (snode)
       {
-        EcListNode iFrom = ecmap_data (snode);
+        EcListNode iFrom = ecmap_node_value (snode);
         
         // remove extra chars after node tags
         {
@@ -259,25 +261,27 @@ void ectemplate_sections_tag (EcTemplate self, EcTemplatePart part, EcMap sectio
 
         part->type = PART_TYPE_NODE;
       }
+      break;
     }
-    break;
   }
 }
 
 //-----------------------------------------------------------------------------
 
-void __STDCALL q6template_sections_cleanitem (void* p)
+void __STDCALL q6template_sections_cleanitem (void* key, void* val)
 {
-  EcString s = p;
+  EcString keyobj = key;
+  EcString valobj = val;
   
-  ecstr_delete(&s);
+  ecstr_delete(&keyobj);
+  ecstr_delete(&valobj);
 }
 
 //-----------------------------------------------------------------------------
 
 int ectemplate_sections (EcTemplate self)
 {
-  EcMap sections = ecmap_create (EC_ALLOC);
+  EcMap sections = ecmap_create (NULL, q6template_sections_cleanitem);
   
   EcListCursor cursor;
   
@@ -297,7 +301,7 @@ int ectemplate_sections (EcTemplate self)
     }
   }
   
-  ecmap_destroy (EC_ALLOC, &sections /*, q6template_sections_cleanitem*/);
+  ecmap_destroy (&sections);
   
   return ENTC_ERR_NONE;
 }

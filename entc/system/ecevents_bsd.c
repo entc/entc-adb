@@ -333,7 +333,7 @@ void ece_list_sortout (EcEventQueue self, ece_list_sort_out_fct callback, void* 
         self->fct (&(pdata->ptr));
       }
       
-      eclist_erase (self->ptrs, &cursor);
+      eclist_cursor_erase (self->ptrs, &cursor);
     }
   }
 
@@ -353,7 +353,7 @@ void ece_list_destroy (EcEventQueue* sptr)
     
     cursor.node = self->ecnode;
     
-    eclist_erase (self->eclist, &cursor);
+    eclist_cursor_erase (self->eclist, &cursor);
   }
   
   ecmutex_unlock (self->ecmutex);
@@ -401,7 +401,7 @@ void* ece_list_data_get (EcEventQueue self, EcHandle handle, int remove)
       {
         void* ptr = pdata->ptr;
         
-        eclist_erase (self->ptrs, &cursor);
+        eclist_cursor_erase (self->ptrs, &cursor);
         
         ENTC_DEL (&pdata, EcEventData);
         

@@ -111,9 +111,9 @@ __LIBEX int eclist_cursor_next (EcListCursor*);
 
 __LIBEX int eclist_cursor_prev (EcListCursor*);
 
-__LIBEX void eclist_erase (EcList, EcListCursor*);
+__LIBEX void eclist_cursor_erase (EcList, EcListCursor*);
 
-__LIBEX void* eclist_extract (EcList, EcListCursor*);
+__LIBEX void* eclist_cursor_extract (EcList, EcListCursor*);
 
 __LIBEX void eclist_insert_slice (EcList, EcListCursor*, EcList* pslice);
 

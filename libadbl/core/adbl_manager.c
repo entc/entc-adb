@@ -177,17 +177,17 @@ void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char*
       ADBLModuleProperties* pp;
       EcMapNode node;
       
-      node = ecmap_find(self->modules, dbtype);
-      if (node == ecmap_end(self->modules))
+      node = ecmap_find(self->modules, (void*)dbtype);
+      if (node == NULL)
       {
         eclogger_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
         return;
       }
       
-      pp = ecmap_data (node);
+      pp = ecmap_node_value (node);
       
-      node = ecmap_find(self->credentials, name);      
-      if( node == ecmap_end(self->credentials) )
+      node = ecmap_find(self->credentials, (void*)name);
+      if (node == NULL)
       { 
         int isfile = FALSE;
         EcString fileprefix = NULL;
@@ -196,7 +196,7 @@ void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char*
         AdblCredentials* pc = adbl_credentials_new (dbtype);
         pc->pp = pp;
         //add to map
-        ecmap_append(self->credentials, name, pc);        
+        ecmap_insert (self->credentials, ecstr_copy(name), pc);
         //parse the other stuff
         ENTC_XMLSTREAM_BEGIN
 
@@ -302,14 +302,66 @@ void adbl_parseConfig (AdblManager self, const char* confpath, int preread)
 
 /*------------------------------------------------------------------------*/
 
+static void __STDCALL adbl_modules_onDestroy (void* key, void* val)
+{
+  {
+    EcString h = key; ecstr_delete (&h);
+  }
+  {
+    ADBLModuleProperties* properties = val;
+    
+    ecdl_delete(&(properties->handle));
+    
+    ENTC_DEL (&properties, ADBLModuleProperties);
+  }
+}
+
+/*------------------------------------------------------------------------*/
+
+static void __STDCALL adbl_credentials_onDestroy (void* key, void* val)
+{
+  {
+    EcString h = key; ecstr_delete (&h);
+  }
+  {
+    AdblCredentials* pc = val;
+    
+    /* disconnect from database */
+    if (isAssigned (pc->connection) && isAssigned(pc->pp))
+    {
+      if (isAssigned(pc->pp->dbdisconnect))
+      {
+        pc->pp->dbdisconnect (pc->connection);
+      }
+      else
+      {
+        eclogger_msg (LL_WARN, MODULE, "delete", "disconnect method in matrix is not defined");
+      }
+    }
+    /* clean */
+    pc->properties.port = 0;
+    ecstr_delete( &(pc->properties.host) );
+    ecstr_delete( &(pc->properties.file) );
+    ecstr_delete( &(pc->properties.schema) );
+    ecstr_delete( &(pc->properties.username) );
+    ecstr_delete( &(pc->properties.password) );
+    
+    ecstr_delete( &(pc->type) );
+    
+    ENTC_DEL (&pc, AdblCredentials);
+  }
+}
+
+/*------------------------------------------------------------------------*/
+
 AdblManager adbl_new ()
 {
   AdblManager self = ENTC_NEW(struct AdblManager_s);
     
   self->mutex = ecmutex_new ();
   self->observer = 0;
-  self->modules = ecmap_create (EC_ALLOC);
-  self->credentials = ecmap_create (EC_ALLOC);
+  self->modules = ecmap_create (NULL, adbl_modules_onDestroy);
+  self->credentials = ecmap_create (NULL, adbl_credentials_onDestroy);
   self->path = ecstr_init();
   
   return self;
@@ -320,56 +372,18 @@ AdblManager adbl_new ()
 void adbl_delete (AdblManager* ptr)
 {
   AdblManager self = *ptr;
-  /* variable declaration */
-  EcMapNode node;
   
   ecmutex_delete(&(self->mutex));
 
-  /* delete the observer and close the config file */
+  // delete the observer and close the config file
   if( self->observer )
   {
     ecf_observer_delete( self->observer );
     self->observer = 0;    
   }
   
-  for(node = ecmap_first(self->credentials); node != ecmap_end(self->credentials); node = ecmap_next(node))
-  {
-    AdblCredentials* pc = ecmap_data(node);
-    /* disconnect from database */
-    if (isAssigned (pc->connection) && isAssigned(pc->pp))
-    {
-      if (isAssigned(pc->pp->dbdisconnect))
-      {
-        pc->pp->dbdisconnect (pc->connection);
-      }
-      else
-      {
-        eclogger_msg (LL_WARN, MODULE, "delete", "disconnect method in matrix is not defined"); 
-      }
-    }
-    /* clean */
-    pc->properties.port = 0;
-    ecstr_delete( &(pc->properties.host) );        
-    ecstr_delete( &(pc->properties.file) );
-    ecstr_delete( &(pc->properties.schema) );
-    ecstr_delete( &(pc->properties.username) );
-    ecstr_delete( &(pc->properties.password) );
-    
-    ecstr_delete( &(pc->type) );
-    
-    ENTC_DEL (&pc, AdblCredentials);
-  }  
-  ecmap_destroy (EC_ALLOC, &(self->credentials));
-
-  for(node = ecmap_first(self->modules); node != ecmap_end(self->modules); node = ecmap_next(node))
-  {
-    ADBLModuleProperties* properties = ecmap_data(node);
-    
-    ecdl_delete(&(properties->handle));
-    
-    ENTC_DEL (&properties, ADBLModuleProperties);
-  }
-  ecmap_destroy (EC_ALLOC, &(self->modules));
+  ecmap_destroy (&(self->credentials));
+  ecmap_destroy (&(self->modules));
   
   ecstr_delete(&(self->path));
 
@@ -387,8 +401,8 @@ void adbl_setCredentialsFile (AdblManager self, const EcString name, const EcStr
 
   ecmutex_lock(self->mutex);
   
-  node = ecmap_find(self->modules, dbtype);
-  if (node == ecmap_end(self->modules))
+  node = ecmap_find (self->modules, (void*)dbtype);
+  if (node == NULL)
   {
     eclogger_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
 
@@ -396,18 +410,18 @@ void adbl_setCredentialsFile (AdblManager self, const EcString name, const EcStr
     return;
   }
   
-  pp = ecmap_data (node);
+  pp = ecmap_node_value (node);
   
-  node = ecmap_find(self->credentials, name);      
-  if( node == ecmap_end(self->credentials) )
+  node = ecmap_find (self->credentials, (void*)name);
+  if (node == NULL)
   { 
     pc = adbl_credentials_new (dbtype);  
     //add to map
-    ecmap_append(self->credentials, name, pc);    
+    ecmap_insert (self->credentials, ecstr_copy(name), pc);
   }
   else
   {
-    pc = ecmap_data(node);
+    pc = ecmap_node_value (node);
     ecstr_replace(&(pc->type), dbtype);
   }
   
@@ -447,8 +461,8 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   EcMapNode node;
   ADBLModuleProperties* properties;
 
-  node = ecmap_find (self->modules, name);      
-  if (node != ecmap_end(self->modules))
+  node = ecmap_find (self->modules, (void*)name);
+  if (node)
   {
     ecdl_delete(&handle);
     // already exists
@@ -483,7 +497,7 @@ void adbl_addPlugin (AdblManager self, EcLibraryHandle handle, const char* name)
   properties->dbtable            = (adbl_dbtable_t)            ecdl_method (handle, "dbtable");
   
   //add to map
-  ecmap_append (self->modules, name, properties);  
+  ecmap_insert (self->modules, ecstr_copy(name), properties);
   
   eclogger_fmt (LL_DEBUG, MODULE, "init", "adbl plugin %s successful loaded", name );    
 }
@@ -641,17 +655,17 @@ void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath
       ADBLModuleProperties* pp;
       EcMapNode node;
       
-      node = ecmap_find(self->modules, dbtype);
-      if (node == ecmap_end (self->modules))
+      node = ecmap_find (self->modules, (void*)dbtype);
+      if (node == NULL)
       {
         eclogger_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
         return;
       }
       
-      pp = ecmap_data (node);
+      pp = ecmap_node_value (node);
       
-      node = ecmap_find(self->credentials, dbname);
-      if( node != ecmap_end (self->credentials) )
+      node = ecmap_find (self->credentials, (void*)dbname);
+      if (node)
       {
         eclogger_fmt (LL_WARN, MODULE, "credentials", "parsing the config file: db-source already exists [%s] in current register", dbname );
         continue;
@@ -664,7 +678,7 @@ void adbl_scanJsonParse (AdblManager self, EcUdc data, const EcString configpath
         AdblCredentials* pc = adbl_credentials_new (dbtype);
         pc->pp = pp;
         //add to map
-        ecmap_append(self->credentials, dbname, pc);
+        ecmap_insert (self->credentials, ecstr_copy(dbname), pc);
         //parse the other stuff
         
         eclogger_fmt (LL_TRACE, MODULE, "scan", "added '%s'", dbname);
@@ -764,8 +778,8 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
     return 0;  
   }
   
-  node = ecmap_find(self->credentials, dbsource);
-  if( node == ecmap_end(self->credentials) )
+  node = ecmap_find (self->credentials, (void*)dbsource);
+  if (node == NULL)
   {
     /* not found */
     eclogger_fmt (LL_WARN, MODULE, "session", "can't find db-source [%s] in current register", dbsource);        
@@ -774,7 +788,7 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
 
   ecmutex_lock(self->mutex);
   
-  pc = ecmap_data(node);
+  pc = ecmap_node_value (node);
       
   if (isNotAssigned(pc->connection))
   {
