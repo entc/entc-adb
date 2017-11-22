@@ -120,10 +120,12 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
 {
   EcUdc data;
   
-  const char* tests [5] =
+  const char* tests [7] =
   
   {
-     "{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}"
+     "{}"
+    ,"[]"
+    ,"{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}"
     ,"{\"_ctype\":1,\"_rinfo\":{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}},\"_cpath\":[\"view_processes_allval\"]}"
     ,"{\"userid\":\"undefined\",\"x\":1,\"y\":0}"
     ,"{\"userid\":\"undefined\",\"x\":-1,\"y\":-2}"
@@ -131,7 +133,7 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
   };
   
   int i;
-  for (i = 0; i < 5; i++)
+  for (i = 0; i < 7; i++)
   {
     EcString text;
 

@@ -566,7 +566,7 @@ EcUdc ecjson_readFromBuffer (const EcBuffer buf, const EcString name)
   {
     eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
 
-    eclogger_msg (LL_WARN, "JSON", "%s", (const char*)buf->buffer);
+    eclogger_msg (LL_WARN, "JSON", "reader", (const char*)buf->buffer);
   }
   else
   {
@@ -604,7 +604,7 @@ EcUdc ecjson_read (const EcString source, const EcString name)
     {
       eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
       
-      eclogger_msg (LL_WARN, "JSON", "%s", source);
+      eclogger_msg (LL_WARN, "JSON", "reader", source);
     }
     else
     {

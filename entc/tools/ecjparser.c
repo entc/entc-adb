@@ -595,6 +595,17 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             
             break;
           }
+          case JPARSER_STATE_KEY_BEG:
+          {
+            ecjsonparser_pop (self);
+            
+            if (self->keyElement)
+            {
+              state = JPARSER_STATE_VAL_BEG;
+            }
+            
+            break;
+          }
           case JPARSER_STATE_VAL_BEG:
           {
             state = ecjsonparser_item (self, ENTC_JPARSER_UNDEFINED);
