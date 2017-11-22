@@ -553,6 +553,40 @@ static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
 
 //-----------------------------------------------------------------------------------------------------------
 
+EcUdc ecjson_readFromBuffer (const EcBuffer buf, const EcString name)
+{
+  EcUdc ret = NULL;
+  int res;
+
+  EcErr err = ecerr_create();
+  EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
+  
+  res = ecjsonparser_parse (jparser, (const char*)buf->buffer, buf->size, err);
+  if (res)
+  {
+    eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
+
+  }
+  else
+  {
+    ret = ecjsonparser_lastObject (jparser);
+  }
+  
+  if (ret)
+  {
+    // set name
+    ecudc_setName (ret, name);
+  }
+  
+  // clean up
+  ecjsonparser_destroy (&jparser);
+  ecerr_destroy(&err);
+  
+  return ret;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
   EcUdc ret = NULL;

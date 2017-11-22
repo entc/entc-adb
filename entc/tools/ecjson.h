@@ -30,6 +30,8 @@
 
 __LIBEX EcUdc ecjson_read (const EcString, const EcString name);
 
+__LIBEX EcUdc ecjson_readFromBuffer (const EcBuffer, const EcString name);
+
 __LIBEX EcString ecjson_write (const EcUdc);
 
 __LIBEX int ecjson_readFromFile (const EcString filename, EcUdc*);
