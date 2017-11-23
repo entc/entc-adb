@@ -19,6 +19,8 @@
 
 #include "ecmap.h"
 
+#include <string.h>
+
 // TODO: this object must be review in respect of using a real hashtable
 
 //----------------------------------------------------------------------------------------
