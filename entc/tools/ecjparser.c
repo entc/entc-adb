@@ -544,6 +544,12 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             state = JPARSER_STATE_KEY_BEG;
             break;
           }
+          case JPARSER_STATE_STR_RUN:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
+            
+            break;
+          }
           default:
           {
             return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '{'");
@@ -570,6 +576,12 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             ecstream_clear (self->valElement->stream);
             
             ecjsonparser_push (self, ENTC_JPARSER_OBJECT_LIST, JPARSER_STATE_LIST_RUN);
+            break;
+          }
+          case JPARSER_STATE_STR_RUN:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
+            
             break;
           }
           default:
@@ -645,6 +657,12 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             
             break;
           }
+          case JPARSER_STATE_STR_RUN:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
+            
+            break;
+          }
           default:
           {
             return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '}'");
@@ -703,6 +721,12 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             {
               state = JPARSER_STATE_VAL_BEG;
             }
+            
+            break;
+          }
+          case JPARSER_STATE_STR_RUN:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
             
             break;
           }
@@ -784,6 +808,12 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             
             break;
           }
+          case JPARSER_STATE_STR_RUN:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
+            
+            break;
+          }
           default:
           {
             return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in ','");
@@ -799,6 +829,12 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
           {
             state = JPARSER_STATE_VAL_BEG;
             ecstream_clear (self->valElement->stream);
+            
+            break;
+          }
+          case JPARSER_STATE_STR_RUN:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
             
             break;
           }
