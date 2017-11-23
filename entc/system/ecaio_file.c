@@ -445,6 +445,17 @@ int ecaio_filereader_assign (EcAioFileReader* pself, EcAio aio, EcErr err)
   // override callbacks
   ecaio_context_setCallbacks (ctx, self, ecaio_filereader_fct_process, ecaio_filereader_fct_destroy);
   
+  
+  if (self->onInit)
+  {
+    res = self->onInit (self->ptr, err);
+    if (res)
+    {
+      ecaio_context_destroy(&ctx);
+    }
+  }
+  
+   
   res = ecaio_append (aio, (void*)self->handle, ctx, err);
   if (res)
   {
@@ -462,6 +473,7 @@ int ecaio_filereader_assign (EcAioFileReader* pself, EcAio aio, EcErr err)
     }
   }
   
+  /*
   if (self->onInit)
   {
     res = self->onInit (self->ptr, err);
@@ -470,6 +482,7 @@ int ecaio_filereader_assign (EcAioFileReader* pself, EcAio aio, EcErr err)
       ecaio_context_destroy(&ctx);
     }
   }
+   */
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "freader", "active");
   

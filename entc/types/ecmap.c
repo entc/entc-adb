@@ -19,6 +19,8 @@
 
 #include "ecmap.h"
 
+#include "utils/eclogger.h"
+
 // TODO: this object must be review in respect of using a real hashtable
 
 //----------------------------------------------------------------------------------------
@@ -229,8 +231,7 @@ EcMap ecmap_clone (EcMap orig, fct_ecmap_onClone onCloneKey, fct_ecmap_onClone o
   EcMap self = ecmap_create (orig->onCompare, orig->onDestroy);
   
   EcListCursor cursor;
-  
-  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  eclist_cursor_init (orig->list, &cursor, LIST_DIR_NEXT);
   
   while (eclist_cursor_next (&cursor))
   {
@@ -248,7 +249,7 @@ EcMap ecmap_clone (EcMap orig, fct_ecmap_onClone onCloneKey, fct_ecmap_onClone o
     {
       val = onCloneVal (h->val);
     }
-
+    
     ecmap_insert (self, key, val);
   }
   
