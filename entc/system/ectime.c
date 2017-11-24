@@ -207,14 +207,22 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
 void ectime_toPaddedTimestamp (time_t* t, char* buffer, ulong_t size)
 {
   EcString h;
+
+#ifdef _WIN32
+
+  _snprintf_s(buffer, size, 1, "%li", *t); 
+
+#else
   struct tm timeinfo;
   
   // fill the timeinfo
   ectime_toTimeInfo (&timeinfo, t);
-  
+
   // create buffer with timeinfo as string
   strftime (buffer, size, "%s", &timeinfo);
-  
+
+#endif
+
   h = ecstr_lpad (buffer, '0', size);
   
   memcpy (buffer, h, size);
