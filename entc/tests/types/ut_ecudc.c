@@ -26,7 +26,10 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
 {
   const char* t1 = "{\"userid\":5,\"wpid\":3,\"token\":\"5643-1243-8421-7632-8799E18FCC23\",\"name\":\"alex\",\"roles\":{\"master_all\":\"role\",\"files_upload\":\"role\"}}";
 
-  EcUdc udc01 = ecjson_read(t1, "t1");
+  EcUdc udc01; 
+  EcUdc udc02;
+
+  udc01 = ecjson_read(t1, "t1");
 
   // print
   {
@@ -37,11 +40,11 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
     ecstr_delete(&h);
   }
 
-  EcUdc udc02 = ecudc_clone(EC_ALLOC, udc01);
+  udc02 = ecudc_clone(EC_ALLOC, udc01);
   
   // print
   {
-    EcString h = ecjson_write(udc01);
+    EcString h = ecjson_write(udc02);
     
     printf("C1: %s\n", h);
     
