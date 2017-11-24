@@ -19,6 +19,9 @@
 
 #include "ecbuffer.h"
 #include "ecstream.h"
+#include "ecerr.h"
+
+#include "utils/eclogger.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -780,11 +783,23 @@ EcBuffer ecbuf_sha_256 (EcBuffer b1)
   
   if (!CryptAcquireContext (&provHandle, NULL, NULL, PROV_RSA_AES, 0))
   {
-    EcErr err = ecerr_create();
+    DWORD errCode = GetLastError ();
 
-    ecerr_set
+    if (errCode == NTE_BAD_KEYSET)
+	{
+      if (!CryptAcquireContext (&provHandle, NULL, NULL, PROV_RSA_AES, CRYPT_NEWKEYSET))
+      {
+		EcErr err = ecerr_create();
 
-    return NULL;
+		ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+
+		eclogger_fmt (LL_ERROR, "ENTC", "sha256", "can't create sha256 '%s'", err->text);
+
+		ecerr_destroy (&err);
+
+		return NULL;
+	  }
+	}
   }
   
   if (!CryptCreateHash (provHandle, CALG_SHA_256, 0, 0, &hashHandle))
