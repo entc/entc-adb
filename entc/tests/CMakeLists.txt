@@ -44,6 +44,10 @@ ADD_EXECUTABLE( ut_ecstring types/ut_ecstring.c )
 TARGET_LINK_LIBRARIES( ut_ecstring entc )
 add_test(ut_ecstring tests/Debug/ut_ecstring)
 
+ADD_EXECUTABLE( ut_ecbuffer types/ut_ecbuffer.c )
+TARGET_LINK_LIBRARIES( ut_ecbuffer entc )
+add_test(ut_ecbuffer tests/Debug/ut_ecbuffer)
+
 ADD_EXECUTABLE( ut_ecudc types/ut_ecudc.c )
 TARGET_LINK_LIBRARIES( ut_ecudc entc )
 add_test(ut_ecudc tests/Debug/ut_ecudc)

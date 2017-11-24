@@ -132,6 +132,13 @@ EcBuffer ecbuf_create_fromBuffer (const unsigned char* src, uint_t size)
 
 //----------------------------------------------------------------------------------------
 
+EcBuffer ecbuf_create_fromStr (const EcString src)
+{
+  return ecbuf_create_fromBuffer ((const unsigned char*)src, ecstr_len(src));
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecbuf_destroy (EcBuffer* pself)
 {
   EcBuffer self = *pself;
