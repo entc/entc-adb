@@ -59,13 +59,16 @@ __LIB_EXPORT void ectime_toTimeInfo (struct tm*, const time_t*);
 
 __LIB_EXPORT void ectime_toGmtString (const time_t*, char* buffer, ulong_t size);
 
-__LIB_EXPORT void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size);
-
+// %Y%m%dT%H%M%SZ
 __LIB_EXPORT void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size);
 
 __LIB_EXPORT void ectime_toAlphaNum (const time_t* t, char* buffer, ulong_t size);
 
+// YYYY-MM-DD HH:NN:SS
 __LIB_EXPORT void ectime_toString (const time_t* t, char* buffer, ulong_t size);
+
+// YYYY_MM_DD__HH_NN_SS__
+__LIB_EXPORT void ectime_toPrefix (const time_t* t, char* buffer, ulong_t size);
 
 __LIB_EXPORT void ectime_parseISO8601 (time_t* t, const char* stime);
 

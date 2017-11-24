@@ -1284,15 +1284,7 @@ int64_t ecudc_get_asNumber (const EcUdc self, const EcString name, int64_t alt)
   const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
-    int64_t ret = ecudc_asNumber (res);
-    if (ret == 0)
-    {
-      return alt;
-    }
-    else
-    {
-      return ret;
-    }
+    return ecudc_asNumber (res);
   }
   else
   {
@@ -1307,15 +1299,7 @@ double ecudc_get_asDouble (const EcUdc self, const EcString name, double alt)
   const EcUdc res = ecudc_node (self, name);
   if (isAssigned (res))
   {
-    double ret = ecudc_asDouble (res);
-    if (ret == 0)
-    {
-      return alt;
-    }
-    else
-    {
-      return ret;
-    }
+    return ecudc_asDouble (res);
   }
   else
   {

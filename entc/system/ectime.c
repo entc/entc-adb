@@ -159,6 +159,19 @@ void ectime_toString (const time_t* t, char* buffer, ulong_t size)
 
 //-----------------------------------------------------------------------------------
 
+void ectime_toPrefix (const time_t* t, char* buffer, ulong_t size)
+{
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_toTimeInfo (&timeinfo, t);
+  
+  // create buffer with timeinfo as string
+  strftime (buffer, size, "%Y_%m_%d__%H_%M_%S__", &timeinfo);
+}
+
+//-----------------------------------------------------------------------------------
+
 void ectime_toAlphaNum (const time_t* t, char* buffer, ulong_t size)
 {
   struct tm timeinfo;
