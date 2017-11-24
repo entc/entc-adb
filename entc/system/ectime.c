@@ -223,7 +223,7 @@ void ectime_toPaddedTimestamp (time_t* t, char* buffer, ulong_t size)
 
 #ifdef _WIN32
 
-  _snprintf_s(buffer, size, 1, "%li", *t); 
+  _snprintf_s(buffer, size, size, "%li", *t); 
 
 #else
   struct tm timeinfo;

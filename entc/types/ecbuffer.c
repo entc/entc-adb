@@ -773,6 +773,10 @@ EcBuffer ecbuf_sha_256 (EcBuffer b1)
   
   if (!CryptAcquireContext (&provHandle, NULL, NULL, PROV_RSA_AES, 0))
   {
+    EcErr err = ecerr_create();
+
+    ecerr_set
+
     return NULL;
   }
   
