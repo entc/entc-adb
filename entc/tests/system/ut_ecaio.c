@@ -136,7 +136,7 @@ static int __STDCALL test_ecaio_test3_thread (void* ptr)
   
   printf ("worker thread wait\n");
   
-  ecaio_wait_abortOnSignal (ptr, err);
+  ecaio_wait_abortOnSignal (ptr, TRUE, err);
   
   printf ("worker thread done\n");
   
@@ -178,6 +178,12 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
 
 #else
 
+    // this should not trigger
+    kill(getpid(), SIGINT);
+ 
+    ece_sleep (1000);
+ 
+    // this will abort
     kill(getpid(), SIGTERM);
 
 #endif

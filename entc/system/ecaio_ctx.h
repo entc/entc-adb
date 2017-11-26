@@ -30,6 +30,7 @@
 #define ENTC_AIO_CODE_CONTINUE      10
 #define ENTC_AIO_CODE_DONE          11
 #define ENTC_AIO_CODE_ABORTALL      12
+#define ENTC_AIO_CODE_ONCE          13
 
 //=============================================================================
 

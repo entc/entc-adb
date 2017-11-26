@@ -591,7 +591,7 @@ static void ecaio_empty_signalhandler (int signum)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_abortOnSignal (EcAio self, EcErr err)
+int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
   EcAioContext ctx;
@@ -797,6 +797,32 @@ int ecaio_appendVNode (EcAio self, int fd, void* data, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_appendPNode (EcAio self, int pid, void* data, EcErr err)
+{
+  int res;
+  
+  struct kevent kev;
+  memset (&kev, 0x0, sizeof(struct kevent));
+  
+  if (data == NULL)
+  {
+    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    
+    return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
+  }
+  
+  EV_SET (&kev, pid, EVFILT_PROC, EV_ADD | EV_ENABLE | EV_ONESHOT, NOTE_EXIT, 0, data);
+  res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
+  if (res < 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
   int res;
@@ -855,6 +881,11 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
         // abort
         return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "user abborted");
       }
+      else if (cont == ENTC_AIO_CODE_ONCE)
+      {
+        // we don't need to remove the event
+        // event was setup as once
+      }
       else
       {
         if (event.ident != -1)
@@ -863,7 +894,13 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
           struct kevent kev;
           EV_SET (&kev, event.ident, EVFILT_READ | EVFILT_WRITE, EV_DISPATCH, 0, 0, NULL);
           
-          kevent (self->kq, &kev, 1, NULL, 0, NULL);
+          res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
+          if (res < 0)
+          {
+            ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+            
+            eclogger_fmt (LL_WARN, "Q6_AIO", "remove", "error in removing event [%i] -> %s", event.ident, err->text);
+          }
         }
       }
     }
@@ -920,10 +957,11 @@ static void ecaio_dummy_signalhandler (int signum)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_abortOnSignal (EcAio self, EcErr err)
+int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
   
+  if (onlyTerm == FALSE)
   {
     struct kevent kev;
     memset (&kev, 0x0, sizeof(struct kevent));

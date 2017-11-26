@@ -58,9 +58,11 @@ __LIBEX EcMapNode ecmap_insert (EcMap, void* key, void* data);
 
 __LIBEX EcMapNode ecmap_find (EcMap, void* key);
 
-__LIBEX void ecmap_erase (EcMap, EcMapNode);
+__LIBEX void ecmap_erase (EcMap, EcMapNode);          // removes the node, calls the onDestroy callback and releases the node
 
-__LIBEX EcMapNode ecmap_extract (EcMap, EcMapNode);
+__LIBEX EcMapNode ecmap_extract (EcMap, EcMapNode);   // extracts the node from the container and returns it
+
+__LIBEX void ecmap_destroy_node (EcMap, EcMapNode*);  // calls the onDestroy callback and releases the node
 
 __LIBEX unsigned long ecmap_size (EcMap);
 

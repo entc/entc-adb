@@ -46,11 +46,16 @@ __LIBEX int ecaio_addQueueEvent (EcAio, void* ptr, fct_ecaio_context_process, fc
 
 __LIBEX int ecaio_wait (EcAio, unsigned long timeout, EcErr);
 
-__LIBEX int ecaio_wait_abortOnSignal (EcAio, EcErr);
+__LIBEX int ecaio_wait_abortOnSignal (EcAio, int onlyTerm, EcErr);
+
+__LIBEX int ecaio_addContextToEvent (EcAio, EcAioContext ctx, EcErr err);
+
+//-----------------------------------------------------------------------------
+// special events
 
 __LIBEX int ecaio_appendVNode (EcAio, int fd, void* data, EcErr err);
 
-__LIBEX int ecaio_addContextToEvent (EcAio, EcAioContext ctx, EcErr err);
+__LIBEX int ecaio_appendPNode (EcAio, int pid, void* data, EcErr err);
 
 //-----------------------------------------------------------------------------
 
