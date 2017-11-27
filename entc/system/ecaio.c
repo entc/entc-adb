@@ -897,10 +897,9 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
           res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
           if (res < 0)
           {
-            ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-            
-            eclogger_fmt (LL_WARN, "Q6_AIO", "remove", "error in removing event [%i] -> %s", event.ident, err->text);
+            eclogger_fmt (LL_WARN, "Q6_AIO", "remove", "error in removing event [%i]", event.ident);
           }
+          
         }
       }
     }
