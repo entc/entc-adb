@@ -129,6 +129,8 @@ SET (CORE_SOURCES_SYS
   system/ecaio_sendf.c
   system/ecaio_proc.h
   system/ecaio_proc.c
+  system/ecaio_event.h
+  system/ecaio_event.c
 )
 
 SET (CORE_SOURCES_TYPES

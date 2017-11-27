@@ -57,6 +57,10 @@ __LIBEX int ecaio_appendVNode (EcAio, int fd, void* data, EcErr err);
 
 __LIBEX int ecaio_appendPNode (EcAio, int pid, void* data, EcErr err);
 
+__LIBEX int ecaio_appendENode (EcAio, EcAioContext ctx, void** eh, EcErr err);
+
+__LIBEX int ecaio_triggerENode (EcAio, void* eh, EcErr err);
+
 //-----------------------------------------------------------------------------
 
 #endif

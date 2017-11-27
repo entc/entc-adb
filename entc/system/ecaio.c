@@ -823,6 +823,74 @@ int ecaio_appendPNode (EcAio self, int pid, void* data, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
+{
+  //int res;
+
+  *eh = ctx;
+  
+  return ENTC_ERR_NONE;
+  
+  /*
+  struct kevent kev;
+  memset (&kev, 0x0, sizeof(struct kevent));
+  
+  if (ctx == NULL)
+  {
+    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    
+    return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
+  }
+
+  static int identifier = 0;
+  
+  identifier--;
+  *eh = identifier;
+  
+  EV_SET(&kev, identifier, EVFILT_USER, EV_ADD | EV_ONESHOT, 0, 0, ctx);
+  res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
+  if (res < 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+   */
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
+{
+  //int res;
+  
+  /*
+  struct kevent kev;
+  memset (&kev, 0x0, sizeof(struct kevent));
+
+  eclogger_fmt (LL_TRACE, "Q6_AIO", "event", "trigger event [%i]", eh);
+  
+  EV_SET (&kev, eh, EVFILT_USER, EV_ENABLE, NOTE_TRIGGER, 0, NULL);
+  res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
+  if (res < 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+   */
+  ecaio_context_process (eh, 0, 0);
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+void ecaio_abort_all (EcAio self)
+{
+  
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
   int res;
@@ -878,6 +946,9 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       }
       else if (cont == ENTC_AIO_CODE_ABORTALL)
       {
+        // terminate and clear everything
+        ecaio_abort_all (self);
+        
         // abort
         return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "user abborted");
       }
@@ -925,23 +996,13 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       if (signalKind)
       {
         eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", event.ident, signalKind);
+ 
+        return ecaio_abort (self, err);
       }
       else
       {
         eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> unknown signal", event.ident);
       }
-      
-      return ecaio_abort (self, err);
-      
-      /*
-      if (event.ident == SIGINT || event.ident == SIGTERM)
-      {
-        return ENTC_ERR_NONE_CONTINUE;
-      }
-      
-      // abort
-      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "wait abborted (signal?)");
-       */
     }
     
     return ENTC_ERR_NONE;

@@ -12,22 +12,140 @@
 struct EcAioProc_s
 {
   
+  void* ptr;
   
+  fct_ecaio_context_destroy onDestroy;
+  
+  fct_ecaio_context_onNotify onNotify;
+  
+  HANDLE handle;
+  
+  EcThread thread;
+  
+  EcAio aio;
+  
+  void* eventh;
   
 };
 
 //-----------------------------------------------------------------------------
 
-EcAioProc ecaio_proc_create (int pid)
+static int __STDCALL ecaio_proc_thread (void* ptr)
 {
+  EcAioProc self = ptr;
+  int res;
   
+  // wait here until something happens
+  DWORD res = WaitForSingleObjects (self->handle, FALSE, INFINITE);
+  switch (res)
+  {
+    case WAIT_ABANDONED:
+    {
+      return ENTC_ERR_NONE_CONTINUE;  // try again
+    }
+    case WAIT_TIMEOUT:
+    {
+      return ENTC_ERR_NONE;  // try again
+    }
+    case WAIT_FAILED:
+    {
+      EcErr err = ecerr_create();
+      
+      ecerr_lastErrorOS (err, 0);
+      
+      printf ("ERROR %s", err->text);
+      
+      ecerr_destroy(&err);
+      
+      return ENTC_ERR_NONE_CONTINUE;  // try again
+    }
+    case WAIT_OBJECT_0:
+    {
+      return ENTC_ERR_NONE_CONTINUE;
+    }
+    case WAIT_OBJECT_0 + 1:
+    {
+      return ENTC_ERR_NONE;  // start to rebuild the handles
+    }
+    default:
+    {
+      return q6sys_procbroker_handleProcessTermination (self, (res - WAIT_OBJECT_0) - 2, ctxs);
+    }
+  }
+  
+  {
+    EcErr err = ecerr_create ();
+    
+    ecaio_triggerENode (self->aio, self->eventh, err);
+    
+    ecerr_destroy (&err);
+  }
+  
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+static void __STDCALL ecaio_proc_onDestroy (void* ptr)
+{
+  EcAioProc self = ptr;
+  
+  if (self->onNotify)
+  {
+    self->onNotify (self->ptr, 0);
+  }
+  
+  if (self->onDestroy)
+  {
+    self->onDestroy (self->ptr);
+  }
+  
+  ecthread_join (self->thread);
+  
+  ecthread_delete (&(self->thread));
+  
+  ENTC_DEL(&self, struct EcAioProc_s);
+}
+
+//-----------------------------------------------------------------------------
+
+EcAioProc ecaio_proc_create (uint64_t pid)
+{
+  EcAioProc self = ENTC_NEW(struct EcAioProc_s);
+  
+  self->handle = pid;
+  
+  self->onNotify = NULL;
+  self->onDestroy = NULL;
+  self->ptr = NULL;
+  
+  self->thread = NULL;
+  
+  return self;
 }
 
 //-----------------------------------------------------------------------------
 
 int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
 {
+  int res;
+  EcAioProc self = *pself;
   
+  // register a term event
+  EcAioEvent event = ecaio_event_create();
+  
+  self->aio = aio;
+  
+  ecaio_event_setCallback(event, self, ecaio_proc_onDestroy);
+  
+  res = ecaio_event_assign (&event, aio, &(self->eventh), err);
+  
+  // thread part
+  self->thread = ecthread_new ();
+  ecthread_start(self->thread, ecaio_proc_thread, self);
+  
+  *pself = NULL;
+  return res;
 }
 
 //*****************************************************************************
@@ -137,6 +255,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
 //*****************************************************************************
 
 #include "ecthread.h"
+#include "ecaio_event.h"
 
 //-----------------------------------------------------------------------------
 
@@ -153,6 +272,10 @@ struct EcAioProc_s
   
   EcThread thread;
   
+  EcAio aio;
+  
+  void* eventh;
+  
 };
 
 //-----------------------------------------------------------------------------
@@ -163,10 +286,27 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   int res;
   
   waitpid(self->pid, &res, 0);
+
+  {
+    EcErr err = ecerr_create ();
+    
+    ecaio_triggerENode (self->aio, self->eventh, err);
+    
+    ecerr_destroy (&err);
+  }
+
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+static void __STDCALL ecaio_proc_onDestroy (void* ptr)
+{
+  EcAioProc self = ptr;
   
   if (self->onNotify)
   {
-    self->onNotify (self->ptr, res);
+    self->onNotify (self->ptr, 0);
   }
   
   if (self->onDestroy)
@@ -174,16 +314,16 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
     self->onDestroy (self->ptr);
   }
   
+  ecthread_join (self->thread);
+  
   ecthread_delete (&(self->thread));
   
   ENTC_DEL(&self, struct EcAioProc_s);
-  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
 
-EcAioProc ecaio_proc_create (int pid)
+EcAioProc ecaio_proc_create (uint64_t pid)
 {
   EcAioProc self = ENTC_NEW(struct EcAioProc_s);
   
@@ -202,15 +342,24 @@ EcAioProc ecaio_proc_create (int pid)
 
 int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
 {
+  int res;
   EcAioProc self = *pself;
   
-  self->thread = ecthread_new ();
+  // register a term event
+  EcAioEvent event = ecaio_event_create();
   
+  self->aio = aio;
+  
+  ecaio_event_setCallback(event, self, ecaio_proc_onDestroy);
+  
+  res = ecaio_event_assign (&event, aio, &(self->eventh), err);
+  
+  // thread part
+  self->thread = ecthread_new ();
   ecthread_start(self->thread, ecaio_proc_thread, self);
   
   *pself = NULL;
-  
-  return ENTC_ERR_NONE;
+  return res;
 }
 
 #endif
