@@ -116,6 +116,23 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
 
 //-----------------------------------------------------------------------------
 
+int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
+{
+  *eh = ctx;
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
+{
+  ecaio_context_process (eh, 0, 0);
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
   DWORD numOfBytes;
@@ -203,7 +220,7 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_abortOnSignal (EcAio self, EcErr err)
+int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
   g_aio = self;
