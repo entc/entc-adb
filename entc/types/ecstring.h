@@ -147,7 +147,11 @@ __LIBEX void ecstr_toLower(EcString);
 
 __LIBEX void ecstr_toUpper(EcString);
 
+#ifdef _WIN32
+
 __LIBEX wchar_t* ecstr_utf8ToWide (const EcString);
+
+#endif
 
 //-----------------------------------------------------------------------------
  
