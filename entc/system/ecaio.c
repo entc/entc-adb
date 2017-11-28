@@ -28,6 +28,7 @@ struct EcAio_s
 //-----------------------------------------------------------------------------
 
 static EcAio g_aio = NULL;
+static int g_termOnly = FALSE;
 
 //-----------------------------------------------------------------------------
 
@@ -165,7 +166,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       DWORD lastError = GetLastError ();
       
       if (ecaio_context_continue (ovl, FALSE, numOfBytes))
-      {
+      {        
         return ecerr_set (err, ENTC_LVL_EXPECTED, ENTC_ERR_PROCESS_ABORT, "wait abborted");
       }
       
@@ -198,23 +199,45 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 {
+  int abort = FALSE;
+
   switch( ctrlType )
   {
     case CTRL_C_EVENT:
+	{
+      abort = (g_termOnly == FALSE);
+
+	  eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+	  break;
+	}
     case CTRL_SHUTDOWN_EVENT:
+	{
+      abort = TRUE;
+
+	  eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "shutdown");
+	  break;
+	}
     case CTRL_CLOSE_EVENT:
     {
+      abort = TRUE;
+
+	  eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "close");
+	  break;
+	}
+  }
+  if (abort)
+  {
+	  int res;
       EcErr err = ecerr_create ();
       
-      int res = ecaio_abort (g_aio, err);
+
+      res = ecaio_abort (g_aio, err);
       
       ecerr_destroy (&err);
       
       Sleep (5000);
-    }
-      break;
   }
-  
+
   return 0;
 }
 
@@ -224,6 +247,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
   g_aio = self;
+  g_termOnly = onlyTerm;
   
   if( !SetConsoleCtrlHandler ((PHANDLER_ROUTINE)ecaio_wait_ctrl_handler, TRUE ))
   {
