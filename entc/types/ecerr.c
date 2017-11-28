@@ -4,6 +4,7 @@
 
 // entc includes
 #include "types/ecstring.h"
+#include "system/macros.h"
 
 //-----------------------------------------------------------------------------
 

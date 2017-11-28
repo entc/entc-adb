@@ -20,8 +20,8 @@
 #ifndef ENTC_TYPES_BUFFER_H
 #define ENTC_TYPES_BUFFER_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "system/macros.h"
+#include "system/types.h"
 
 #include "ecstring.h"
 
@@ -85,7 +85,7 @@ __LIB_EXPORT EcBuffer ecbuf_bin2hex (EcBuffer);
 
 __LIB_EXPORT const EcString ecbuf_const_str (const EcBuffer);
 
-__LIB_EXPORT EcString ecbuf_str (EcBuffer*);
+__LIB_EXPORT EcString ecbuf_str (EcBuffer*);    // convert to string
 
 __LIB_EXPORT void ecbuf_replace (EcString*, EcBuffer*);
 
