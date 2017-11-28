@@ -6,6 +6,8 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include "ecthread.h"
+#include "ecaio_event.h"
 
 //-----------------------------------------------------------------------------
 
@@ -36,42 +38,7 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   int res;
   
   // wait here until something happens
-  DWORD res = WaitForSingleObjects (self->handle, FALSE, INFINITE);
-  switch (res)
-  {
-    case WAIT_ABANDONED:
-    {
-      return ENTC_ERR_NONE_CONTINUE;  // try again
-    }
-    case WAIT_TIMEOUT:
-    {
-      return ENTC_ERR_NONE;  // try again
-    }
-    case WAIT_FAILED:
-    {
-      EcErr err = ecerr_create();
-      
-      ecerr_lastErrorOS (err, 0);
-      
-      printf ("ERROR %s", err->text);
-      
-      ecerr_destroy(&err);
-      
-      return ENTC_ERR_NONE_CONTINUE;  // try again
-    }
-    case WAIT_OBJECT_0:
-    {
-      return ENTC_ERR_NONE_CONTINUE;
-    }
-    case WAIT_OBJECT_0 + 1:
-    {
-      return ENTC_ERR_NONE;  // start to rebuild the handles
-    }
-    default:
-    {
-      return q6sys_procbroker_handleProcessTermination (self, (res - WAIT_OBJECT_0) - 2, ctxs);
-    }
-  }
+  WaitForSingleObject (self->handle, INFINITE);
   
   {
     EcErr err = ecerr_create ();
