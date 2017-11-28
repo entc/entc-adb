@@ -1142,7 +1142,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   
   adbl_constructAttributesInsert (statement, bv, insert->attrs, self->ansi);
   
-  //eclogger_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_buffer( statement ) );
+  //eclogger_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_get (statement) );
   
   adblmodule_prepared_statement (stmt, bv, statement);
   
