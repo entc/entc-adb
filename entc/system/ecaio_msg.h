@@ -28,11 +28,25 @@
 
 //=============================================================================
 
+struct EcMsgChannel_s; typedef struct EcMsgChannel_s* EcMsgChannel;
+
+//-----------------------------------------------------------------------------
+
+__LIBEX EcMsgChannel ecmsg_channel_create ();
+
+__LIBEX void ecmsg_channel_destroy (EcMsgChannel*);
+
+__LIBEX int ecmsg_channel_init (EcMsgChannel, const EcString name, EcErr err);
+
+__LIBEX void* ecmsg_channel_handle (EcMsgChannel);
+
+//=============================================================================
+
 struct EcAioMsgReader_s; typedef struct EcAioMsgReader_s* EcAioMsgReader;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioMsgReader ecaio_msgreader_create (uint64_t channel);
+__LIBEX EcAioMsgReader ecaio_msgreader_create (void* channelHandle);
 
 __LIBEX int ecaio_msgreader_assign (EcAioMsgReader*, EcAio aio, EcErr err);
 
