@@ -205,9 +205,13 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
   {
     case CTRL_C_EVENT:
 	{
-      abort = (g_termOnly == FALSE);
+      if (g_termOnly == FALSE)
+	  {
+        abort = TRUE;
 
-	  eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+  	    eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+	  }
+
 	  break;
 	}
     case CTRL_SHUTDOWN_EVENT:

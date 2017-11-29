@@ -292,7 +292,7 @@ int ecfs_copy (const EcString source, const EcString dest)
 
 int ecfs_mkdir(const EcString source)
 {
-  return CreateDirectory(source, NULL);
+  return CreateDirectory (source, NULL);
 }
 
 /*------------------------------------------------------------------------*/
@@ -434,8 +434,18 @@ EcString ecfs_getExecutablePath (int argc, char *argv[])
 
 int ecfs_createDirIfNotExists (const EcString path)
 {
-  int res = CreateDirectory (path, NULL);  
-  return res == 0 || res == ERROR_ALREADY_EXISTS;
+  if (CreateDirectory (path, NULL) == 0)
+  {
+    DWORD errCode = GetLastError();
+	if (errCode == ERROR_ALREADY_EXISTS)  // ignore this error
+	{
+      return TRUE;
+	}
+
+	return FALSE;
+  }
+
+  return TRUE; 
 }
 
 //------------------------------------------------------------------------------------------------------------
