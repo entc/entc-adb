@@ -684,6 +684,20 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 static void ecaio_abort_signalhandler (int sig)
 {
+  switch (sig)
+  {
+    case SIGINT:
+    {
+      eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", sig, "SIGINT");
+      break;
+    }
+    case SIGTERM:
+    {
+      eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", sig, "SIGTERM");
+      break;
+    }
+  }
+
   uint64_t u = TRUE;
   write (tfd, &u, sizeof(uint64_t));
 }
