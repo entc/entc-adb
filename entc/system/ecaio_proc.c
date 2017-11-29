@@ -117,7 +117,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
 
 //*****************************************************************************
 
-#elif defined __BSD_KEVENT2
+#elif defined __BSD_KEVENT
 
 //*****************************************************************************
 
@@ -143,7 +143,7 @@ struct EcAioProc_s
 
 //-----------------------------------------------------------------------------
 
-EcAioProc ecaio_proc_create (int pid)
+EcAioProc ecaio_proc_create (uint64_t pid)
 {
   EcAioProc self = ENTC_NEW(struct EcAioProc_s);
   

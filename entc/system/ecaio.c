@@ -459,6 +459,24 @@ int ecaio_appendVNode (EcAio self, int fd, void* data, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
+{
+  *eh = ctx;
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
+{
+  ecaio_context_process (eh, 0, 0);
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
 {
   ecmutex_lock (self->mutex);
@@ -493,7 +511,7 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
+int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcErr err)
 {
   int n;
   struct epoll_event *events;
@@ -506,7 +524,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for event");
   
-  n = epoll_wait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1);
+  n = epoll_pwait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1, sigmask);
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got event %i", n);
   
@@ -516,7 +534,9 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     
     free (events);
     
-    return ecerr_lastErrorOS(err, ENTC_LVL_ERROR);
+    eclogger_fmt (LL_ERROR, "Q6_AIO", "wait", "error on epoll");
+    
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
   if (n > 0)
@@ -622,7 +642,22 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-static void ecaio_dummy_signalhandler (int signum)
+int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
+{
+  sigset_t sigmask;
+  
+  // use an empty set
+  sigemptyset (&sigmask);
+  
+  sigaddset (&sigmask, SIGINT);
+  sigaddset (&sigmask, SIGTERM);
+
+  return ecaio_wait_signal (self, timeout, &sigmask, err);
+}
+
+//-----------------------------------------------------------------------------
+
+static void ecaio_dummy_signalhandler (int sig)
 {
   uint64_t u = TRUE;
   write (tfd, &u, sizeof(uint64_t));
@@ -641,10 +676,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   int res;
   EcAioContext ctx;
   
-  signal(SIGTERM, ecaio_dummy_signalhandler);
-  signal(SIGINT, ecaio_dummy_signalhandler);
-  
-  signal(SIGPIPE, ecaio_empty_signalhandler);
+  struct sigaction act;
   
   // add terminator
   tfd = eventfd (0, 0);
@@ -652,6 +684,41 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   {
     
   }
+  
+  memset (&act, 0, sizeof(act));
+  act.sa_handler = ecaio_dummy_signalhandler;
+  
+  if (sigaction(SIGTERM, &act, 0))
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  if (onlyTerm == FALSE)
+  {
+    if (sigaction(SIGINT, &act, 0))
+    {
+      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    }
+  }
+  
+  sigset_t mask;
+  //sigset_t orig_mask;
+  
+  sigemptyset (&mask);
+  
+  if (onlyTerm == FALSE)
+  {
+    sigaddset (&mask, SIGINT);
+  }
+    
+  sigaddset (&mask, SIGTERM);
+  
+  /*
+  if (sigprocmask (SIG_BLOCK, &mask, &orig_mask) < 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  */
   
   {
     // create a new aio context
@@ -665,7 +732,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)
   {
-    res = ecaio_wait (self, ENTC_INFINITE, err);
+    res = ecaio_wait_signal (self, ENTC_INFINITE, &mask, err);
   }
   
   close (tfd);
