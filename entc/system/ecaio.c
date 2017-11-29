@@ -507,12 +507,10 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
+int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcErr err)
 {
   int n;
   struct epoll_event *events;
-  
-  sigset_t sigmask;
   
   events = calloc (Q6_EPOLL_MAXEVENTS, sizeof(struct epoll_event));
   
@@ -522,7 +520,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for event");
   
-  n = epoll_pwait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1, &sigmask);
+  n = epoll_pwait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1, sigmask);
   
   //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got event %i", n);
   
@@ -533,7 +531,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     free (events);
     
     eclogger_fmt (LL_ERROR, "Q6_AIO", "wait", "error on epoll");
- 
+    
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
@@ -640,6 +638,18 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
+{
+  sigset_t sigmask;
+  
+  // use an empty set
+  sigemptyset (&sigmask);
+  
+  return ecaio_wait_signal (self, timeout, &sigmask, err);
+}
+
+//-----------------------------------------------------------------------------
+
 static void ecaio_dummy_signalhandler (int signum)
 {
   uint64_t u = TRUE;
@@ -650,24 +660,6 @@ static void ecaio_dummy_signalhandler (int signum)
 
 static void ecaio_empty_signalhandler (int signum)
 {
-}
-
-//-----------------------------------------------------------------------------
-
-void ecaio_resetSignals (int onlyTerm)
-{
-  signal(SIGTERM, ecaio_dummy_signalhandler);
-  
-  if (onlyTerm)
-  {
-    signal(SIGINT, ecaio_empty_signalhandler);
-  }
-  else
-  {
-    signal(SIGINT, ecaio_dummy_signalhandler);
-  }
-  
-  signal(SIGPIPE, ecaio_empty_signalhandler);
 }
 
 //-----------------------------------------------------------------------------
@@ -684,7 +676,24 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     
   }
   
-  ecaio_resetSignals (onlyTerm);
+  sigset_t mask;
+  //sigset_t orig_mask;
+  
+  sigemptyset (&mask);
+  
+  if (onlyTerm == FALSE)
+  {
+    sigaddset (&mask, SIGINT);
+  }
+    
+  sigaddset (&mask, SIGTERM);
+  
+  /*
+  if (sigprocmask (SIG_BLOCK, &mask, &orig_mask) < 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  */
   
   {
     // create a new aio context
@@ -698,7 +707,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)
   {
-    res = ecaio_wait (self, ENTC_INFINITE, err);
+    res = ecaio_wait_signal (self, ENTC_INFINITE, &mask, err);
   }
   
   close (tfd);
