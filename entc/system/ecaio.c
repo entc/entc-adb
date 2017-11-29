@@ -558,9 +558,13 @@ int ecaio_handle_event (EcAio self)
       // abort
       return ENTC_ERR_NONE_CONTINUE;
     }
-  }
 
-  return ENTC_ERR_NOT_FOUND;
+    return ENTC_ERR_NONE;
+  }
+  else
+  {
+    return ENTC_ERR_NOT_FOUND;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -621,9 +625,9 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcE
       {
         ecmutex_unlock (self->iom);
 
-	free (events);
+	      free (events);
 
-	ecaio_abort (self, NULL);
+	      ecaio_abort (self, NULL);
 
         // abort
         return ENTC_ERR_NONE_CONTINUE;
