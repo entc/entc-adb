@@ -727,11 +727,7 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* ori
   // define the mask
   sigemptyset (mask);
 
-  if (onlyTerm == FALSE)
-  {
-    sigaddset (mask, SIGINT);
-  }
-
+  sigaddset (mask, SIGINT);
   sigaddset (mask, SIGTERM);
 
   if (sigprocmask(SIG_BLOCK, &mask, &orig_mask) < 0) 
