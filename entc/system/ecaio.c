@@ -455,6 +455,24 @@ int ecaio_appendVNode (EcAio self, int fd, void* data, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
+{
+  *eh = ctx;
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
+{
+  ecaio_context_process (eh, 0, 0);
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
 {
   ecmutex_lock (self->mutex);
@@ -632,15 +650,28 @@ static void ecaio_empty_signalhandler (int signum)
 
 //-----------------------------------------------------------------------------
 
+void ecaio_resetSignals (int onlyTerm)
+{
+  signal(SIGTERM, ecaio_dummy_signalhandler);
+  
+  if (onlyTerm)
+  {
+    signal(SIGINT, ecaio_empty_signalhandler);
+  }
+  else
+  {
+    signal(SIGINT, ecaio_dummy_signalhandler);
+  }
+  
+  signal(SIGPIPE, ecaio_empty_signalhandler);
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
   EcAioContext ctx;
-  
-  signal(SIGTERM, ecaio_dummy_signalhandler);
-  signal(SIGINT, ecaio_dummy_signalhandler);
-  
-  signal(SIGPIPE, ecaio_empty_signalhandler);
   
   // add terminator
   tfd = eventfd (0, 0);
@@ -648,6 +679,8 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   {
     
   }
+  
+  ecaio_resetSignals (onlyTerm);
   
   {
     // create a new aio context
