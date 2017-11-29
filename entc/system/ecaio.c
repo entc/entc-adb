@@ -530,7 +530,9 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     
     free (events);
     
-    return ecerr_lastErrorOS(err, ENTC_LVL_ERROR);
+    eclogger_fmt (LL_ERROR, "Q6_AIO", "wait", "error on epoll");
+ 
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
   if (n > 0)
