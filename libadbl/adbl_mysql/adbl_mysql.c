@@ -136,7 +136,7 @@ void bindvars_addS (AdblMysqlBindVars* self, const EcString val)
     bind->length = 0;
     bind->error = 0; 
     
-    //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);      
+    //eclogger_fmt (LL_TRACE, C_MODDESC, "bind val", "bind [%i] value '%s' as string", self->pos, val);
     
     self->pos++;
   }
@@ -560,7 +560,7 @@ int adblmodule_prepared_statement (MYSQL_STMT* stmt, AdblMysqlBindVars* bv, EcSt
     return FALSE;
   }
   
-  //eclogger_fmt (LL_TRACE, C_MODDESC, "bind params", "bind %i parameters", bv->pos);
+  eclogger_fmt (LL_TRACE, C_MODDESC, "bind params", "bind %i parameters", bv->pos);
 
   // try to bind all constraint values
   if (mysql_stmt_bind_param (stmt, bv->binds) != 0)
@@ -1142,7 +1142,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   
   adbl_constructAttributesInsert (statement, bv, insert->attrs, self->ansi);
   
-  //eclogger_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_get (statement) );
+  eclogger_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_get (statement) );
   
   adblmodule_prepared_statement (stmt, bv, statement);
   
@@ -1161,8 +1161,14 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   ecstream_destroy (&statement);
   
   bindvars_destroy (&bv);
-      
-  return mysql_affected_rows (self->conn);
+  
+  {
+    int affectedRows = mysql_affected_rows (self->conn);
+    
+    //eclogger_fmt (LL_TRACE, C_MODDESC, "insert", "affected rows %i", affectedRows);
+
+    return affectedRows;
+  }
 }
 
 //------------------------------------------------------------------------------------------------------
