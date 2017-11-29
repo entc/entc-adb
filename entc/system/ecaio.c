@@ -645,8 +645,8 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   // use an empty set
   sigemptyset (&sigmask);
   
-  sigaddset (&mask, SIGINT);
-  sigaddset (&mask, SIGTERM);
+  sigaddset (&sigmask, SIGINT);
+  sigaddset (&sigmask, SIGTERM);
 
   return ecaio_wait_signal (self, timeout, &sigmask, err);
 }
