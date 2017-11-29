@@ -558,13 +558,9 @@ int ecaio_handle_event (EcAio self)
       // abort
       return ENTC_ERR_NONE_CONTINUE;
     }
+  }
 
-    return ENTC_ERR_NONE;
-  }
-  else
-  {
-    return ENTC_ERR_NOT_FOUND;
-  }
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
