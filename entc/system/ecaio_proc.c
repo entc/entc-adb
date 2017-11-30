@@ -327,7 +327,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   
   self->aio = aio;
   
-  ecaio_event_setCallback (event, self, ecaio_proc_onDestroy);
+  ecaio_event_setCallback (event, self, ecaio_proc_onNotify, ecaio_proc_onDestroy);
   
   res = ecaio_event_assign (&event, aio, &(self->eventh), err);
   
