@@ -329,8 +329,23 @@ struct EcAio_s
   //int pfd[2];
 
   EcList ctxs;
+  
+  EcList events;
 
+  EcMutex eventsm;
+  
 };
+
+//-----------------------------------------------------------------------------
+
+static int __STDCALL ecaio_events_onDestroy (void* ptr)
+{
+  EcAioContext ctx = ptr;
+  
+  ecaio_context_process (ctx, 0, 0);
+  
+  return 0;
+}
 
 //-----------------------------------------------------------------------------
 
@@ -352,6 +367,9 @@ EcAio ecaio_create ()
   self->mutex = ecmutex_new();
   self->iom = ecmutex_new ();
 
+  self->eventsm = ecmutex_new ();
+  self->events = eclist_create ();
+  
   return self;
 }
 
@@ -471,8 +489,12 @@ int ecaio_appendVNode (EcAio self, int fd, void* data, EcErr err)
 
 int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 {
-  *eh = ctx;
+  ecmutex_lock (self->eventsm);
   
+  *eh = eclist_push_back (self->events, ctx);
+  
+  ecmutex_unlock (self->eventsm);
+
   return ENTC_ERR_NONE;
 }
 
@@ -480,8 +502,14 @@ int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 
 int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 {
-  ecaio_context_process (eh, 0, 0);
+  EcListNode node = eh;
+
+  ecmutex_lock (self->eventsm);
   
+  eclist_erase (self->events, node);
+  
+  ecmutex_unlock (self->eventsm);
+
   return ENTC_ERR_NONE;
 }
 
