@@ -342,7 +342,7 @@ static int __STDCALL ecaio_events_onDestroy (void* ptr)
 {
   EcAioContext ctx = ptr;
   
-  ecaio_context_process (ctx, 0, 0);
+  ecaio_context_destroy (&ctx);
   
   return 0;
 }
@@ -502,14 +502,20 @@ int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 
 int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 {
+  EcAioContext ctx;
   EcListNode node = eh;
 
   ecmutex_lock (self->eventsm);
   
-  eclist_erase (self->events, node);
+  ctx = eclist_extract (self->events, node);
   
   ecmutex_unlock (self->eventsm);
 
+  if (ecaio_context_process (ctx, 0, 0) == ENTC_AIO_CODE_CONTINUE)
+  {
+    ecaio_context_destroy (&ctx);
+  }
+  
   return ENTC_ERR_NONE;
 }
 

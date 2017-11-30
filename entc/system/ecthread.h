@@ -45,6 +45,8 @@ __LIB_EXPORT void ecthread_start(EcThread, ecthread_callback_fct, void* ptr);
 
 __LIB_EXPORT void ecthread_join(EcThread);
 
+__LIB_EXPORT void ecthread_cancel(EcThread);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 struct EcTimedThread_s; typedef struct EcTimedThread_s* EcTimedThread;

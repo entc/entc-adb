@@ -95,6 +95,13 @@ void ecthread_delete(EcThread* pself)
 
 //-----------------------------------------------------------------------------------
 
+void ecthread_cancel (EcThread self)
+{
+  pthread_cancel (self->tid);
+}
+
+//-----------------------------------------------------------------------------------
+
 void ecthread_start(EcThread self, ecthread_callback_fct fct, void* ptr)
 {
   // define some special attributes

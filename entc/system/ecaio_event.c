@@ -7,6 +7,8 @@ struct EcAioEvent_s
   
   fct_ecaio_context_destroy onDestroy;
   
+  fct_ecaio_context_onNotify onNotify;
+  
   void* ptr;
   
 };
@@ -34,6 +36,13 @@ void ecaio_event_destroy (EcAioEvent* pself)
 
 static int __STDCALL ecaio_event_onProcess (void* ptr, EcAioContext ctx, unsigned long flags, unsigned long filter)
 {
+  EcAioEvent self = ptr;
+  
+  if (self->onNotify)
+  {
+    self->onNotify (self->ptr, flags);
+  }
+  
   return ENTC_AIO_CODE_ONCE;
 }
 
@@ -77,9 +86,10 @@ int ecaio_event_assign (EcAioEvent* pself, EcAio aio, void** eventh, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-void ecaio_event_setCallback (EcAioEvent self, void* ptr, fct_ecaio_context_destroy onDestroy)
+void ecaio_event_setCallback (EcAioEvent self, void* ptr, fct_ecaio_context_onNotify onNotify, fct_ecaio_context_destroy onDestroy)
 {
   self->onDestroy = onDestroy;
+  self->onNotify = onNotify;
   self->ptr = ptr;
 }
 

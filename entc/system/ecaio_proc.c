@@ -251,7 +251,7 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   EcAioProc self = ptr;
   int res;
   
-  waitpid(self->pid, &res, 0);
+  waitpid (self->pid, &res, 0);
 
   {
     EcErr err = ecerr_create ();
@@ -266,7 +266,7 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-static void __STDCALL ecaio_proc_onDestroy (void* ptr)
+static int __STDCALL ecaio_proc_onNotify (void* ptr, int action)
 {
   EcAioProc self = ptr;
   
@@ -274,6 +274,17 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   {
     self->onNotify (self->ptr, 0);
   }
+ 
+  return ENTC_AIO_CODE_ONCE;
+}
+
+//-----------------------------------------------------------------------------
+
+static void __STDCALL ecaio_proc_onDestroy (void* ptr)
+{
+  EcAioProc self = ptr;
+  
+  ecthread_cancel (self->thread);
   
   if (self->onDestroy)
   {
@@ -316,7 +327,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   
   self->aio = aio;
   
-  ecaio_event_setCallback(event, self, ecaio_proc_onDestroy);
+  ecaio_event_setCallback (event, self, ecaio_proc_onDestroy);
   
   res = ecaio_event_assign (&event, aio, &(self->eventh), err);
   

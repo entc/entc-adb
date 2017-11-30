@@ -59,6 +59,8 @@ __LIBEX void eclist_replace (EcList, EcListNode, void* data);
 
 __LIBEX void* eclist_data (EcListNode);
 
+__LIBEX void* eclist_extract (EcList, EcListNode);
+
 __LIBEX void eclist_erase (EcList, EcListNode);
 
 __LIBEX EcListNode eclist_next (EcListNode);

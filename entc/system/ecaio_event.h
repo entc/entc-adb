@@ -35,7 +35,7 @@ __LIBEX EcAioEvent ecaio_event_create (void);
 
 __LIBEX int ecaio_event_assign (EcAioEvent*, EcAio aio, void** eventh, EcErr err);
 
-__LIBEX void ecaio_event_setCallback (EcAioEvent, void*, fct_ecaio_context_destroy);
+__LIBEX void ecaio_event_setCallback (EcAioEvent, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
 
 //=============================================================================
 
