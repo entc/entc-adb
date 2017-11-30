@@ -242,7 +242,7 @@ static int __STDCALL test_ecaio_test4 (void* ptr, TestEnvContext ctx, EcErr err)
     {
       thread [i] = ecthread_new();
       
-      ecthread_start (thread [i], test_ecaio_test3_thread, aio);
+      ecthread_start (thread [i], test_ecaio_test4_thread, aio);
     }
     
     ece_sleep (1000);
