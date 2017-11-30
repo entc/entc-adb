@@ -368,7 +368,7 @@ EcAio ecaio_create ()
   self->iom = ecmutex_new ();
 
   self->eventsm = ecmutex_new ();
-  self->events = eclist_create ();
+  self->events = eclist_create (ecaio_events_onDestroy);
   
   return self;
 }
