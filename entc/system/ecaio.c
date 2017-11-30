@@ -549,6 +549,17 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
 
 //-----------------------------------------------------------------------------
 
+void ecaio_abortall (EcAio self)
+{
+  ecmutex_lock (self->eventsm);
+  
+  eclist_clear (self->events);
+  
+  ecmutex_unlock (self->eventsm);
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_handle_event (EcAio self)
 {
   EcAioContext ctx = NULL;
@@ -583,6 +594,8 @@ int ecaio_handle_event (EcAio self)
       // send again for other threads
       ecaio_abort (self, NULL);
 
+      ecaio_abortall (self);
+      
       // abort
       return ENTC_ERR_NONE_CONTINUE;
     }
@@ -654,6 +667,8 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
         ecmutex_unlock (self->iom);
 
 	      free (events);
+        
+        ecaio_abortall (self);
 
 	      ecaio_abort (self, NULL);
 
