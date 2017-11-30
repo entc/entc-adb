@@ -669,15 +669,21 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, EcE
 
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
-  sigset_t sigmask;
+  sigset_t mask;
+  sigset_t orig_mask;
   
-  // use an empty set
-  sigemptyset (&sigmask);
+  // define the mask
+  sigemptyset (&mask);
   
-  sigaddset (&sigmask, SIGINT);
-  sigaddset (&sigmask, SIGTERM);
-
-  return ecaio_wait_signal (self, timeout, &sigmask, err);
+  sigaddset (&mask, SIGINT);
+  sigaddset (&mask, SIGTERM);
+  
+  if (sigprocmask(SIG_BLOCK, &mask, &orig_mask) < 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  return ecaio_wait_signal (self, timeout, &orig_mask, err);
 }
 
 //-----------------------------------------------------------------------------
