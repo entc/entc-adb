@@ -631,9 +631,9 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
 
   //eclogger_fmt (LL_TRACE, "ENTC", "context", "waiting for event");
 
-  n = epoll_pwait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1, sigmask);
+  n = epoll_wait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1);
 
-  //eclogger_fmt (LL_TRACE, "ENTC", "context", "got event %i", n);
+  eclogger_fmt (LL_TRACE, "ENTC", "context", "got event %i", n);
 
   if (n < 0)
   {

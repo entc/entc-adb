@@ -113,15 +113,19 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     printf ("#4\n");
 
-    res = ecproc_waitForProcessToTerminate(proc, err);
+    res = ecproc_waitForProcessToTerminate (proc, err);
     if (testctx_err (tctx, err))
     {
 
     }
     
+    printf ("#5\n");
+
     // this should not trigger
     kill(getpid(), SIGTERM);
     
+    printf ("#6\n");
+
     ecthread_join(thread);
     
     ecthread_delete(&thread);
