@@ -718,7 +718,6 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err
 
 int ecaio_reset_signals (EcErr err)
 {
-  /*
   int res;
 
   sigset_t sigset;
@@ -755,10 +754,6 @@ int ecaio_reset_signals (EcErr err)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
-   */
-  
-  signal(SIGTERM, SIG_IGN);
-  signal(SIGINT, SIG_IGN);
   
   return ENTC_ERR_NONE;
 }
@@ -1300,12 +1295,6 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     
     return ENTC_ERR_NONE;
   }
-}
-
-//-----------------------------------------------------------------------------
-
-static void ecaio_dummy_signalhandler (int signum)
-{
 }
 
 //-----------------------------------------------------------------------------
