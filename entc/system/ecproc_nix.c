@@ -281,14 +281,14 @@ int ecproc_waitForProcess (void* handle, EcErr err)
   siginfo_t info;
   memset (&info, 0, sizeof(siginfo_t));
   
-  res = waitid (P_ALL, handle, &info, WUNTRACED | WEXITED);
+  res = waitid (P_ALL, (int64_t)handle, &info, WUNTRACED | WEXITED);
   if (res < 0)
   {
     int errorCode = errno;
     if (errorCode == ECHILD)
     {
       // no process or already terminated
-      eclogger_fmt (LL_WARN, "ENTC", "child", "child process not found [%i]", (int)handle);
+      eclogger_fmt (LL_WARN, "ENTC", "child", "child process not found [%i]", (int64_t)handle);
 
       return ENTC_ERR_NONE;
     }
