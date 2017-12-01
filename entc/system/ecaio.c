@@ -403,17 +403,6 @@ static int __STDCALL ecaio_term_process (void* ptr, EcAioContext ctx, unsigned l
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_process_signal (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
-{
-  printf ("received signal [%i]\n", ptr);
-  
-  
-  
-  return ENTC_AIO_CODE_ABORTALL;
-}
-
-//-----------------------------------------------------------------------------
-
 int ecaio_init (EcAio self, EcErr err)
 {
   self->efd = epoll_create1 (0);
@@ -847,6 +836,23 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* sigset, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+{
+  struct signalfd_siginfo info;
+  unsigned long bytes = read(ptr, &info, sizeof(info));
+  
+  if (bytes == sizeof(info))
+  {
+    eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i]", info.ssi_signo);
+    
+    
+  }
+  
+  return ENTC_AIO_CODE_ABORTALL;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
@@ -872,7 +878,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     // create a new aio context
     ctx = ecaio_context_create ();
     
-    ecaio_context_setCallbacks (ctx, sfd, ecaio_process_signal, NULL);
+    ecaio_context_setCallbacks (ctx, sfd, ecaio_signal_process, NULL);
     
     ecaio_append (self, sfd, ctx, err);
   }
