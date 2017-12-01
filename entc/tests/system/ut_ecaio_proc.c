@@ -98,13 +98,21 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     EcThread thread = ecthread_new();
     
     ecthread_start (thread, test_ecaio_parent_thread, aio);
+
+    printf ("#1\n");
     
-    ece_sleep (10000);
+    ece_sleep (100);
+
+    printf ("#2\n");
 
     ecproc_terminate (proc);
     
+    printf ("#3\n");
+
     ece_sleep (100);
     
+    printf ("#4\n");
+
     res = ecproc_waitForProcessToTerminate(proc, err);
     if (testctx_err (tctx, err))
     {
