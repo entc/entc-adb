@@ -844,12 +844,29 @@ static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned
   
   if (bytes == sizeof(struct signalfd_siginfo))
   {
-    eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i]", info.ssi_signo);
-    
-    
+    switch (info.ssi_signo)
+    {
+      case SIGINT:
+      {
+        eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> SIGINT", info.ssi_signo);
+        
+        return ENTC_AIO_CODE_ABORTALL;
+      }
+      case SIGTERM:
+      {
+        eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> SIGTERM", info.ssi_signo);
+        
+        return ENTC_AIO_CODE_ABORTALL;
+      }
+      default:
+      {
+        eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> unknown", info.ssi_signo);
+        
+        return ENTC_AIO_CODE_CONTINUE;
+      }
+    }
   }
   
-  return ENTC_AIO_CODE_ABORTALL;
 }
 
 //-----------------------------------------------------------------------------
