@@ -108,7 +108,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     res = ecproc_waitForProcessToTerminate(proc, err);
     if (testctx_err (tctx, err))
     {
-      return 0;
+
     }
     
     // this should not trigger
