@@ -730,6 +730,12 @@ int ecaio_reset_signals (EcErr err)
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
+  res = sigaddset (&sigset, SIGQUIT);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+
   res = sigaddset (&sigset, SIGINT);
   if (res)
   {
