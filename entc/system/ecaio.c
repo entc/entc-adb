@@ -510,7 +510,7 @@ static int __STDCALL ecaio_enode_fct_process (void* ptr, EcAioContext ctx, unsig
 int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 {
   EcAioContext ctx;
-  EcListNode node = ptr;
+  EcListNode node = eh;
   
   ecmutex_lock (self->eventsm);
   
