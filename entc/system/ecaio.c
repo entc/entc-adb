@@ -716,37 +716,40 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err
 
 //-----------------------------------------------------------------------------
 
-int ecaio_reset_signals (EcAio self, sigset_t* sigset, EcErr err)
+int ecaio_reset_signals (EcAio self, EcErr err)
 {
   int res;
-  
+
+  sigset_t sigset;
+  memset(&sigset, 0, sizeof(sigset_t));
+
   // Create a sigset of all the signals that we're interested in
-  res = sigemptyset (sigset);
+  res = sigemptyset (&sigset);
   if (res)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  res = sigaddset (sigset, SIGINT);
+  res = sigaddset (&sigset, SIGINT);
   if (res)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  res = sigaddset (sigset, SIGHUP);
+  res = sigaddset (&sigset, SIGHUP);
   if (res)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  res = sigaddset (sigset, SIGTERM);
+  res = sigaddset (&sigset, SIGTERM);
   if (res)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
   // We must block the signals in order for signalfd to receive them
-  res = sigprocmask (SIG_BLOCK, sigset, NULL);
+  res = sigprocmask (SIG_BLOCK, &sigset, NULL);
   if (res)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
@@ -759,12 +762,7 @@ int ecaio_reset_signals (EcAio self, sigset_t* sigset, EcErr err)
 
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
-  int res;
-  
-  sigset_t mask;
-  memset(&mask, 0, sizeof(sigset_t));
-  
-  res = ecaio_reset_signals (self, &mask, err);
+  int res = ecaio_reset_signals (self, err);
   if (res)
   {
     return res;
@@ -848,12 +846,34 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   sigset_t mask;
   memset(&mask, 0, sizeof(sigset_t));
 
-  res = ecaio_reset_signals (self, &mask, err);
+  res = ecaio_reset_signals (self, err);
   if (res)
   {
     return res;
   }
   
+  // Create a sigset of all the signals that we're interested in
+  res = sigemptyset (&mask);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  if (onlyTerm == FALSE)
+  {
+    res = sigaddset (&mask, SIGINT);
+    if (res)
+    {
+      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    }
+  }
+
+  res = sigaddset (&mask, SIGTERM);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+
   sfd = signalfd (-1, &mask, 0);
   if (sfd == -1)
   {
