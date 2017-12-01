@@ -747,6 +747,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+/*
 static void ecaio_abort_signalhandler (int sig)
 {
   switch (sig)
@@ -766,6 +767,7 @@ static void ecaio_abort_signalhandler (int sig)
   uint64_t u = TRUE;
   write (tfd, &u, sizeof(uint64_t));
 }
+ */
 
 //-----------------------------------------------------------------------------
 
@@ -775,8 +777,10 @@ static void ecaio_empty_signalhandler (int signum)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* orig_mask, EcErr err)
+int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* sigset, EcErr err)
 {
+  int res;
+  /*
   struct sigaction act;
  
   {
@@ -804,7 +808,34 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* ori
   sigaddset(mask, SIGINT);
   sigaddset(mask, SIGQUIT);
   sigaddset(mask, SIGTERM);
+   */
   
+  // Create a sigset of all the signals that we're interested in
+  res = sigemptyset (sigset);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  res = sigaddset (sigset, SIGINT);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+
+  res = sigaddset (sigset, SIGHUP);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  // We must block the signals in order for signalfd to receive them
+  res = sigprocmask (SIG_BLOCK, ssigset, NULL);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+
   return ENTC_ERR_NONE;
 }
 
@@ -817,12 +848,9 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   int sfd;
 
   sigset_t mask;
-  sigset_t orig_mask;
-
   memset(&mask, 0, sizeof(sigset_t));
-  memset(&orig_mask, 0, sizeof(sigset_t));
 
-  res = ecaio_reset_signals (self, onlyTerm, &mask, &orig_mask, err);
+  res = ecaio_reset_signals (self, onlyTerm, &mask, err);
   if (res)
   {
     return res;
@@ -843,6 +871,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     ecaio_append (self, sfd, ctx, err);
   }
   
+  /*
   // add terminator
   tfd = eventfd (0, 0);
   if (tfd == -1)
@@ -858,15 +887,15 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 
     ecaio_append (self, tfd, ctx, err);
   }
-
+*/
+   
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)
-
   {
-    res = ecaio_wait_signal (self, ENTC_INFINITE, &orig_mask, 2, err);
+    res = ecaio_wait_signal (self, ENTC_INFINITE, &mask, 2, err);
   }
 
-  close (tfd);
+  //close (tfd);
 
   return res;
 }
