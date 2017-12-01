@@ -43,7 +43,7 @@ static int __STDCALL test_ecaio_parent_thread (void* ptr)
   
   printf ("worker thread wait\n");
   
-  ecaio_wait_abortOnSignal (ptr, FALSE, err);
+  ecaio_wait_abortOnSignal (ptr, TRUE, err);
   
   printf ("worker thread done\n");
   
@@ -112,7 +112,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     }
     
     // this should not trigger
-    kill(getpid(), SIGINT);
+    kill(getpid(), SIGTERM);
     
     ecthread_join(thread);
     
