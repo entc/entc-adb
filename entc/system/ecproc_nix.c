@@ -170,8 +170,15 @@ int ecproc_start (EcProc self, const char* command, const char* args, EcErr err)
     }
     case  0: // child process
     {
+      int i;
       char* arguments [11];
+
       arguments[0] = ecstr_copy (command);
+
+      for (i = 1; i < 10; i++)
+      {
+        arguments[i] = NULL;
+      }
 
       if (args)
       {
@@ -179,12 +186,6 @@ int ecproc_start (EcProc self, const char* command, const char* args, EcErr err)
       }
       else
       {
-        int i;
-        for (i = 1; i < 10; i++)
-        {
-          arguments[i] = NULL;
-        }
-        
         ecproc_addParameter (arguments, self->fifoOut);
         ecproc_addParameter (arguments, self->fifoIn);
       }
