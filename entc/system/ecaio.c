@@ -782,11 +782,18 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* ori
   sigaddset(mask, SIGQUIT);
   sigaddset(mask, SIGTERM);
   
+  /*
   if (sigprocmask(SIG_BLOCK, mask, NULL) == -1)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
+   */
 
+  signal (SIGINT, SIG_IGN);
+  signal (SIGTERM, SIG_IGN);
+  signal (SIGQUIT, SIG_IGN);
+  
+  
   /*
   
   
