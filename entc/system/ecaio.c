@@ -839,9 +839,9 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* sigset, EcErr err)
 static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   struct signalfd_siginfo info;
-  unsigned long bytes = read(ptr, &info, sizeof(info));
+  unsigned long bytes = read(ptr, &info, sizeof(struct signalfd_siginfo));
   
-  if (bytes == sizeof(info))
+  if (bytes == sizeof(struct signalfd_siginfo))
   {
     eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i]", info.ssi_signo);
     
