@@ -99,7 +99,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     ecthread_start (thread, test_ecaio_parent_thread, aio);
     
-    ece_sleep (100);
+    ece_sleep (10000);
 
     ecproc_terminate (proc);
     
