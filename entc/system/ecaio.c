@@ -500,23 +500,25 @@ int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+static int __STDCALL ecaio_enode_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+{
+  return ENTC_AIO_CODE_DONE;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 {
   EcAioContext ctx;
-  EcListNode node = eh;
-
+  EcListNode node = ptr;
+  
   ecmutex_lock (self->eventsm);
   
   ctx = eclist_extract (self->events, node);
   
   ecmutex_unlock (self->eventsm);
 
-  if (ecaio_context_process (ctx, 0, 0) == ENTC_AIO_CODE_CONTINUE)
-  {
-    ecaio_context_destroy (&ctx);
-  }
-  
-  return ENTC_ERR_NONE;
+  return ecaio_addQueueEvent (self, ctx, ecaio_enode_fct_process, NULL, err);
 }
 
 //-----------------------------------------------------------------------------
