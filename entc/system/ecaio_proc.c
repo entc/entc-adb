@@ -251,6 +251,8 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   EcAioProc self = ptr;
   int res;
   
+  printf ("wait for process %i\n", self->pid);
+  
   waitpid (self->pid, &res, 0);
 
   {
