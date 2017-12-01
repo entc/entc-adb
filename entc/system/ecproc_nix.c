@@ -288,7 +288,7 @@ int ecproc_waitForProcess (void* handle, EcErr err)
     if (errorCode == ECHILD)
     {
       // no process or already terminated
-      eclogger_fmt (LL_WARN, "ENTC", "child", "child process not found [%i]", info.si_pid);
+      eclogger_fmt (LL_WARN, "ENTC", "child", "child process not found [%i]", (int)handle);
 
       return ENTC_ERR_NONE;
     }
