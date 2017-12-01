@@ -777,66 +777,34 @@ static void ecaio_empty_signalhandler (int signum)
 
 int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* orig_mask, EcErr err)
 {
+  struct sigaction act;
+ 
+  {
+    memset (&act, 0, sizeof(act));
+    act.sa_handler = SIG_IGN;
+    
+    int res = sigaction (SIGINT, &act, NULL);
+    if (res)
+    {
+      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    }
+  }
+  {
+    memset (&act, 0, sizeof(act));
+    act.sa_handler = SIG_IGN;
+    
+    int res = sigaction (SIGTERM, &act, NULL);
+    if (res)
+    {
+      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    }
+  }
+  
   sigemptyset(mask);
   sigaddset(mask, SIGINT);
   sigaddset(mask, SIGQUIT);
   sigaddset(mask, SIGTERM);
   
-  /*
-  if (sigprocmask(SIG_BLOCK, mask, NULL) == -1)
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-   */
-
-  signal (SIGINT, SIG_IGN);
-  signal (SIGTERM, SIG_IGN);
-  signal (SIGQUIT, SIG_IGN);
-  
-  
-  /*
-  
-  
-  // re-route the signal SIGTERM
-  {
-    struct sigaction act;
-
-    memset (&act, 0, sizeof(act));
-    act.sa_handler = ecaio_abort_signalhandler;
-
-    if (sigaction(SIGTERM, &act, 0))
-    {
-      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-    }
-  }
-
-  // re-route the signal SIGINT
-  {
-    struct sigaction act;
-
-    memset (&act, 0, sizeof(act));
-    act.sa_handler = onlyTerm ? ecaio_empty_signalhandler : ecaio_abort_signalhandler;
-
-    if (sigaction(SIGINT, &act, 0))
-    {
-      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-    }
-  }
-
-  // define the mask
-  sigemptyset (mask);
-
-  sigaddset (mask, SIGINT);
-  sigaddset (mask, SIGTERM);
-
-
-  if (sigprocmask(SIG_BLOCK, &mask, &orig_mask) < 0) 
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-   
-   */
-
   return ENTC_ERR_NONE;
 }
 
