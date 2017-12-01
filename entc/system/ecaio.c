@@ -716,20 +716,56 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
 
 //-----------------------------------------------------------------------------
 
+int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* sigset, EcErr err)
+{
+  int res;
+  
+  // Create a sigset of all the signals that we're interested in
+  res = sigemptyset (sigset);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  res = sigaddset (sigset, SIGINT);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  res = sigaddset (sigset, SIGHUP);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  res = sigaddset (sigset, SIGTERM);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  // We must block the signals in order for signalfd to receive them
+  res = sigprocmask (SIG_BLOCK, sigset, NULL);
+  if (res)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
   sigset_t mask;
-  sigset_t orig_mask;
+  memset(&mask, 0, sizeof(sigset_t));
   
-  // define the mask
-  sigemptyset (&mask);
-  
-  sigaddset (&mask, SIGINT);
-  sigaddset (&mask, SIGTERM);
-  
-  if (sigprocmask(SIG_BLOCK, &mask, &orig_mask) < 0)
+  res = ecaio_reset_signals (self, onlyTerm, &mask, err);
+  if (res)
   {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    return res;
   }
   
   return ecaio_wait_signal (self, timeout, &orig_mask, 1, err);
@@ -763,76 +799,6 @@ static void ecaio_abort_signalhandler (int sig)
 
 static void ecaio_empty_signalhandler (int signum)
 {
-}
-
-//-----------------------------------------------------------------------------
-
-int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* sigset, EcErr err)
-{
-  int res;
-  /*
-  struct sigaction act;
- 
-  {
-    memset (&act, 0, sizeof(act));
-    act.sa_handler = SIG_IGN;
-    
-    int res = sigaction (SIGINT, &act, NULL);
-    if (res)
-    {
-      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-    }
-  }
-  {
-    memset (&act, 0, sizeof(act));
-    act.sa_handler = SIG_IGN;
-    
-    int res = sigaction (SIGTERM, &act, NULL);
-    if (res)
-    {
-      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-    }
-  }
-  
-  sigemptyset(mask);
-  sigaddset(mask, SIGINT);
-  sigaddset(mask, SIGQUIT);
-  sigaddset(mask, SIGTERM);
-   */
-  
-  // Create a sigset of all the signals that we're interested in
-  res = sigemptyset (sigset);
-  if (res)
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-  
-  res = sigaddset (sigset, SIGINT);
-  if (res)
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-
-  res = sigaddset (sigset, SIGHUP);
-  if (res)
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-  
-  res = sigaddset (sigset, SIGTERM);
-  if (res)
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-
-  // We must block the signals in order for signalfd to receive them
-  res = sigprocmask (SIG_BLOCK, sigset, NULL);
-  if (res)
-  {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-  }
-
-  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
