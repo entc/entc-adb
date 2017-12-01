@@ -759,6 +759,8 @@ int ecaio_reset_signals (EcAio self, sigset_t* sigset, EcErr err)
 
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
+  int res;
+  
   sigset_t mask;
   memset(&mask, 0, sizeof(sigset_t));
   
