@@ -103,7 +103,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
     printf ("#1\n");
     
-    ece_sleep (100);
+    ece_sleep (10000);
 
     printf ("#2\n");
 
