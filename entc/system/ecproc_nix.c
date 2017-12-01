@@ -284,7 +284,16 @@ int ecproc_waitForProcess (void* handle, EcErr err)
   res = waitid (P_ALL, handle, &info, WUNTRACED | WEXITED);
   if (res < 0)
   {
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    int errorCode = errno;
+    if (errorCode == ECHILD)
+    {
+      // no process or already terminated
+      eclogger_fmt (LL_WARN, "ENTC", "child", "child process not found [%i]", info.si_pid);
+
+      return ENTC_ERR_NONE;
+    }
+    
+    return ecerr_formatErrorOS (err, ENTC_LVL_ERROR, errorCode);
   }
   
   switch (info.si_code)
