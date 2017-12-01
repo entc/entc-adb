@@ -830,7 +830,7 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* sigset, EcErr err)
   }
   
   // We must block the signals in order for signalfd to receive them
-  res = sigprocmask (SIG_BLOCK, ssigset, NULL);
+  res = sigprocmask (SIG_BLOCK, sigset, NULL);
   if (res)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
