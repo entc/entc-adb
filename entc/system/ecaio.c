@@ -766,6 +766,19 @@ static void ecaio_empty_signalhandler (int signum)
 
 int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* orig_mask, EcErr err)
 {
+  sigemptyset(mask);
+  sigaddset(mask, SIGINT);
+  sigaddset(mask, SIGQUIT);
+  sigaddset(mask, SIGTERM);
+  
+  if (sigprocmask(SIG_BLOCK, mask, NULL) == -1)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+
+  /*
+  
+  
   // re-route the signal SIGTERM
   {
     struct sigaction act;
@@ -803,6 +816,8 @@ int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* mask, sigset_t* ori
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
+   
+   */
 
   return ENTC_ERR_NONE;
 }
