@@ -608,7 +608,7 @@ int ecaio_handle_event (EcAio self)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int onAbort, EcErr err)
+int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err)
 {
   int n;
   struct epoll_event *events;
@@ -716,7 +716,7 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
 
 //-----------------------------------------------------------------------------
 
-int ecaio_reset_signals (EcAio self, int onlyTerm, sigset_t* sigset, EcErr err)
+int ecaio_reset_signals (EcAio self, sigset_t* sigset, EcErr err)
 {
   int res;
   
@@ -762,13 +762,13 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   sigset_t mask;
   memset(&mask, 0, sizeof(sigset_t));
   
-  res = ecaio_reset_signals (self, onlyTerm, &mask, err);
+  res = ecaio_reset_signals (self, &mask, err);
   if (res)
   {
     return res;
   }
   
-  return ecaio_wait_signal (self, timeout, &orig_mask, 1, err);
+  return ecaio_wait_signal (self, timeout, 1, err);
 }
 
 //-----------------------------------------------------------------------------
@@ -846,7 +846,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   sigset_t mask;
   memset(&mask, 0, sizeof(sigset_t));
 
-  res = ecaio_reset_signals (self, onlyTerm, &mask, err);
+  res = ecaio_reset_signals (self, &mask, err);
   if (res)
   {
     return res;
@@ -888,7 +888,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)
   {
-    res = ecaio_wait_signal (self, ENTC_INFINITE, &mask, 2, err);
+    res = ecaio_wait_signal (self, ENTC_INFINITE, 2, err);
   }
 
   //close (tfd);
