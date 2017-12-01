@@ -255,11 +255,11 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   
   EcErr err = ecerr_create();
   
-  res = ecproc_waitForProcess (self->pid, err);
+  res = ecproc_waitForProcess ((void*)self->pid, err);
   
   if (res)
   {
-    eclogger_fmt (LL_ERROR, "ENTC PROC", "thread", "can't wait for process %s", err->text);
+    eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
   }
 
   ecaio_triggerENode (self->aio, self->eventh, err);
@@ -300,6 +300,8 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   
   ecthread_delete (&(self->thread));
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc thread", "stopped and destroyed");
+
   ENTC_DEL(&self, struct EcAioProc_s);
 }
 
