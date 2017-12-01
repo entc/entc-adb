@@ -56,6 +56,8 @@ __LIBEX void* ecproc_getHandleOut (EcProc);
 
 __LIBEX EcString ecproc_getExecutableName (int argc, char* argv[]);
 
+__LIBEX int ecproc_waitForProcess (void* handle, EcErr);
+
 //-----------------------------------------------------------------------------
 
 #endif

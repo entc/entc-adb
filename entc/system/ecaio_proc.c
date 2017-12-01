@@ -251,17 +251,18 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   EcAioProc self = ptr;
   int res;
   
-  printf ("wait for process %i\n", self->pid);
+  EcErr err = ecerr_create();
   
-  waitpid (self->pid, &res, 0);
-
+  res = ecproc_waitForProcess (self->pid, err);
+  
+  if (res)
   {
-    EcErr err = ecerr_create ();
-    
-    ecaio_triggerENode (self->aio, self->eventh, err);
-    
-    ecerr_destroy (&err);
+    eclogger_fmt (LL_ERROR, "ENTC PROC", "thread", "can't wait for process %s", err->text);
   }
+
+  ecaio_triggerENode (self->aio, self->eventh, err);
+    
+  ecerr_destroy (&err);
 
   return 0;
 }

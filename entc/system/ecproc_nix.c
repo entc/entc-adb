@@ -267,14 +267,21 @@ void ecproc_terminate (EcProc self)
 
 int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
 {
+  ecproc_closeReading (self);
+ 
+  return ecproc_waitForProcess (self->pid, err);
+}
+
+//-----------------------------------------------------------------------------
+
+int ecproc_waitForProcess (void* handle, EcErr err)
+{
   int res;
  
   siginfo_t info;
   memset (&info, 0, sizeof(siginfo_t));
   
-  ecproc_closeReading (self);
-  
-  res = waitid (P_ALL, self->pid, &info, WUNTRACED | WEXITED);
+  res = waitid (P_ALL, handle, &info, WUNTRACED | WEXITED);
   if (res < 0)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
