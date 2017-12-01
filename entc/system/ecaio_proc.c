@@ -142,11 +142,11 @@ struct EcAioProc_s
 
 //-----------------------------------------------------------------------------
 
-EcAioProc ecaio_proc_create (uint64_t pid)
+EcAioProc ecaio_proc_create (void* handle)
 {
   EcAioProc self = ENTC_NEW(struct EcAioProc_s);
   
-  self->pid = pid;
+  self->pid = handle;
   
   self->onNotify = NULL;
   self->onDestroy = NULL;

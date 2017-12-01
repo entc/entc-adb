@@ -32,7 +32,7 @@ struct EcAioProc_s; typedef struct EcAioProc_s* EcAioProc;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioProc ecaio_proc_create (uint64_t pid);
+__LIBEX EcAioProc ecaio_proc_create (void* handle);
 
 __LIBEX int ecaio_proc_assign (EcAioProc*, EcAio aio, EcErr err);
 
