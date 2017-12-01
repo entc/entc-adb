@@ -255,8 +255,14 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   
   EcErr err = ecerr_create();
   
-  res = ecproc_waitForProcess ((void*)self->pid, err);
+  // block all signals
+  res = ecaio_reset_signals (err);
+  if (res)
+  {
+    eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
+  }
   
+  res = ecproc_waitForProcess ((void*)self->pid, err);
   if (res)
   {
     eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
