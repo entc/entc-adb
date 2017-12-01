@@ -500,13 +500,6 @@ int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_enode_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
-{
-  return ENTC_AIO_CODE_DONE;
-}
-
-//-----------------------------------------------------------------------------
-
 int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 {
   EcAioContext ctx;
@@ -518,7 +511,7 @@ int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
   
   ecmutex_unlock (self->eventsm);
 
-  return ecaio_addQueueEvent (self, ctx, ecaio_enode_fct_process, NULL, err);
+  return ecaio_addContextToEvent (self, ctx, err);
 }
 
 //-----------------------------------------------------------------------------
