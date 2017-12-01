@@ -93,7 +93,9 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     ecaio_proc_assign (&ctx, aio, err);
   }
-    
+  
+  ecaio_reset_signals (err);
+  
   {
     EcThread thread = ecthread_new();
     

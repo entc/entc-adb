@@ -716,7 +716,7 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err
 
 //-----------------------------------------------------------------------------
 
-int ecaio_reset_signals (EcAio self, EcErr err)
+int ecaio_reset_signals (EcErr err)
 {
   int res;
 
@@ -762,7 +762,7 @@ int ecaio_reset_signals (EcAio self, EcErr err)
 
 int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 {
-  int res = ecaio_reset_signals (self, err);
+  int res = ecaio_reset_signals (err);
   if (res)
   {
     return res;
@@ -846,7 +846,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   sigset_t mask;
   memset(&mask, 0, sizeof(sigset_t));
 
-  res = ecaio_reset_signals (self, err);
+  res = ecaio_reset_signals (err);
   if (res)
   {
     return res;
@@ -1305,6 +1305,16 @@ static void ecaio_dummy_signalhandler (int signum)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_reset_signals (EcErr err)
+{
+  signal(SIGTERM, ecaio_dummy_signalhandler);
+  signal(SIGINT, ecaio_dummy_signalhandler);
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
@@ -1333,8 +1343,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     }
   }
   
-  signal(SIGTERM, ecaio_dummy_signalhandler);
-  signal(SIGINT, ecaio_dummy_signalhandler);
+  ecaio_reset_signals (err);
   
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)

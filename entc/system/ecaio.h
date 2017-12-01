@@ -62,5 +62,10 @@ __LIBEX int ecaio_appendENode (EcAio, EcAioContext ctx, void** eh, EcErr err);
 __LIBEX int ecaio_triggerENode (EcAio, void* eh, EcErr err);
 
 //-----------------------------------------------------------------------------
+// some helper
+
+__LIBEX int ecaio_reset_signals (EcErr err);
+
+//-----------------------------------------------------------------------------
 
 #endif
