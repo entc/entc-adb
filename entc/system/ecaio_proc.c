@@ -1,5 +1,7 @@
 #include "ecaio_proc.h"
 
+#include "utils/eclogger.h"
+
 #if defined __MS_IOCP
 
 //*****************************************************************************
