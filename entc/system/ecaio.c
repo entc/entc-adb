@@ -302,10 +302,11 @@ int ecaio_abort (EcAio self, EcErr err)
 
 //*****************************************************************************
 
-#include <sys/eventfd.h>
 #include <signal.h>
-#include <sys/epoll.h>
 #include <errno.h>
+#include <sys/epoll.h>
+#include <sys/eventfd.h>
+#include <sys/signalfd.h>
 
 #define Q6_EPOLL_MAXEVENTS 1
 
