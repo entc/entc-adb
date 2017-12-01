@@ -403,6 +403,17 @@ static int __STDCALL ecaio_term_process (void* ptr, EcAioContext ctx, unsigned l
 
 //-----------------------------------------------------------------------------
 
+static int __STDCALL ecaio_process_signal (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+{
+  printf ("received signal [%i]\n", ptr);
+  
+  
+  
+  return ENTC_AIO_CODE_ABORTALL;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_init (EcAio self, EcErr err)
 {
   self->efd = epoll_create1 (0);
@@ -852,7 +863,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     // create a new aio context
     ctx = ecaio_context_create ();
     
-    ecaio_context_setCallbacks (ctx, NULL, ecaio_term_process, NULL);
+    ecaio_context_setCallbacks (ctx, sfd, ecaio_process_signal, NULL);
     
     ecaio_append (self, sfd, ctx, err);
   }
