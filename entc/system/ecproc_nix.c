@@ -54,15 +54,15 @@ void ecproc_addParameter (char** arguments, const EcString param)
 struct EcProc_s
 {
   
-  pid_t pid;
+  unsigned long pid;
   
   EcString fifoIn;
   
   EcString fifoOut;
   
-  int fdIn;
+  unsigned long fdIn;
   
-  int fdOut;
+  unsigned long fdOut;
   
 };
 
@@ -269,7 +269,7 @@ int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
 {
   ecproc_closeReading (self);
  
-  return ecproc_waitForProcess (self->pid, err);
+  return ecproc_waitForProcess ((void*)self->pid, err);
 }
 
 //-----------------------------------------------------------------------------
@@ -281,14 +281,14 @@ int ecproc_waitForProcess (void* handle, EcErr err)
   siginfo_t info;
   memset (&info, 0, sizeof(siginfo_t));
   
-  res = waitid (P_ALL, (int64_t)handle, &info, WUNTRACED | WEXITED);
+  res = waitid (P_ALL, (unsigned long)handle, &info, WUNTRACED | WEXITED);
   if (res < 0)
   {
     int errorCode = errno;
     if (errorCode == ECHILD)
     {
       // no process or already terminated
-      eclogger_fmt (LL_WARN, "ENTC", "child", "child process not found [%i]", (int64_t)handle);
+      eclogger_fmt (LL_WARN, "ENTC", "child", "child process not found [%lu]", (unsigned long)handle);
 
       return ENTC_ERR_NONE;
     }
