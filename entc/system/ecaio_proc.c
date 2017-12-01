@@ -275,6 +275,8 @@ static int __STDCALL ecaio_proc_onNotify (void* ptr, int action)
 {
   EcAioProc self = ptr;
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
+
   if (self->onNotify)
   {
     self->onNotify (self->ptr, 0);
@@ -289,6 +291,8 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
 {
   EcAioProc self = ptr;
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy");
+
   ecthread_cancel (self->thread);
   
   if (self->onDestroy)
