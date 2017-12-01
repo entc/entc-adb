@@ -828,6 +828,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
 {
   int res;
   EcAioContext ctx;
+  int sfd;
 
   sigset_t mask;
   sigset_t orig_mask;
@@ -840,7 +841,22 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   {
     return res;
   }
-
+  
+  sfd = signalfd (-1, &mask, 0);
+  if (sfd == -1)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  {
+    // create a new aio context
+    ctx = ecaio_context_create ();
+    
+    ecaio_context_setCallbacks (ctx, NULL, ecaio_term_process, NULL);
+    
+    ecaio_append (self, sfd, ctx, err);
+  }
+  
   // add terminator
   tfd = eventfd (0, 0);
   if (tfd == -1)
