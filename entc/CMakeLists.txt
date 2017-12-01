@@ -133,6 +133,9 @@ SET (CORE_SOURCES_SYS
   system/ecaio_event.c
   system/ecaio_msg.h
   system/ecaio_msg.c
+  system/ecproc.h
+  system/ecproc_win.c
+  system/ecproc_nix.c
 )
 
 SET (CORE_SOURCES_TYPES

@@ -170,7 +170,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
         ecerr_formatErrorOS (err, ENTC_LVL_ERROR, lastError);
 
-		eclogger_fmt (LL_WARN, "Q6_AIO", "wait", "error on io completion port: %s", err->text);
+		eclogger_fmt (LL_WARN, "ENTC", "wait", "error on io completion port: %s", err->text);
 
         ecerr_destroy (&err);
 	  }
@@ -219,7 +219,7 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 	  {
         abort = TRUE;
 
-  	    eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+  	    eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
 	  }
 
 	  break;
@@ -228,14 +228,14 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 	{
       abort = TRUE;
 
-	  eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "shutdown");
+	  eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "shutdown");
 	  break;
 	}
     case CTRL_CLOSE_EVENT:
     {
       abort = TRUE;
 
-	  eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", ctrlType, "close");
+	  eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "close");
 	  break;
 	}
   }
@@ -456,7 +456,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
   event.data.ptr = ctx;
   event.events = EPOLLET | EPOLLONESHOT | EPOLLIN;
   
-  //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "append %i", (int)handle, ctx);
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "append %i", (int)handle, ctx);
   
   int s = epoll_ctl (self->efd, EPOLL_CTL_ADD, hfd, &event);
   if (s < 0)
@@ -467,7 +467,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
       return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_NOT_SUPPORTED, "file descriptor don't support epoll");
     }
     
-    eclogger_fmt (LL_ERROR, "Q6_AIO", "append", "append failed with error %i", s);
+    eclogger_fmt (LL_ERROR, "ENTC", "append", "append failed with error %i", s);
     
     return ecerr_formatErrorOS(err, ENTC_LVL_ERROR, errCode);
   }
@@ -534,7 +534,7 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
   //write (self->ufd, &u, sizeof(uint64_t));
   write (self->ufd, &u, sizeof(uint64_t));
   
-  //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "wrote %u", u);
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "wrote %u", u);
   
   return ENTC_ERR_NONE;
 }
@@ -548,7 +548,7 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
   
   ecaio_context_setCallbacks (ctx, ptr, process, destroy);
   
-  //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "new ctx %p", ctx);
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "new ctx %p", ctx);
   
   return ecaio_addContextToEvent (self, ctx, err);
 }
@@ -591,7 +591,7 @@ int ecaio_handle_event (EcAio self)
 
     write (self->ufd, &u, sizeof(uint64_t));
 
-    //eclogger_fmt (LL_TRACE, "Q6_AIO", "event", "context %p", ctx);
+    //eclogger_fmt (LL_TRACE, "ENTC", "event", "context %p", ctx);
 
     int res = ecaio_context_process (ctx, 0, 0);
 
@@ -619,15 +619,15 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
 
   events = calloc (Q6_EPOLL_MAXEVENTS, sizeof(struct epoll_event));
 
-  //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for lock");
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "waiting for lock");
 
   ecmutex_lock (self->iom);
 
-  //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "waiting for event");
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "waiting for event");
 
   n = epoll_pwait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1, sigmask);
 
-  //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got event %i", n);
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "got event %i", n);
 
   if (n < 0)
   {
@@ -635,7 +635,7 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
 
     free (events);
 
-    eclogger_fmt (LL_WARN, "Q6_AIO", "wait", "error on epoll [%i]", onAbort);
+    eclogger_fmt (LL_WARN, "ENTC", "wait", "error on epoll [%i]", onAbort);
 
     //ecaio_abort (self, NULL);
 
@@ -657,11 +657,11 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
       // save the handle, because ctx got freed in the process call
       void* handle = ecaio_context_getHandle (ctx);
 
-      //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "got ctx from IO event %p", ctx);
+      //eclogger_fmt (LL_TRACE, "ENTC", "context", "got ctx from IO event %p", ctx);
 
       int cont = ecaio_context_process (ctx, 0, 0);
 
-      //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "return %i", cont);
+      //eclogger_fmt (LL_TRACE, "ENTC", "context", "return %i", cont);
 
       if (cont == ENTC_AIO_CODE_CONTINUE)
       {
@@ -683,7 +683,7 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
       }
       else
       {
-        //eclogger_fmt (LL_TRACE, "Q6_AIO", "context", "remove %i %p", ctx->handle, ctx);
+        //eclogger_fmt (LL_TRACE, "ENTC", "context", "remove %i %p", ctx->handle, ctx);
         // remove
         struct epoll_event event = {0}; // see bugs
         int s = epoll_ctl (self->efd, EPOLL_CTL_DEL, handle, &event);
@@ -691,7 +691,7 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, sigset_t* sigmask, int
         {
 
 
-          //eclogger_fmt (LL_ERROR, "Q6_AIO", "wait", "failed to remove file descriptor %i", ctx->handle);
+          //eclogger_fmt (LL_ERROR, "ENTC", "wait", "failed to remove file descriptor %i", ctx->handle);
         }
       }
 
@@ -747,12 +747,12 @@ static void ecaio_abort_signalhandler (int sig)
   {
     case SIGINT:
     {
-      eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", sig, "SIGINT");
+      eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", sig, "SIGINT");
       break;
     }
     case SIGTERM:
     {
-      eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", sig, "SIGTERM");
+      eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", sig, "SIGTERM");
       break;
     }
   }
@@ -930,7 +930,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
   
   if (ctx == NULL)
   {
-    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -957,7 +957,7 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
   
   if (ctx == NULL)
   {
-    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -988,7 +988,7 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
   EcAioContext context = ecaio_context_create ();
   if (context == NULL)
   {
-    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1009,7 +1009,7 @@ int ecaio_appendVNode (EcAio self, int fd, void* data, EcErr err)
   
   if (data == NULL)
   {
-    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1035,7 +1035,7 @@ int ecaio_appendPNode (EcAio self, int pid, void* data, EcErr err)
   
   if (data == NULL)
   {
-    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1066,7 +1066,7 @@ int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
   
   if (ctx == NULL)
   {
-    eclogger_fmt (LL_FATAL, "Q6_AIO", "add event", "context is NULL");
+    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1097,7 +1097,7 @@ int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
   struct kevent kev;
   memset (&kev, 0x0, sizeof(struct kevent));
 
-  eclogger_fmt (LL_TRACE, "Q6_AIO", "event", "trigger event [%i]", eh);
+  eclogger_fmt (LL_TRACE, "ENTC", "event", "trigger event [%i]", eh);
   
   EV_SET (&kev, eh, EVFILT_USER, EV_ENABLE, NOTE_TRIGGER, 0, NULL);
   res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
@@ -1197,7 +1197,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
           res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
           if (res < 0)
           {
-            //eclogger_fmt (LL_WARN, "Q6_AIO", "remove", "error in removing event [%i]", event.ident);
+            //eclogger_fmt (LL_WARN, "ENTC", "remove", "error in removing event [%i]", event.ident);
           }
           
         }
@@ -1224,13 +1224,13 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       
       if (signalKind)
       {
-        eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> %s", event.ident, signalKind);
+        eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", event.ident, signalKind);
  
         return ecaio_abort (self, err);
       }
       else
       {
-        eclogger_fmt (LL_TRACE, "Q6_AIO", "signal", "signal seen [%i] -> unknown signal", event.ident);
+        eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> unknown signal", event.ident);
       }
     }
     
