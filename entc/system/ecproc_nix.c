@@ -267,6 +267,8 @@ void ecproc_terminate (EcProc self)
 
 int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
 {
+  eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", self->pid);
+
   ecproc_closeReading (self);
  
   return ecproc_waitForProcess ((void*)self->pid, err);
