@@ -258,20 +258,30 @@ EcProc ecproc_get (int argc, char* argv[], EcErr err)
 
 void ecproc_terminate (EcProc self)
 {
-  kill(self->pid, SIGTERM);
-  
-  ecproc_closeWriting (self);
+  if (self->pid)
+  {
+    kill(self->pid, SIGTERM);
+
+    eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", self->pid);
+ 
+    ecproc_closeWriting (self);
+  }
 }
 
 //-----------------------------------------------------------------------------
 
 int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
 {
-  eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", self->pid);
-
-  ecproc_closeReading (self);
- 
-  return ecproc_waitForProcess ((void*)self->pid, err);
+  if (self->pid)
+  {
+    ecproc_closeReading (self);
+    
+    return ecproc_waitForProcess ((void*)self->pid, err);
+  }
+  else
+  {
+    return ENTC_ERR_NONE;
+  }
 }
 
 //-----------------------------------------------------------------------------
