@@ -555,7 +555,7 @@ void ecaio_abortall (EcAio self)
 {
   ecmutex_lock (self->eventsm);
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "abortall", "clear all events");
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "abortall", "{%p} clear all events [%i]", self, eclist_size(self->events));
   
   eclist_clear (self->events);
   
