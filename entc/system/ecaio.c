@@ -596,8 +596,6 @@ int ecaio_handle_event (EcAio self)
       // send again for other threads
       ecaio_abort (self, NULL);
 
-      ecaio_abortall (self);
-      
       // abort
       return ENTC_ERR_NONE_CONTINUE;
     }
@@ -670,8 +668,6 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err
 
 	      free (events);
         
-        ecaio_abortall (self);
-
 	      ecaio_abort (self, NULL);
 
         // abort
@@ -774,37 +770,14 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     return res;
   }
   
-  return ecaio_wait_signal (self, timeout, 1, err);
-}
+  res = ecaio_wait_signal (self, timeout, 1, err);
 
-//-----------------------------------------------------------------------------
-
-/*
-static void ecaio_abort_signalhandler (int sig)
-{
-  switch (sig)
+  if (res)
   {
-    case SIGINT:
-    {
-      eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", sig, "SIGINT");
-      break;
-    }
-    case SIGTERM:
-    {
-      eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", sig, "SIGTERM");
-      break;
-    }
+    ecaio_abortall (self);
   }
-
-  uint64_t u = TRUE;
-  write (tfd, &u, sizeof(uint64_t));
-}
- */
-
-//-----------------------------------------------------------------------------
-
-static void ecaio_empty_signalhandler (int signum)
-{
+  
+  return res;
 }
 
 //-----------------------------------------------------------------------------
@@ -895,32 +868,14 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     ecaio_append (self, sfd, ctx, err);
   }
   
-  /*
-  // add terminator
-  tfd = eventfd (0, 0);
-  if (tfd == -1)
-  {
-
-  }
-
-  {
-    // create a new aio context
-    ctx = ecaio_context_create ();
-
-    ecaio_context_setCallbacks (ctx, NULL, ecaio_term_process, NULL);
-
-    ecaio_append (self, tfd, ctx, err);
-  }
-*/
-   
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)
   {
     res = ecaio_wait_signal (self, ENTC_INFINITE, 2, err);
   }
 
-  //close (tfd);
-
+  ecaio_abortall (self);
+  
   return res;
 }
 
