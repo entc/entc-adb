@@ -23,16 +23,13 @@
 
 static void* __STDCALL test_ecaio_init (EcErr err)
 {
-  return ecaio_create ();
+  return NULL;
 }
 
 //---------------------------------------------------------------------------
 
 static void __STDCALL test_ecaio_done (void* ptr)
 {
-  EcAio aio = ptr;
-  
-  ecaio_destroy (&aio);
 }
 
 //---------------------------------------------------------------------------
@@ -43,7 +40,7 @@ static int __STDCALL test_ecaio_parent_thread (void* ptr)
   
   printf ("worker thread wait\n");
   
-  ecaio_wait_abortOnSignal (ptr, TRUE, err);
+  ecaio_wait (ptr, ENTC_INFINITE, err);
   
   printf ("worker thread done\n");
   
@@ -74,7 +71,7 @@ static void __STDCALL test_ecaio_test1_onDestroy (void* ptr)
 static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr err)
 {
   int res;
-  EcAio aio = ptr;
+  EcAio aio = ecaio_create ();
 
   ecaio_init (aio, err);
 
@@ -93,8 +90,8 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     ecaio_proc_assign (&ctx, aio, err);
   }
-  
-  ecaio_reset_signals (err);
+
+  ecaio_registerTerminateControls (aio, FALSE, err);
   
   {
     EcThread thread = ecthread_new();
@@ -135,6 +132,8 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
   
   ecproc_destroy(&proc);
   
+  ecaio_destroy (&aio);
+  
   return 0;
 }
 
@@ -142,15 +141,19 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
 static int __STDCALL test_ecaio_client (void* ptr, TestEnvContext tctx, EcErr err)
 {
-  EcAio aio = ptr;
+  EcAio aio = ecaio_create ();
   
   ecaio_init (aio, err);
   
-  int res = ecaio_wait_abortOnSignal(aio, TRUE, err);
+  ecaio_registerTerminateControls (aio, FALSE, err);
+
+  int res = ecaio_wait(aio, ENTC_INFINITE, err);
   if (res)
   {
     printf("wait abort: %s\n", err->text);
   }
+  
+  ecaio_destroy (&aio);
   
   return 0;
 }

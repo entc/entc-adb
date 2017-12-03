@@ -1272,15 +1272,16 @@ int ecaio_reset_signals (EcErr err)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
+int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr err)
 {
   int res;
   
-  if (onlyTerm == FALSE)
+  if (noKeyboardInterupt == FALSE)
   {
     struct kevent kev;
     memset (&kev, 0x0, sizeof(struct kevent));
     
+    // register keyboard interupt
     EV_SET (&kev, SIGINT, EVFILT_SIGNAL, EV_ADD | EV_ENABLE, 0, 0, NULL);
     res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
     if (res < 0)
@@ -1292,6 +1293,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     struct kevent kev;
     memset (&kev, 0x0, sizeof(struct kevent));
     
+    // register TERM signal interupt
     EV_SET (&kev, SIGTERM, EVFILT_SIGNAL, EV_ADD | EV_ENABLE, 0, 0, NULL);
     res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
     if (res < 0)
@@ -1302,13 +1304,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
   
   ecaio_reset_signals (err);
   
-  res = ENTC_ERR_NONE;
-  while (res == ENTC_ERR_NONE)
-  {
-    res = ecaio_wait (self, ENTC_INFINITE, err);
-  }
-  
-  return res;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
