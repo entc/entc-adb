@@ -197,6 +197,8 @@ static int __STDCALL ecaio_proc_onProcess (void* ptr, EcAioContext ctx, unsigned
 {
   EcAioProc self = ptr;
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
+  
   if (self->onNotify)
   {
     self->onNotify (self->ptr, flags);

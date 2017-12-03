@@ -1142,7 +1142,7 @@ void ecaio_abort_all (EcAio self)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
+int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 {
   int res;
   struct timespec tmout;
@@ -1158,6 +1158,8 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
   {
     tmout.tv_sec = timeout / 1000;
     tmout.tv_nsec = (timeout % 1000) * 1000;
+    
+    eclogger_fmt (LL_TRACE, "ENTC AIO", "wait", "wait for timeout %i seconds", tmout.tv_sec);
     
     res = kevent (self->kq, NULL, 0, &event, 1, &tmout);
   }
@@ -1247,7 +1249,7 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
       if (signalKind)
       {
         eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", event.ident, signalKind);
- 
+        
         return ecaio_abort (self, err);
       }
       else
@@ -1258,6 +1260,17 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
     
     return ENTC_ERR_NONE;
   }
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_wait (EcAio self, EcErr err)
+{
+  int res = ENTC_ERR_NONE;
+  
+  for (; res == ENTC_ERR_NONE; res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err));
+  
+  return res;
 }
 
 //-----------------------------------------------------------------------------

@@ -41,7 +41,7 @@ static int __STDCALL test_ecaio_test1_thread (void* ptr)
   
   printf ("worker thread wait\n");
   
-  ecaio_wait (ptr, ENTC_INFINITE, err);
+  ecaio_wait (ptr, err);
 
   printf ("worker thread done\n");
 
@@ -136,7 +136,7 @@ static int __STDCALL test_ecaio_test3_thread (void* ptr)
   
   printf ("worker thread wait\n");
   
-  ecaio_wait_abortOnSignal (ptr, TRUE, err);
+  ecaio_wait (ptr, err);
   
   printf ("worker thread done\n");
   

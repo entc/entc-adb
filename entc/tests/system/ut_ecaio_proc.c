@@ -40,7 +40,7 @@ static int __STDCALL test_ecaio_parent_thread (void* ptr)
   
   printf ("worker thread wait\n");
   
-  ecaio_wait (ptr, ENTC_INFINITE, err);
+  ecaio_wait (ptr, err);
   
   printf ("worker thread done\n");
   
@@ -77,6 +77,8 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
   ecaio_init (aio, err);
   
+  ecaio_registerTerminateControls (aio, TRUE, err);
+  
   res = ecproc_start (proc, "ut_ecaio_proc", "test", err);
   if (testctx_err (tctx, err))
   {
@@ -92,8 +94,6 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     ecaio_proc_assign (&ctx, aio, err);
   }
-
-  ecaio_registerTerminateControls (aio, FALSE, err);
   
   printf ("$2\n");
   
@@ -158,9 +158,9 @@ static int __STDCALL test_ecaio_client (void* ptr, TestEnvContext tctx, EcErr er
   
   ecaio_init (aio, err);
   
-  ecaio_registerTerminateControls (aio, FALSE, err);
+  ecaio_registerTerminateControls (aio, TRUE, err);
 
-  int res = ecaio_wait(aio, ENTC_INFINITE, err);
+  int res = ecaio_wait(aio, err);
   if (res)
   {
     printf("wait abort: %s\n", err->text);

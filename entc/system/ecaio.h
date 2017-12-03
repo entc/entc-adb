@@ -44,7 +44,9 @@ __LIBEX int ecaio_abort (EcAio, EcErr);
 
 __LIBEX int ecaio_addQueueEvent (EcAio, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
 
-__LIBEX int ecaio_wait (EcAio, unsigned long timeout, EcErr);
+__LIBEX int ecaio_waitForNextEvent (EcAio, unsigned long timeout, EcErr);
+
+__LIBEX int ecaio_wait (EcAio, EcErr);
 
 __LIBEX int ecaio_addContextToEvent (EcAio, EcAioContext ctx, EcErr err);
 
