@@ -135,13 +135,15 @@ static int __STDCALL ecaio_notify_fct_process (void* ptr, EcAioContext ctx, unsi
       //free (uname);
     }
     
-    nOffset = fni->NextEntryOffset;
-    if (nOffset == 0)
+    if (fni->NextEntryOffset)
+    {
+      char *p = (char*)fni;
+      fni = (FILE_NOTIFY_INFORMATION*)(p + fni->NextEntryOffset);
+    }
+    else
     {
       break;
     }
-    
-    fni += nOffset;
   }
   
   return ecaio_notify_read (self, ctx);

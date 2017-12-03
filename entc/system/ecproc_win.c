@@ -188,8 +188,6 @@ int ecproc_command (EcProc self, const EcString folder, const EcString binary, c
 
   if (args == NULL)
   {
-    EcString h2;
-
     // create a named pipe for communication
     res = ecproc_createPipe (self, err);
 	if (res)
@@ -197,11 +195,7 @@ int ecproc_command (EcProc self, const EcString folder, const EcString binary, c
       return res;
 	}
 
-    h2 = ecstr_cat3 (binary, " ", self->pipeUUID);
-
-    realArgs = ecstr_cat3 (h2, " ", args);
-
-	ecstr_delete (&h2);
+    realArgs = ecstr_cat3 (binary, " ", self->pipeUUID);
   }
   else
   {
@@ -223,7 +217,7 @@ int ecproc_command (EcProc self, const EcString folder, const EcString binary, c
 
   ecstr_delete (&realArgs);
 
-  if (self->pipe)
+  if ((res == ENTC_ERR_NONE) && self->pipe)
   {
     if (ConnectNamedPipe (self->pipe, NULL) == 0)
     {
