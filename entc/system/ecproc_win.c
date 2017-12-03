@@ -27,7 +27,7 @@ int ecproc_isWinNT ()
 
 void ecproc_initSecurityAttributes (SECURITY_ATTRIBUTES* sa, SECURITY_DESCRIPTOR* sd)
 {
-   if (q6sys_proc_isWinNT()) //initialize security descriptor (Windows NT)
+   if (ecproc_isWinNT()) //initialize security descriptor (Windows NT)
    {
       InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION);
       SetSecurityDescriptorDacl (sd, TRUE, NULL, FALSE);
@@ -52,7 +52,7 @@ void* ecproc_createNamedPipe (const char* name, EcErr err)
   
   EcString namedPipe = ecstr_cat2 ("\\\\.\\pipe\\", name);
   
-  q6sys_proc_initSecurityAttributes (&sa, &sd);
+  ecproc_initSecurityAttributes (&sa, &sd);
   
   pipeHandle = CreateNamedPipe (namedPipe, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE, 10, 1024, 1024, NMPWAIT_USE_DEFAULT_WAIT, &sa);
   
@@ -146,7 +146,10 @@ void ecproc_destroy (EcProc* pself)
 {
   EcProc self = *pself;
 
-  CloseHandle (self->pipe);
+  if (self->pipe)
+  {
+    CloseHandle (self->pipe);
+  }
   
   CloseHandle (self->processInfo.hProcess);
   
@@ -155,65 +158,101 @@ void ecproc_destroy (EcProc* pself)
 
 //-----------------------------------------------------------------------------
 
-int ecproc_start (EcProc self, const char* command, const char* args, const char* folder, EcErr err)
+int ecproc_createPipe (EcProc self, EcErr err)
 {
   EcBuffer buf = ecbuf_create_uuid ();
 
   ecstr_replaceTO (&(self->pipeUUID), ecbuf_str (&buf));
   //ecstr_replaceTO (&(self->pipeName), ecstr_cat2 ("\\\\.\\pipe\\", self->pipeUUID));
 
-  self->pipe = q6sys_pipe_createNamedPipe (self->pipeUUID, err);
+  self->pipe = ecproc_createNamedPipe (self->pipeUUID, err);
   if (self->pipe == NULL)
   {
-    return ENTC_ERR_OS_ERROR;
-  }
-  
-  /*
-  q6sys_proc_initSecurityAttributes (&(self->sa), &(self->sd));
-
-  self->pipe = CreateNamedPipe(self->pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE, 10, 1024, 1024, NMPWAIT_USE_DEFAULT_WAIT, &(self->sa));
-  if (self->pipe == INVALID_HANDLE_VALUE)
-  {
-    return q6err_lastErrorOS (err, Q6LVL_ERROR);
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
 
-  FlushFileBuffers (self->pipe);
-*/
-  
-  
-   
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecproc_command (EcProc self, const EcString folder, const EcString binary, const char* args, EcErr err)
+{
+  int res = ENTC_ERR_NONE;
+  EcString realArgs;
+
   ZeroMemory (&(self->startupInfo), sizeof(STARTUPINFO));
   self->startupInfo.cb = sizeof(STARTUPINFO);
 
   ZeroMemory (&(self->processInfo), sizeof(PROCESS_INFORMATION));
 
+  if (args == NULL)
   {
-    const EcString cmdName = ecfs_extractFile (command);
-    EcString h2 = ecstr_cat3 (cmdName, " ", self->pipeUUID);
-    EcString realArgs = ecstr_cat3 (h2, " ", args);
+    EcString h2;
 
-    int res = CreateProcessA (command, realArgs, NULL, NULL, TRUE, 0, NULL, folder, &(self->startupInfo), &(self->processInfo));
+    // create a named pipe for communication
+    res = ecproc_createPipe (self, err);
+	if (res)
+	{
+      return res;
+	}
 
-    ecstr_delete (&h2);
-    ecstr_delete (&realArgs);
+    h2 = ecstr_cat3 (binary, " ", self->pipeUUID);
 
-    if (res == 0)
-    {
-      eclogger_fmt (LL_ERROR, "Q6", "start proc", "can't start '%s'", command);
+    realArgs = ecstr_cat3 (h2, " ", args);
 
-      return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-    }
+	ecstr_delete (&h2);
+  }
+  else
+  {
+    realArgs = ecstr_cat3 (binary, " ", args);
   }
 
   {
-    DWORD res = ConnectNamedPipe (self->pipe, NULL);
-    if (res == FALSE)
+    EcString pathbn = ecfs_mergeToPath (folder, binary);
+
+    if (CreateProcessA (pathbn, realArgs, NULL, NULL, TRUE, 0, NULL, folder, &(self->startupInfo), &(self->processInfo)) == 0)
+	{
+      eclogger_fmt (LL_ERROR, "Q6", "start proc", "can't start '%s' : '%s'", folder, binary);
+
+	  res = ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+	}
+
+    ecstr_delete (&pathbn);
+  }
+
+  ecstr_delete (&realArgs);
+
+  if (self->pipe)
+  {
+    if (ConnectNamedPipe (self->pipe, NULL) == 0)
     {
 
     }
   }
-            
-  return ENTC_ERR_NONE;
+
+  return res;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecproc_start (EcProc self, const char* command, const char* args, EcErr err)
+{
+  int res;
+  const EcString cmdName = ecfs_extractFile (command);
+
+  // for windows
+  EcString execbn = ecstr_cat2 (cmdName, ".exe");
+
+  // use the current directory
+  EcString folder = ecproc_ownPath ();
+	
+  res = ecproc_command (self, folder, execbn, args, err);
+
+  ecstr_delete (&execbn);
+  ecstr_delete (&folder);
+
+  return res;
 }
 
 //-----------------------------------------------------------------------------
@@ -228,7 +267,7 @@ EcProc ecproc_get (int argc, char* argv[], EcErr err)
   {
     EcProc process;
 
-    void* pipeHandle = q6sys_pipe_openNamedPipe (argv[1], err);
+    void* pipeHandle = ecproc_openNamedPipe (argv[1], err);
     if (pipeHandle == INVALID_HANDLE_VALUE)
     {
       ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
@@ -268,9 +307,7 @@ void ecproc_terminate (EcProc self)
 
 int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
 {
-  DWORD res = WaitForSingleObject (self->processInfo.hProcess, INFINITE);
-  
-  
+  return ecproc_waitForProcess (self->processInfo.hProcess, err);
 }
 
 //-----------------------------------------------------------------------------
@@ -302,6 +339,17 @@ EcString ecproc_getExecutableName (int argc, char* argv[])
   GetModuleFileNameA (NULL, buffer, MAX_PATH);
   
   return ecfs_extractFileName (buffer);
+}
+
+//-----------------------------------------------------------------------------
+
+int ecproc_waitForProcess (void* handle, EcErr err)
+{
+  DWORD res = WaitForSingleObject (handle, INFINITE);
+  
+  
+
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
