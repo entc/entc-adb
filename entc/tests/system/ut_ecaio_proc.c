@@ -77,7 +77,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
   ecaio_init (aio, err);
   
-  ecaio_registerTerminateControls (aio, TRUE, err);
+  ecaio_registerTerminateControls (aio, FALSE, err);
   
   res = ecproc_start (proc, "ut_ecaio_proc", "test", err);
   if (testctx_err (tctx, err))
@@ -154,13 +154,14 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
 static int __STDCALL test_ecaio_client (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  int res;
   EcAio aio = ecaio_create ();
   
   ecaio_init (aio, err);
   
   ecaio_registerTerminateControls (aio, TRUE, err);
 
-  int res = ecaio_wait(aio, err);
+  res = ecaio_wait(aio, err);
   if (res)
   {
     printf("wait abort: %s\n", err->text);

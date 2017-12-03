@@ -129,7 +129,7 @@ int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
+int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 {
   DWORD numOfBytes;
   ULONG_PTR ptr;
@@ -202,6 +202,20 @@ int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_wait (EcAio self, EcErr err)
+{
+  int res = ENTC_ERR_NONE;
+  
+  for (; res == ENTC_ERR_NONE; res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err));
+  
+  return res;
+}
+
+//-----------------------------------------------------------------------------
+
+static int g_termOnly = FALSE;
+static EcAio g_aio = NULL;
+
 static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 {
   int abort = FALSE;
@@ -210,7 +224,7 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
   {
     case CTRL_C_EVENT:
 	{
-//      if (g_termOnly == FALSE)
+      if (g_termOnly == FALSE)
 	  {
         abort = TRUE;
 
@@ -233,48 +247,42 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 	  eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "close");
 	  break;
 	}
+	default:
+	{
+      abort = FALSE;
+
+	  eclogger_fmt (LL_TRACE, "ENTC", "signal", "unknown signal seen [%i]", ctrlType);
+	  break;
+	}
   }
   if (abort)
   {
 	  int res;
       EcErr err = ecerr_create ();
       
-
-//      res = ecaio_abort (g_aio, err);
+      res = ecaio_abort (g_aio, err);
       
       ecerr_destroy (&err);
       
-      Sleep (5000);
+      //Sleep (5000);
   }
 
-  return 0;
+  return TRUE;
 }
 
 //-----------------------------------------------------------------------------
 
-int ecaio_reset_signals (EcErr err)
-{  
-  if( !SetConsoleCtrlHandler ((PHANDLER_ROUTINE)ecaio_wait_ctrl_handler, TRUE ))
+int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr err)
+{
+  g_aio = self;
+  g_termOnly = noKeyboardInterupt;
+
+  if (SetConsoleCtrlHandler ((PHANDLER_ROUTINE)ecaio_wait_ctrl_handler, TRUE) == 0)
   {
-    return ENTC_ERR_OS_ERROR;
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
 
   return ENTC_ERR_NONE;
-}
-
-//-----------------------------------------------------------------------------
-
-int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
-{
-  int res;
-  
-  res = ENTC_ERR_NONE;
-  while (res == ENTC_ERR_NONE)
-  {
-    res = ecaio_wait (self, ENTC_INFINITE, err);
-  }
-  
-  return res;
 }
 
 //-----------------------------------------------------------------------------

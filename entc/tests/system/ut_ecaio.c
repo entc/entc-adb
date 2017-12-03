@@ -156,7 +156,15 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     
 #ifdef _WIN32
 
+    printf ("send SIGINT\n");
+
 	GenerateConsoleCtrlEvent (CTRL_C_EVENT, 0);
+
+	ece_sleep (1000);
+
+	printf ("send SIGTERM\n");
+
+	GenerateConsoleCtrlEvent (CTRL_CLOSE_EVENT, 0);
 
 #else
 
@@ -246,8 +254,8 @@ int main(int argc, char* argv[])
   
   testenv_reg (te, "Single Thread", test_ecaio_init, test_ecaio_done, test_ecaio_test1);
   testenv_reg (te, "Multi Thread", test_ecaio_init, test_ecaio_done, test_ecaio_test2);
-  testenv_reg (te, "Signal TERM", test_ecaio_init, test_ecaio_done, test_ecaio_test3);
   testenv_reg (te, "Signal INT", test_ecaio_init, test_ecaio_done, test_ecaio_test4);
+  testenv_reg (te, "Signal TERM", test_ecaio_init, test_ecaio_done, test_ecaio_test3);
   
   testenv_run (te);
   
