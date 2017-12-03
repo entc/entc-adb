@@ -27,11 +27,6 @@ struct EcAio_s
 
 //-----------------------------------------------------------------------------
 
-static EcAio g_aio = NULL;
-static int g_termOnly = FALSE;
-
-//-----------------------------------------------------------------------------
-
 EcAio ecaio_create ()
 {
   EcAio self = ENTC_NEW(struct EcAio_s);
@@ -215,7 +210,7 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
   {
     case CTRL_C_EVENT:
 	{
-      if (g_termOnly == FALSE)
+//      if (g_termOnly == FALSE)
 	  {
         abort = TRUE;
 
@@ -245,7 +240,7 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
       EcErr err = ecerr_create ();
       
 
-      res = ecaio_abort (g_aio, err);
+//      res = ecaio_abort (g_aio, err);
       
       ecerr_destroy (&err);
       
@@ -257,16 +252,21 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
-{
-  int res;
-  g_aio = self;
-  g_termOnly = onlyTerm;
-  
+int ecaio_reset_signals (EcErr err)
+{  
   if( !SetConsoleCtrlHandler ((PHANDLER_ROUTINE)ecaio_wait_ctrl_handler, TRUE ))
   {
     return ENTC_ERR_OS_ERROR;
   }
+
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
+{
+  int res;
   
   res = ENTC_ERR_NONE;
   while (res == ENTC_ERR_NONE)

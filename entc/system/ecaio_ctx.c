@@ -104,7 +104,7 @@ int ecaio_context_process (EcAioContext self, unsigned long val1, unsigned long 
 {
   int res = ecaio_refctx_process (self->ref, self, val1, val2);
   
-  if (res == ENTC_AIO_CODE_DONE || res == ENTC_AIO_CODE_ABORTALL)
+  if (res == ENTC_AIO_CODE_DONE || res == ENTC_AIO_CODE_ABORTALL || res == ENTC_AIO_CODE_ONCE)
   {
     ecaio_context_destroy (&self);
   }

@@ -1,6 +1,7 @@
 #include "ecaio_proc.h"
 
 #include "utils/eclogger.h"
+#include "ecproc.h"
 
 #if defined __MS_IOCP
 
@@ -37,19 +38,44 @@ struct EcAioProc_s
 static int __STDCALL ecaio_proc_thread (void* ptr)
 {
   EcAioProc self = ptr;
+  int res;
   
-  // wait here until something happens
-  WaitForSingleObject (self->handle, INFINITE);
+  EcErr err = ecerr_create();
   
+  // block all signals
+  res = ecaio_reset_signals (err);
+  if (res)
   {
-    EcErr err = ecerr_create ();
-    
-    ecaio_triggerENode (self->aio, self->eventh, err);
-    
-    ecerr_destroy (&err);
+    eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
   }
   
+  res = ecproc_waitForProcess (self->handle, err);
+  if (res)
+  {
+    eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
+  }
+
+  ecaio_triggerENode (self->aio, self->eventh, err);
+    
+  ecerr_destroy (&err);
+
   return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+static int __STDCALL ecaio_proc_onNotify (void* ptr, int action)
+{
+  EcAioProc self = ptr;
+  
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
+
+  if (self->onNotify)
+  {
+    self->onNotify (self->ptr, 0);
+  }
+ 
+  return ENTC_AIO_CODE_ONCE;
 }
 
 //-----------------------------------------------------------------------------
@@ -58,10 +84,9 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
 {
   EcAioProc self = ptr;
   
-  if (self->onNotify)
-  {
-    self->onNotify (self->ptr, 0);
-  }
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy");
+
+  ecthread_cancel (self->thread);
   
   if (self->onDestroy)
   {
@@ -72,16 +97,18 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   
   ecthread_delete (&(self->thread));
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc thread", "stopped and destroyed");
+
   ENTC_DEL(&self, struct EcAioProc_s);
 }
 
 //-----------------------------------------------------------------------------
 
-EcAioProc ecaio_proc_create (uint64_t pid)
+EcAioProc ecaio_proc_create (void* phandle)
 {
   EcAioProc self = ENTC_NEW(struct EcAioProc_s);
   
-  self->handle = (void*)pid;
+  self->handle = phandle;
   
   self->onNotify = NULL;
   self->onDestroy = NULL;
@@ -104,7 +131,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   
   self->aio = aio;
   
-  ecaio_event_setCallback(event, self, ecaio_proc_onDestroy);
+  ecaio_event_setCallback (event, self, ecaio_proc_onNotify, ecaio_proc_onDestroy);
   
   res = ecaio_event_assign (&event, aio, &(self->eventh), err);
   

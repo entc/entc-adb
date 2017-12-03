@@ -76,9 +76,9 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
   int res;
   EcAio aio = ptr;
 
-  ecaio_init (aio, err);
-
   EcProc proc = ecproc_create ();
+
+  ecaio_init (aio, err);
   
   res = ecproc_start (proc, "ut_ecaio_proc", "test", err);
   if (testctx_err (tctx, err))
@@ -86,6 +86,8 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     return 0;
   }
   
+  printf ("$0\n");
+
   {
     EcAioProc ctx = ecaio_proc_create (ecproc_handle(proc));
     
@@ -93,8 +95,12 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     ecaio_proc_assign (&ctx, aio, err);
   }
-  
+    
+  printf ("$1\n");
+
   ecaio_reset_signals (err);
+
+  printf ("$2\n");
   
   {
     EcThread thread = ecthread_new();
@@ -123,8 +129,17 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     printf ("#5\n");
 
-    // this should not trigger
-    kill(getpid(), SIGTERM);
+#ifdef _WIN32
+
+	GenerateConsoleCtrlEvent (CTRL_C_EVENT, 0);
+
+#else
+
+	// this should not trigger
+    raise(SIGTERM);
+
+#endif
+
     
     printf ("#6\n");
 
@@ -142,11 +157,12 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
 static int __STDCALL test_ecaio_client (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  int res;
   EcAio aio = ptr;
   
   ecaio_init (aio, err);
   
-  int res = ecaio_wait_abortOnSignal(aio, TRUE, err);
+  res = ecaio_wait_abortOnSignal(aio, TRUE, err);
   if (res)
   {
     printf("wait abort: %s\n", err->text);
