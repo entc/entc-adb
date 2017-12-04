@@ -323,14 +323,14 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
 
   ecthread_cancel (self->thread);
   
+  ecthread_join (self->thread);
+  
+  ecthread_delete (&(self->thread));
+  
   if (self->onDestroy)
   {
     self->onDestroy (self->ptr);
   }
-  
-  ecthread_join (self->thread);
-  
-  ecthread_delete (&(self->thread));
   
   eclogger_fmt (LL_TRACE, "ENTC AIO", "proc thread", "stopped and destroyed");
 
