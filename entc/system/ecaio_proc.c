@@ -321,18 +321,16 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
 
   self->onNotify = NULL;
   
-  ecthread_join (self->thread);
-  
-  ecthread_delete (&(self->thread));
-  
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "stopped [%lu]", (unsigned long)self->pid);
-  
   if (self->onDestroy)
   {
     self->onDestroy (self->ptr);
   }
 
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc thread", "destroyed [%lu]", (unsigned long)self->pid);
+  ecthread_join (self->thread);
+  
+  ecthread_delete (&(self->thread));
+  
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "stopped [%lu]", (unsigned long)self->pid);
   
   ENTC_DEL(&self, struct EcAioProc_s);
 }
