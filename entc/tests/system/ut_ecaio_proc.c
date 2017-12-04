@@ -131,7 +131,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 #else
 
 	// this should not trigger
-    raise(SIGINT);
+    kill(getpid(), SIGINT);
 
 #endif
 
