@@ -390,6 +390,8 @@ int ecproc_waitForProcess (void* handle, EcErr err)
       break;
     }
   }
+  
+  printf("wait done\n");
 
   return ENTC_ERR_NONE;
 }
