@@ -292,14 +292,21 @@ EcProc ecproc_get (int argc, char* argv[], EcErr err)
 
 //-----------------------------------------------------------------------------
 
+void ecproc_terminateProcess (void* handle)
+{
+  kill(handle, SIGTERM);
+  
+  eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", (int)handle);
+}
+
+//-----------------------------------------------------------------------------
+
 void ecproc_terminate (EcProc self)
 {
   if (self->pid)
   {
-    kill(self->pid, SIGTERM);
-
-    eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", self->pid);
- 
+    ecproc_terminateProcess ((void*)self->pid);
+    
     ecproc_closeWriting (self);
   }
 }
