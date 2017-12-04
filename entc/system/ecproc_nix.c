@@ -87,40 +87,46 @@ EcProc ecproc_create (void)
 
 void ecproc_closeWriting (EcProc self)
 {
-  printf ("about to close writing\n");
-  
-  if (close (self->fdOut) < 0)
+  if (self->fifoOut)
   {
-    EcErr err = ecerr_create();
+    printf ("about to close writing\n");
     
-    ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    if (close (self->fdOut) < 0)
+    {
+      EcErr err = ecerr_create();
+      
+      ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+      
+      eclogger_fmt (LL_ERROR, "ENTC PRC", "close write", "can't close pipe: %s", err->text);
+      
+      ecerr_destroy (&err);
+    }
     
-    eclogger_fmt (LL_ERROR, "ENTC PRC", "close write", "can't close pipe: %s", err->text);
-    
-    ecerr_destroy (&err);
+    printf ("writing closed\n");
   }
-
-  printf ("writing closed\n");
 }
 
 //-----------------------------------------------------------------------------
 
 void ecproc_closeReading (EcProc self)
 {
-  printf ("about to close reading\n");
-
-  if (close (self->fdIn) < 0)
+  if (self->fifoIn)
   {
-    EcErr err = ecerr_create();
+    printf ("about to close reading\n");
     
-    ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    if (close (self->fdIn) < 0)
+    {
+      EcErr err = ecerr_create();
+      
+      ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+      
+      eclogger_fmt (LL_ERROR, "ENTC PRC", "close read", "can't close pipe: %s", err->text);
+      
+      ecerr_destroy (&err);
+    }
     
-    eclogger_fmt (LL_ERROR, "ENTC PRC", "close read", "can't close pipe: %s", err->text);
-    
-    ecerr_destroy (&err);
+    printf ("reading closed\n");
   }
-  
-  printf ("reading closed\n");
 }
 
 //-----------------------------------------------------------------------------
