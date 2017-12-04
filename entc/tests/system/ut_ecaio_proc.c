@@ -98,7 +98,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
   printf ("$2\n");
   
   {
-    EcThread thread = ecthread_new();
+    EcThread thread = ecthread_new(NULL);
     
     ecthread_start (thread, test_ecaio_parent_thread, aio);
 

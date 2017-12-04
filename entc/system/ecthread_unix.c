@@ -39,6 +39,8 @@ struct EcThread_s {
   
   ecthread_callback_fct fct;
   
+  ecthread_fct_onDestroy onDestroy;
+  
   void* ptr;
   
   pthread_t tid;
@@ -49,30 +51,41 @@ struct EcThread_s {
 
 //-----------------------------------------------------------------------------------
 
-void* ecthread_run(void* params)
+static int cleanup_pop_arg = 0;
+
+static void* ecthread_run (void* params)
 {
   EcThread self = params;
   
   if (self->fct)
   {
-    while (self->fct(self->ptr))
+    while (self->fct (self->ptr))
     {
+      pthread_testcancel();
+      
       wait(0);
     }
   }
   
-  pthread_exit(0);
+  if (self->onDestroy)
+  {
+    self->onDestroy(params);
+  }
+  
+  return NULL;
 }
 
 //-----------------------------------------------------------------------------------
 
-EcThread ecthread_new()
+EcThread ecthread_new (ecthread_fct_onDestroy onDestroy)
 {
   EcThread self = ENTC_NEW(struct EcThread_s);
   
   self->fct = NULL;
   self->ptr = NULL;
   //memset(self->tid, 0x00, sizeof(pthread_t));
+  
+  self->onDestroy = onDestroy;
   
   self->status = FALSE;
   
@@ -152,7 +165,7 @@ EcTimedThread ectimedthread_new()
 {
   EcTimedThread self = ENTC_NEW(struct EcTimedThread_s);
   
-  self->thread = ecthread_new();
+  self->thread = ecthread_new (NULL);
   self->ec = ece_context_new();
   
   return self;

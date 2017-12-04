@@ -64,7 +64,7 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
   }
   
   {
-    EcThread thread = ecthread_new();
+    EcThread thread = ecthread_new(NULL);
     
     ecthread_start (thread, test_ecaio_test1_thread, aio);
     
@@ -104,7 +104,7 @@ static int __STDCALL test_ecaio_test2 (void* ptr, TestEnvContext ctx, EcErr err)
     
     for (i = 0; i < 10; i++)
     {
-      thread [i] = ecthread_new();
+      thread [i] = ecthread_new(NULL);
       
       ecthread_start (thread [i], test_ecaio_test1_thread, aio);
     }
@@ -165,7 +165,7 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     
     for (i = 0; i < 10; i++)
     {
-      thread [i] = ecthread_new();
+      thread [i] = ecthread_new(NULL);
       
       ecthread_start (thread [i], test_ecaio_test3_thread, aio);
     }
