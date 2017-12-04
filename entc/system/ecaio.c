@@ -400,6 +400,9 @@ void ecaio_destroy (EcAio* pself)
   ecmutex_delete(&(self->mutex));
   ecmutex_delete(&(self->iom));
   
+  ecmutex_delete(&(self->eventsm));
+  eclist_destroy (&(self->events));
+  
   ENTC_DEL(pself, struct EcAio_s);
 }
 
