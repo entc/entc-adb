@@ -312,13 +312,13 @@ int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
   {
     int res;
     
-    eclogger_fmt (LL_TRACE, "ENTC PRC", "wait", "wait for process '%p'", self);
+    eclogger_fmt (LL_TRACE, "ENTC PRC", "wait", "wait for process [%i]", self->pid);
     
     ecproc_closeReading (self);
     
     res = ecproc_waitForProcess ((void*)self->pid, err);
 
-    eclogger_fmt (LL_TRACE, "ENTC PRC", "wait", "wait for process '%p' done", self);
+    eclogger_fmt (LL_TRACE, "ENTC PRC", "wait", "wait for process [%i] done", self->pid);
     
     return res;
   }
