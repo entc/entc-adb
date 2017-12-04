@@ -283,16 +283,16 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
     eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
   }
 
-  printf("t1\n")
+  printf("t1\n");
   
   if (self->onNotify)
   {
-    printf("t2\n")
+    printf("t2\n");
 
     ecaio_triggerENode (self->aio, self->eventh, err);
   }
   
-  printf("t3\n")
+  printf("t3\n");
 
   ecerr_destroy (&err);
 
