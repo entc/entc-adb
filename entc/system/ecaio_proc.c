@@ -316,7 +316,7 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   
   eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy [%lu]", (unsigned long)self->pid);
 
-  ecproc_terminateProcess (self->pid);
+  self->onNotify = NULL;
   
   ecthread_join (self->thread);
   
