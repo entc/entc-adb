@@ -78,6 +78,8 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     ecthread_delete(&thread);
   }
   
+  ecaio_destroy (&aio);
+
   return 0;
 }
 
@@ -122,6 +124,8 @@ static int __STDCALL test_ecaio_test2 (void* ptr, TestEnvContext ctx, EcErr err)
     }
   }
   
+  ecaio_destroy (&aio);
+
   return 0;
 }
 
@@ -190,6 +194,8 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     }
   }
   
+  ecaio_destroy (&aio);
+
   return 0;
 }
 
@@ -243,6 +249,8 @@ static int __STDCALL test_ecaio_test4 (void* ptr, TestEnvContext ctx, EcErr err)
     }
   }
   
+  ecaio_destroy (&aio);
+
   return 0;
 }
 
