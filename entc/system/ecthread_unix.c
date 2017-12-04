@@ -51,8 +51,6 @@ struct EcThread_s {
 
 //-----------------------------------------------------------------------------------
 
-static int cleanup_pop_arg = 0;
-
 static void* ecthread_run (void* params)
 {
   EcThread self = params;
@@ -69,7 +67,7 @@ static void* ecthread_run (void* params)
   
   if (self->onDestroy)
   {
-    self->onDestroy(params);
+    self->onDestroy (self->ptr);
   }
   
   return NULL;
