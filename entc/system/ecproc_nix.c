@@ -356,7 +356,7 @@ int ecproc_waitForProcess (void* handle, EcErr err)
   {
     case CLD_EXITED:
     {
-      eclogger_fmt (LL_WARN, "ENTC", "child", "child process terminated [%i]", info.si_pid);
+   //   eclogger_fmt (LL_WARN, "ENTC", "child", "child process terminated [%i]", info.si_pid);
       break;
     }
     case CLD_KILLED:
