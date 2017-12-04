@@ -347,6 +347,17 @@ struct EcAio_s
 
 //-----------------------------------------------------------------------------
 
+static int __STDCALL ecaio_ctxs_onDestroy (void* ptr)
+{
+  EcAioContext ctx = ptr;
+  
+  ecaio_context_destroy (&ctx);
+  
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
 static int __STDCALL ecaio_events_onDestroy (void* ptr)
 {
   EcAioContext ctx = ptr;
@@ -366,7 +377,7 @@ EcAio ecaio_create ()
   self->ufd = 0;
   self->ctx = NULL;
 
-  self->ctxs = eclist_create (NULL);
+  self->ctxs = eclist_create (ecaio_ctxs_onDestroy);
 
   /*
    self->pfd[0] = NULL;
@@ -586,9 +597,7 @@ int ecaio_handle_event (EcAio self)
 
   if (eclist_cursor_next (&c))
   {
-    ctx = eclist_data(c.node);
-
-    eclist_cursor_erase (self->ctxs, &c);
+    ctx = eclist_cursor_extract (self->ctxs, &c);
   }
 
   ecmutex_unlock (self->mutex);
