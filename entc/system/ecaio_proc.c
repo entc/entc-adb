@@ -294,20 +294,6 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-void __STDCALL ecaio_proc_thread_onDestroy (void* ptr)
-{
-  EcAioProc self = ptr;
- 
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "stopped [%lu]", (unsigned long)self->pid);
-  
-  if (self->onDestroy)
-  {
-    self->onDestroy (self->ptr);
-  }
-}
-
-//-----------------------------------------------------------------------------
-
 static int __STDCALL ecaio_proc_onNotify (void* ptr, int action)
 {
   EcAioProc self = ptr;
@@ -336,6 +322,13 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   
   ecthread_delete (&(self->thread));
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "stopped [%lu]", (unsigned long)self->pid);
+  
+  if (self->onDestroy)
+  {
+    self->onDestroy (self->ptr);
+  }
+
   eclogger_fmt (LL_TRACE, "ENTC AIO", "proc thread", "destroyed [%lu]", (unsigned long)self->pid);
   
   ENTC_DEL(&self, struct EcAioProc_s);
@@ -375,7 +368,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   res = ecaio_event_assign (&event, aio, &(self->eventh), err);
   
   // thread part
-  self->thread = ecthread_new (ecaio_proc_thread_onDestroy);
+  self->thread = ecthread_new (NULL);
   ecthread_start(self->thread, ecaio_proc_thread, self);
   
   *pself = NULL;
