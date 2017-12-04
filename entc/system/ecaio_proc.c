@@ -283,7 +283,7 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
     eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
   }
 
-  printf("t1\n");
+  printf("t1 [%lu]\n", (unsigned long)self->pid);
   
   if (self->onNotify)
   {
