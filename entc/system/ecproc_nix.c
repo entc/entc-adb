@@ -87,14 +87,46 @@ EcProc ecproc_create (void)
 
 void ecproc_closeWriting (EcProc self)
 {
-  close (self->fdOut);
+  if (self->fifoOut)
+  {
+    printf ("about to close writing\n");
+    
+    if (close (self->fdOut) < 0)
+    {
+      EcErr err = ecerr_create();
+      
+      ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+      
+      eclogger_fmt (LL_ERROR, "ENTC PRC", "close write", "can't close pipe: %s", err->text);
+      
+      ecerr_destroy (&err);
+    }
+    
+    printf ("writing closed\n");
+  }
 }
 
 //-----------------------------------------------------------------------------
 
 void ecproc_closeReading (EcProc self)
 {
-  close (self->fdIn);
+  if (self->fifoIn)
+  {
+    printf ("about to close reading\n");
+    
+    if (close (self->fdIn) < 0)
+    {
+      EcErr err = ecerr_create();
+      
+      ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+      
+      eclogger_fmt (LL_ERROR, "ENTC PRC", "close read", "can't close pipe: %s", err->text);
+      
+      ecerr_destroy (&err);
+    }
+    
+    printf ("reading closed\n");
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -103,15 +135,15 @@ void ecproc_destroy (EcProc* pself)
 {
   EcProc self = *pself;
   
-  //eclogger_fmt (LL_TRACE, "Q6_PROC", "destroy", "process context '%s' closing pipe", self->name);
+  eclogger_fmt (LL_TRACE, "ENTC PRC", "destroy", "process context '%p' closing pipes", self);
   
   ecproc_closeWriting (self);
-  ecproc_closeReading (self);
-  
-  //eclogger_fmt (LL_TRACE, "Q6_PROC", "destroy", "process context '%s' destroyed", self->name);
+  //ecproc_closeReading (self);
   
   if (self->fifoIn)
   {
+    eclogger_fmt (LL_TRACE, "ENTC PRC", "destroy", "remove FIFO IN %s", self->fifoIn);
+ 
     // remove the fifo file
     ecfs_rmfile (self->fifoIn);
     
@@ -120,12 +152,16 @@ void ecproc_destroy (EcProc* pself)
   
   if (self->fifoOut)
   {
+    eclogger_fmt (LL_TRACE, "ENTC PRC", "destroy", "remove FIFO OUT %s", self->fifoOut);
+
     // remove the fifo file
     ecfs_rmfile (self->fifoOut);
     
     ecstr_delete(&(self->fifoOut));
   }
   
+  eclogger_fmt (LL_TRACE, "ENTC PRC", "destroy", "process context '%p' destroyed", self);
+ 
   ENTC_DEL (pself, struct EcProc_s);
 }
 
@@ -256,14 +292,21 @@ EcProc ecproc_get (int argc, char* argv[], EcErr err)
 
 //-----------------------------------------------------------------------------
 
+void ecproc_terminateProcess (void* handle)
+{
+  kill(handle, SIGTERM);
+  
+  eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", (int)handle);
+}
+
+//-----------------------------------------------------------------------------
+
 void ecproc_terminate (EcProc self)
 {
   if (self->pid)
   {
-    kill(self->pid, SIGTERM);
-
-    eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", self->pid);
- 
+    ecproc_terminateProcess ((void*)self->pid);
+    
     ecproc_closeWriting (self);
   }
 }
@@ -274,9 +317,17 @@ int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
 {
   if (self->pid)
   {
+    int res;
+    
+    eclogger_fmt (LL_TRACE, "ENTC PRC", "wait", "wait for process [%i]", self->pid);
+    
     ecproc_closeReading (self);
     
-    return ecproc_waitForProcess ((void*)self->pid, err);
+    res = ecproc_waitForProcess ((void*)self->pid, err);
+
+    eclogger_fmt (LL_TRACE, "ENTC PRC", "wait", "wait for process [%i] done", self->pid);
+    
+    return res;
   }
   else
   {

@@ -347,6 +347,17 @@ struct EcAio_s
 
 //-----------------------------------------------------------------------------
 
+static int __STDCALL ecaio_ctxs_onDestroy (void* ptr)
+{
+  EcAioContext ctx = ptr;
+  
+  ecaio_context_destroy (&ctx);
+  
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
 static int __STDCALL ecaio_events_onDestroy (void* ptr)
 {
   EcAioContext ctx = ptr;
@@ -366,7 +377,7 @@ EcAio ecaio_create ()
   self->ufd = 0;
   self->ctx = NULL;
 
-  self->ctxs = eclist_create (NULL);
+  self->ctxs = eclist_create (ecaio_ctxs_onDestroy);
 
   /*
    self->pfd[0] = NULL;
@@ -399,6 +410,9 @@ void ecaio_destroy (EcAio* pself)
   
   ecmutex_delete(&(self->mutex));
   ecmutex_delete(&(self->iom));
+  
+  ecmutex_delete(&(self->eventsm));
+  eclist_destroy (&(self->events));
   
   ENTC_DEL(pself, struct EcAio_s);
 }
@@ -583,9 +597,7 @@ int ecaio_handle_event (EcAio self)
 
   if (eclist_cursor_next (&c))
   {
-    ctx = eclist_data(c.node);
-
-    eclist_cursor_erase (self->ctxs, &c);
+    ctx = eclist_cursor_extract (self->ctxs, &c);
   }
 
   ecmutex_unlock (self->mutex);
@@ -616,7 +628,7 @@ int ecaio_handle_event (EcAio self)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err)
+int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 {
   int n;
   struct epoll_event *events;
@@ -638,8 +650,6 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err
     ecmutex_unlock (self->iom);
 
     free (events);
-
-    eclogger_fmt (LL_WARN, "ENTC", "wait", "error on epoll [%i]", onAbort);
 
     //ecaio_abort (self, NULL);
 
@@ -722,6 +732,19 @@ int ecaio_wait_signal (EcAio self, unsigned long timeout, int onAbort, EcErr err
 
 //-----------------------------------------------------------------------------
 
+int ecaio_wait (EcAio self, EcErr err)
+{
+  int res = ENTC_ERR_NONE;
+  
+  for (; res == ENTC_ERR_NONE; res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err));
+  
+  ecaio_abortall (self);
+  
+  return res;
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_reset_signals (EcErr err)
 {
   int res;
@@ -772,26 +795,6 @@ int ecaio_reset_signals (EcErr err)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait (EcAio self, unsigned long timeout, EcErr err)
-{
-  int res = ecaio_reset_signals (err);
-  if (res)
-  {
-    return res;
-  }
-  
-  res = ecaio_wait_signal (self, timeout, 1, err);
-
-  if (res)
-  {
-    ecaio_abortall (self);
-  }
-  
-  return res;
-}
-
-//-----------------------------------------------------------------------------
-
 static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   struct signalfd_siginfo info;
@@ -826,7 +829,7 @@ static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned
 
 //-----------------------------------------------------------------------------
 
-int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
+int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr err)
 {
   int res;
   EcAioContext ctx;
@@ -848,7 +851,7 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  if (onlyTerm == FALSE)
+  if (noKeyboardInterupt == FALSE)
   {
     res = sigaddset (&mask, SIGINT);
     if (res)
@@ -877,14 +880,6 @@ int ecaio_wait_abortOnSignal (EcAio self, int onlyTerm, EcErr err)
     
     ecaio_append (self, sfd, ctx, err);
   }
-  
-  res = ENTC_ERR_NONE;
-  while (res == ENTC_ERR_NONE)
-  {
-    res = ecaio_wait_signal (self, ENTC_INFINITE, 2, err);
-  }
-
-  ecaio_abortall (self);
   
   return res;
 }

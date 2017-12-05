@@ -58,6 +58,8 @@ __LIBEX EcString ecproc_getExecutableName (int argc, char* argv[]);
 
 __LIBEX int ecproc_waitForProcess (void* handle, EcErr);
 
+__LIBEX void ecproc_terminateProcess (void* handle);
+
 //-----------------------------------------------------------------------------
 
 #endif

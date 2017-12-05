@@ -98,7 +98,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
   printf ("$2\n");
   
   {
-    EcThread thread = ecthread_new();
+    EcThread thread = ecthread_new(NULL);
     
     ecthread_start (thread, test_ecaio_parent_thread, aio);
 
@@ -126,12 +126,12 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
 #ifdef _WIN32
 
-	GenerateConsoleCtrlEvent (CTRL_C_EVENT, 0);
+	  GenerateConsoleCtrlEvent (CTRL_C_EVENT, 0);
 
 #else
 
 	// this should not trigger
-    raise(SIGTERM);
+    kill(getpid(), SIGINT);
 
 #endif
 
@@ -140,6 +140,8 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
     ecthread_join(thread);
     
+    printf ("#7\n");
+ 
     ecthread_delete(&thread);
   }
   
