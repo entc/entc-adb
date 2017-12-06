@@ -34,7 +34,7 @@ typedef int (__STDCALL *fct_ecaio_sfile_onInit) (void* ptr, EcRefCountedSocket, 
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioSendFile ecaio_sendfile_create (const EcString fileName, const EcString name, EcRefCountedSocket, void*, fct_ecaio_sfile_onInit);
+__LIBEX EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket, void*, fct_ecaio_sfile_onInit);
 
 __LIBEX int ecaio_sendfile_assign (EcAioSendFile*, EcAio aio, EcErr err);
 

@@ -13,7 +13,7 @@
 struct EcAioSendFile_s
 {
   
-  EcString fileName;
+  EcString file;
  
   EcString name;
   
@@ -28,11 +28,11 @@ struct EcAioSendFile_s
 
 //-----------------------------------------------------------------------------
 
-EcAioSendFile ecaio_sendfile_create (const EcString fileName, const EcString name, EcRefCountedSocket refSocket, void* ptr, fct_ecaio_sfile_onInit onInit)
+EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket refSocket, void* ptr, fct_ecaio_sfile_onInit onInit)
 {
   EcAioSendFile self = ENTC_NEW (struct EcAioSendFile_s);
   
-  self->fileName = ecstr_copy (fileName);
+  self->file = ecstr_copy (file);
   self->name = ecstr_copy (name);
   
   self->onInit = onInit;
@@ -49,8 +49,8 @@ void ecaio_sendfile_destroy (EcAioSendFile* pself)
 {
   EcAioSendFile self = *pself;
   
-  ecstr_delete(&(self->fileName));
-  ecstr_delete(&(self->name));
+  ecstr_delete (&(self->file));
+  ecstr_delete (&(self->name));
   
   if (self->fh)
   {
@@ -118,7 +118,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
 #if defined __WIN_OS
   
   // open file for reading
-  self->fh = CreateFileA (self->fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+  self->fh = CreateFileA (self->file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
   if (self->fh == INVALID_HANDLE_VALUE)
   {
     ecaio_sendfile_destroy (pself);
@@ -138,7 +138,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
   
 #else
   
-  self->fh = ecfh_open (self->fileName, O_RDONLY);
+  self->fh = ecfh_open (self->file, O_RDONLY);
   if (self->fh == NULL)
   {
     ecaio_sendfile_destroy (pself);
@@ -159,7 +159,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
   
   if (self->onInit)
   {
-    int res = self->onInit (self->ptr, self->refSocket, fileSize, self->fileName, self->name, err);
+    int res = self->onInit (self->ptr, self->refSocket, fileSize, self->file, self->name, err);
     if (res)
     {
       ecaio_sendfile_destroy (pself);
