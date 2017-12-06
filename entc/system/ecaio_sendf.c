@@ -14,6 +14,8 @@ struct EcAioSendFile_s
 {
   
   EcString fileName;
+ 
+  EcString name;
   
   fct_ecaio_sfile_onInit onInit;
   void* ptr;
@@ -26,11 +28,12 @@ struct EcAioSendFile_s
 
 //-----------------------------------------------------------------------------
 
-EcAioSendFile ecaio_sendfile_create (const EcString fileName, EcRefCountedSocket refSocket, void* ptr, fct_ecaio_sfile_onInit onInit)
+EcAioSendFile ecaio_sendfile_create (const EcString fileName, const EcString name, EcRefCountedSocket refSocket, void* ptr, fct_ecaio_sfile_onInit onInit)
 {
   EcAioSendFile self = ENTC_NEW (struct EcAioSendFile_s);
   
   self->fileName = ecstr_copy (fileName);
+  self->name = ecstr_copy (name);
   
   self->onInit = onInit;
   self->ptr = ptr;
@@ -47,6 +50,7 @@ void ecaio_sendfile_destroy (EcAioSendFile* pself)
   EcAioSendFile self = *pself;
   
   ecstr_delete(&(self->fileName));
+  ecstr_delete(&(self->name));
   
   if (self->fh)
   {
@@ -155,7 +159,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
   
   if (self->onInit)
   {
-    int res = self->onInit (self->ptr, self->refSocket, fileSize, self->fileName, err);
+    int res = self->onInit (self->ptr, self->refSocket, fileSize, self->fileName, self->name, err);
     if (res)
     {
       ecaio_sendfile_destroy (pself);
