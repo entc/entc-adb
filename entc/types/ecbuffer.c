@@ -848,7 +848,7 @@ EcBuffer ecbuf_sha_256 (EcBuffer b1, EcErr err)
 
 #include <openssl/sha.h>
 
-EcBuffer ecbuf_sha_256 (EcBuffer b1)
+EcBuffer ecbuf_sha_256 (EcBuffer b1, EcErr err)
 {
   unsigned char hash [SHA256_DIGEST_LENGTH];
   EcBuffer outb = ecbuf_create (64);
