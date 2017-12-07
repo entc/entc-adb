@@ -734,13 +734,22 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
 int ecaio_wait (EcAio self, EcErr err)
 {
-  int res = ENTC_ERR_NONE;
+  int res;
   
-  for (; res == ENTC_ERR_NONE; res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err));
+  while (TRUE)
+  {
+    res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err);
+    
+    if (res)
+    {
+      // terminate and clear everything
+      //ecaio_abort_all (self);
+      
+      return res;
+    }
+  }
   
-  ecaio_abortall (self);
-  
-  return res;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
