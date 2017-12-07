@@ -894,7 +894,7 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
   }
    */
   
-  return res;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
