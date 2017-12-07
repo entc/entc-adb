@@ -216,7 +216,7 @@ set_target_properties(entc PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
 
 #------------------------------------------------------------------------------
 
-find_package(Lua)
+find_package(Lua2)
 
 IF(LUA_LIBRARIES)
 
