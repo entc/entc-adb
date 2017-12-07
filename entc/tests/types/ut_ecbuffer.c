@@ -6,7 +6,7 @@
 
 //=============================================================================
 
-static void* __STDCALL test_ecbuffer_init ()
+static void* __STDCALL test_ecbuffer_init (EcErr err)
 {
   return NULL;
 }
@@ -26,6 +26,7 @@ static int __STDCALL test_ecbuffer_sha256 (void* ptr, TestEnvContext tctx, EcErr
   
   EcBuffer sha256 = ecbuf_sha_256 (textToEncode);
   
+
   testctx_push_string (tctx, ecbuf_const_str(sha256));
   
   testctx_assert (tctx, testctx_pop_tocomp (tctx, "df276bb3814778f574bd5ff0f8d889625726240d563b277997b87bba91e67596"), "sha256 compare");

@@ -771,7 +771,7 @@ EcEventFiles ece_files_new ()
   
   memset(self->matrix, 0, sizeof(EcEventFilesData) * self->size );
   
-  self->thread = ecthread_new();
+  self->thread = ecthread_new(NULL);
   
   ecthread_start(self->thread, ecevents_thread, (void*)self);
   

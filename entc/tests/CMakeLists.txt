@@ -18,6 +18,14 @@ ADD_EXECUTABLE( ut_ecaio system/ut_ecaio.c )
 TARGET_LINK_LIBRARIES( ut_ecaio entc )
 add_test(ut_ecaio tests/Debug/ut_ecaio)
 
+ADD_EXECUTABLE( ut_ecaio_notify system/ut_ecaio_notify.c )
+TARGET_LINK_LIBRARIES( ut_ecaio_notify entc )
+add_test(ut_ecaio_notify tests/Debug/ut_ecaio_notify)
+
+ADD_EXECUTABLE( ut_ecaio_proc system/ut_ecaio_proc.c )
+TARGET_LINK_LIBRARIES( ut_ecaio_proc entc )
+add_test(ut_ecaio_proc tests/Debug/ut_ecaio_proc)
+
 ADD_EXECUTABLE( ut_ecexec system/ut_ecexec.c )
 TARGET_LINK_LIBRARIES( ut_ecexec entc )
 add_test(ut_ecexec tests/Debug/ut_ecexec)

@@ -826,7 +826,7 @@ EcEventFiles ece_files_new ()
   
   memset(self->matrix, 0, sizeof(self->matrix));
   
-  self->thread = ecthread_new();
+  self->thread = ecthread_new(NULL);
   
   ecthread_start(self->thread, ecevents_run, self);
   

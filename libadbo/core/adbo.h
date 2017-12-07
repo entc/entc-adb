@@ -74,6 +74,8 @@ __LIB_EXPORT int adbo_db_update (Adbo, const EcString table, EcUdc* data, EcUdc 
 
 __LIB_EXPORT EcUdc adbo_db_fetch (Adbo, const EcString table, EcUdc params);
 
+__LIB_EXPORT int adbo_db_delete (Adbo, const EcString table, EcUdc params);
+
 __LIB_EXPORT struct AdblManager_s* adbo_db_adbl (Adbo);
 
 __CPP_EXTERN______________________________________________________________________________END

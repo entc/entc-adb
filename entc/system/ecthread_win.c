@@ -22,6 +22,9 @@
 #include "ecthread.h"
 #include "ecmutex.h"
 
+#include "types/ecerr.h"
+#include "utils/eclogger.h"
+
 #include <windows.h>
 
 //-----------------------------------------------------------------------------------
@@ -95,12 +98,32 @@ void ecthread_start(EcThread self, ecthread_callback_fct fct, void* ptr)
 
 void ecthread_join(EcThread self)
 {  
-  if (self->th != NULL) {
+  if (self->th != NULL)
+  {
     // wait until the thread terminates
     WaitForSingleObject (self->th, INFINITE);
     // release resources
     CloseHandle(self->th);
     self->th = NULL;
+  }
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecthread_cancel(EcThread self)
+{
+  if (self->th != NULL)
+  {
+    if (TerminateThread(self->th, 0) == 0)
+    {
+      EcErr err = ecerr_create ();
+
+	  ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+
+      eclogger_fmt (LL_ERROR, "ENTC", "thread", "can't cancel thread: %s", err->text);
+
+	  ecerr_destroy (&err);
+    }
   }
 }
 

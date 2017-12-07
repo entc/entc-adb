@@ -28,6 +28,7 @@
 
 #ifdef _WIN32
 
+#include <windows.h>
 #include <stdio.h>
 
 #else
@@ -1037,4 +1038,26 @@ EcString ecstr_toVersion( uint_t version )
   return ecbuf_str (&buffer02);
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
+
+wchar_t* ecstr_utf8ToWide (const EcString source)
+{
+
+#ifdef _WIN32
+
+  int size = MultiByteToWideChar (CP_ACP, MB_COMPOSITE, source, -1, NULL, 0);
+
+  wchar_t* wdest = malloc(sizeof(wchar_t) * size);
+
+  int res = MultiByteToWideChar (CP_ACP, MB_COMPOSITE, source, -1, wdest, size);
+
+  return wdest;
+
+#else
+
+  return NULL;
+
+#endif
+}
+
+//-----------------------------------------------------------------------------

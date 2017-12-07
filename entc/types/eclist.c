@@ -162,6 +162,62 @@ void* eclist_data (EcListNode node)
 
 //-----------------------------------------------------------------------------
 
+void* eclist_extract (EcList self, EcListNode node)
+{
+  void* ret = NULL;
+  
+  if (node)
+  {
+    EcListNode prev = node->prev;
+    EcListNode next = node->next;
+    
+    if (prev)
+    {
+      prev->next = next;
+    }
+    else
+    {
+      // this was the first node
+      self->fpos = next;
+    }
+    
+    if (next)
+    {
+      next->prev = prev;
+    }
+    else
+    {
+      // this was the last node
+      self->lpos = prev;
+    }
+    
+    ret = node->data;
+    
+    ENTC_DEL(&node, struct EcListNode_s);
+    
+    if (self->size > 0)
+    {
+      self->size--;
+    }
+  }
+  
+  return ret;
+}
+
+//-----------------------------------------------------------------------------
+
+void eclist_erase (EcList self, EcListNode node)
+{
+  void* data = eclist_extract (self, node);
+  
+  if (data && self->onDestroy)
+  {
+    self->onDestroy (data);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
 EcListNode eclist_next (EcListNode node)
 {
   if (node)

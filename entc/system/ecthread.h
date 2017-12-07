@@ -33,17 +33,21 @@ __CPP_EXTERN____________________________________________________________________
 
 typedef int (_STDCALL *ecthread_callback_fct)(void* ptr);
 
+typedef void (_STDCALL *ecthread_fct_onDestroy)(void* ptr);
+
 struct EcThread_s; typedef struct EcThread_s* EcThread;
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT EcThread ecthread_new(void);
+__LIB_EXPORT EcThread ecthread_new (ecthread_fct_onDestroy onDestroy);
 
 __LIB_EXPORT void ecthread_delete(EcThread*);
 
-__LIB_EXPORT void ecthread_start(EcThread, ecthread_callback_fct, void* ptr);
+__LIB_EXPORT void ecthread_start (EcThread, ecthread_callback_fct, void* ptr);
 
 __LIB_EXPORT void ecthread_join(EcThread);
+
+__LIB_EXPORT void ecthread_cancel(EcThread);
 
 __CPP_EXTERN______________________________________________________________________________END
 

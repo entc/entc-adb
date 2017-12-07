@@ -20,138 +20,139 @@
 #ifndef ENTC_TYPES_STRING_H
 #define ENTC_TYPES_STRING_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+//-----------------------------------------------------------------------------
 
-#include "../types/eclist.h"
+#include "system/ecdefs.h"
+#include "system/types.h"
+
 #include <time.h>
 
 #ifdef __GNUC__
 #include <stdarg.h>
 #endif
 
+//-----------------------------------------------------------------------------
+
 #define EcString char*
 
-__CPP_EXTERN______________________________________________________________________________START
+//=============================================================================
 
-  /* **** basic methods **** */
+__LIBEX EcString ecstr_init();                 // create not valid string
+
+__LIBEX int ecstr_valid (const EcString);
+
+__LIBEX int ecstr_empty (const EcString);
+
+__LIBEX EcString ecstr_copy (const EcString);  // copy string
+
+__LIBEX EcString ecstr_part (const EcString, uint_t length);  // create a new string from pos 0 to length
   
-__LIB_EXPORT EcString ecstr_init();
+__LIBEX EcString ecstr_long (uint64_t value);
 
-__LIB_EXPORT int ecstr_valid( const EcString );
-  /* create a new string */
-__LIB_EXPORT EcString ecstr_copy( const EcString );
-  /* create a new string from pos 0 to length */
-__LIB_EXPORT EcString ecstr_part( const EcString, uint_t length );
+__LIBEX EcString ecstr_longPadded (uint64_t value, int amount);
+
+__LIBEX EcString ecstr_float (double, uint_t n);
+
+__LIBEX EcString ecstr_filled (char c, uint_t n);
+
+__LIBEX EcString ecstr_format (const EcString format, ...);
+
+__LIBEX EcString ecstr_format_list (const EcString format, va_list ptr);
   
-__LIB_EXPORT EcString ecstr_long( uint64_t value );
+__LIBEX void ecstr_delete( EcString* );
 
-__LIB_EXPORT EcString ecstr_longPadded ( uint64_t value, int amount);
+__LIBEX EcString ecstr_replace( EcString*, const EcString );
 
-__LIB_EXPORT EcString ecstr_float (double, uint_t n);
-
-__LIB_EXPORT EcString ecstr_filled (char c, uint_t n);
-
-__LIB_EXPORT EcString ecstr_format (const EcString format, ...);
-
-__LIB_EXPORT EcString ecstr_format_list (const EcString format, va_list ptr);
+__LIBEX EcString ecstr_replaceTO( EcString*, EcString );
   
-__LIB_EXPORT void ecstr_delete( EcString* );
-
-__LIB_EXPORT EcString ecstr_replace( EcString*, const EcString );
-
-__LIB_EXPORT EcString ecstr_replaceTO( EcString*, EcString );
+__LIBEX EcString ecstr_replacePos( EcString*, const EcString, const EcString pos ); 
   
-__LIB_EXPORT EcString ecstr_replacePos( EcString*, const EcString, const EcString pos ); 
-  
+//-----------------------------------------------------------------------------
+
   /* **** merge methods **** */
   
-__LIB_EXPORT EcString ecstr_cat2 (const EcString, const EcString);
+__LIBEX EcString ecstr_cat2 (const EcString, const EcString);
 
-__LIB_EXPORT EcString ecstr_catc (const EcString, char c, const EcString);
+__LIBEX EcString ecstr_catc (const EcString, char c, const EcString);
 
-__LIB_EXPORT EcString ecstr_cat3 (const EcString, const EcString, const EcString);
+__LIBEX EcString ecstr_cat3 (const EcString, const EcString, const EcString);
 
-__LIB_EXPORT EcString ecstr_cat4 (const EcString, const EcString, const EcString, const EcString);
+__LIBEX EcString ecstr_cat4 (const EcString, const EcString, const EcString, const EcString);
   
+//-----------------------------------------------------------------------------
+
   /* **** const methods **** */
   
-__LIB_EXPORT uint_t ecstr_len ( const EcString );
+__LIBEX uint_t ecstr_len ( const EcString );
 
-__LIB_EXPORT const char* ecstr_cstring ( const EcString );
+__LIBEX const char* ecstr_cstring ( const EcString );
   
-__LIB_EXPORT int ecstr_equal( const EcString, const EcString );
+__LIBEX int ecstr_equal( const EcString, const EcString );
 
-__LIB_EXPORT int ecstr_equaln( const EcString, const EcString, uint_t size );
+__LIBEX int ecstr_equaln( const EcString, const EcString, uint_t size );
 
-__LIB_EXPORT int ecstr_equalUnsensitive (const EcString, const EcString);
+__LIBEX int ecstr_equalUnsensitive (const EcString, const EcString);
   
-__LIB_EXPORT int ecstr_leading ( const EcString, const EcString leading);
+__LIBEX int ecstr_leading ( const EcString, const EcString leading);
 
-__LIB_EXPORT int ecstr_ending ( const EcString, const EcString ending);
+__LIBEX int ecstr_ending ( const EcString, const EcString ending);
 
-__LIB_EXPORT int ecstr_has (const EcString, char c);
+__LIBEX int ecstr_has (const EcString, char c);
 
-__LIB_EXPORT const EcString ecstr_pos (const EcString, char c);
+__LIBEX const EcString ecstr_pos (const EcString, char c);
 
-__LIB_EXPORT const EcString ecstr_spos (const EcString, char c, EcString* part);
+__LIBEX const EcString ecstr_spos (const EcString, char c, EcString* part);
 
-__LIB_EXPORT const EcString ecstr_npos (const EcString, char c, uint_t max);
+__LIBEX const EcString ecstr_npos (const EcString, char c, uint_t max);
 
-__LIB_EXPORT EcString ecstr_extractf( const EcString source, char c );
+__LIBEX EcString ecstr_extractf( const EcString source, char c );
 
-__LIB_EXPORT EcString ecstr_shrink (const EcString source, char from, char to);
+__LIBEX EcString ecstr_shrink (const EcString source, char from, char to);
 
-__LIB_EXPORT int ecstr_split (const EcString source, EcString*, EcString*, char c);
+__LIBEX int ecstr_split (const EcString source, EcString*, EcString*, char c);
 
-__LIB_EXPORT int ecstr_leadingPart (const EcString source, const EcString leading, EcString*);
+__LIBEX int ecstr_leadingPart (const EcString source, const EcString leading, EcString*);
 
-__LIB_EXPORT int ecstr_endingPart (const EcString source, const EcString ending, EcString*);
+__LIBEX int ecstr_endingPart (const EcString source, const EcString ending, EcString*);
 
-  /* **** transform methods **** */
+//-----------------------------------------------------------------------------
+
+/* **** transform methods **** */
   
-__LIB_EXPORT EcString ecstr_trim( const EcString );
+__LIBEX EcString ecstr_trim( const EcString );
   
-__LIB_EXPORT EcString ecstr_trimNonePrintable( const EcString );
+__LIBEX EcString ecstr_trimNonePrintable( const EcString );
   
-__LIB_EXPORT EcString ecstr_trimKeepDefault( const EcString );
+__LIBEX EcString ecstr_trimKeepDefault( const EcString );
   
-__LIB_EXPORT EcString ecstr_trimEndLine( const EcString );
+__LIBEX EcString ecstr_trimEndLine( const EcString );
 
 // trim the string only by a certain character
-__LIB_EXPORT EcString ecstr_trimc (const EcString, char c);
+__LIBEX EcString ecstr_trimc (const EcString, char c);
 
 // trim the string only by a certain character
-__LIB_EXPORT EcString ecstr_trimlr (const EcString, char l, char r);
+__LIBEX EcString ecstr_trimlr (const EcString, char l, char r);
 
-__LIB_EXPORT EcString ecstr_toVersion( uint_t version );
+__LIBEX EcString ecstr_toVersion( uint_t version );
 
-__LIB_EXPORT EcString ecstr_wrappedl (const EcString, char c);
+__LIBEX EcString ecstr_wrappedl (const EcString, char c);
 
-__LIB_EXPORT EcString ecstr_lpad (const EcString, char c, uint_t len);
+__LIBEX EcString ecstr_lpad (const EcString, char c, uint_t len);
 
 // transform: no change on size
 
-__LIB_EXPORT void ecstr_replaceAllChars( EcString, char find, char replace );
+__LIBEX void ecstr_replaceAllChars( EcString, char find, char replace );
 
-__LIB_EXPORT void ecstr_toLower(EcString);
+__LIBEX void ecstr_toLower(EcString);
 
-__LIB_EXPORT void ecstr_toUpper(EcString);
+__LIBEX void ecstr_toUpper(EcString);
 
-  /* **** misc methods **** */
+#ifdef _WIN32
 
-__LIB_EXPORT int ecstr_empty(const EcString);
+__LIBEX wchar_t* ecstr_utf8ToWide (const EcString);
 
-/*
-__LIB_EXPORT void ecstr_tokenizer(EcList, const EcString source, char delimeter);
-  
-__LIB_EXPORT void ecstr_tokenizer_clear(EcList);
+#endif
 
-__LIB_EXPORT EcString ecstr_tokenizer_get (EcList, EcListNode);
-  
-__LIB_EXPORT EcString ecstr_extractParameter(char pn, int argc, char *argv[]);
-*/
+//-----------------------------------------------------------------------------
  
-__CPP_EXTERN______________________________________________________________________________END
-
 #endif
