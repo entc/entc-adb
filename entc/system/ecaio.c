@@ -754,6 +754,7 @@ int ecaio_wait (EcAio self, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+/*
 int ecaio_reset_signals (EcErr err)
 {
   int res;
@@ -801,6 +802,7 @@ int ecaio_reset_signals (EcErr err)
   
   return ENTC_ERR_NONE;
 }
+ */
 
 //-----------------------------------------------------------------------------
 
@@ -840,6 +842,7 @@ static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned
 
 int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr err)
 {
+  /*
   int res;
   EcAioContext ctx;
   int sfd;
@@ -889,6 +892,7 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
     
     ecaio_append (self, sfd, ctx, err);
   }
+   */
   
   return res;
 }
