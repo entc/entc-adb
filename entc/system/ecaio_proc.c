@@ -365,6 +365,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   int res;
   EcAioProc self = *pself;
   
+  /*
   // register a term event
   EcAioEvent event = ecaio_event_create();
   
@@ -377,7 +378,8 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   // thread part
   self->thread = ecthread_new (NULL);
   ecthread_start(self->thread, ecaio_proc_thread, self);
-  
+  */
+   
   *pself = NULL;
   return res;
 }

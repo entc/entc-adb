@@ -643,7 +643,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
   n = epoll_wait (self->efd, events, Q6_EPOLL_MAXEVENTS, -1);
 
-  eclogger_fmt (LL_TRACE, "ENTC", "context", "got event %i", n);
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "got event %i", n);
 
   if (n < 0)
   {
@@ -734,17 +734,27 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
 int ecaio_wait (EcAio self, EcErr err)
 {
-  int res = ENTC_ERR_NONE;
+  int res;
   
-  for (; res == ENTC_ERR_NONE; res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err));
+  while (TRUE)
+  {
+    res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err);
+    
+    if (res)
+    {
+      // terminate and clear everything
+      //ecaio_abort_all (self);
+      
+      return res;
+    }
+  }
   
-  ecaio_abortall (self);
-  
-  return res;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
 
+/*
 int ecaio_reset_signals (EcErr err)
 {
   int res;
@@ -792,6 +802,7 @@ int ecaio_reset_signals (EcErr err)
   
   return ENTC_ERR_NONE;
 }
+ */
 
 //-----------------------------------------------------------------------------
 
@@ -831,6 +842,7 @@ static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned
 
 int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr err)
 {
+  /*
   int res;
   EcAioContext ctx;
   int sfd;
@@ -880,8 +892,9 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
     
     ecaio_append (self, sfd, ctx, err);
   }
+   */
   
-  return res;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -1202,9 +1215,6 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
       }
       else if (cont == ENTC_AIO_CODE_ABORTALL)
       {
-        // terminate and clear everything
-        ecaio_abort_all (self);
-        
         // abort
         return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "user abborted");
       }
@@ -1269,11 +1279,22 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
 int ecaio_wait (EcAio self, EcErr err)
 {
-  int res = ENTC_ERR_NONE;
+  int res;
   
-  for (; res == ENTC_ERR_NONE; res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err));
+  while (TRUE)
+  {
+    res = ecaio_waitForNextEvent (self, ENTC_INFINITE, err);
+    
+    if (res)
+    {
+      // terminate and clear everything
+      //ecaio_abort_all (self);
+
+      return res;
+    }
+  }
   
-  return res;
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -1329,9 +1350,13 @@ static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsig
 {
   EcAio self = ptr;
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "event", "abort");
+
   // send again
   ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, NULL);
   
+  eclogger_fmt (LL_TRACE, "ENTC AIO", "event", "abort all");
+
   return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
 }
 

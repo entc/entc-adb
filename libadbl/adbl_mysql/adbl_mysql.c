@@ -560,7 +560,7 @@ int adblmodule_prepared_statement (MYSQL_STMT* stmt, AdblMysqlBindVars* bv, EcSt
     return FALSE;
   }
   
-  eclogger_fmt (LL_TRACE, C_MODDESC, "bind params", "bind %i parameters", bv->pos);
+  //eclogger_fmt (LL_TRACE, C_MODDESC, "bind params", "bind %i parameters", bv->pos);
 
   // try to bind all constraint values
   if (mysql_stmt_bind_param (stmt, bv->binds) != 0)
