@@ -30,7 +30,7 @@
 
 struct EcAioSendFile_s; typedef struct EcAioSendFile_s* EcAioSendFile;
 
-typedef int (__STDCALL *fct_ecaio_sfile_onInit) (void* ptr, EcRefCountedSocket, uint64_t fileSize, const EcString fileName, const EcString name, EcErr);
+typedef int (__STDCALL *fct_ecaio_sfile_onInit) (void* ptr, EcRefCountedSocket, uint64_t fileSize, const EcString file, const EcString name, EcErr);
 
 //-----------------------------------------------------------------------------
 

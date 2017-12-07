@@ -125,7 +125,7 @@ EcBuffer ecbuf_create_uuid ()
 
 EcBuffer ecbuf_create_fromBuffer (const unsigned char* src, uint_t size)
 {
-  EcBuffer self = ecbuf_create (size + 1);
+  EcBuffer self = ecbuf_create (size);
   
   // copy content
   memcpy (self->buffer, src, size);
