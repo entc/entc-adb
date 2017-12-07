@@ -129,7 +129,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   res = ecaio_event_assign (&event, aio, &(self->eventh), err);
   
   // thread part
-  self->thread = ecthread_new ();
+  self->thread = ecthread_new (NULL);
   ecthread_start(self->thread, ecaio_proc_thread, self);
   
   *pself = NULL;

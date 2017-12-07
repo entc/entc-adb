@@ -23,7 +23,8 @@
 #include "system/macros.h"
 #include "system/types.h"
 
-#include "ecstring.h"
+#include "types/ecstring.h"
+#include "types/ecerr.h"
 
 #pragma pack(push, 16)
 typedef struct { unsigned char* buffer; uint_t size; } EcBuffer_s, * EcBuffer;
@@ -71,7 +72,7 @@ __LIB_EXPORT EcBuffer ecbuf_md5 (EcBuffer);
 
 __LIB_EXPORT EcBuffer ecbuf_sha1 (EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_sha_256 (EcBuffer);
+__LIB_EXPORT EcBuffer ecbuf_sha_256 (EcBuffer, EcErr);
 
 __LIB_EXPORT EcBuffer ecbuf_xor (EcBuffer, EcBuffer);  // uses always the smallest one
 
