@@ -777,25 +777,99 @@ EcString ecstr_trimEndLine( const EcString s )
 
 //---------------------------------------------------------------------------
 
+EcString ecstr_unwrapl (const EcString source, char cl, char cr, EcString* pleft, EcString* pright)
+{
+  // look for the left char
+  EcString sl;
+  EcString sr;
+  
+  sl = strchr (source, cl);
+  if (sl == NULL)
+  {
+    if (pleft)
+    {
+      *pleft = NULL;
+    }
+    
+    if (pright)
+    {
+      *pright = NULL;
+    }
+    
+    // no first left char found
+    return ecstr_copy (source);
+  }
+  
+  sr = strchr (sl + 1, cr);
+  if (sr == NULL)
+  {
+    if (pleft)
+    {
+      *pleft = NULL;
+    }
+    
+    if (pright)
+    {
+      *pright = NULL;
+    }
+    
+    // no first left char found
+    return ecstr_copy (source);
+  }
+
+  if (pleft)
+  {
+    EcString left;
+    
+    // just calculate the diff from sl to the begining
+    unsigned long diff = sl - source;
+
+    if (diff > 0)
+    {
+      left = ecstr_part (source, diff);
+    }
+    else
+    {
+      left = NULL;
+    }
+    
+    *pleft = left;
+  }
+  
+  if (pright)
+  {
+    EcString right;
+    
+    // find the end of the string
+    const char* se;
+    
+    for (se = sr; *se; se++);
+    
+    {
+      unsigned long diff = se - sr - 1;
+      
+      if (diff > 0)
+      {
+        right = ecstr_part (sr + 1, diff);
+      }
+      else
+      {
+        right = NULL;
+      }
+    }
+    
+    *pright = right;
+  }
+  
+  // compose the return
+  return ecstr_part (sl + 1, sr - sl - 1);
+}
+
+//---------------------------------------------------------------------------
+
 EcString ecstr_wrappedl (const EcString source, char c)
 {
-  // variables declaration
-  const char* start;
-  const char* end;
-
-  start = strchr (source, c);
-  if (start == NULL)
-  {
-    return NULL;
-  }
-  // start founded
-  end = strchr (start + 1, c);
-  if (end == NULL)
-  {
-    return NULL;
-  }
-  // compose the return
-  return ecstr_part(start + 1, end - start - 1);
+  return ecstr_unwrapl (source, c, c, NULL, NULL);
 }
 
 //---------------------------------------------------------------------------

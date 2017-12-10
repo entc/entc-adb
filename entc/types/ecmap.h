@@ -96,6 +96,8 @@ typedef struct
    */
   
   EcListCursor cursor;
+  
+  int position;
 
 } EcMapCursor;
 

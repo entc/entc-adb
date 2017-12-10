@@ -137,6 +137,9 @@ __LIBEX EcString ecstr_toVersion( uint_t version );
 
 __LIBEX EcString ecstr_wrappedl (const EcString, char c);
 
+// left and right can be NULL
+__LIBEX EcString ecstr_unwrapl (const EcString, char cl, char cr, EcString* left, EcString* right);
+
 __LIBEX EcString ecstr_lpad (const EcString, char c, uint_t len);
 
 // transform: no change on size
