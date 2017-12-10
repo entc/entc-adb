@@ -118,7 +118,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
 #if defined __WIN_OS
   
   // open file for reading
-  self->fh = CreateFileA (self->fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+  self->fh = CreateFileA (self->file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
   if (self->fh == INVALID_HANDLE_VALUE)
   {
     ecaio_sendfile_destroy (pself);
