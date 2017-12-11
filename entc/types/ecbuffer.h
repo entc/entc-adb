@@ -27,7 +27,7 @@
 #include "types/ecerr.h"
 
 #pragma pack(push, 16)
-typedef struct { unsigned char* buffer; uint_t size; } EcBuffer_s, * EcBuffer;
+typedef struct { unsigned char* buffer; unsigned long size; } EcBuffer_s, * EcBuffer;
 #pragma pack(pop)
 
 __CPP_EXTERN______________________________________________________________________________START
