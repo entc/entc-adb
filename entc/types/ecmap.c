@@ -296,6 +296,8 @@ void ecmap_cursor_set (EcMapCursor* cursor)
   {
     cursor->node = NULL;
   }
+  
+  cursor->position = cursor->cursor.position;
 }
 
 //----------------------------------------------------------------------------------------
