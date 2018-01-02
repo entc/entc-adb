@@ -393,6 +393,8 @@ int ecfs_rmdir_loop (int fd, DIR* dir)
   // iterate through all entries
   for (dentry = readdir (dir); res && isAssigned (dentry); dentry = readdir (dir))
   {
+    eclogger_fmt (LL_TRACE, "ENTC", "rmdir", "rm dir %s", dentry->d_name);
+    
     // ignore those 
     if (ecstr_equal (dentry->d_name, ".") || ecstr_equal (dentry->d_name, ".."))
     {
@@ -415,7 +417,7 @@ int ecfs_rmdir_loop (int fd, DIR* dir)
           {
             if (fstat (fd2, &st) == 0)
             {
-              res = unlinkat (fd, dentry->d_name, S_ISDIR (st.st_mode) ? AT_REMOVEDIR : 0) == 0;            
+              //res = unlinkat (fd, dentry->d_name, S_ISDIR (st.st_mode) ? AT_REMOVEDIR : 0) == 0;
             }
             else
             {
@@ -428,12 +430,12 @@ int ecfs_rmdir_loop (int fd, DIR* dir)
         // if directory
         case DT_DIR:
         {
-          res = unlinkat (fd, dentry->d_name, AT_REMOVEDIR) == 0;            
+          //res = unlinkat (fd, dentry->d_name, AT_REMOVEDIR) == 0;
         }
         break;
         default:
         {
-          res = unlinkat (fd, dentry->d_name, 0) == 0;            
+          //res = unlinkat (fd, dentry->d_name, 0) == 0;
         }
         break;
       }
@@ -492,6 +494,36 @@ int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
 
 //--------------------------------------------------------------------------------
 
+int ecfs_rmdir_removeDir (const EcString source)
+{
+  //eclogger_fmt (LL_TRACE, "ENTC", "rmdir", "rm directory %s", source);
+  
+  if (rmdir (source) != 0)
+  {
+    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't delete directory");
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecfs_rmdir_removeFile (const EcString source)
+{
+  //eclogger_fmt (LL_TRACE, "ENTC", "rmdir", "rm file %s", source);
+  
+  if (unlink (source) != 0)
+  {
+    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't unlink file");
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+//--------------------------------------------------------------------------------
+
 int ecfs_rmdir_loop (const EcString source, DIR* dir)
 {
   int res = TRUE;
@@ -500,13 +532,13 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
   // iterate through all entries
   for (dentry = readdir (dir); res && isAssigned (dentry); dentry = readdir (dir))
   {
-    // ignore those 
+    // ignore those
     if (ecstr_equal (dentry->d_name, ".") || ecstr_equal (dentry->d_name, ".."))
     {
       continue;
     }
     
-    {      
+    {
       EcString path = ecfs_mergeToPath (source, dentry->d_name);
       
       switch (dentry->d_type)
@@ -514,43 +546,18 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
           // if this flag is set we need to check with stat (no info about type)
         case DT_UNKNOWN:
         {
-          struct stat st;
-          
-          if (stat (path, &st) == 0)
-          {
-            if (S_ISDIR (st.st_mode))
-            {
-              res = ecfs_rmdir (path, TRUE);          
-            }
-            else
-            {
-              if (unlink(path) != 0)
-              {
-                eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't unlink file");
-                res = FALSE;
-              }
-            }                    
-          }
-          else
-          {
-            res = FALSE;
-            eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't stat");            
-          }
+          ecfs_rmdir (path, TRUE);
         }
         break;
         // if directory
         case DT_DIR:
         {
-          res = ecfs_rmdir (path, TRUE);          
+          res = ecfs_rmdir_removeDir (path);
         }
         break;
         default:
         {
-          if (unlink(path) != 0)
-          {
-            eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't unlink file");
-            res = FALSE;
-          }
+          res = ecfs_rmdir_removeFile (path);
         }
         break;
       }
@@ -578,17 +585,41 @@ int ecfs_rmdir_dir (const EcString source)
   
   closedir(dir);  
   
-  if (rmdir (source) != 0)
-  {
-    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't delete directory");
-    return FALSE;    
-  }
-  
   return res;
 }
 
 //--------------------------------------------------------------------------------
 
+int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
+{
+  struct stat st;
+  
+  if (stat (source, &st) == 0)
+  {
+    if (S_ISDIR (st.st_mode))
+    {
+      if (forceOnNoneEmpty)
+      {
+        ecfs_rmdir_dir (source);
+      }
+      
+      return ecfs_rmdir_removeDir (source);
+    }
+    else
+    {
+      return ecfs_rmdir_removeFile (source);
+    }
+  }
+  else
+  {
+    
+    return FALSE;
+  }
+}
+
+//--------------------------------------------------------------------------------
+
+/*
 int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
 {
   // try to remove recusively
@@ -601,6 +632,7 @@ int ecfs_rmdir (const EcString source, int forceOnNoneEmpty)
     return (rmdir (source) == 0);
   }
 }
+ */
 
 //--------------------------------------------------------------------------------
 

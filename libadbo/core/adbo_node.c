@@ -264,6 +264,8 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     }
     else
     {
+      eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "add key '%s'", dbcolumn);
+
       return adbo_dbkeys_set_constraint (dataConstraint, constraint, dbcolumn, TRUE);
     }
   }
@@ -281,13 +283,19 @@ int adbo_dbkeys_constraints (EcUdc dbkeys, EcUdc data, AdblConstraint* constrain
   EcUdc dbkey;
 
   // for debug
+  
   /*
   {
     EcString jsontext = ecjson_write (dbkeys);
     eclogger_fmt (LL_TRACE, "ADBO", "dbkeys", ecstr_cstring(jsontext));
     ecstr_delete(&jsontext);
   }
-   */
+  {
+    EcString jsontext = ecjson_write (data);
+    eclogger_fmt (LL_TRACE, "ADBO", "data", ecstr_cstring(jsontext));
+    ecstr_delete(&jsontext);
+  }
+  */
   
   for (dbkey  = ecudc_next (dbkeys, &cursor); isAssigned (dbkey); dbkey = ecudc_next (dbkeys, &cursor))
   {
@@ -1123,11 +1131,15 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
   }
   else if (adbo_node_foreign (node, filter, context, constraint))
   {
+    eclogger_msg (LL_TRACE, "ADBO", "update", "using only foreign keys");
+
     // no primary key but foreign key, lets try to insert
     ret = adbo_node_insert (node, context, dbsession, dbtable, filter, update_data, cols, constraint);
   }
   else
   {
+    eclogger_msg (LL_TRACE, "ADBO", "update", "no primary nor foreign keys");
+
     // no primary key nor foreign key, lets try to insert
     ret = adbo_node_insert (node, context, dbsession, dbtable, filter, update_data, cols, NULL);
   }

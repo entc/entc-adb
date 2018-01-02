@@ -72,6 +72,8 @@ __LIB_EXPORT void adbo_destroy (Adbo*);
 
 __LIB_EXPORT int adbo_db_update (Adbo, const EcString table, EcUdc* data, EcUdc caseNode);
 
+__LIB_EXPORT EcUdc adbo_db_cursor (Adbo, const EcString table, EcUdc params);
+
 __LIB_EXPORT EcUdc adbo_db_fetch (Adbo, const EcString table, EcUdc params);
 
 __LIB_EXPORT int adbo_db_delete (Adbo, const EcString table, EcUdc params);

@@ -996,6 +996,14 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
   
   bindvars_destroy (&bv);
   
+  // commit
+  if (mysql_commit (self->conn) != 0)
+  {
+    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
+    
+    return -1;
+  }
+  
   if (res)
   {
     return mysql_affected_rows (self->conn);
@@ -1106,6 +1114,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   EcStream statement;
   int bindCnt;
   AdblMysqlBindVars* bv;
+  int affectedRows;
 
   AdblMysqlConnection self = ptr;
   
@@ -1162,13 +1171,19 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   
   bindvars_destroy (&bv);
   
-  {
-    int affectedRows = mysql_affected_rows (self->conn);
-    
-    //eclogger_fmt (LL_TRACE, C_MODDESC, "insert", "affected rows %i", affectedRows);
+  affectedRows = mysql_affected_rows (self->conn);
+  
+  //eclogger_fmt (LL_TRACE, C_MODDESC, "insert", "affected rows %i", affectedRows);
 
-    return affectedRows;
+  // commit
+  if (mysql_commit (self->conn) != 0)
+  {
+    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
+    
+    return -1;
   }
+
+  return affectedRows;
 }
 
 //------------------------------------------------------------------------------------------------------
