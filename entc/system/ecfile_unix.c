@@ -42,6 +42,8 @@
 
 #endif
 
+#include <openssl/md5.h>
+
 struct EcFileHandle_s
 {
   int fd; 
@@ -179,14 +181,38 @@ FILE* ecfh_file(EcFileHandle self, EcString type)
 
 /*------------------------------------------------------------------------*/
 
-EcString ecfh_md5(EcFileHandle self)
+
+EcString ecfh_md5 (EcFileHandle self)
 {
+  EcBuffer buf = ecbuf_create (1024);
+  EcBuffer ret = ecbuf_create (32);
+  int bytes;
+  MD5_CTX mdContext;
+  unsigned char c[MD5_DIGEST_LENGTH];
+  int i = 0;
+  
   ecfh_reset( self );
 
-    
+  // init the MD5 content
+  MD5_Init (&mdContext);
+  
+  while ((bytes = read (self->fd, buf->buffer, buf->size)) != 0)
+  {
+    MD5_Update (&mdContext, buf->buffer, bytes);
+  }
+  
+  MD5_Final (c, &mdContext);
+  
   ecfh_reset( self );
 
-  return ecstr_copy("askjdhjsadbjavdjha");  
+  for (i = 0; i < MD5_DIGEST_LENGTH; i++)
+  {
+    sprintf((char*)(ret->buffer) + (i * 2), "%02x", c[i]);
+  }
+
+  ecbuf_destroy (&buf);
+  
+  return ecbuf_str(&ret);
 }
 
 //--------------------------------------------------------------------------------
