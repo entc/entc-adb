@@ -264,7 +264,7 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
     }
     else
     {
-      eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "add key '%s'", dbcolumn);
+      //eclogger_fmt (LL_TRACE, "ADBO", "dkkey", "add key '%s'", dbcolumn);
 
       return adbo_dbkeys_set_constraint (dataConstraint, constraint, dbcolumn, TRUE);
     }
