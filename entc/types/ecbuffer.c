@@ -1193,3 +1193,115 @@ EcBuffer ecbuf_bin2hex (EcBuffer bin)
 }
 
 //----------------------------------------------------------------------------------------
+
+#include <openssl/aes.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+
+//----------------------------------------------------------------------------------------
+
+void ecbuf_decrypt_aes_handleError (EVP_CIPHER_CTX* ctx)
+{
+  unsigned long errCode;
+  
+  while ((errCode = ERR_get_error()))
+  {
+    char *err = ERR_error_string(errCode, NULL);
+    printf("%s\n", err);
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
+{
+  EcBuffer buf = ecbuf_create (source->size + source->size);
+  
+  //unsigned char pad = RSA_X931_PADDING;
+  
+  EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX_init (&ctx);
+  
+  OpenSSL_add_all_algorithms();
+  
+  const EVP_CIPHER* cipher = EVP_get_cipherbyname ("aes-256-cfb");
+  
+  if (cipher == NULL)
+  {
+    printf ("cipher not found\n");
+    
+    return NULL;
+  }
+  
+  {
+    int ll;
+    
+    EVP_EncryptInit(&ctx, cipher, "testme32", NULL);
+  
+    EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
+
+    EVP_EncryptUpdate(&ctx, buf->buffer, &(buf->size), "alex@kalkhof.org", 16);
+    
+    EVP_EncryptFinal(&ctx, buf->buffer + buf->size, &ll);
+    
+    buf->size += ll;
+    
+    EcBuffer hex = ecbuf_bin2hex(buf);
+    
+    printf ("dada: %s\n", hex->buffer);
+    
+  }
+  
+  printf ("input '%i'\n", source->size);
+  
+  if (EVP_DecryptInit_ex (&ctx, cipher, NULL, NULL, NULL) == 0)
+  {
+    ecbuf_decrypt_aes_handleError (&ctx);
+    
+    return NULL;
+  }
+
+  if (EVP_DecryptInit_ex (&ctx, cipher, NULL, "testme32", NULL) == 0)
+  {
+    ecbuf_decrypt_aes_handleError (&ctx);
+    
+    return NULL;
+  }
+  
+  int blocksize = EVP_CIPHER_CTX_block_size (&ctx);
+  
+  printf ("blocksize %i\n", blocksize);
+  
+  
+  int len = 0;
+  int outl = 0;
+
+    if (EVP_DecryptUpdate (&ctx, buf->buffer, &outl, source->buffer, source->size) == 0)
+    {
+      ecbuf_decrypt_aes_handleError (&ctx);
+      
+      return NULL;
+    }
+    
+    printf ("outl: %i\n", outl);
+    
+    len += outl;
+  
+  if (EVP_DecryptFinal (&ctx, buf->buffer + len, &outl) == 0)
+  {
+    ecbuf_decrypt_aes_handleError (&ctx);
+
+    return NULL;
+  }
+  
+  len += outl;
+
+  
+  
+  EVP_CIPHER_CTX_cleanup (&ctx);
+  
+  return buf;
+}
+
+//----------------------------------------------------------------------------------------
