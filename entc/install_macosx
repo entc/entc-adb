@@ -33,3 +33,7 @@ cp $PWD/types/*.h $INCLUDEDIR/types/
 mkdir $INCLUDEDIR/tools
 rm $INCLUDEDIR/tools/*
 cp $PWD/tools/*.h $INCLUDEDIR/tools/
+
+mkdir $INCLUDEDIR/tests
+rm $INCLUDEDIR/tests/*
+cp $PWD/tests/*.h $INCLUDEDIR/tests/

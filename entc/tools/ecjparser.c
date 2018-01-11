@@ -20,6 +20,7 @@
 #define JPARSER_STATE_LIST_RUN    8
 #define JPARSER_STATE_NUMBER_RUN  9
 #define JPARSER_STATE_FLOAT_RUN   10
+#define JPARSER_STATE_STR_ESCAPE  11
 
 //=============================================================================
 
