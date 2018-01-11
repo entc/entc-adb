@@ -20,6 +20,7 @@
 #include "ecstring.h"
 
 #include "ecbuffer.h"
+#include "ecstream.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -903,6 +904,80 @@ void ecstr_replaceAllChars( EcString self, char find, char replace )
       *pos = replace;
     }
     pos++;
+  }
+}
+
+//-------------------------------------------------------------------------------
+
+EcString ecstr_removeAllChars (const EcString source, char find)
+{
+  EcString r;
+  int len = ecstr_len (source);
+  
+  const char* s = source;
+  char* d;
+
+  // allocate memory
+  r = ENTC_MALLOC (len + 1);
+  d = r;
+  
+  // copy content without the find char
+  while (*s)
+  {
+    if (*s != find)
+    {
+      *d = *s;
+      d++;
+    }
+    
+    s++;
+  }
+  
+  *d = '\0';
+  
+  return r;
+}
+
+//-------------------------------------------------------------------------------
+
+EcString ecstr_replaceS (const EcString source, const EcString find, const EcString replace)
+{
+  EcStream s;
+  const char* fpos;
+  const char* lpos;
+  
+  if (source == NULL)
+  {
+    return NULL;
+  }
+  
+  if (find == NULL)
+  {
+    return ecstr_copy (source);
+  }
+  
+  s = ecstream_create ();
+  
+  lpos = source;
+  
+  for (fpos = strstr (lpos, find); fpos; fpos = strstr (lpos, find))
+  {
+    ecstream_append_buf (s, lpos, fpos - lpos);
+
+    if (replace)
+    {
+      ecstream_append_str (s, replace);
+    }
+    
+    lpos = fpos + strlen (find);
+  }
+
+  ecstream_append_str (s, lpos);
+  
+  {
+    EcBuffer b = ecstream_tobuf (&s);
+    
+    return ecbuf_str (&b);
   }
 }
 

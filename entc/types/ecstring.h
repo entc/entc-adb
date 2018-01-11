@@ -142,6 +142,10 @@ __LIBEX EcString ecstr_unwrapl (const EcString, char cl, char cr, EcString* left
 
 __LIBEX EcString ecstr_lpad (const EcString, char c, uint_t len);
 
+__LIBEX EcString ecstr_removeAllChars (const EcString, char find);
+
+__LIBEX EcString ecstr_replaceS (const EcString, const EcString, const EcString);
+
 // transform: no change on size
 
 __LIBEX void ecstr_replaceAllChars( EcString, char find, char replace );
