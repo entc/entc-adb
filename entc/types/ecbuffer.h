@@ -84,6 +84,8 @@ __LIB_EXPORT EcBuffer ecbuf_bin2hex (EcBuffer);
 
 __LIB_EXPORT EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret);
 
+__LIB_EXPORT EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret);
+
 // getters
 
 __LIB_EXPORT const EcString ecbuf_const_str (const EcBuffer);

@@ -1234,35 +1234,9 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
     return NULL;
   }
   
-  {
-    int ll;
-    
-    EVP_EncryptInit(&ctx, cipher, "testme32", NULL);
+  printf ("KEY: %s\n", secret);
   
-    EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
-
-    EVP_EncryptUpdate(&ctx, buf->buffer, &(buf->size), "alex@kalkhof.org", 16);
-    
-    EVP_EncryptFinal(&ctx, buf->buffer + buf->size, &ll);
-    
-    buf->size += ll;
-    
-    EcBuffer hex = ecbuf_bin2hex(buf);
-    
-    printf ("dada: %s\n", hex->buffer);
-    
-  }
-  
-  printf ("input '%i'\n", source->size);
-  
-  if (EVP_DecryptInit_ex (&ctx, cipher, NULL, NULL, NULL) == 0)
-  {
-    ecbuf_decrypt_aes_handleError (&ctx);
-    
-    return NULL;
-  }
-
-  if (EVP_DecryptInit_ex (&ctx, cipher, NULL, "testme32", NULL) == 0)
+  if (EVP_DecryptInit (&ctx, EVP_aes_256_cbc(), (const unsigned char*)secret, "") == 0)
   {
     ecbuf_decrypt_aes_handleError (&ctx);
     
@@ -1297,8 +1271,47 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
   
   len += outl;
 
+  EVP_CIPHER_CTX_cleanup (&ctx);
   
+  return buf;
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
+{
+  EcBuffer buf = ecbuf_create (source->size * 2);
   
+  EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX_init (&ctx);
+  
+  OpenSSL_add_all_algorithms();
+  
+  const EVP_CIPHER* cipher = EVP_get_cipherbyname ("aes-256-cfb");
+  
+  if (cipher == NULL)
+  {
+    printf ("cipher not found\n");
+    
+    return NULL;
+  }
+  
+  {
+    int ll;
+    
+    EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (const unsigned char*)secret, "");
+    
+    EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
+    
+    EVP_EncryptUpdate(&ctx, buf->buffer, &(buf->size), source->buffer, source->size);
+    
+    EVP_EncryptFinal(&ctx, buf->buffer + buf->size, &ll);
+    
+    buf->size += ll;
+
+    return buf;
+  }
+
   EVP_CIPHER_CTX_cleanup (&ctx);
   
   return buf;

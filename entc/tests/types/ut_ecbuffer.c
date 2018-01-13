@@ -65,14 +65,30 @@ static int __STDCALL test_ecbuffer_aes (void* ptr, TestEnvContext tctx, EcErr er
   return 0;
 }
 
-//=============================================================================
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_ecbuffer_aes2 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcBuffer inb = ecbuf_create_fromStr("Hello Du! wie geht dir heute, guten Tag noch");
+
+  EcBuffer enc = ecbuf_encrypt_aes (inb, "merci");
+  
+  EcBuffer dec = ecbuf_decrypt_aes (enc, "merci");
+  
+  printf ("S: %s\n", dec->buffer);
+  
+  
+  return 0;
+}
+
+//====================2=========================================================
 
 int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
   
   //testenv_reg (te, "SHA256", test_ecbuffer_init, test_ecbuffer_done, test_ecbuffer_sha256);
-  testenv_reg (te, "AES", test_ecbuffer_init, test_ecbuffer_done, test_ecbuffer_aes);
+  testenv_reg (te, "AES", test_ecbuffer_init, test_ecbuffer_done, test_ecbuffer_aes2);
   
   testenv_run (te);
   

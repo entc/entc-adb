@@ -785,22 +785,27 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcString ecjson_write (const EcUdc source)
+EcBuffer ecjson_write (const EcUdc source)
 {
-  EcBuffer buffer;
-  
   EcStream stream = ecstream_create ();
   
   jsonwriter_fill (stream, source);
   
-  buffer = ecstream_tobuf (&stream);
-  
-  return ecbuf_str (&buffer);  
+  return ecstream_tobuf (&stream);
 }
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecjson_readFromFile (const EcString filename, EcUdc* retUdc)
+EcString ecjson_toString (const EcUdc source)
+{
+  EcBuffer buf = ecjson_write (source);
+  
+  return ecbuf_str (&buf);
+}
+
+//-------------------------------------------------------------------------------------------------------
+
+int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString secret)
 {
   uint64_t fsize;
   EcBuffer content;
@@ -817,9 +822,19 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc)
   // TODO: using stream
   content = ecbuf_create (fsize + 1);
   
-  if (ecfh_readBuffer (fh, content) == 0)
+  if (secret)
   {
-    return ENTC_RESCODE_NOT_AVAILABLE;
+    if (ecfh_readBuffer_decrypted (fh, content, secret) == 0)
+    {
+      return ENTC_RESCODE_NOT_AVAILABLE;
+    }
+  }
+  else
+  {
+    if (ecfh_readBuffer (fh, content) == 0)
+    {
+      return ENTC_RESCODE_NOT_AVAILABLE;
+    }
   }
   
   ecfh_close(&fh);
@@ -837,7 +852,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc)
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecjson_writeToFile (const EcString filename, const EcUdc source)
+int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcString secret)
 {
   EcFileHandle fh;
   int res = ENTC_RESCODE_OK;
@@ -849,13 +864,20 @@ int ecjson_writeToFile (const EcString filename, const EcUdc source)
   }
   
   {
-    EcString text = ecjson_write (source);
-    if (text)
+    EcBuffer buf = ecjson_write (source);
+    if (buf)
     {
-      ecfh_writeString (fh, text);
+      if (secret)
+      {
+        ecfh_writeBuffer_encrypted (fh, buf, secret);
+      }
+      else
+      {
+        ecfh_writeBuffer (fh, buf, buf->size);
+      }
       
       // clean up
-      ecstr_delete (&text);
+      ecbuf_destroy (&buf);
     }
     else
     {
