@@ -50,7 +50,7 @@ static int __STDCALL test_ecbuffer_aes (void* ptr, TestEnvContext tctx, EcErr er
   
   const EcString secret = "testme32";
   
-  EcBuffer decrypted = ecbuf_decrypt_aes (binaToDecode, secret);
+  EcBuffer decrypted = ecbuf_decrypt_aes (binaToDecode, secret, err);
   
   const EcString result = ecbuf_const_str(decrypted);
   
@@ -74,13 +74,13 @@ static int __STDCALL test_ecbuffer_aes2 (void* ptr, TestEnvContext tctx, EcErr e
   
   EcBuffer inb = ecbuf_create_fromStr("{\"test\":34}");
 
-  EcBuffer enc = ecbuf_encrypt_aes (inb, pass1);
+  EcBuffer enc = ecbuf_encrypt_aes (inb, pass1, err);
   
   EcBuffer b = ecbuf_encode_base64 (enc);
 
   EcBuffer enc2 = ecbuf_decode_base64 (b);
   
-  EcBuffer dec = ecbuf_decrypt_aes (enc2, pass2);
+  EcBuffer dec = ecbuf_decrypt_aes (enc2, pass2, err);
   
   printf ("S: %s\n", dec->buffer);
   
