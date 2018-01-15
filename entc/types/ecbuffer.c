@@ -1312,7 +1312,7 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
     
     ecstr_delete (&keys);
     
-    //EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
+    EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
     
     if (EVP_EncryptUpdate(&ctx, encrypted->buffer, &len, source->buffer, source->size) == 0)
     {
