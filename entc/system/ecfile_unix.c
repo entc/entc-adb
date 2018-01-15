@@ -107,35 +107,6 @@ int ecfh_writeString(EcFileHandle self, const EcString value)
 
 /*------------------------------------------------------------------------*/
 
-int ecfh_writeString_encrypted (EcFileHandle self, const EcString source, const EcString key)
-{
-  EcBuffer_s buf;
-  
-  buf.buffer = (unsigned char*)source;
-  buf.size = strlen (source);
-  
-  return ecfh_writeBuffer_encrypted (self, &buf, key);
-}
-
-/*------------------------------------------------------------------------*/
-
-int ecfh_writeBuffer_encrypted (EcFileHandle self, const EcBuffer source, const EcString key)
-{
-  int res;
-  
-  EcBuffer encbuf = ecbuf_encrypt_aes (source, key, NULL);
-  
-  printf ("WRITE TO FILE: %lu, %s\n", encbuf->size, key);
-  
-  res = write (self->fd, encbuf->buffer, encbuf->size);
-  
-  ecbuf_destroy (&encbuf);
-  
-  return res;
-}
-
-/*------------------------------------------------------------------------*/
-
 int ecfh_writeBuffer (EcFileHandle self, const EcBuffer buffer, uint_t size)
 {
   return write (self->fd, buffer->buffer, size);
@@ -170,47 +141,6 @@ uint_t ecfh_readBufferOf (EcFileHandle self, EcBuffer buffer, uint_t offset)
     return 0;
   }
 
-  return res;
-}
-
-/*------------------------------------------------------------------------*/
-
-uint_t ecfh_readBuffer_decrypted (EcFileHandle self, EcBuffer buffer, const EcString key)
-{
-  EcBuffer decbuf;
-  
-  int res = read (self->fd, buffer->buffer, buffer->size);
-  if (res < 0)
-  {
-    return 0;
-  }
-  
-  buffer->size = res;
-  
-  printf ("READ FROM FILE: %i, %s\n", res, key);
-  
-  decbuf = ecbuf_decrypt_aes (buffer, key, NULL);
-  if (decbuf == NULL)
-  {
-    return 0;
-  }
-  
-  // swap values decrypted buffer to input buffer
-  {
-    EcBuffer_s h;
-    
-    h.buffer = buffer->buffer;
-    h.size = buffer->size;
-    
-    buffer->buffer = decbuf->buffer;
-    buffer->size = decbuf->size;
-    
-    decbuf->buffer = h.buffer;
-    decbuf->size = h.size;
-  }
-  
-  ecbuf_destroy (&decbuf);
-  
   return res;
 }
 

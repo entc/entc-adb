@@ -1192,6 +1192,7 @@ EcBuffer ecbuf_bin2hex (EcBuffer bin)
   return hex;
 }
 
+/*
 //----------------------------------------------------------------------------------------
 
 #include <openssl/aes.h>
@@ -1357,21 +1358,10 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret, EcErr err)
     encrypted->size = len + ll;
   }
   
-  /*
-  {
-    int i = 0;
-    
-    for (i = 0; i < encrypted->size; i++)
-    {
-      printf ("[%i] %i\n", i, (char)encrypted->buffer[i]);
-    }
-    
-  }
-   */
-
   EVP_CIPHER_CTX_cleanup (&ctx);
   
   return encrypted;
 }
 
 //----------------------------------------------------------------------------------------
+*/

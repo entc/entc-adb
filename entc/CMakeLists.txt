@@ -202,6 +202,8 @@ SET (CORE_SOURCES_TOOLS
 
   tools/ectemplate.h
   tools/ectemplate.c
+  tools/eccrypt.h
+  tools/eccrypt.c
 )
 
 SET (CORE_SOURCES_TESTS
