@@ -1282,6 +1282,8 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
 {
   EcBuffer buf = ecbuf_create (source->size * 2);
   
+  memset (buf->buffer, 0, buf->size);
+  
   EVP_CIPHER_CTX ctx;
   EVP_CIPHER_CTX_init (&ctx);
   
