@@ -1323,6 +1323,8 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
       return NULL;
     }
     
+    printf ("ENC %i\n", len);
+    
     if (EVP_EncryptFinal(&ctx, encrypted->buffer + len, &ll) == 0)
     {
       ecbuf_decrypt_aes_handleError (&ctx);
@@ -1331,6 +1333,9 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
       
       return NULL;
     }
+
+    printf ("ENC %i\n", ll);
+    
     
     encrypted->size = len + ll;
   }
@@ -1340,7 +1345,7 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
     
     for (i = 0; i < encrypted->size; i++)
     {
-      printf ("[%i] %i", i, encrypted->buffer[i]);
+      printf ("[%i] %i\n", i, encrypted->buffer[i]);
     }
     
   }
