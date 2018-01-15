@@ -1299,7 +1299,7 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
     int len;
     
 
-    if (EVP_EncryptInit(&ctx, EVP_aes_256_cfb(), (unsigned char*)keys, NULL) == 0)
+    if (EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (unsigned char*)keys, NULL) == 0)
     {
       ecbuf_decrypt_aes_handleError (&ctx);
       
