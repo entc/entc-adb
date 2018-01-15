@@ -1305,8 +1305,12 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
       
       EVP_CIPHER_CTX_cleanup (&ctx);
       
+      ecstr_delete (&keys);
+
       return NULL;
     }
+    
+    ecstr_delete (&keys);
     
     //EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
     
