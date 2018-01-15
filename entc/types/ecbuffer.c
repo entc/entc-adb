@@ -1280,9 +1280,7 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
 
 EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
 {
-  EcBuffer buf = ecbuf_create (source->size * 2);
-  
-  memset (buf->buffer, 0, buf->size);
+  EcBuffer encrypted = ecbuf_create (source->size * 2);
   
   EVP_CIPHER_CTX ctx;
   EVP_CIPHER_CTX_init (&ctx);
@@ -1301,24 +1299,41 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
     int len;
     
 
-    EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (unsigned char*)keys, NULL);
-    
-//    EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (const unsigned char*)secret, "mamamia");
+    if (EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (unsigned char*)keys, NULL) == 0)
+    {
+      ecbuf_decrypt_aes_handleError (&ctx);
+      
+      EVP_CIPHER_CTX_cleanup (&ctx);
+      
+      return NULL;
+    }
     
     //EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
     
-    EVP_EncryptUpdate(&ctx, buf->buffer, &len, source->buffer, source->size);
-    
-    EVP_EncryptFinal(&ctx, buf->buffer + len, &ll);
-    
-    buf->size = len + ll;
+    if (EVP_EncryptUpdate(&ctx, encrypted->buffer, &len, source->buffer, source->size) == 0)
+    {
+      ecbuf_decrypt_aes_handleError (&ctx);
+      
+      EVP_CIPHER_CTX_cleanup (&ctx);
 
-    return buf;
+      return NULL;
+    }
+    
+    if (EVP_EncryptFinal(&ctx, encrypted->buffer + len, &ll) == 0)
+    {
+      ecbuf_decrypt_aes_handleError (&ctx);
+      
+      EVP_CIPHER_CTX_cleanup (&ctx);
+      
+      return NULL;
+    }
+    
+    encrypted->size = len + ll;
   }
 
   EVP_CIPHER_CTX_cleanup (&ctx);
   
-  return buf;
+  return encrypted;
 }
 
 //----------------------------------------------------------------------------------------
