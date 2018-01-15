@@ -32,13 +32,13 @@ __LIBEX EcUdc ecjson_read (const EcString, const EcString name);
 
 __LIBEX EcUdc ecjson_readFromBuffer (const EcBuffer, const EcString name);
 
-__LIBEX int ecjson_readFromFile (const EcString filename, EcUdc*, const EcString secret);
-
-__LIBEX int ecjson_writeToFile (const EcString filename, const EcUdc, const EcString secret);
-
 __LIBEX EcBuffer ecjson_write (const EcUdc source);
 
 __LIBEX EcString ecjson_toString (const EcUdc source);
+
+__LIBEX int ecjson_readFromFile (const EcString filename, EcUdc*, const EcString secret);
+
+__LIBEX int ecjson_writeToFile (const EcString filename, const EcUdc, const EcString secret);
 
 //-----------------------------------------------------------------------------
 

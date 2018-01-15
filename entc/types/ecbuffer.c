@@ -1223,44 +1223,42 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
   EVP_CIPHER_CTX ctx;
   EVP_CIPHER_CTX_init (&ctx);
   
-  OpenSSL_add_all_algorithms();
+  EcBuffer_s h;
   
-  const EVP_CIPHER* cipher = EVP_get_cipherbyname ("aes-256-cfb");
+  h.buffer = (unsigned char*)secret;
+  h.size = strlen(secret);
   
-  if (cipher == NULL)
-  {
-    printf ("cipher not found\n");
-    
-    return NULL;
-  }
+  EcBuffer key = ecbuf_sha1(&h);
   
-  printf ("KEY: %s\n", secret);
+  EcString keys = ecbuf_str(&key);
   
-  if (EVP_DecryptInit (&ctx, EVP_aes_256_cbc(), (const unsigned char*)secret, "") == 0)
+  if (EVP_DecryptInit (&ctx, EVP_aes_256_cbc(), (unsigned char*)keys, NULL) == 0)
   {
     ecbuf_decrypt_aes_handleError (&ctx);
     
     return NULL;
   }
   
-  int blocksize = EVP_CIPHER_CTX_block_size (&ctx);
+  //EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
+
+  //int blocksize = EVP_CIPHER_CTX_block_size (&ctx);
   
-  printf ("blocksize %i\n", blocksize);
+  //printf ("blocksize %i\n", blocksize);
   
   
   int len = 0;
   int outl = 0;
 
-    if (EVP_DecryptUpdate (&ctx, buf->buffer, &outl, source->buffer, source->size) == 0)
-    {
-      ecbuf_decrypt_aes_handleError (&ctx);
-      
-      return NULL;
-    }
+  if (EVP_DecryptUpdate (&ctx, buf->buffer, &len, source->buffer, source->size) == 0)
+  {
+    ecbuf_decrypt_aes_handleError (&ctx);
     
-    printf ("outl: %i\n", outl);
+    return NULL;
+  }
+  
+    //printf ("outl: %i\n", outl);
     
-    len += outl;
+    //len += outl;
   
   if (EVP_DecryptFinal (&ctx, buf->buffer + len, &outl) == 0)
   {
@@ -1270,6 +1268,8 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
   }
   
   len += outl;
+  
+  buf->size = len;
 
   EVP_CIPHER_CTX_cleanup (&ctx);
   
@@ -1285,29 +1285,31 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
   EVP_CIPHER_CTX ctx;
   EVP_CIPHER_CTX_init (&ctx);
   
-  OpenSSL_add_all_algorithms();
+  EcBuffer_s h;
   
-  const EVP_CIPHER* cipher = EVP_get_cipherbyname ("aes-256-cfb");
+  h.buffer = (unsigned char*)secret;
+  h.size = strlen(secret);
   
-  if (cipher == NULL)
-  {
-    printf ("cipher not found\n");
-    
-    return NULL;
-  }
+  EcBuffer key = ecbuf_sha1(&h);
+  
+  EcString keys = ecbuf_str(&key);
   
   {
     int ll;
+    int len;
     
-    EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (const unsigned char*)secret, "");
+
+    EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (unsigned char*)keys, NULL);
     
-    EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
+//    EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (const unsigned char*)secret, "mamamia");
     
-    EVP_EncryptUpdate(&ctx, buf->buffer, &(buf->size), source->buffer, source->size);
+    //EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
     
-    EVP_EncryptFinal(&ctx, buf->buffer + buf->size, &ll);
+    EVP_EncryptUpdate(&ctx, buf->buffer, &len, source->buffer, source->size);
     
-    buf->size += ll;
+    EVP_EncryptFinal(&ctx, buf->buffer + len, &ll);
+    
+    buf->size = len + ll;
 
     return buf;
   }

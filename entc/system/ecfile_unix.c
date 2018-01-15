@@ -129,10 +129,6 @@ int ecfh_writeBuffer_encrypted (EcFileHandle self, const EcBuffer source, const 
   
   res = write (self->fd, encbuf->buffer, encbuf->size);
   
-  EcBuffer hex = ecbuf_bin2hex(encbuf);
-  
-  printf ("HEX: %s\n", hex->buffer);
-  
   ecbuf_destroy (&encbuf);
   
   return res;
@@ -192,11 +188,6 @@ uint_t ecfh_readBuffer_decrypted (EcFileHandle self, EcBuffer buffer, const EcSt
   buffer->size = res;
   
   printf ("READ FROM FILE: %i, %s\n", res, key);
-  
-  EcBuffer hex = ecbuf_bin2hex(buffer);
-  
-  printf ("HEX: %s\n", hex->buffer);
-
   
   decbuf = ecbuf_decrypt_aes (buffer, key);
   if (decbuf == NULL)

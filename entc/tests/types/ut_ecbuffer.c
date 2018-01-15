@@ -69,11 +69,18 @@ static int __STDCALL test_ecbuffer_aes (void* ptr, TestEnvContext tctx, EcErr er
 
 static int __STDCALL test_ecbuffer_aes2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
-  EcBuffer inb = ecbuf_create_fromStr("Hello Du! wie geht dir heute, guten Tag noch");
-
-  EcBuffer enc = ecbuf_encrypt_aes (inb, "merci");
+  EcString pass1 = ecstr_copy("michi79");
+  EcString pass2 = ecstr_copy("michi79");
   
-  EcBuffer dec = ecbuf_decrypt_aes (enc, "merci");
+  EcBuffer inb = ecbuf_create_fromStr("{\"test\":34}");
+
+  EcBuffer enc = ecbuf_encrypt_aes (inb, pass1);
+  
+  EcBuffer b = ecbuf_encode_base64 (enc);
+
+  EcBuffer enc2 = ecbuf_decode_base64 (b);
+  
+  EcBuffer dec = ecbuf_decrypt_aes (enc2, pass2);
   
   printf ("S: %s\n", dec->buffer);
   
@@ -81,7 +88,7 @@ static int __STDCALL test_ecbuffer_aes2 (void* ptr, TestEnvContext tctx, EcErr e
   return 0;
 }
 
-//====================2=========================================================
+//=============================================================================
 
 int main(int argc, char* argv[])
 {

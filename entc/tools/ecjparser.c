@@ -1041,7 +1041,7 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
           }
           default:
           {
-            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in default");
+            return ecerr_set_fmt (err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state [%i] in default '%c' <- [%i]", state, *c, *c);
           }
         }
         
