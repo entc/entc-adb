@@ -242,12 +242,12 @@ int main(int argc, char* argv[])
   testenv_reg (te, "Json Reader Test7", test_ecjson_init, test_ecjson_done, test_ecjson_test7);
   
   
-for (i = 0; i < 1000; i++)
-{
-  printf ("[%i]\n", i);
+//for (i = 0; i < 1000; i++)
+//{
+  //printf ("[%i]\n", i);
   
   testenv_run (te);
-}
+//}
   
   return testenv_destroy (&te);
 }
