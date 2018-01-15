@@ -123,7 +123,7 @@ int ecfh_writeBuffer_encrypted (EcFileHandle self, const EcBuffer source, const 
 {
   int res;
   
-  EcBuffer encbuf = ecbuf_encrypt_aes (source, key);
+  EcBuffer encbuf = ecbuf_encrypt_aes (source, key, NULL);
   
   printf ("WRITE TO FILE: %lu, %s\n", encbuf->size, key);
   
@@ -189,7 +189,7 @@ uint_t ecfh_readBuffer_decrypted (EcFileHandle self, EcBuffer buffer, const EcSt
   
   printf ("READ FROM FILE: %i, %s\n", res, key);
   
-  decbuf = ecbuf_decrypt_aes (buffer, key);
+  decbuf = ecbuf_decrypt_aes (buffer, key, NULL);
   if (decbuf == NULL)
   {
     return 0;

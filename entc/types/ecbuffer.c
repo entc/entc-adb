@@ -1214,8 +1214,28 @@ void ecbuf_decrypt_aes_handleError (EVP_CIPHER_CTX* ctx)
 
 //----------------------------------------------------------------------------------------
 
-EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
+EcString ecbuf_aes_getkey (const EcString secret, EcErr err)
 {
+  EcBuffer_s h;
+  
+  h.buffer = (unsigned char*)secret;
+  h.size = strlen(secret);
+  
+  EcBuffer key = ecbuf_sha_256 (&h, err);
+  
+  if (key == NULL)
+  {
+    return NULL;
+  }
+  
+  return ecbuf_str(&key);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret, EcErr err)
+{
+  int res;
   EcBuffer buf = ecbuf_create (source->size + source->size);
   
   //unsigned char pad = RSA_X931_PADDING;
@@ -1223,16 +1243,17 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
   EVP_CIPHER_CTX ctx;
   EVP_CIPHER_CTX_init (&ctx);
   
-  EcBuffer_s h;
+  EcString key = ecbuf_aes_getkey (secret, err);
+  if (key == NULL)
+  {
+    return NULL;
+  }
   
-  h.buffer = (unsigned char*)secret;
-  h.size = strlen(secret);
+  res = EVP_DecryptInit (&ctx, EVP_aes_256_cbc(), (unsigned char*)key, NULL);
   
-  EcBuffer key = ecbuf_sha1(&h);
+  ecstr_delete (&key);
   
-  EcString keys = ecbuf_str(&key);
-  
-  if (EVP_DecryptInit (&ctx, EVP_aes_256_cbc(), (unsigned char*)keys, NULL) == 0)
+  if (res == 0)
   {
     ecbuf_decrypt_aes_handleError (&ctx);
     
@@ -1278,39 +1299,36 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
 
 //----------------------------------------------------------------------------------------
 
-EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
+EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret, EcErr err)
 {
+  int res;
   EcBuffer encrypted = ecbuf_create (source->size * 2);
   
   EVP_CIPHER_CTX ctx;
   EVP_CIPHER_CTX_init (&ctx);
   
-  EcBuffer_s h;
+  EcString key = ecbuf_aes_getkey (secret, err);
+  if (key == NULL)
+  {
+    return NULL;
+  }
   
-  h.buffer = (unsigned char*)secret;
-  h.size = strlen(secret);
+  res = EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (unsigned char*)key, NULL);
   
-  EcBuffer key = ecbuf_sha1(&h);
+  ecstr_delete (&key);
   
-  EcString keys = ecbuf_str(&key);
-  
+  if (res == 0)
+  {
+    ecbuf_decrypt_aes_handleError (&ctx);
+    
+    EVP_CIPHER_CTX_cleanup (&ctx);
+    
+    return NULL;
+  }
+
   {
     int ll;
     int len;
-    
-
-    if (EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (unsigned char*)keys, NULL) == 0)
-    {
-      ecbuf_decrypt_aes_handleError (&ctx);
-      
-      EVP_CIPHER_CTX_cleanup (&ctx);
-      
-      ecstr_delete (&keys);
-
-      return NULL;
-    }
-    
-    ecstr_delete (&keys);
     
     EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
     
