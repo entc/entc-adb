@@ -99,7 +99,7 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
 EcEncryptAES ecencrypt_aes_initialize (const EcString secret, EcErr err)
 {
   int res;
-  EcEncryptAES self = ENTC_NEW(struct EcEncryptAES_s);
+  EcEncryptAES self = ecencrypt_aes_create ();
   
   EcString key = eccrypt_aes_getkey (secret, err);
   if (key == NULL)
