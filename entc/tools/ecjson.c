@@ -900,7 +900,7 @@ int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcStr
   EcErr err = ecerr_create();
   EcFileHandle fh;
   int res = ENTC_ERR_NONE;
-  EcEncryptAES aes;
+  EcEncryptAES aes = NULL;
   EcBuffer buf;
 
   if (secret)

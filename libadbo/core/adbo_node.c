@@ -835,7 +835,7 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
     case ENTC_UDC_NODE:
     case ENTC_UDC_LIST:
     {
-      EcString val = ecjson_write (dataItem);
+      EcString val = ecjson_toString (dataItem);
       
       adbl_attrs_addChar (attrs, columnName, val);
       
