@@ -1334,6 +1334,16 @@ EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret)
     
     encrypted->size = len + ll;
   }
+  
+  {
+    int i = 0;
+    
+    for (i = 0; i < encrypted->size; i++)
+    {
+      printf ("[%i] %i", i, encrypted->buffer[i]);
+    }
+    
+  }
 
   EVP_CIPHER_CTX_cleanup (&ctx);
   
