@@ -54,6 +54,10 @@ __LIBEX EcBuffer ecdecrypt_aes_finalize (EcDecryptAES, EcErr);
 
 __LIBEX void ecdecrypt_aes_destroy (EcDecryptAES* pself);
 
-//-----------------------------------------------------------------------------
+//=============================================================================
+
+__LIBEX int ecencrypt_file (const EcString source, const EcString dest, const EcString secret, EcErr);
+
+__LIBEX int ecdecrypt_file (const EcString source, const EcString dest, const EcString secret, EcErr);
 
 #endif

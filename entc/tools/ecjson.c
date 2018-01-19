@@ -824,7 +824,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
   jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
   
   // buffer for reading
-  buf = ecbuf_create(1024);
+  buf = ecbuf_create(10);
   
   for (bytesRead = ecfh_readBuffer (fh, buf); bytesRead > 0; bytesRead = ecfh_readBuffer (fh, buf))
   {
