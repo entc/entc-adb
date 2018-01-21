@@ -581,7 +581,7 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
         // if directory
         case DT_DIR:
         {
-          res = ecfs_rmdir_dir (path);
+          res = ecfs_rmdir (path, TRUE);
         }
         break;
         default:
