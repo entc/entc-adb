@@ -20,6 +20,7 @@
 #include "ecjson.h"
 #include "types/ecstream.h"
 #include "utils/eclogger.h"
+#include "tools/eccrypt.h"
 
 #include "ecjparser.h"
 
@@ -592,39 +593,12 @@ EcUdc ecjson_readFromBuffer (const EcBuffer buf, const EcString name)
 
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
-  EcUdc ret = NULL;
-  int res;
- 
-  if (source)
-  {
-    EcErr err = ecerr_create();
-    
-    EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
-    
-    res = ecjsonparser_parse (jparser, source, strlen(source), err);
-    if (res)
-    {
-      eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
-      
-      eclogger_msg (LL_WARN, "JSON", "reader", source);
-    }
-    else
-    {
-      ret = ecjsonparser_lastObject(jparser);
-    }
-    
-    if (ret)
-    {
-      // set name
-      ecudc_setName (ret, name);
-    }
-    
-    // clean up
-    ecjsonparser_destroy (&jparser);
-    ecerr_destroy(&err);
-  }
-
-  return ret;
+  EcBuffer_s h;
+  
+  h.buffer = (unsigned char*)source;
+  h.size = strlen (source);
+  
+  return ecjson_readFromBuffer (&h, name);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -677,6 +651,9 @@ void jsonwriter_escape (EcStream stream, const EcString source)
 
 void jsonwriter_fill (EcStream stream, const EcUdc node)
 {
+//  printf ("fill [%p]\n", node);
+  
+
   switch (ecudc_type (node))
   {
     case ENTC_UDC_LIST:
@@ -785,85 +762,218 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcString ecjson_write (const EcUdc source)
+EcBuffer ecjson_write (const EcUdc source)
 {
-  EcBuffer buffer;
-  
   EcStream stream = ecstream_create ();
   
   jsonwriter_fill (stream, source);
   
-  buffer = ecstream_tobuf (&stream);
-  
-  return ecbuf_str (&buffer);  
+  return ecstream_tobuf (&stream);
 }
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecjson_readFromFile (const EcString filename, EcUdc* retUdc)
+EcString ecjson_toString (const EcUdc source)
 {
-  uint64_t fsize;
-  EcBuffer content;
-  EcFileHandle fh;
+  EcBuffer buf = ecjson_write (source);
+  
+  return ecbuf_str (&buf);
+}
 
+//-------------------------------------------------------------------------------------------------------
+
+int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString secret)
+{
+  int res;
+  int bytesRead;
+
+  EcFileHandle fh;
+  EcErr err;
+  EcJsonParser jparser;
+  EcBuffer buf;
+  EcDecryptAES aes = NULL;
+  
+  err = ecerr_create();
+
+  // create crypto object
+  if (secret)
+  {
+    aes = ecdecrypt_aes_initialize (secret, err);
+    if (aes == NULL)
+    {
+      ecerr_destroy(&err);
+      return err->code;
+    }
+  }
+
+  // open file
   fh = ecfh_open (filename, O_RDONLY);
   if (isNotAssigned (fh))
   {
-    return ENTC_RESCODE_NOT_AVAILABLE;
+    if (aes)
+    {
+      ecdecrypt_aes_destroy (&aes);
+    }
+    
+    ecerr_destroy(&err);
+
+    return ENTC_ERR_NOT_FOUND;
   }
   
-  fsize = ecfh_size (fh);
+  // create the parser
+  jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
   
-  // TODO: using stream
-  content = ecbuf_create (fsize + 1);
+  // buffer for reading
+  buf = ecbuf_create(10);
   
-  if (ecfh_readBuffer (fh, content) == 0)
+  for (bytesRead = ecfh_readBuffer (fh, buf); bytesRead > 0; bytesRead = ecfh_readBuffer (fh, buf))
   {
-    return ENTC_RESCODE_NOT_AVAILABLE;
+    EcBuffer_s h;
+    
+    h.buffer = buf->buffer;
+    h.size = bytesRead;
+    
+    if (aes)
+    {
+      EcBuffer pbuf = ecdecrypt_aes_update (aes, &h, err);
+      if (pbuf == NULL)
+      {
+        res = err->code;
+        break;
+      }
+      
+      h.buffer = pbuf->buffer;
+      h.size = pbuf->size;
+    }
+    
+    res = ecjsonparser_parse (jparser, (const char*)h.buffer, h.size, err);
+    if (res)
+    {
+      break;
+    }
   }
+  
+  // finalize decryption
+  if (aes && res == ENTC_ERR_NONE)
+  {
+    EcBuffer pbuf = NULL;
+    
+    pbuf = ecdecrypt_aes_finalize (aes, err);
+    if (pbuf == NULL)
+    {
+      res = err->code;
+    }
+    
+    res = ecjsonparser_parse (jparser, (const char*)pbuf->buffer, pbuf->size, err);
+  }
+
+  if (res == ENTC_ERR_NONE)
+  {
+    *retUdc = ecjsonparser_lastObject (jparser);
+    
+    if (*retUdc)
+    {
+      // set name
+      ecudc_setName (*retUdc, NULL);
+    }
+  }
+
+  // clean up
+  ecjsonparser_destroy (&jparser);
+  ecerr_destroy(&err);
   
   ecfh_close(&fh);
+  ecbuf_destroy(&buf);
   
+  if (aes)
   {
-    EcString text = ecbuf_str (&content);
+    ecdecrypt_aes_destroy (&aes);
+  }
   
-    *retUdc = ecjson_read(text, NULL);
-  
-    ecstr_delete (&text);
-  }  
-
-  return ENTC_RESCODE_OK;
+  return res;
 }
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecjson_writeToFile (const EcString filename, const EcUdc source)
+int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcString secret)
 {
+  EcErr err = ecerr_create();
   EcFileHandle fh;
-  int res = ENTC_RESCODE_OK;
+  int res = ENTC_ERR_NONE;
+  EcEncryptAES aes = NULL;
+  EcBuffer buf;
 
+  if (secret)
+  {
+    aes = ecencrypt_aes_initialize (secret, err);
+    if (aes == NULL)
+    {
+      res = err->code;
+
+      ecerr_destroy (&err);
+      
+      return res;
+    }
+  }
+    
   fh = ecfh_open (filename, O_CREAT | O_RDWR | O_TRUNC);
   if (isNotAssigned (fh))
   {
-    return ENTC_RESCODE_NOT_AVAILABLE;
+    if (aes)
+    {
+      ecencrypt_aes_destroy (&aes);
+    }
+    
+    ecerr_destroy(&err);
+    
+    return ENTC_ERR_NOT_FOUND;
   }
-  
+
+  // write ecudc to json text
+  buf = ecjson_write (source);
+  if (buf)
   {
-    EcString text = ecjson_write (source);
-    if (text)
+    EcBuffer pbuf = buf;
+    
+    if (aes)
     {
-      ecfh_writeString (fh, text);
-      
-      // clean up
-      ecstr_delete (&text);
+      pbuf = ecencrypt_aes_update (aes, buf, err);
     }
-    else
+    
+    if (pbuf)
     {
-      res = ENTC_RESCODE_NOT_AVAILABLE;
+      ecfh_writeBuffer (fh, pbuf, pbuf->size);
+      pbuf = NULL;
     }
+
+    if (aes)
+    {
+      pbuf = ecencrypt_aes_finalize (aes, err);
+    }
+    
+    if (pbuf)
+    {
+      ecfh_writeBuffer (fh, pbuf, pbuf->size);
+      pbuf = NULL;
+    }
+    
+    // clean up
+    ecbuf_destroy (&buf);
+  }
+  else
+  {
+    res = ENTC_ERR_PROCESS_FAILED;
   }
   
   ecfh_close(&fh);
+  
+  if (aes)
+  {
+    ecencrypt_aes_destroy (&aes);
+  }
+
+  ecerr_destroy (&err);
+  
   return res;
 }
 

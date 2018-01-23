@@ -449,6 +449,7 @@ int ecfs_rmdir_loop (int fd, DIR* dir)
             {
               res = FALSE;
             }
+            
             close (fd2);
           }
         }
@@ -550,6 +551,8 @@ int ecfs_rmdir_removeFile (const EcString source)
 
 //--------------------------------------------------------------------------------
 
+int ecfs_rmdir_dir (const EcString source);
+
 int ecfs_rmdir_loop (const EcString source, DIR* dir)
 {
   int res = TRUE;
@@ -578,7 +581,7 @@ int ecfs_rmdir_loop (const EcString source, DIR* dir)
         // if directory
         case DT_DIR:
         {
-          res = ecfs_rmdir_removeDir (path);
+          res = ecfs_rmdir (path, TRUE);
         }
         break;
         default:

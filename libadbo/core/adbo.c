@@ -306,7 +306,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   
   // debug
   {
-    EcString h = ecjson_write(dataNode);
+    EcString h = ecjson_toString (dataNode);
     
     eclogger_fmt (LL_TRACE, "ADBO", "insert D", h);
 
@@ -314,7 +314,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   }
   // debug
   {
-    EcString h = ecjson_write(params);
+    EcString h = ecjson_toString (params);
     
     eclogger_fmt (LL_TRACE, "ADBO", "insert P", h);
     

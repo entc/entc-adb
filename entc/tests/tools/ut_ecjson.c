@@ -40,7 +40,7 @@ static int __STDCALL test_ecjson_test1 (void* ptr, TestEnvContext tctx, EcErr er
     return 1;
   }
   
-  text = ecjson_write(data);
+  text = ecjson_toString (data);
   
   eclogger_fmt (LL_INFO, "TEST", "data", text);
   
@@ -79,7 +79,7 @@ static int __STDCALL test_ecjson_test2 (void* ptr, TestEnvContext tctx, EcErr er
     return 1;
   }
   
-  text = ecjson_write(data);
+  text = ecjson_toString (data);
   
   eclogger_fmt (LL_INFO, "TEST", "data", text);
   
@@ -104,7 +104,7 @@ static int __STDCALL test_ecjson_test3 (void* ptr, TestEnvContext tctx, EcErr er
     return 1;
   }
   
-  text = ecjson_write(data);
+  text = ecjson_toString (data);
   
   eclogger_fmt (LL_INFO, "TEST", "data", text);
   
@@ -143,7 +143,7 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
       return 1;
     }
     
-    text = ecjson_write(data);
+    text = ecjson_toString (data);
     
     eclogger_fmt (LL_INFO, "TEST", "data", text);
     
@@ -173,17 +173,128 @@ static int __STDCALL test_ecjson_test5 (void* ptr, TestEnvContext tctx, EcErr er
 
 //---------------------------------------------------------------------------
 
+static int __STDCALL test_ecjson_test6 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  int i;
+  EcUdc data;
+  
+  data = ecudc_create(EC_ALLOC, ENTC_UDC_LIST, "root");
+  
+  for (i = 0; i < 10; i++)
+  {
+    EcUdc item = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, NULL);
+    
+    ecudc_add_asNumber(EC_ALLOC, item, "index", i);
+    
+    ecudc_add (data, &item);
+  }
+  
+  ecjson_writeToFile (".meta2", data, "michi79");
+  
+  ecudc_destroy(EC_ALLOC, &data);
+  
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_ecjson_test7 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc data;
+  EcString key;
+  
+  key = ecstr_copy ("michi79");
+  
+  ecjson_readFromFile(".meta2", &data, key);
+
+  printf ("read done\n");
+
+  EcString h = ecjson_toString (data);
+  
+  printf ("%s\n", h);
+  
+  ecstr_delete(&h);
+  
+  ecudc_destroy(EC_ALLOC, &data);
+
+  ecstr_delete(&key);
+
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_ecjson_test8 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  int i;
+  EcUdc data;
+  
+  data = ecudc_create(EC_ALLOC, ENTC_UDC_LIST, "root");
+  
+  for (i = 0; i < 10; i++)
+  {
+    EcUdc item = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, NULL);
+    
+    ecudc_add_asNumber(EC_ALLOC, item, "index", i);
+    
+    ecudc_add (data, &item);
+  }
+  
+  ecjson_writeToFile (".meta3", data, NULL);
+  
+  ecudc_destroy(EC_ALLOC, &data);
+  
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+
+static int __STDCALL test_ecjson_test9 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc data;
+
+  ecjson_readFromFile (".meta3", &data, NULL);
+  
+  printf ("read done\n");
+  
+  EcString h = ecjson_toString (data);
+  
+  printf ("%s\n", h);
+  
+  ecstr_delete(&h);
+  
+  ecudc_destroy(EC_ALLOC, &data);
+  
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+
 int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
+  int i;
   
+  /*
   testenv_reg (te, "Json Reader Test1", test_ecjson_init, test_ecjson_done, test_ecjson_test1);
   testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
   testenv_reg (te, "Json Reader Test3", test_ecjson_init, test_ecjson_done, test_ecjson_test3);
   testenv_reg (te, "Json Reader Test4", test_ecjson_init, test_ecjson_done, test_ecjson_test4);
   testenv_reg (te, "Json Reader Test5", test_ecjson_init, test_ecjson_done, test_ecjson_test5);
+   */
+  testenv_reg (te, "Json Reader Test6", test_ecjson_init, test_ecjson_done, test_ecjson_test6);
+  testenv_reg (te, "Json Reader Test7", test_ecjson_init, test_ecjson_done, test_ecjson_test7);
+
+  testenv_reg (te, "Json Reader Test8", test_ecjson_init, test_ecjson_done, test_ecjson_test8);
+  testenv_reg (te, "Json Reader Test9", test_ecjson_init, test_ecjson_done, test_ecjson_test9);
+
+  
+//for (i = 0; i < 1000; i++)
+//{
+  //printf ("[%i]\n", i);
   
   testenv_run (te);
+//}
   
   return testenv_destroy (&te);
 }

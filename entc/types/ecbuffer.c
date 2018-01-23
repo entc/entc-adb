@@ -1192,6 +1192,7 @@ EcBuffer ecbuf_bin2hex (EcBuffer bin)
   return hex;
 }
 
+/*
 //----------------------------------------------------------------------------------------
 
 #include <openssl/aes.h>
@@ -1214,8 +1215,28 @@ void ecbuf_decrypt_aes_handleError (EVP_CIPHER_CTX* ctx)
 
 //----------------------------------------------------------------------------------------
 
-EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
+EcString ecbuf_aes_getkey (const EcString secret, EcErr err)
 {
+  EcBuffer_s h;
+  
+  h.buffer = (unsigned char*)secret;
+  h.size = strlen(secret);
+  
+  EcBuffer key = ecbuf_sha_256 (&h, err);
+  
+  if (key == NULL)
+  {
+    return NULL;
+  }
+  
+  return ecbuf_str(&key);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret, EcErr err)
+{
+  int res;
   EcBuffer buf = ecbuf_create (source->size + source->size);
   
   //unsigned char pad = RSA_X931_PADDING;
@@ -1223,70 +1244,43 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
   EVP_CIPHER_CTX ctx;
   EVP_CIPHER_CTX_init (&ctx);
   
-  OpenSSL_add_all_algorithms();
-  
-  const EVP_CIPHER* cipher = EVP_get_cipherbyname ("aes-256-cfb");
-  
-  if (cipher == NULL)
+  EcString key = ecbuf_aes_getkey (secret, err);
+  if (key == NULL)
   {
-    printf ("cipher not found\n");
-    
     return NULL;
   }
   
-  {
-    int ll;
-    
-    EVP_EncryptInit(&ctx, cipher, "testme32", NULL);
+  res = EVP_DecryptInit (&ctx, EVP_aes_256_cbc(), (unsigned char*)key, NULL);
   
-    EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
-
-    EVP_EncryptUpdate(&ctx, buf->buffer, &(buf->size), "alex@kalkhof.org", 16);
-    
-    EVP_EncryptFinal(&ctx, buf->buffer + buf->size, &ll);
-    
-    buf->size += ll;
-    
-    EcBuffer hex = ecbuf_bin2hex(buf);
-    
-    printf ("dada: %s\n", hex->buffer);
-    
-  }
+  ecstr_delete (&key);
   
-  printf ("input '%i'\n", source->size);
-  
-  if (EVP_DecryptInit_ex (&ctx, cipher, NULL, NULL, NULL) == 0)
-  {
-    ecbuf_decrypt_aes_handleError (&ctx);
-    
-    return NULL;
-  }
-
-  if (EVP_DecryptInit_ex (&ctx, cipher, NULL, "testme32", NULL) == 0)
+  if (res == 0)
   {
     ecbuf_decrypt_aes_handleError (&ctx);
     
     return NULL;
   }
   
-  int blocksize = EVP_CIPHER_CTX_block_size (&ctx);
+  //EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
+
+  //int blocksize = EVP_CIPHER_CTX_block_size (&ctx);
   
-  printf ("blocksize %i\n", blocksize);
+  //printf ("blocksize %i\n", blocksize);
   
   
   int len = 0;
   int outl = 0;
 
-    if (EVP_DecryptUpdate (&ctx, buf->buffer, &outl, source->buffer, source->size) == 0)
-    {
-      ecbuf_decrypt_aes_handleError (&ctx);
-      
-      return NULL;
-    }
+  if (EVP_DecryptUpdate (&ctx, buf->buffer, &len, source->buffer, source->size) == 0)
+  {
+    ecbuf_decrypt_aes_handleError (&ctx);
     
-    printf ("outl: %i\n", outl);
+    return NULL;
+  }
+  
+    //printf ("outl: %i\n", outl);
     
-    len += outl;
+    //len += outl;
   
   if (EVP_DecryptFinal (&ctx, buf->buffer + len, &outl) == 0)
   {
@@ -1296,12 +1290,78 @@ EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret)
   }
   
   len += outl;
+  
+  buf->size = len;
 
-  
-  
   EVP_CIPHER_CTX_cleanup (&ctx);
   
   return buf;
 }
 
 //----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret, EcErr err)
+{
+  int res;
+  EcBuffer encrypted = ecbuf_create (source->size * 2);
+  
+  EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX_init (&ctx);
+  
+  EcString key = ecbuf_aes_getkey (secret, err);
+  if (key == NULL)
+  {
+    return NULL;
+  }
+  
+  res = EVP_EncryptInit(&ctx, EVP_aes_256_cbc(), (unsigned char*)key, NULL);
+  
+  ecstr_delete (&key);
+  
+  if (res == 0)
+  {
+    ecbuf_decrypt_aes_handleError (&ctx);
+    
+    EVP_CIPHER_CTX_cleanup (&ctx);
+    
+    return NULL;
+  }
+
+  {
+    int ll;
+    int len;
+    
+    EVP_CIPHER_CTX_set_padding(&ctx, RSA_X931_PADDING);
+    
+    if (EVP_EncryptUpdate(&ctx, encrypted->buffer, &len, source->buffer, source->size) == 0)
+    {
+      ecbuf_decrypt_aes_handleError (&ctx);
+      
+      EVP_CIPHER_CTX_cleanup (&ctx);
+
+      return NULL;
+    }
+    
+    printf ("ENC %i\n", len);
+    
+    if (EVP_EncryptFinal(&ctx, encrypted->buffer + len, &ll) == 0)
+    {
+      ecbuf_decrypt_aes_handleError (&ctx);
+      
+      EVP_CIPHER_CTX_cleanup (&ctx);
+      
+      return NULL;
+    }
+
+    printf ("ENC %i\n", ll);
+    
+    encrypted->size = len + ll;
+  }
+  
+  EVP_CIPHER_CTX_cleanup (&ctx);
+  
+  return encrypted;
+}
+
+//----------------------------------------------------------------------------------------
+*/

@@ -816,6 +816,17 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             
             break;
           }
+          case JPARSER_STATE_KEY_RUN:    // end of key
+          {
+            EcJsonParserItem* element = self->keyElement;
+            
+            if (element)
+            {
+              ecstream_append_c (element->stream, *c);
+            }
+            
+            break;
+          }
           default:
           {
             return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in ','");
@@ -1030,7 +1041,7 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
           }
           default:
           {
-            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in default");
+            return ecerr_set_fmt (err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state [%i] in default '%c' <- [%i]", state, *c, *c);
           }
         }
         

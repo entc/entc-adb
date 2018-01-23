@@ -38,7 +38,7 @@ int ecerr_set (EcErr self, int lvl, int code, const char* text)
   {
     return code;
   }
-  
+
   if (self->text)
   {
     // catenate
@@ -50,6 +50,35 @@ int ecerr_set (EcErr self, int lvl, int code, const char* text)
   }
   
   self->code = code;
+  
+  return code;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecerr_set_fmt (EcErr self, int lvl, int code, const char* text, ...)
+{
+  if (self == NULL)
+  {
+    return code;
+  }
+  
+  char buffer [1002];
+
+  // variables
+  va_list ptr;
+  
+  va_start(ptr, text);
+  
+#ifdef _WIN32
+  vsnprintf_s (buffer, 1001, 1000, text, ptr);
+#else
+  vsnprintf (buffer, 1000, text, ptr);
+#endif
+  
+  ecerr_set (self, lvl, code, buffer);
+  
+  va_end(ptr);
   
   return code;
 }

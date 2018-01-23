@@ -4,6 +4,8 @@
 #include <utils/eclogger.h>
 #include <system/ecaio_file.h>
 
+#include <tools/eccrypt.h>
+
 #if defined __WIN_OS
 #include <windows.h>
 #endif
@@ -16,6 +18,8 @@ struct EcAioSendFile_s
   EcString file;
   
   EcString name;
+  
+  EcDecryptAES aes;
  
   fct_ecaio_sfile_onInit onInit;
   void* ptr;
@@ -40,6 +44,8 @@ EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, E
   
   self->refSocket = ecrefsocket_clone (refSocket);
   
+  self->aes = NULL;
+  
   return self;
 }
 
@@ -48,6 +54,11 @@ EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, E
 void ecaio_sendfile_destroy (EcAioSendFile* pself)
 {
   EcAioSendFile self = *pself;
+
+  if (self->aes)
+  {
+    ecdecrypt_aes_destroy (&(self->aes));
+  }
   
   ecstr_delete (&(self->file));
   ecstr_delete (&(self->name));
@@ -68,9 +79,51 @@ void ecaio_sendfile_destroy (EcAioSendFile* pself)
 
 //-----------------------------------------------------------------------------
 
+int ecaio_sendfile_setSecret (EcAioSendFile self, const EcString secret, EcErr err)
+{
+  // initialize the decryption
+  self->aes = ecdecrypt_aes_initialize (secret, err);
+  
+  if (self->aes == NULL)
+  {
+    return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't set AES secret");
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 static void __STDCALL ecaio_sendfile_onDestroy (void* ptr)
 {
   EcAioSendFile self = ptr;
+  
+  if (self->aes)
+  {
+    EcErr err = ecerr_create();
+    
+    EcAioSocketWriter writer;
+    int res;
+    
+    writer = ecaio_socketwriter_create (self->refSocket);
+
+    EcBuffer g = ecdecrypt_aes_finalize (self->aes, err);
+    if (g)
+    {
+      //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "wrote decrypted bytes %i", g->size);
+
+      // we need a copy here :-(
+      ecaio_socketwriter_setBufferCP (writer, (char*)g->buffer, g->size);
+    }
+    
+    res = ecaio_socketwriter_assign (&writer, err);
+    if (res)
+    {
+      eclogger_fmt (LL_ERROR, "Q6_SOCK", "sfstream", "write to socket %i: %s", ecrefsocket_socket (self->refSocket), err->text);
+    }
+    
+    ecerr_destroy(&err);
+  }
   
   //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "close");
   
@@ -90,9 +143,28 @@ static int __STDCALL ecaio_sendfile_onRead (void* ptr, void* handle, const char*
   //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "on read [%p]", self);
   
   writer = ecaio_socketwriter_create (self->refSocket);
-  
-  // we need a copy here :-(
-  ecaio_socketwriter_setBufferCP (writer, buffer, len);
+ 
+  if (self->aes)
+  {
+    EcBuffer_s h;
+    
+    h.buffer = (unsigned char*)buffer;
+    h.size = len;
+    
+    EcBuffer g = ecdecrypt_aes_update (self->aes, &h, err);
+    if (g)
+    {
+      //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "wrote decrypted bytes %i", g->size);
+      
+      // we need a copy here :-(
+      ecaio_socketwriter_setBufferCP (writer, (char*)g->buffer, g->size);
+    }
+  }
+  else
+  {
+    // we need a copy here :-(
+    ecaio_socketwriter_setBufferCP (writer, buffer, len);
+  }
   
   res = ecaio_socketwriter_assign (&writer, err);
   if (res)
@@ -159,7 +231,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
   
   if (self->onInit)
   {
-    int res = self->onInit (self->ptr, self->refSocket, fileSize, self->file, self->name, err);
+    int res = self->onInit (self->ptr, self->refSocket, self->aes ? 0 : fileSize, self->file, self->name, err);
     if (res)
     {
       ecaio_sendfile_destroy (pself);

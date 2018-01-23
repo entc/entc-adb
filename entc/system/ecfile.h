@@ -192,6 +192,8 @@ __LIBEX uint64_t ecfh_size (EcFileHandle);
   
 __LIBEX int ecfh_writeString (EcFileHandle, const EcString);
   
+__LIBEX int ecfh_writeString_encrypted (EcFileHandle, const EcString, const EcString key);
+
 __LIBEX int ecfh_writeBuffer (EcFileHandle, const EcBuffer buffer, uint_t size);
 
 __LIBEX int ecfh_writeConst (EcFileHandle, const char* buffer, uint_t size);

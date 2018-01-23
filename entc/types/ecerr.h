@@ -68,6 +68,8 @@ __LIBEX void ecerr_destroy (EcErr*);
 
 __LIBEX int ecerr_set (EcErr, int lvl, int code, const char* text);
 
+__LIBEX int ecerr_set_fmt (EcErr, int lvl, int code, const char* text, ...);
+
 __LIBEX int ecerr_setTO (EcErr, int lvl, int code, char** text);
 
 __LIBEX int ecerr_lastErrorOS (EcErr, int lvl);
