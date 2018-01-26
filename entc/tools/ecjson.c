@@ -593,12 +593,19 @@ EcUdc ecjson_readFromBuffer (const EcBuffer buf, const EcString name)
 
 EcUdc ecjson_read (const EcString source, const EcString name)
 {
-  EcBuffer_s h;
-  
-  h.buffer = (unsigned char*)source;
-  h.size = strlen (source);
-  
-  return ecjson_readFromBuffer (&h, name);
+  if (source)
+  {
+    EcBuffer_s h;
+    
+    h.buffer = (unsigned char*)source;
+    h.size = strlen (source);
+    
+    return ecjson_readFromBuffer (&h, name);
+  }
+  else
+  {
+    return NULL;
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------
