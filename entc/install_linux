@@ -21,3 +21,5 @@ cp -R types/*.h $INCLUDE_PATH/types/
 mkdir $INCLUDE_PATH/tools
 cp -R tools/*.h $INCLUDE_PATH/tools/
 
+mkdir $INCLUDE_PATH/tests
+cp -R tests/*.h $INCLUDE_PATH/tests/
