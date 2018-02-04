@@ -29,7 +29,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   EcUdc udc01; 
   EcUdc udc02;
 
-  udc01 = ecjson_read(t1, "t1");
+  udc01 = ecjson_read_s(t1, "t1");
 
   // print
   {

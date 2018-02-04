@@ -28,9 +28,11 @@
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcUdc ecjson_read (const EcString, const EcString name);
+__LIBEX EcUdc ecjson_read_s (const EcString, const EcString name);
 
-__LIBEX EcUdc ecjson_readFromBuffer (const EcBuffer, const EcString name);
+__LIBEX EcUdc ecjson_read_ecbuf (const EcBuffer, const EcString name);
+
+__LIBEX EcUdc ecjson_read_buffer (const char* buffer, int64_t size, const EcString name);
 
 __LIBEX EcBuffer ecjson_write (const EcUdc source);
 

@@ -34,7 +34,7 @@ static int __STDCALL test_ecjson_test1 (void* ptr, TestEnvContext tctx, EcErr er
   \"List\":[\"Text\",42,23.42,true,false,null],\
   \"Node\":{\"Text\":\"Hello\"}}";
   
-  data = ecjson_read (test1, NULL);
+  data = ecjson_read_s (test1, NULL);
   if (!data)
   {
     return 1;
@@ -73,7 +73,7 @@ static int __STDCALL test_ecjson_test2 (void* ptr, TestEnvContext tctx, EcErr er
    ]\
   }";
 
-  data = ecjson_read (test1, NULL);
+  data = ecjson_read_s (test1, NULL);
   if (!data)
   {
     return 1;
@@ -98,7 +98,7 @@ static int __STDCALL test_ecjson_test3 (void* ptr, TestEnvContext tctx, EcErr er
   
   const char* test1 = "{\"settings\":{\"host\":\"127.0.0.1\",\"port\":\"8084\"}}";
   
-  data = ecjson_read (test1, NULL);
+  data = ecjson_read_s (test1, NULL);
   if (!data)
   {
     return 1;
@@ -137,7 +137,7 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
   {
     EcString text;
 
-    data = ecjson_read (tests[i], NULL);
+    data = ecjson_read_s (tests[i], NULL);
     if (!data)
     {
       return 1;
@@ -160,7 +160,7 @@ static int __STDCALL test_ecjson_test5 (void* ptr, TestEnvContext tctx, EcErr er
 {
   EcUdc data;
   
-  data = ecjson_read (NULL, NULL);
+  data = ecjson_read_s (NULL, NULL);
   if (data)
   {
     return 1;
@@ -270,6 +270,27 @@ static int __STDCALL test_ecjson_test9 (void* ptr, TestEnvContext tctx, EcErr er
 
 //---------------------------------------------------------------------------
 
+static int __STDCALL test_ecjson_test10 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc data;
+  
+  ecjson_readFromFile ("json.txt", &data, NULL);
+  
+  printf ("read done\n");
+  
+  EcString h = ecjson_toString (data);
+  
+  printf ("%s\n", h);
+  
+  ecstr_delete(&h);
+  
+  ecudc_destroy(EC_ALLOC, &data);
+  
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+
 int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
@@ -282,12 +303,14 @@ int main(int argc, char* argv[])
   testenv_reg (te, "Json Reader Test4", test_ecjson_init, test_ecjson_done, test_ecjson_test4);
   testenv_reg (te, "Json Reader Test5", test_ecjson_init, test_ecjson_done, test_ecjson_test5);
    */
+  /*
   testenv_reg (te, "Json Reader Test6", test_ecjson_init, test_ecjson_done, test_ecjson_test6);
   testenv_reg (te, "Json Reader Test7", test_ecjson_init, test_ecjson_done, test_ecjson_test7);
 
   testenv_reg (te, "Json Reader Test8", test_ecjson_init, test_ecjson_done, test_ecjson_test8);
   testenv_reg (te, "Json Reader Test9", test_ecjson_init, test_ecjson_done, test_ecjson_test9);
-
+*/
+  testenv_reg (te, "Json Reader Test10", test_ecjson_init, test_ecjson_done, test_ecjson_test10);
   
 //for (i = 0; i < 1000; i++)
 //{

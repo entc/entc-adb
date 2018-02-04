@@ -551,7 +551,11 @@ int ecstr_leadingPart (const EcString source, const EcString leading, EcString* 
     return FALSE;
   }
   
-  ecstr_replaceTO(result, ecstr_part(source + len, strlen(source) - len));  
+  if (result)
+  {
+    ecstr_replaceTO(result, ecstr_part(source + len, strlen(source) - len));
+  }
+  
   return TRUE;
 }
 

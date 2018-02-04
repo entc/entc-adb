@@ -556,20 +556,20 @@ static void __STDCALL ecjson_read_onObjDestroy (void* ptr, void* obj)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcUdc ecjson_readFromBuffer (const EcBuffer buf, const EcString name)
+EcUdc ecjson_read_buffer (const char* buffer, int64_t size, const EcString name)
 {
   EcUdc ret = NULL;
   int res;
-
+  
   EcErr err = ecerr_create();
   EcJsonParser jparser = ecjsonparser_create (ecjson_read_onItem, ecjson_read_onObjCreate, ecjson_read_onObjDestroy, NULL);
   
-  res = ecjsonparser_parse (jparser, (const char*)buf->buffer, buf->size, err);
+  res = ecjsonparser_parse (jparser, buffer, size, err);
   if (res)
   {
     eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
-
-    eclogger_msg (LL_WARN, "JSON", "reader", (const char*)buf->buffer);
+    
+    eclogger_msg (LL_WARN, "JSON", "reader", buffer);
   }
   else
   {
@@ -591,16 +591,18 @@ EcUdc ecjson_readFromBuffer (const EcBuffer buf, const EcString name)
 
 //-----------------------------------------------------------------------------------------------------------
 
-EcUdc ecjson_read (const EcString source, const EcString name)
+EcUdc ecjson_read_ecbuf (const EcBuffer buf, const EcString name)
+{
+  return ecjson_read_buffer ((char*)buf->buffer, buf->size, name);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+EcUdc ecjson_read_s (const EcString source, const EcString name)
 {
   if (source)
   {
-    EcBuffer_s h;
-    
-    h.buffer = (unsigned char*)source;
-    h.size = strlen (source);
-    
-    return ecjson_readFromBuffer (&h, name);
+    return ecjson_read_buffer (source, ecstr_len(source), name);
   }
   else
   {
