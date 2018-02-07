@@ -2,7 +2,6 @@
 #include "tests/ecenv.h"
 
 #include "system/ecthread.h"
-#include "system/ecevents.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -65,7 +64,7 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     
     ecthread_start (thread, test_ecaio_test1_thread, aio);
     
-    ece_sleep (1000);
+    ecthread_sleep (1000);
     
     ecaio_abort(aio, err);
     if (testctx_err (ctx, err))
@@ -108,7 +107,7 @@ static int __STDCALL test_ecaio_test2 (void* ptr, TestEnvContext ctx, EcErr err)
       ecthread_start (thread [i], test_ecaio_test1_thread, aio);
     }
     
-    ece_sleep (1000);
+    ecthread_sleep (1000);
     
     ecaio_abort(aio, err);
     if (testctx_err (ctx, err))
@@ -156,7 +155,7 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
       ecthread_start (thread [i], test_ecaio_test1_thread, aio);
     }
     
-    ece_sleep (1000);
+    ecthread_sleep (1000);
     
 #ifdef _WIN32
 
@@ -177,7 +176,7 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     // this should not trigger
     kill(getpid(), SIGINT);
  
-    ece_sleep (1000);
+    ecthread_sleep (1000);
 
     printf ("send SIGTERM\n");
  
@@ -226,7 +225,7 @@ static int __STDCALL test_ecaio_test4 (void* ptr, TestEnvContext ctx, EcErr err)
       ecthread_start (thread [i], test_ecaio_test1_thread, aio);
     }
     
-    ece_sleep (1000);
+    ecthread_sleep (1000);
     
 #ifdef _WIN32
     

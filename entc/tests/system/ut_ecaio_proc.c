@@ -4,7 +4,6 @@
 #include "system/ecproc.h"
 
 #include "system/ecthread.h"
-#include "system/ecevents.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -104,7 +103,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
 
     printf ("#1\n");
     
-    ece_sleep (10000);
+    ecthread_sleep (10000);
 
     printf ("#2\n");
 
@@ -112,7 +111,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     printf ("#3\n");
 
-    ece_sleep (100);
+    ecthread_sleep (100);
     
     printf ("#4\n");
 

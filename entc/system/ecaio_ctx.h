@@ -22,6 +22,7 @@
 
 //-----------------------------------------------------------------------------
 
+#include "system/ecdefs.h"
 #include "types/ecerr.h"
 
 //-----------------------------------------------------------------------------
@@ -82,7 +83,7 @@ __LIBEX int ecaio_refctx_process (EcAioRefCtx, EcAioContext, unsigned long val1,
 
 //-----------------------------------------------------------------------------
 
-#if defined __APPLE__
+#if defined __BSD_OS
 
 #define __BSD_KEVENT
 

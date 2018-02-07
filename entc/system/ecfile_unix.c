@@ -17,30 +17,35 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef __GNUC__
-
 #include "ecfile.h"
-#include "../types/eclist.h"
 
+#if defined __BSD_OS || defined __LINUX_OS
+
+#include "system/ecdefs.h"
+#include "types/eclist.h"
 #include "utils/eclogger.h"
+
+#if defined __APPLE__
+
+#include <limits.h>
+#include <copyfile.h>
+#include <mach-o/dyld.h>
+
+#elif defined __BSD_OS
+
+
+
+#elif defined __LINUX_OS
+
+#include <sys/sendfile.h>
+
+#endif
 
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-
-#ifdef __APPLE_CC__
-
-#include <limits.h>
-#include <copyfile.h>
-#include <mach-o/dyld.h>
-
-#else
-
-#include <sys/sendfile.h>
-
-#endif
 
 #include <openssl/md5.h>
 
@@ -369,8 +374,11 @@ int ecfs_move (const EcString source, const EcString dest)
 int ecfs_copy (const EcString source, const EcString dest)
 {
 #ifdef __APPLE_CC__
+  
   return copyfile (source, dest, 0, COPYFILE_ACL | COPYFILE_XATTR | COPYFILE_DATA) == 0;
-#else
+  
+#elif __LINUX_OS
+  
   int sfd = open (source, O_RDONLY, 0);
   int dfd = open (dest, O_WRONLY | O_CREAT /*| O_TRUNC/*/, 0644);
   
@@ -382,6 +390,50 @@ int ecfs_copy (const EcString source, const EcString dest)
   
   close (sfd);
   close (dfd);
+  
+  return TRUE;
+
+#else
+  
+  EcFileHandle fhin;
+  EcFileHandle fhout;
+  
+  EcBuffer buf;
+  
+  fhin = ecfh_open (source, O_RDONLY);
+  if (fhin == NULL)
+  {
+    return FALSE; 
+  }
+  
+  fhout = ecfh_open (dest, O_WRONLY | O_CREAT);
+  if (fhout == NULL)
+  {
+    ecfh_close (&fhin);
+    
+    return FALSE;     
+  }
+  
+  buf = ecbuf_create (10000);
+  
+  // copy all data
+  while (TRUE)
+  {
+    uint_t bytesRead = ecfh_readBuffer (fhin, buf);
+    if (bytesRead > 0)
+    {
+      ecfh_writeBuffer (fhout, buf, bytesRead); 
+    }
+    else
+    {
+      break; 
+    }
+  }
+  
+  ecbuf_destroy (&buf);
+  
+  ecfh_close (&fhin);
+  ecfh_close (&fhout);
   
   return TRUE;
 #endif

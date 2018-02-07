@@ -19,8 +19,9 @@
 
 #include "ecdl.h"
 
-#include "../system/ecfile.h"
-#include "../utils/eclogger.h"
+#include "system/ecdefs.h"
+#include "system/ecfile.h"
+#include "utils/eclogger.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -71,7 +72,7 @@ EcLibraryHandle ecdl_new (const EcString filename)
   {
     return 0;  
   }
-#elif __linux__
+#elif defined __LINUX_OS || defined __BSD_OS
   if( !ecstr_equal(fext, "so") )
   {
     return 0;  
@@ -120,13 +121,21 @@ EcLibraryHandle ecdl_fromName (const EcString path, const EcString name)
 {
   EcLibraryHandle ret = 0;
 #ifdef __APPLE_CC__
+  
   EcString fullname = ecstr_cat3("lib", name, ".dylib");
-#elif __linux__
+
+#elif defined __LINUX_OS || defined __BSD_OS
+  
   EcString fullname = ecstr_cat3("lib", name, ".so");
+
 #elif _WIN32
+  
   EcString fullname = ecstr_cat2(name, ".dll");  
+
 #else
+  
   return 0;
+
 #endif
   EcString fullpath = ecfs_mergeToPath(path, fullname);
   

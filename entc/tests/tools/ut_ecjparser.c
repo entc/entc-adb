@@ -13,7 +13,7 @@ static void __STDCALL onLine (void* ptr, const char* line)
 
 static void* __STDCALL test_stdlparser_init (EcErr err)
 {
-
+  return NULL;
 }
 
 //---------------------------------------------------------------------------

@@ -20,14 +20,13 @@
 #ifndef ENTC_TOOLS_XMLSTREAM_H
 #define ENTC_TOOLS_XMLSTREAM_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "system/macros.h"
+#include "system/types.h"
 
-#include "../types/ecstring.h"
+#include "types/ecstring.h"
 
-#include "../utils/ecobserver.h"
-#include "../utils/eclogger.h"
-#include "../types/ecmapchar.h"
+#include "utils/eclogger.h"
+#include "types/ecmapchar.h"
 
 #define ENTC_XMLTYPE_NONE    0
 #define ENTC_XMLTYPE_SINGLE  1
@@ -43,8 +42,6 @@ __CPP_EXTERN____________________________________________________________________
 __LIB_EXPORT EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir);
 
 __LIB_EXPORT EcXMLStream ecxmlstream_openpath (const char* path, const char* filename, const char* confdir);
-
-__LIB_EXPORT EcXMLStream ecxmlstream_openobserver (EcFileObserver);
 
 __LIB_EXPORT EcXMLStream ecxmlstream_openbuffer (const char* buffer);
 

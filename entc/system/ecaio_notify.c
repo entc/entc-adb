@@ -210,13 +210,18 @@ struct EcAioNotify_s
 
 int ecaio_notify_init (EcAioNotify self, const char* path, EcErr err)
 {
+#ifdef O_EVTONLY
   self->fd = open (path, O_EVTONLY);
   if (self->fd < 0)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
-  
+
   return ENTC_ERR_NONE;
+#else
+
+  return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "not supported on this system");
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -263,7 +268,7 @@ struct EcAioNotify_s
 
 int ecaio_notify_init (EcAioNotify self, const char* path, EcErr err)
 {
-  self->fd = NULL;
+  self->fd = 0;
   
   return ENTC_ERR_NONE;
 }

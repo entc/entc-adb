@@ -19,19 +19,12 @@
 
 #include "ecthread.h"
 #include "ecmutex.h"
-#include "ecevents.h"
 
 #ifdef __GNUC__
 
 #include <pthread.h>
 #include <sys/wait.h>
-
-//-----------------------------------------------------------------------------------
-
-void ecthread_schedule(ecthread_main_fct main, int argc, char* argv[])
-{
-  if (main) { main(argc, argv); }
-}
+#include <unistd.h>
 
 //-----------------------------------------------------------------------------------
 
@@ -138,92 +131,14 @@ void ecthread_join (EcThread self)
   }
 }
 
+//-----------------------------------------------------------------------------------
+
+void ecthread_sleep (unsigned long milliseconds)
+{
+  usleep (milliseconds * 1000);
+}
+
 #endif
-
-//-----------------------------------------------------------------------------------
-
-struct EcTimedThread_s
-{
-  
-  EcThread thread;
-  
-  EcEventContext ec;
-  
-  ulong_t timeout;
-  
-  ecthread_callback_fct fct;
-  
-  void* ptr;
-  
-};
-
-//-----------------------------------------------------------------------------------
-
-EcTimedThread ectimedthread_new()
-{
-  EcTimedThread self = ENTC_NEW(struct EcTimedThread_s);
-  
-  self->thread = ecthread_new (NULL);
-  self->ec = ece_context_new();
-  
-  return self;
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectimedthread_delete(EcTimedThread* pself)
-{
-  EcTimedThread self = *pself;
-  
-  ecthread_delete(&(self->thread));
-  ece_context_delete(&(self->ec));
-  
-  ENTC_DEL(pself, struct EcTimedThread_s);
-}
-
-//-----------------------------------------------------------------------------------
-
-int _STDCALL ectimedthread_run (void* params)
-{
-  EcTimedThread self = params;
-
-  if (!self->fct)
-  {
-    return FALSE;
-  }
-    
-  if (ece_context_waitforAbort (self->ec, self->timeout) == ENTC_EVENT_TIMEOUT)
-  {
-    self->fct (self->ptr);
-    return TRUE;
-  }
-  else
-  {    
-    return FALSE;
-  }
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectimedthread_start(EcTimedThread self, ecthread_callback_fct fct, void* ptr, ulong_t timeout)
-{
-  self->timeout = timeout;
-  self->fct = fct;
-  self->ptr = ptr;
-  ecthread_start(self->thread, ectimedthread_run, self);
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectimedthread_stop(EcTimedThread self)
-{
-  // signal to stop thread
-  ece_context_setAbort (self->ec);
-  // wait until thread stopped
-  ecthread_join (self->thread);
-  // reset the signal
-  ece_context_resetAbort (self->ec);
-}
 
 //-----------------------------------------------------------------------------------
 

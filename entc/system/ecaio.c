@@ -919,6 +919,7 @@ int ecaio_abort (EcAio self, EcErr err)
 
 #include <sys/event.h>
 #include <errno.h>
+#include <signal.h>
 
 //-----------------------------------------------------------------------------
 
@@ -973,7 +974,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
   
-  EV_SET (&kev, handle, EVFILT_READ | EVFILT_WRITE, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, 0, ctx);
+  EV_SET (&kev, (long)handle, EVFILT_READ | EVFILT_WRITE, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, 0, (void*)ctx);
   
   res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
   if (res < 0)
@@ -1000,6 +1001,8 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
   
+#ifdef EVFILT_USER
+  
   EV_SET(&kev, ctx, EVFILT_USER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, 0, ctx);
   res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
   if (res < 0)
@@ -1014,8 +1017,14 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
   {
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
-  
+    
   return ENTC_ERR_NONE;
+  
+#else
+  
+  return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "not supported on this system");  
+#endif
+  
 }
 
 //-----------------------------------------------------------------------------

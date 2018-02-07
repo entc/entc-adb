@@ -21,7 +21,7 @@
 
 #include "types/ecstream.h"
 
-#ifdef __GNUC__
+#if defined __BSD_OS || defined __LINUX_OS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/select.h>
 
 #define PIPE_READ   0
 #define PIPE_WRITE  1
@@ -38,9 +39,9 @@ struct EcExec_s
 {
   char* arguments[11];
   
-  EcStream stdout;
+  EcStream outstream;
   
-  EcStream stderr;
+  EcStream errstream;
   
 };
 
@@ -57,8 +58,8 @@ EcExec ecexec_new (const EcString script)
     self->arguments[i] = NULL;
   }
   
-  self->stdout = ecstream_create ();
-  self->stderr = ecstream_create ();
+  self->outstream = ecstream_create ();
+  self->errstream = ecstream_create ();
   
   return self;
 }
@@ -75,8 +76,8 @@ void ecexec_delete (EcExec* pself)
     ecstr_delete(&(self->arguments[i]));
   }
   
-  ecstream_destroy (&(self->stdout));
-  ecstream_destroy (&(self->stderr));
+  ecstream_destroy (&(self->outstream));
+  ecstream_destroy (&(self->errstream));
   
   ENTC_DEL (pself, struct EcExec_s);
 }
@@ -142,19 +143,14 @@ int ecexec_run (EcExec self)
       int status = 0;
       pid_t w;
       
-      ecstream_clear(self->stdout);
-      ecstream_clear(self->stderr);
+      fd_set fdsread;
+      FD_ZERO(&fdsread);
+
+      ecstream_clear(self->outstream);
+      ecstream_clear(self->errstream);
       
       close(outfd[PIPE_WRITE]); /* close writing ends */
       close(errfd[PIPE_WRITE]);
-      
-      //    FILE * pipes[2];
-      
-      //    pipes[0] = fdopen(outfd[PIPE_READ], "r"); /* return reading end to the caller */
-      //    pipes[1] = fdopen(errfd[PIPE_READ], "r");
-      
-      fd_set fdsread;
-      FD_ZERO(&fdsread);
       
       FD_SET(outfd[0], &fdsread);
       FD_SET(errfd[0], &fdsread);
@@ -164,8 +160,8 @@ int ecexec_run (EcExec self)
       
       char buffer[21];
       
-      FILE * stdout = fdopen(outfd[0], "r");
-      FILE * stderr = fdopen(errfd[0], "r");
+      FILE* outf = fdopen(outfd[0], "r");
+      FILE* errf = fdopen(errfd[0], "r");
       
       do 
       {
@@ -175,25 +171,25 @@ int ecexec_run (EcExec self)
         
         if(FD_ISSET(outfd[PIPE_READ], &fdsread))
         {        
-          res02 = fread(buffer, 1, 20, stdout);
+          res02 = fread(buffer, 1, 20, outf);
           while(res02 > 0)
           {
             eclogger_fmt (LL_TRACE, "_SYS", "exec", "stdout: got data %i", res02);    
             
-            ecstream_append_buf (self->stdout, buffer, res02);
-            res02 = fread(buffer, 1, 20, stdout);
+            ecstream_append_buf (self->outstream, buffer, res02);
+            res02 = fread(buffer, 1, 20, outf);
           }
         }
         
         if(FD_ISSET(errfd[PIPE_READ], &fdsread))
         {
-          res02 = fread(buffer, 1, 20, stderr);
+          res02 = fread(buffer, 1, 20, errf);
           while(res02 > 0)
           {
             eclogger_fmt (LL_TRACE, "_SYS", "exec", "stderr: got data %i", res02);    
 
-            ecstream_append_buf (self->stderr, buffer, res02);
-            res02 = fread(buffer, 1, 20, stderr);
+            ecstream_append_buf (self->errstream, buffer, res02);
+            res02 = fread(buffer, 1, 20, errf);
           }
         }        
       }
@@ -201,8 +197,8 @@ int ecexec_run (EcExec self)
       
       eclogger_fmt (LL_TRACE, "_SYS", "exec", "run '%s' done", self->arguments[0]);    
       
-      fclose(stdout);
-      fclose(stderr);
+      fclose(outf);
+      fclose(errf);
       
       close(outfd[PIPE_READ]);
       close(errfd[PIPE_READ]);
@@ -217,14 +213,14 @@ int ecexec_run (EcExec self)
 
 const EcString ecexec_stdout (EcExec self)
 {
-  return ecstream_get (self->stdout);
+  return ecstream_get (self->outstream);
 }
 
 //-----------------------------------------------------------------------------------
 
 const EcString ecexec_stderr (EcExec self)
 {
-  return ecstream_get (self->stderr);
+  return ecstream_get (self->errstream);
 }
 
 //-----------------------------------------------------------------------------------

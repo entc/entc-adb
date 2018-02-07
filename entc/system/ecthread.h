@@ -20,49 +20,31 @@
 #ifndef ENTC_SYSTEM_THREAD_H
 #define ENTC_SYSTEM_THREAD_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+//-----------------------------------------------------------------------------
 
-typedef void (_STDCALL *ecthread_main_fct)(int argc, char *argv[]);
+#include "system/ecdefs.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT void ecthread_schedule(ecthread_main_fct, int argc, char* argv[]);
-
-__CPP_EXTERN______________________________________________________________________________END
-
-typedef int (_STDCALL *ecthread_callback_fct)(void* ptr);
-
-typedef void (_STDCALL *ecthread_fct_onDestroy)(void* ptr);
+typedef int (__STDCALL *ecthread_callback_fct)(void* ptr);
+typedef void (__STDCALL *ecthread_fct_onDestroy)(void* ptr);
 
 struct EcThread_s; typedef struct EcThread_s* EcThread;
 
-__CPP_EXTERN______________________________________________________________________________START
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT EcThread ecthread_new (ecthread_fct_onDestroy onDestroy);
+__LIBEX EcThread ecthread_new (ecthread_fct_onDestroy onDestroy);
 
-__LIB_EXPORT void ecthread_delete(EcThread*);
+__LIBEX void ecthread_delete (EcThread*);
 
-__LIB_EXPORT void ecthread_start (EcThread, ecthread_callback_fct, void* ptr);
+__LIBEX void ecthread_start (EcThread, ecthread_callback_fct, void* ptr);
 
-__LIB_EXPORT void ecthread_join(EcThread);
+__LIBEX void ecthread_join (EcThread);
 
-__LIB_EXPORT void ecthread_cancel(EcThread);
+__LIBEX void ecthread_cancel (EcThread);
 
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
-struct EcTimedThread_s; typedef struct EcTimedThread_s* EcTimedThread;
-
-__CPP_EXTERN______________________________________________________________________________START
-
-__LIB_EXPORT EcTimedThread ectimedthread_new(void);
-
-__LIB_EXPORT void ectimedthread_delete(EcTimedThread*);
-
-__LIB_EXPORT void ectimedthread_start(EcTimedThread, ecthread_callback_fct, void* ptr, ulong_t timeout);
-
-__LIB_EXPORT void ectimedthread_stop(EcTimedThread);
-
-__CPP_EXTERN______________________________________________________________________________END
+__LIBEX void ecthread_sleep (unsigned long milliseconds);
 
 #endif

@@ -172,7 +172,7 @@ EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
 
   int lenLast;
 
-  if (EVP_EncryptFinal(&(self->ctx), self->buf->buffer, &lenLast) == 0)
+  if (EVP_EncryptFinal_ex(&(self->ctx), self->buf->buffer, &lenLast) == 0)
   {
     eccrypt_aes_handleError (&(self->ctx), err);
     return NULL;
@@ -308,7 +308,7 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
   
   int lenLast;
   
-  if (EVP_DecryptFinal(&(self->ctx), self->buf->buffer, &lenLast) == 0)
+  if (EVP_DecryptFinal_ex(&(self->ctx), self->buf->buffer, &lenLast) == 0)
   {
     eccrypt_aes_handleError (&(self->ctx), err);
     return NULL;

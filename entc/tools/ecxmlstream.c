@@ -19,14 +19,13 @@
 
 #include "ecxmlstream.h"
 
-#include "../utils/ecreadbuffer.h"
-#include "../system/ecfile.h"
-#include "../utils/ecobserver.h"
-#include "../utils/ecsecfile.h"
+#include "utils/ecreadbuffer.h"
+#include "system/ecfile.h"
+#include "utils/ecsecfile.h"
 
-#include "../types/ecstream.h"
-#include "../types/ecmapchar.h"
-#include "../types/ecstack.h"
+#include "types/ecstream.h"
+#include "types/ecmapchar.h"
+#include "types/ecstack.h"
 #include "types/ecmap.h"
 
 #include <string.h>
@@ -42,8 +41,6 @@ struct EcXMLStream_s
   
   const char* constbuffer;
 
-  EcFileObserver observer;
-  
   /* misc */
   EcStack nodes;
   
@@ -85,8 +82,7 @@ static void __STDCALL ecxmlstream_namespaces_onDestroy (void* key, void* val)
 EcXMLStream ecxmlstream_new (void)
 {
   EcXMLStream self = ENTC_NEW(struct EcXMLStream_s);
-  /* fhandle */
-  self->observer = 0;
+
   /* data sources */
   self->readbuffer = 0;
   self->constbuffer = 0;
@@ -137,26 +133,6 @@ EcXMLStream ecxmlstream_openpath (const char* path, const char* filename, const 
 
 /*------------------------------------------------------------------------*/
 
-EcXMLStream ecxmlstream_openobserver (EcFileObserver observer)
-{
-  EcXMLStream self = ecxmlstream_new ();
-  /* create a new readbuffer for the file */
-  EcFileHandle fhandle = ecf_observer_open(observer);
-
-  if( fhandle )
-  {
-    self->readbuffer = ecreadbuffer_create (fhandle, FALSE);
-
-    self->observer = observer;
-    
-  //eclogger_logformat(self->logger, LOGMSG_XML, "CORE", "xmlstream open file '%s' with file observer", ecfile_getFileName(observer));
-  }
-  
-  return self;
-}
-
-/*------------------------------------------------------------------------*/
-
 EcXMLStream ecxmlstream_openbuffer (const char* buffer)
 {
   EcXMLStream self = ecxmlstream_new ();
@@ -196,11 +172,7 @@ void ecxmlstream_clean (EcXMLStream self)
 void ecxmlstream_close( EcXMLStream self )
 {
   ecxmlstream_clean( self );
-  /* signal the observer that the file handle can be closed */
-  if( self->observer )
-  {
-    ecf_observer_close( self->observer );
-  }
+
   /* delete the readbuffer */
   if( self->readbuffer )
   {
@@ -632,11 +604,7 @@ void ecxmlstream_logError( EcXMLStream self )
 {
   if( self->readbuffer )
   {
-    if( self->observer )
-    {
-      eclogger_fmt (LL_ERROR, "ENTC", "xml", "error in parsing '%s'", ecf_observer_getFileName(self->observer));        
-    }
-    else if( self->filename )
+    if( self->filename )
     {
       eclogger_fmt (LL_ERROR, "ENTC", "xml", "error in parsing '%s'", self->filename);      
     }

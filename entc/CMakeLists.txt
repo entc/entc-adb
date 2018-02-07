@@ -91,19 +91,10 @@ SET (CORE_SOURCES_SYS
   system/ecmutex_win.c
   system/ecmutex_unix.c
   system/ecmutex_dos.c
-  system/ecevents.h
-  system/ecevents_win.c
-  system/ecevents_bsd.c
-  system/ecevents_linux.c
-  system/ecevents_dos.c
   system/ecthread.h
   system/ecthread_win.c
   system/ecthread_unix.c
   system/ecthread_dos.c
-  system/ecsignal.h
-  system/ecsignal_win.c
-  system/ecsignal_unix.c
-  system/ecsignal_dos.c
   system/ecdl.h
   system/ecdl.c
   system/ecdlib.h
@@ -144,15 +135,15 @@ SET (CORE_SOURCES_TYPES
   types/ecalloc.h
   types/ecalloc.c
   types/ecarray.c
-types/ecintmap.h
-types/ecintmap.c
-types/eclist.h
-types/eclist.c
-types/ecmap.h
-types/ecmap.c
-types/ecmapchar.h
-types/ecmapchar.c
-types/ecstack.c
+  types/ecintmap.h
+  types/ecintmap.c
+  types/eclist.h
+  types/eclist.c
+  types/ecmap.h
+  types/ecmap.c
+  types/ecmapchar.h
+  types/ecmapchar.c
+  types/ecstack.c
   types/ectable.c
   types/ecchain.c
   types/ecchain.h
@@ -180,8 +171,6 @@ SET (CORE_SOURCES_UTILS
   utils/ecreadbuffer.c
   utils/ecsmartbuffer.h
   utils/ecsmartbuffer.c
-  utils/ecobserver.h
-  utils/ecobserver.c
   utils/ecsecfile.h
   utils/ecsecfile.c
 )

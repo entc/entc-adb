@@ -168,7 +168,7 @@ EcAioProc ecaio_proc_create (void* handle)
 {
   EcAioProc self = ENTC_NEW(struct EcAioProc_s);
   
-  self->pid = handle;
+  self->pid = (long)handle;
   
   self->onNotify = NULL;
   self->onDestroy = NULL;
@@ -347,7 +347,7 @@ EcAioProc ecaio_proc_create (void* handle)
 {
   EcAioProc self = ENTC_NEW(struct EcAioProc_s);
   
-  self->pid = handle;
+  self->pid = (unsigned long)handle;
   
   self->onNotify = NULL;
   self->onDestroy = NULL;

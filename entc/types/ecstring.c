@@ -848,7 +848,8 @@ EcString ecstr_unwrapl (const EcString source, char cl, char cr, EcString* pleft
     // find the end of the string
     const char* se;
     
-    for (se = sr; *se; se++);
+    for (se = sr; *se; se++)
+      ;
     
     {
       unsigned long diff = se - sr - 1;

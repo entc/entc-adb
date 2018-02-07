@@ -3,6 +3,8 @@
 #include "tests/ecenv.h"
 
 #include <stdio.h>
+#include <mm_malloc.h>
+#include <string.h>
 
 //=============================================================================
 
@@ -40,7 +42,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   {
     void* data = malloc(42);
     
-    sprintf((char*)data, "hello world [%i]", i);
+    snprintf((char*)data, 42, "hello world [%i]", i);
     
     eclist_push_back (h, data);
   }
@@ -51,7 +53,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   for (i = 0; i < 5; i++)
   {
     void* data = malloc(42);
-    sprintf((char*)data, "hello world [%i]", i);
+    snprintf((char*)data, 42, "hello world [%i]", i);
     
     eclist_push_back (h, data);
     
@@ -169,7 +171,7 @@ static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx, EcErr e
   for (i = 0; i < 10; i++)
   {
     void* data = malloc(42);
-    sprintf((char*)data, "cloud [%i]", i);
+    snprintf((char*)data, 42, "cloud [%i]", i);
     
     eclist_push_back (h, data);
   }

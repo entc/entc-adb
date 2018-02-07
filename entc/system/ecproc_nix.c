@@ -294,7 +294,7 @@ EcProc ecproc_get (int argc, char* argv[], EcErr err)
 
 void ecproc_terminateProcess (void* handle)
 {
-  kill(handle, SIGTERM);
+  kill((int)handle, SIGTERM);
   
   eclogger_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", (int)handle);
 }
@@ -339,6 +339,8 @@ int ecproc_waitForProcessToTerminate (EcProc self, EcErr err)
 
 int ecproc_waitForProcess (void* handle, EcErr err)
 {
+#if defined waitid && defined WEXITED
+ 
   int res;
  
   siginfo_t info;
@@ -397,6 +399,19 @@ int ecproc_waitForProcess (void* handle, EcErr err)
       break;
     }
   }
+
+  
+#else
+
+  int status;
+  pid_t res = waitpid((unsigned long)handle, &status, 0);
+  
+  if (res < 0)
+  {
+     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+
+#endif
 
   return ENTC_ERR_NONE;
 }
