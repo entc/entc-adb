@@ -29,8 +29,18 @@
 
 #include "md5.h"
 
+//----------------------------------------------------------------------------------------
+
 #ifdef _WIN32
+
 #include <windows.h>
+
+#endif
+
+#if defined __LINUX_OS
+
+#include <uuid/uuid.h>
+
 #endif
 
 //----------------------------------------------------------------------------------------
@@ -107,8 +117,8 @@ EcBuffer ecbuf_create_filled (uint_t size, char fillupwith)
 
 EcBuffer ecbuf_create_uuid ()
 {
-/*
-#ifdef _WIN32
+ /*
+#if defined __WIN_OS
 
   TGUID guid;
 
@@ -119,8 +129,20 @@ EcBuffer ecbuf_create_uuid ()
     return ecbuf_create_str (&uuid);  
   }
 
-#else
-*/      
+#elif defined __LINUX_OS
+
+  uuid_generate (uuid_t out);
+
+#elif defined __FreeBSD__
+  
+  uuid_t out;
+  uint32_t status;
+  
+  uuid_create (&out, &status);
+  
+  
+#else  // alternative
+*/
   EcBuffer self = ecbuf_create (40);
   int t = 0;
 
@@ -146,10 +168,11 @@ EcBuffer ecbuf_create_uuid ()
     
     *pos = ( t < nLen ) ? c : 0x00;
   }
-      
-      
-//#endif
-  return self;
+            
+  return self;  
+/*
+#endif
+*/
 }
 
 //----------------------------------------------------------------------------------------

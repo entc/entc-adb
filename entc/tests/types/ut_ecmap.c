@@ -45,8 +45,8 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     void* key = malloc(42); 
     void* val = malloc(42); 
 	
-	sprintf((char*)key, "item [%i]", i);	
-	sprintf((char*)val, "value [%i]", i);
+	snprintf((char*)key, 42, "item [%i]", i);	
+	snprintf((char*)val, 42, "value [%i]", i);
     
     ecmap_insert(map01, key, val);
   }
@@ -58,8 +58,8 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     void* key = malloc(42); 
 	void* val = malloc(42); 
 	
-	sprintf((char*)key, "item [%i]", i);	
-	sprintf((char*)val, "value [%i]", i);
+	snprintf((char*)key, 42, "item [%i]", i);	
+	snprintf((char*)val, 42, "value [%i]", i);
     
     ecmap_insert(map01, key, val);
   }
@@ -131,8 +131,8 @@ static int __STDCALL test_ecmap_test2 (void* ptr, TestEnvContext ctx, EcErr err)
     void* key = malloc(42); 
     void* val = malloc(42); 
 	
-	sprintf((char*)key, "item [%i]", i);
-	sprintf((char*)val, "value [%i]", i);
+	snprintf((char*)key, 42, "item [%i]", i);
+	snprintf((char*)val, 42, "value [%i]", i);
     
     ecmap_insert(map01, key, val);
   }
@@ -199,8 +199,8 @@ static int __STDCALL test_ecmap_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     void* key = malloc(42);
     void* val = malloc(42);
     
-    sprintf((char*)key, "item [%i]", i);
-    sprintf((char*)val, "value [%i]", i);
+    snprintf((char*)key, 42, "item [%i]", i);
+    snprintf((char*)val, 42, "value [%i]", i);
     
     ecmap_insert(map01, key, val);
   }

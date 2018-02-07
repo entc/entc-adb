@@ -22,7 +22,7 @@ static void __STDCALL test_ecbuffer_done (void* ptr)
 
 static int __STDCALL test_ecbuffer_sha256 (void* ptr, TestEnvContext tctx, EcErr err)
 {
-  EcBuffer textToEncode = ecbuf_create_fromStr ("1234567890abcdefghif");
+  EcBuffer textToEncode = ecbuf_create_str_cp ("1234567890abcdefghif");
   
   EcBuffer sha256 = ecbuf_sha_256 (textToEncode, err);
   
