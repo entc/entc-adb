@@ -571,7 +571,8 @@ void ecaio_filewriter_setBufferCP (EcAioFileWriter self, const char* buffer, uns
     ecbuf_destroy (&(self->buf));
   }
   
-  self->buf = ecbuf_create_fromBuffer ((const unsigned char*)buffer, size);
+  // TODO: use mv function instead
+  self->buf = ecbuf_create_buffer_cp ((const unsigned char*)buffer, size);
 }
 
 //-----------------------------------------------------------------------------

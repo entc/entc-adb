@@ -252,7 +252,7 @@ void ectemplate_sections_tag (EcTemplate self, EcTemplatePart part, EcMap sectio
         
         // override part content
         {
-          EcBuffer h = ecbuf_create_str (&name);
+          EcBuffer h = ecbuf_create_str_mv (&name);
         
           ecbuf_destroy(&(part->text));
         

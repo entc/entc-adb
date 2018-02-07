@@ -36,15 +36,17 @@ __CPP_EXTERN____________________________________________________________________
 
 __LIB_EXPORT EcBuffer ecbuf_create (uint_t size);
   
-__LIB_EXPORT EcBuffer ecbuf_create_filled (uint_t size, char fillupwith);
+__LIB_EXPORT EcBuffer ecbuf_create_str_cp (const EcString s);
 
-__LIB_EXPORT EcBuffer ecbuf_create_str (EcString* s);
+__LIB_EXPORT EcBuffer ecbuf_create_str_mv (EcString* s);
+
+__LIB_EXPORT EcBuffer ecbuf_create_buffer_cp (const unsigned char*, uint_t size);
+
+__LIB_EXPORT EcBuffer ecbuf_create_buffer_mv (unsigned char*, uint_t size);
 
 __LIB_EXPORT EcBuffer ecbuf_create_uuid ();
 
-__LIB_EXPORT EcBuffer ecbuf_create_fromBuffer (const unsigned char*, uint_t size);
-
-__LIB_EXPORT EcBuffer ecbuf_create_fromStr (const EcString);
+__LIB_EXPORT EcBuffer ecbuf_create_filled (uint_t size, char fillupwith);
 
 __LIB_EXPORT void ecbuf_destroy (EcBuffer*);
 

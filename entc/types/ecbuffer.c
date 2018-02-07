@@ -42,6 +42,53 @@ EcBuffer ecbuf_create (uint_t size)
 
 //----------------------------------------------------------------------------------------
 
+EcBuffer ecbuf_create_str_cp (const EcString s)
+{
+  return ecbuf_create_buffer_cp ((const unsigned char*)s, ecstr_len(s));  
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_create_str_mv (EcString* ps)
+{
+  EcBuffer self = ENTC_NEW (EcBuffer_s);
+  
+  EcString s = *ps;
+  
+  self->size = strlen (s);
+  self->buffer = (unsigned char*)s;
+  
+  *ps = NULL;
+  
+  return self;   
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_create_buffer_cp (const unsigned char* buffer, uint_t size)
+{
+  EcBuffer self = ecbuf_create (size);
+  
+  // copy content
+  memcpy (self->buffer, buffer, size);
+  
+  return self;  
+}
+
+//----------------------------------------------------------------------------------------
+
+EcBuffer ecbuf_create_buffer_mv (unsigned char* buffer, uint_t size)
+{
+  EcBuffer self = ENTC_NEW (EcBuffer_s);
+  
+  self->buffer = buffer;
+  self->size = size;
+  
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcBuffer ecbuf_create_filled (uint_t size, char fillupwith)
 {
   EcBuffer self = ENTC_NEW (EcBuffer_s);
@@ -54,22 +101,6 @@ EcBuffer ecbuf_create_filled (uint_t size, char fillupwith)
   self->buffer[size] = 0;    
   
   return self;    
-}
-
-//----------------------------------------------------------------------------------------
-
-EcBuffer ecbuf_create_str (EcString* ps)
-{
-  EcBuffer self = ENTC_NEW (EcBuffer_s);
-  
-  EcString s = *ps;
-  
-  self->size = strlen (s);
-  self->buffer = (unsigned char*)s;
-  
-  *ps = NULL;
-  
-  return self;  
 }
 
 //----------------------------------------------------------------------------------------
@@ -119,25 +150,6 @@ EcBuffer ecbuf_create_uuid ()
       
 //#endif
   return self;
-}
-
-//----------------------------------------------------------------------------------------
-
-EcBuffer ecbuf_create_fromBuffer (const unsigned char* src, uint_t size)
-{
-  EcBuffer self = ecbuf_create (size);
-  
-  // copy content
-  memcpy (self->buffer, src, size);
-  
-  return self;
-}
-
-//----------------------------------------------------------------------------------------
-
-EcBuffer ecbuf_create_fromStr (const EcString src)
-{
-  return ecbuf_create_fromBuffer ((const unsigned char*)src, ecstr_len(src));
 }
 
 //----------------------------------------------------------------------------------------

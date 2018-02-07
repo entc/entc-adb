@@ -33,7 +33,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
 
   // print
   {
-    EcString h = ecjson_write(udc01);
+    EcString h = ecjson_toString(udc01);
     
     printf("T1: %s\n", h);
     
@@ -44,7 +44,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   
   // print
   {
-    EcString h = ecjson_write(udc02);
+    EcString h = ecjson_toString(udc02);
     
     printf("C1: %s\n", h);
     

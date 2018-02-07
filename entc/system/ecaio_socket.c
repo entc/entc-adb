@@ -1106,7 +1106,7 @@ void ecaio_socketwriter_setBufferCP (EcAioSocketWriter self, const char* buffer,
     ecbuf_destroy (&(self->buf));
   }
   
-  self->buf = ecbuf_create_fromBuffer ((const unsigned char*)buffer, size);
+  self->buf = ecbuf_create_buffer_cp ((const unsigned char*)buffer, size);
 }
 
 //-----------------------------------------------------------------------------
