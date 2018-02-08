@@ -25,8 +25,6 @@
 #include <types/ecalloc.h>
 
 #include <types/ecstream.h>
-#include <utils/ecobserver.h>
-
 #include <types/ecmap.h>
 
 #include <tools/ecxmlstream.h>
@@ -110,8 +108,6 @@ struct AdblManager_s
   
   EcMutex mutex;
   
-  EcFileObserver observer;
-  
   EcMap credentials;
   
   EcMap modules;
@@ -162,142 +158,6 @@ AdblCredentials* adbl_credentials_new (const EcString dbtype)
   self->pp = NULL;
 
   return self;
-}
-
-/*------------------------------------------------------------------------*/
-
-void adbl_parseXMLDatabase( AdblManager self, EcXMLStream xmlstream, const char* confpath)
-{
-  const EcString name = ecxmlstream_nodeAttribute( xmlstream, "name" );
-  if(name)
-  {
-    const EcString dbtype = ecxmlstream_nodeAttribute( xmlstream, "type" );
-    if(dbtype)
-    {
-      ADBLModuleProperties* pp;
-      EcMapNode node;
-      
-      node = ecmap_find(self->modules, (void*)dbtype);
-      if (node == NULL)
-      {
-        eclogger_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
-        return;
-      }
-      
-      pp = ecmap_node_value (node);
-      
-      node = ecmap_find(self->credentials, (void*)name);
-      if (node == NULL)
-      { 
-        int isfile = FALSE;
-        EcString fileprefix = NULL;
-        EcString filextension = NULL;
-        //create new credential
-        AdblCredentials* pc = adbl_credentials_new (dbtype);
-        pc->pp = pp;
-        //add to map
-        ecmap_insert (self->credentials, ecstr_copy(name), pc);
-        //parse the other stuff
-        ENTC_XMLSTREAM_BEGIN
-
-        if( ecxmlstream_isBegin( xmlstream, "connection" ) )
-        {
-		        const char* port = ecxmlstream_nodeAttribute( xmlstream, "port" );
-
-          pc->properties.host = ecstr_copy( ecxmlstream_nodeAttribute( xmlstream, "host" ) );
-  
-          if(port)
-            pc->properties.port = atoi(port);
-
-        }
-        else if( ecxmlstream_isBegin( xmlstream, "schema" ) )
-        {
-          pc->properties.schema = ecstr_copy( ecxmlstream_nodeAttribute( xmlstream, "name" ) );
-          pc->properties.username = ecstr_copy( ecxmlstream_nodeAttribute( xmlstream, "user" ) );
-          pc->properties.password = ecstr_copy( ecxmlstream_nodeAttribute( xmlstream, "password" ) );
-        }
-        else if( ecxmlstream_isBegin( xmlstream, "file" ) )
-        {
-          isfile = TRUE;
-          fileprefix = ecstr_copy( ecxmlstream_nodeAttribute( xmlstream, "prefix" ) );
-          filextension = ecstr_copy( ecxmlstream_nodeAttribute( xmlstream, "filextension" ) );
-        }
-        ENTC_XMLSTREAM_END( "database" )
-        //create the filename
-        if( isfile == TRUE )
-        {
-          EcStream file = ecstream_create ();
-          
-          if( fileprefix )
-          {
-            ecstream_append_str ( file, fileprefix );
-            ecstream_append_str ( file, "_" );
-            ecstr_delete (&fileprefix );  
-          }
-
-          if( pc->properties.schema )
-          {
-            ecstream_append_str ( file, pc->properties.schema );
-          }
-
-          if( filextension )
-          {
-            ecstream_append_str ( file, filextension );
-            ecstr_delete (&filextension);  
-          }
-          else
-          {
-            ecstream_append_str ( file, ".db" );
-          }
-          
-          pc->properties.file = ecfs_mergeToPath(confpath, ecstream_get( file ));
-          
-          /* clean up */
-          ecstream_destroy(&file);
-        }
-      }
-      else
-      {
-        eclogger_fmt (LL_WARN, MODULE, "credentials", "parsing the config file: db-source already exists [%s] in current register", name );
-      }     
-    }
-  }  
-}
-
-/*------------------------------------------------------------------------*/
-
-void adbl_parseXML( AdblManager self, EcXMLStream xmlstream, const char* confpath, int preread)
-{
-  ENTC_XMLSTREAM_BEGIN
-  
-  if (preread && ecxmlstream_isBegin (xmlstream, "modules"))
-  {
-    ecstr_replace (&(self->path), ecxmlstream_nodeAttribute( xmlstream, "scanpath"));
-  }
-  else if (!preread && ecxmlstream_isBegin (xmlstream, "database"))
-  {
-    adbl_parseXMLDatabase(self, xmlstream, confpath);
-  }    
-
-  ENTC_XMLSTREAM_END( "adbl" )
-}
-
-/*------------------------------------------------------------------------*/
-
-void adbl_parseConfig (AdblManager self, const char* confpath, int preread)
-{
-  /* open the file */
-  EcXMLStream xmlstream = ecxmlstream_openobserver (self->observer);
-  /* parse the xml structure */
-  while( ecxmlstream_nextNode( xmlstream ) )
-  {
-    if( ecxmlstream_isBegin( xmlstream, "adbl" ) )
-    {
-      adbl_parseXML(self, xmlstream, confpath, preread);
-    }
-  }
-  /* close the file */
-  ecxmlstream_close (xmlstream);
 }
 
 /*------------------------------------------------------------------------*/
@@ -359,7 +219,6 @@ AdblManager adbl_new ()
   AdblManager self = ENTC_NEW(struct AdblManager_s);
     
   self->mutex = ecmutex_new ();
-  self->observer = 0;
   self->modules = ecmap_create (NULL, adbl_modules_onDestroy);
   self->credentials = ecmap_create (NULL, adbl_credentials_onDestroy);
   self->path = ecstr_init();
@@ -375,13 +234,6 @@ void adbl_delete (AdblManager* ptr)
   
   ecmutex_delete(&(self->mutex));
 
-  // delete the observer and close the config file
-  if( self->observer )
-  {
-    ecf_observer_delete( self->observer );
-    self->observer = 0;    
-  }
-  
   ecmap_destroy (&(self->credentials));
   ecmap_destroy (&(self->modules));
   
@@ -593,11 +445,6 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
     
     // clean up
     eclist_destroy (&engines);
-    
-    if (self->observer)
-    {
-      adbl_parseConfig (self, configpath, FALSE);
-    }
   }
   else
   {
@@ -743,24 +590,6 @@ void adbl_scanJson (AdblManager self, const EcString configpath, const EcString 
     
     ecudc_destroy(EC_ALLOC, &data);
   }
-}
-
-//----------------------------------------------------------------------------------------
-
-void adbl_scan (AdblManager self, EcEventFiles events, const EcString configpath, const EcString execpath)
-{
-  if (isAssigned (self->observer))
-  {
-    ecf_observer_delete(self->observer);
-  }
-  
-  eclogger_fmt (LL_TRACE, MODULE, "scan", "using configpath '%s'", configpath);        
-
-  self->observer = ecf_observer_newFromPath (configpath, "adbl.xml", configpath, events, 0, 0);
-  
-  adbl_parseConfig (self, configpath, TRUE);  
-  
-  adbl_validate_config (self, configpath, execpath);
 }
 
 /*------------------------------------------------------------------------*/

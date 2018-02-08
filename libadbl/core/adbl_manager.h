@@ -23,11 +23,8 @@
 #include "adbl.h"
 
 #include <system/macros.h>
-
 #include <types/ecstring.h>
-
 #include <utils/eclogger.h>
-#include <utils/ecobserver.h>
 
 struct AdblManager_s; typedef struct AdblManager_s* AdblManager;
 
@@ -35,8 +32,6 @@ __CPP_EXTERN____________________________________________________________________
 
 __LIB_EXPORT AdblManager adbl_new ();
   
-__LIB_EXPORT void adbl_scan (AdblManager, EcEventFiles events, const EcString configpath, const EcString execpath);
-
 __LIB_EXPORT void adbl_scanJson (AdblManager, const EcString configpath, const EcString execpath);
 
 __LIB_EXPORT void adbl_delete (AdblManager*);
