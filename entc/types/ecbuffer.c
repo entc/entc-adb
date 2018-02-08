@@ -21,7 +21,7 @@
 #include "ecstream.h"
 #include "ecerr.h"
 
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 #include <stdarg.h>
 #include <stdio.h>

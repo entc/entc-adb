@@ -20,26 +20,29 @@
 #ifndef ENTC_SYSTEM_EXEC_H
 #define ENTC_SYSTEM_EXEC_H 1
 
-#include "../system/macros.h"
-#include "../types/ecstring.h"
-#include "../utils/eclogger.h"
+//-----------------------------------------------------------------------------
+
+#include "system/ecdefs.h"
+#include "types/ecstring.h"
+
+//=============================================================================
 
 struct EcExec_s; typedef struct EcExec_s* EcExec;
 
-__CPP_EXTERN______________________________________________________________________________START
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT EcExec ecexec_new (const EcString script);
+__LIBEX EcExec ecexec_new (const EcString script);
 
-__LIB_EXPORT void ecexec_delete (EcExec*);
+__LIBEX void ecexec_delete (EcExec*);
 
-__LIB_EXPORT void ecexec_addParameter (EcExec, const EcString);
+__LIBEX void ecexec_addParameter (EcExec, const EcString);
 
-__LIB_EXPORT int ecexec_run (EcExec);
+__LIBEX int ecexec_run (EcExec);
 
-__LIB_EXPORT const EcString ecexec_stdout (EcExec);
+__LIBEX const EcString ecexec_stdout (EcExec);
 
-__LIB_EXPORT const EcString ecexec_stderr (EcExec);
+__LIBEX const EcString ecexec_stderr (EcExec);
 
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif

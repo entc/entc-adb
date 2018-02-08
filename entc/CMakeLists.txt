@@ -77,122 +77,131 @@ cmake_minimum_required(VERSION 2.4)
 
 ADD_DEFINITIONS(-ggdb)
 
-SET (CORE_SOURCES_SYS
+SET (ENTC_SYS_HEADERS
+
   system/types.h
   system/ecdefs.h
   system/macros.h
   system/platform.h
   system/ecfile.h
+  system/ecmutex.h
+  system/ecthread.h
+  system/ecdl.h
+  system/ecdlib.h
+  system/ectime.h
+  system/ecexec.h
+  system/ecrefcnt.h
+  system/ecproc.h
+
+)
+
+SET (ENTC_SYS_SOURCES
+
   system/ecfile.c
   system/ecfile_win.c
   system/ecfile_unix.c
   system/ecfile_dos.c
-  system/ecmutex.h
   system/ecmutex_win.c
   system/ecmutex_unix.c
   system/ecmutex_dos.c
-  system/ecthread.h
   system/ecthread_win.c
   system/ecthread_unix.c
   system/ecthread_dos.c
-  system/ecdl.h
   system/ecdl.c
-  system/ecdlib.h
   system/ecdlib.c
-  system/ectime.h
   system/ectime.c
-  system/ecexec.h
   system/ecexec_unix.c
   system/ecexec_win.c
-  system/ecrefcnt.h
   system/ecrefcnt.c
-  system/ecaio.h
-  system/ecaio.c
-  system/ecaio_ctx.h
-  system/ecaio_ctx.c
-  system/ecaio_notify.h
-  system/ecaio_notify.c
-  system/ecaio_file.h
-  system/ecaio_file.c
-  system/ecaio_socket.h
-  system/ecaio_socket.c
-  system/ecaio_sendf.h
-  system/ecaio_sendf.c
-  system/ecaio_proc.h
-  system/ecaio_proc.c
-  system/ecaio_event.h
-  system/ecaio_event.c
-  system/ecaio_msg.h
-  system/ecaio_msg.c
-  system/ecproc.h
   system/ecproc_win.c
   system/ecproc_nix.c
+
 )
 
-SET (CORE_SOURCES_TYPES
+SET (ENTC_AIO_HEADERS
+
+  aio/ecaio.h
+  aio/ecaio_ctx.h
+  aio/ecaio_notify.h
+  aio/ecaio_file.h
+  aio/ecaio_socket.h
+  aio/ecaio_sendf.h
+  aio/ecaio_proc.h
+  aio/ecaio_event.h
+  aio/ecaio_msg.h
+)
+
+SET (ENTC_AIO_SOURCES
+
+  aio/ecaio.c
+  aio/ecaio_ctx.c
+  aio/ecaio_notify.c
+  aio/ecaio_file.c
+  aio/ecaio_socket.c
+  aio/ecaio_sendf.c
+  aio/ecaio_proc.c
+  aio/ecaio_event.c
+  aio/ecaio_msg.c
+)
+
+SET (ENTC_TYPES_HEADERS
+
   types/ecerr.h
-  types/ecerr.c
   types/ecalloc.h
-  types/ecalloc.c
-  types/ecarray.c
-  types/ecintmap.h
-  types/ecintmap.c
   types/eclist.h
-  types/eclist.c
   types/ecmap.h
-  types/ecmap.c
-  types/ecmapchar.h
-  types/ecmapchar.c
-  types/ecstack.c
-  types/ectable.c
-  types/ecchain.c
-  types/ecchain.h
   types/ecstring.h
-  types/ecstring.c
   types/ecbuffer.h
-  types/ecbuffer.c
   types/ocstring.h
   types/ecstream.h
-  types/ecstream.c
   types/eccursor.h
-  types/eccursor.c
   types/ecudc.h
+  types/ecstack.h
+)
+
+SET (ENTC_TYPES_SOURCES
+
+  types/ecerr.c
+  types/ecalloc.c
+  types/ecarray.c
+  types/eclist.c
+  types/ecmap.c
+  types/ectable.c
+  types/ecstring.c
+  types/ecbuffer.c
+  types/ecstream.c
+  types/eccursor.c
   types/ecudc.c
-  
+  types/ecstack.c
   types/md5.c
 )
 
-SET (CORE_SOURCES_UTILS
-  utils/ecmessages.h
-  utils/ecmessages.c
-  utils/eclogger.h
-  utils/eclogger.c
-  utils/ecreadbuffer.h
-  utils/ecreadbuffer.c
-  utils/ecsmartbuffer.h
-  utils/ecsmartbuffer.c
-  utils/ecsecfile.h
-  utils/ecsecfile.c
+SET (ENTC_TOOLS_HEADERS
+
+  tools/eclog.h
+  tools/ecxmlstream.h
+  tools/ecjson.h
+  tools/ecmime.h
+  tools/eclparser.h
+  tools/ecjparser.h
+  tools/ectokenizer.h
+  tools/ectemplate.h
+  tools/eccrypt.h
+  tools/ecreadbuffer.h
 )
 
-SET (CORE_SOURCES_TOOLS
-  tools/ecxmlstream.h
-  tools/ecxmlstream.c
-  tools/ecjson.h
-  tools/ecjson.c
-  tools/ecmime.h
-  tools/ecmime.c
-  tools/eclparser.h
-  tools/eclparser.c
-  tools/ecjparser.h
-  tools/ecjparser.c
-  tools/ectokenizer.h
-  tools/ectokenizer.c
+SET (ENTC_TOOLS_SOURCES
 
-  tools/ectemplate.h
+  tools/eclog.c
+  tools/ecxmlstream.c
+  tools/ecjson.c
+  tools/ecmime.c
+  tools/eclparser.c
+  tools/ecjparser.c
+  tools/ectokenizer.c
   tools/ectemplate.c
-  tools/eccrypt.h
   tools/eccrypt.c
+  tools/ecreadbuffer.c
 )
 
 SET (CORE_SOURCES_TESTS
@@ -202,17 +211,25 @@ SET (CORE_SOURCES_TESTS
 
 INCLUDE_DIRECTORIES("." ${OPENSSL_INCLUDE_DIR})
 
-source_group("System" FILES ${CORE_SOURCES_SYS})
-source_group("Types" FILES ${CORE_SOURCES_TYPES})
-source_group("Utils" FILES ${CORE_SOURCES_UTILS})
-source_group("Tools" FILES ${CORE_SOURCES_TOOLS})
+source_group("System" FILES ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
+source_group("AIO" FILES ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS})
+source_group("Types" FILES ${ENTC_TYPES_SOURCES} ${ENTC_TYPES_HEADERS})
+source_group("Tools" FILES ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS})
 source_group("Tests" FILES ${CORE_SOURCES_TESTS})
 
-ADD_LIBRARY( entc SHARED ${CORE_SOURCES_SYS} ${CORE_SOURCES_TYPES} ${CORE_SOURCES_UTILS} ${CORE_SOURCES_TOOLS} ${CORE_SOURCES_TESTS})
+ADD_LIBRARY( entc SHARED ${ENTC_SYS_SOURCES} ${ENTC_AIO_SOURCES} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${CORE_SOURCES_TESTS})
 
 TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 set_target_properties(entc PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
+
+SET (CMAKE_INSTALL_PREFIX /opt/entc_1_3/)
+
+install (TARGETS entc DESTINATION bin)
+install (FILES ${ENTC_SYS_HEADERS} DESTINATION include/entc/system)
+install (FILES ${ENTC_AIO_HEADERS} DESTINATION include/entc/aio)
+install (FILES ${ENTC_TYPES_HEADERS} DESTINATION include/entc/types)
+install (FILES ${ENTC_TOOLS_HEADERS} DESTINATION include/entc/tools)
 
 #------------------------------------------------------------------------------
 

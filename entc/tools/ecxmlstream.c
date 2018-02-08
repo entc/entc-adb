@@ -19,14 +19,10 @@
 
 #include "ecxmlstream.h"
 
-#include "utils/ecreadbuffer.h"
 #include "system/ecfile.h"
-#include "utils/ecsecfile.h"
-
 #include "types/ecstream.h"
-#include "types/ecmapchar.h"
 #include "types/ecstack.h"
-#include "types/ecmap.h"
+#include "tools/ecreadbuffer.h"
 
 #include <string.h>
 #include <fcntl.h>
@@ -44,7 +40,7 @@ struct EcXMLStream_s
   /* misc */
   EcStack nodes;
   
-  EcMapChar lastattrs;
+  EcMap lastattrs;
   
   EcString value;
   
@@ -66,16 +62,17 @@ typedef struct
   
 } EcXMLTag_s; typedef EcXMLTag_s* EcXMLTag;
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------------------------------------
 
-static void __STDCALL ecxmlstream_namespaces_onDestroy (void* key, void* val)
+static void __STDCALL ecxmlstream_map_onDestroy (void* key, void* val)
 {
-  EcString keyobj = key;
-  EcString valobj = val;
-
-  ecstr_delete (&keyobj);
-  ecstr_delete (&valobj);
-};
+  {
+    EcString h = key; ecstr_delete(&h);
+  }
+  {
+    EcString h = val; ecstr_delete(&h);
+  }
+}
 
 //-----------------------------------------------------------------------------
 
@@ -88,12 +85,12 @@ EcXMLStream ecxmlstream_new (void)
   self->constbuffer = 0;
 
   self->nodes = ecstack_new();
-  self->lastattrs = ecmapchar_create (EC_ALLOC);
+  self->lastattrs = ecmap_create (NULL, ecxmlstream_map_onDestroy);
   self->lastype = ENTC_XMLTYPE_NONE;
   self->value = 0; 
   self->filename = 0;
   
-  self->namespaces = ecmap_create (NULL, ecxmlstream_namespaces_onDestroy);
+  self->namespaces = ecmap_create (NULL, ecxmlstream_map_onDestroy);
   
   return self;
 }
@@ -104,16 +101,15 @@ EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir)
 {
   /* create the instance */
   EcXMLStream self = ecxmlstream_new ();
-  /* create a new readbuffer for the file */
-  struct EcSecFopen st;
   
-  if (ecsec_fopen(&st, filename, O_RDONLY, confdir))
+  EcFileHandle fh = ecfh_open (filename, O_RDONLY);
+  if (fh == NULL)
   {
-    /* transfer ownership to our object */
-    self->readbuffer = ecreadbuffer_create (st.fhandle, TRUE);
+    
   }
-  /* clean up */
-  self->filename = st.filename;
+  
+  self->readbuffer = ecreadbuffer_create (fh, TRUE);
+  self->filename = ecstr_copy (filename);
   
   return self;
 }
@@ -181,7 +177,7 @@ void ecxmlstream_close( EcXMLStream self )
 
   ecstack_delete( &(self->nodes) );
 
-  ecmapchar_destroy (EC_ALLOC, &(self->lastattrs));
+  ecmap_destroy (&(self->lastattrs));
   
   ecstr_delete( &(self->value) );
   
@@ -232,13 +228,13 @@ const EcString ecxmlstream_getNamespace (EcXMLStream self, const EcString namesp
 
 //-----------------------------------------------------------------------------------------------------------
 
-void ecxmlstream_mapNamespaces (EcXMLStream self, EcMapChar nsmap)
+void ecxmlstream_mapNamespaces (EcXMLStream self, EcMap nsmap)
 {
   EcMapCursor* cursor = ecmap_cursor_create (self->namespaces, LIST_DIR_NEXT);
   
   while (ecmap_cursor_next (cursor))
   {
-    ecmapchar_append (nsmap, ecmap_node_value (cursor->node), ecmap_node_key (cursor->node));
+    ecmap_insert (nsmap, ecstr_copy(ecmap_node_value (cursor->node)), ecstr_copy(ecmap_node_key (cursor->node)));
   }
  
   ecmap_cursor_destroy (&cursor);
@@ -284,7 +280,7 @@ void ecxmlstream_parseNode (EcXMLStream self, const char* node)
 
   //eclogger_logformat(self->logger, LOGMSG_XML, "CORE", "found node '%s' from '%s'", selfnode, node);
 
-  ecmapchar_clear(self->lastattrs);
+  ecmap_clear (self->lastattrs);
   
   //eclogger_logformat(self->logger, LOGMSG_XML, "found node '%s'", selfnode);
   /* try to find all attributes */
@@ -332,8 +328,8 @@ void ecxmlstream_parseNode (EcXMLStream self, const char* node)
         }        
         else
         {
-          ecmapchar_append(self->lastattrs, key_val, value);
-          ecstr_delete( &value );
+	  ecmap_insert(self->lastattrs, key_val, value);  // transfer ownership
+	  key_val = NULL;
         }
         
         /*
@@ -383,7 +379,7 @@ void ecxmlstream_cleanLastNode( EcXMLStream self )
     }
     else
     {
-      eclogger_msg (LL_TRACE, "ENTC", "xml", "can't clean up last node");
+      eclog_msg (LL_TRACE, "ENTC", "xml", "can't clean up last node");
     }
   }
   else if( self->lastype == ENTC_XMLTYPE_VALUE )
@@ -494,7 +490,15 @@ ubyte_t ecxmlstream_nodeType( EcXMLStream self )
 
 const char* ecxmlstream_nodeAttribute( EcXMLStream self, const char* name )
 {
-  return ecmapchar_finddata( self->lastattrs, name );
+  EcMapNode node = ecmap_find (self->lastattrs, (void*)name);
+  if (node)
+  {
+    return ecmap_node_value (node);
+  }
+  else
+  {
+    return NULL;
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -606,20 +610,20 @@ void ecxmlstream_logError( EcXMLStream self )
   {
     if( self->filename )
     {
-      eclogger_fmt (LL_ERROR, "ENTC", "xml", "error in parsing '%s'", self->filename);      
+      eclog_fmt (LL_ERROR, "ENTC", "xml", "error in parsing '%s'", self->filename);      
     }
     else
     {
-      eclogger_msg (LL_ERROR, "ENTC", "xml", "error in parsing in unknown file #1");            
+      eclog_msg (LL_ERROR, "ENTC", "xml", "error in parsing in unknown file #1");            
     }
   }
   else if( self->constbuffer )
   {
-    eclogger_msg (LL_ERROR, "ENTC", "xml", "error in parsing buffer" );  
+    eclog_msg (LL_ERROR, "ENTC", "xml", "error in parsing buffer" );  
   }
   else
   {
-    eclogger_msg (LL_ERROR, "ENTC", "xml", "error in parsing in unknown file #2");    
+    eclog_msg (LL_ERROR, "ENTC", "xml", "error in parsing in unknown file #2");    
   }
 }
 
@@ -648,7 +652,7 @@ int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
     
     if (isNotAssigned (tag))
     {
-      eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [NULL][%s]", node + 1);
+      eclog_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [NULL][%s]", node + 1);
 
       ecxmlstream_logError (self);
       return FALSE;      
@@ -660,7 +664,7 @@ int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
 
       if (!ecstr_equal (fullTagName, node + 1))
       {
-        eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", fullTagName, node + 1);
+        eclog_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", fullTagName, node + 1);
         
         ecxmlstream_logError (self);
         
@@ -675,7 +679,7 @@ int ecxmlstream_checkNode( EcXMLStream self, EcStream stream_tag )
     {
       if (!ecstr_equal (tag->name, node + 1))
       {
-        eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", tag->name, node + 1);
+        eclog_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error: start and end tag missmatch [%s][%s]", tag->name, node + 1);
         
         ecxmlstream_logError (self);
         return FALSE;      
@@ -766,7 +770,7 @@ int ecxmlstream_do1( EcXMLStream self, EcStream stream_tag )
         if( c == '<' )
         {
           /* *** ERROR *** */
-          eclogger_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error, found '<' inside node '%s'", ecstream_get( stream_tag ));
+          eclog_fmt (LL_ERROR, "ENTC", "xml", "SYNTAX Error, found '<' inside node '%s'", ecstream_get( stream_tag ));
           
           ecxmlstream_logError(self);
 

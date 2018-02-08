@@ -1,25 +1,7 @@
-/*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
- *
- * This file is part of the extension n' tools (entc-base) framework for C.
- *
- * entc-base is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * entc-base is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ecexec.h"
 
 #include "types/ecstream.h"
+#include "tools/eclog.h"
 
 #if defined __BSD_OS || defined __LINUX_OS
 
@@ -108,7 +90,7 @@ int ecexec_run (EcExec self)
   if (pipe(outfd) == -1 || pipe(errfd) == -1) return -1;
   ///maybe here thread instead of fork  
   
-  eclogger_fmt (LL_TRACE, "_SYS", "exec", "run '%s' '%s'", self->arguments[0], self->arguments[1]);    
+  eclog_fmt (LL_TRACE, "_SYS", "exec", "run '%s' '%s'", self->arguments[0], self->arguments[1]);    
 
   pid = fork();
 
@@ -116,7 +98,7 @@ int ecexec_run (EcExec self)
   {
     case -1: // error
     {
-      eclogger_errno (LL_ERROR, "_SYS", "exec", "fork failed");    
+      eclog_err_os (LL_ERROR, "_SYS", "exec", "fork failed");    
     }
     break;
     case  0: // child process
@@ -174,7 +156,7 @@ int ecexec_run (EcExec self)
           res02 = fread(buffer, 1, 20, outf);
           while(res02 > 0)
           {
-            eclogger_fmt (LL_TRACE, "_SYS", "exec", "stdout: got data %i", res02);    
+            eclog_fmt (LL_TRACE, "_SYS", "exec", "stdout: got data %i", res02);    
             
             ecstream_append_buf (self->outstream, buffer, res02);
             res02 = fread(buffer, 1, 20, outf);
@@ -186,7 +168,7 @@ int ecexec_run (EcExec self)
           res02 = fread(buffer, 1, 20, errf);
           while(res02 > 0)
           {
-            eclogger_fmt (LL_TRACE, "_SYS", "exec", "stderr: got data %i", res02);    
+            eclog_fmt (LL_TRACE, "_SYS", "exec", "stderr: got data %i", res02);    
 
             ecstream_append_buf (self->errstream, buffer, res02);
             res02 = fread(buffer, 1, 20, errf);
@@ -195,7 +177,7 @@ int ecexec_run (EcExec self)
       }
       while (!WIFEXITED(status) && !WIFSIGNALED(status));
       
-      eclogger_fmt (LL_TRACE, "_SYS", "exec", "run '%s' done", self->arguments[0]);    
+      eclog_fmt (LL_TRACE, "_SYS", "exec", "run '%s' done", self->arguments[0]);    
       
       fclose(outf);
       fclose(errf);

@@ -23,7 +23,7 @@
 
 #include "system/ecdefs.h"
 #include "types/eclist.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 #if defined __APPLE__
 
@@ -365,7 +365,7 @@ int ecfs_move (const EcString source, const EcString dest)
     return TRUE;
   }
   
-  eclogger_err (LL_ERROR, "ENTC", "move", errno, "can't move '%s' to '%s'", source, dest);
+  eclog_err_os (LL_ERROR, "ENTC", "move", "can't move '%s' to '%s'", source, dest);
   return FALSE;
 }
 
@@ -579,7 +579,7 @@ int ecfs_rmdir_removeDir (const EcString source)
   
   if (rmdir (source) != 0)
   {
-    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't delete directory");
+    eclog_err_os (LL_ERROR, "ENTC", "rmdir", "can't delete directory");
     return FALSE;
   }
   
@@ -594,7 +594,7 @@ int ecfs_rmdir_removeFile (const EcString source)
   
   if (unlink (source) != 0)
   {
-    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't unlink file");
+    eclog_err_os (LL_ERROR, "ENTC", "rmdir", "can't unlink file");
     return FALSE;
   }
   
@@ -658,7 +658,7 @@ int ecfs_rmdir_dir (const EcString source)
   
   if (isNotAssigned (dir))
   {
-    eclogger_err (LL_ERROR, "ENTC", "rmdir", errno, "can't open directory");
+    eclog_err_os (LL_ERROR, "ENTC", "rmdir", "can't open directory");
     return FALSE;
   }
   
@@ -825,6 +825,7 @@ void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_res
   found = strrchr(file, ENTC_PATH_SEPARATOR);
   if( found && *(found + 1) )
   {
+    uint_t diff02;
     // find the difference between the found and original
     uint_t diff01 = found - file;
     // allocate some memory
@@ -833,10 +834,12 @@ void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_res
     strncpy(resdir, file, diff01);
     // increase found
     found++;
+    
+    diff02 = strlen(found) + 1;
     // allocate the memory for file part
-    resfile = (char*)malloc( sizeof(char) * (strlen(found) + 1) );
+    resfile = (char*)malloc(diff02);
     // copy file part
-    strcpy(resfile, found);
+    strncpy(resfile, found, diff02);
   }
   else
   {

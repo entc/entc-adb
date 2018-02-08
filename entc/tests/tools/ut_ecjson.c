@@ -1,8 +1,6 @@
-
-#include "tools/ecjson.h"
 #include "tests/ecenv.h"
-
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
+#include "tools/ecjson.h"
 
 //=============================================================================
 
@@ -42,7 +40,7 @@ static int __STDCALL test_ecjson_test1 (void* ptr, TestEnvContext tctx, EcErr er
   
   text = ecjson_toString (data);
   
-  eclogger_fmt (LL_INFO, "TEST", "data", text);
+  eclog_fmt (LL_INFO, "TEST", "data", text);
   
   ecstr_delete(&text);
   ecudc_destroy(EC_ALLOC, &data);
@@ -81,7 +79,7 @@ static int __STDCALL test_ecjson_test2 (void* ptr, TestEnvContext tctx, EcErr er
   
   text = ecjson_toString (data);
   
-  eclogger_fmt (LL_INFO, "TEST", "data", text);
+  eclog_fmt (LL_INFO, "TEST", "data", text);
   
   ecstr_delete(&text);
   ecudc_destroy(EC_ALLOC, &data);
@@ -106,7 +104,7 @@ static int __STDCALL test_ecjson_test3 (void* ptr, TestEnvContext tctx, EcErr er
   
   text = ecjson_toString (data);
   
-  eclogger_fmt (LL_INFO, "TEST", "data", text);
+  eclog_fmt (LL_INFO, "TEST", "data", text);
   
   ecstr_delete(&text);
   ecudc_destroy(EC_ALLOC, &data);
@@ -145,7 +143,7 @@ static int __STDCALL test_ecjson_test4 (void* ptr, TestEnvContext tctx, EcErr er
     
     text = ecjson_toString (data);
     
-    eclogger_fmt (LL_INFO, "TEST", "data", text);
+    eclog_fmt (LL_INFO, "TEST", "data", text);
     
     ecstr_delete(&text);
     ecudc_destroy(EC_ALLOC, &data);

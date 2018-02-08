@@ -1,28 +1,9 @@
-/*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
- *
- * This file is part of the extension n' tools (entc-base) framework for C.
- *
- * entc-base is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * entc-base is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ecjson.h"
-#include "types/ecstream.h"
-#include "utils/eclogger.h"
-#include "tools/eccrypt.h"
 
-#include "ecjparser.h"
+#include "types/ecstream.h"
+#include "tools/eclog.h"
+#include "tools/eccrypt.h"
+#include "tools/ecjparser.h"
 
 #include <string.h>
 
@@ -192,7 +173,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           if (isAssigned (udc))
           {
             // error
-            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
+            eclog_msg (LL_TRACE, "JSON", "reader", "array already assigned");
             
             ecstr_delete(&key);            
             return json_cleanup_udc (&udc);
@@ -210,7 +191,7 @@ EcUdc json_parse (JsonParser* parser, const char* name)
           {
             ecstr_delete(&key);            
             // error
-            eclogger_msg (LL_TRACE, "JSON", "reader", "array already assigned");
+            eclog_msg (LL_TRACE, "JSON", "reader", "array already assigned");
             return json_cleanup_udc (&udc);
           }
           
@@ -567,9 +548,8 @@ EcUdc ecjson_read_buffer (const char* buffer, int64_t size, const EcString name)
   res = ecjsonparser_parse (jparser, buffer, size, err);
   if (res)
   {
-    eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
-    
-    eclogger_msg (LL_WARN, "JSON", "reader", buffer);
+    eclog_msg (LL_ERROR, "JSON", "reader", err->text);
+    eclog_msg (LL_WARN, "JSON", "reader", buffer);
   }
   else
   {

@@ -20,7 +20,7 @@
 #include "eccursor.h"
 
 #include "ectable.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 struct EcCursor_s
 {

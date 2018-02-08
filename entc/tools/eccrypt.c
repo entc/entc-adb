@@ -1,5 +1,5 @@
 #include "eccrypt.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 #include "types/ecstream.h"
 
 #include <openssl/aes.h>
@@ -345,7 +345,7 @@ int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     bytesWritten = ecfh_writeBuffer (fhOut, ben, ben->size);
     if (bytesWritten < 0)
     {
-      eclogger_fmt (LL_ERROR, "ENTC", "enc file", "can't write bytes");
+      eclog_fmt (LL_ERROR, "ENTC", "enc file", "can't write bytes");
       
       return ENTC_ERR_PROCESS_FAILED;
     }
@@ -383,7 +383,7 @@ int ecencrypt_file (const EcString source, const EcString dest, const EcString s
   {
     ecencrypt_aes_destroy (&aes);
     
-    eclogger_fmt (LL_WARN, "ENTC", "enc file", "can't open original file '%s'", source);
+    eclog_fmt (LL_WARN, "ENTC", "enc file", "can't open original file '%s'", source);
     
     return ENTC_ERR_PROCESS_FAILED;
   }
@@ -395,12 +395,12 @@ int ecencrypt_file (const EcString source, const EcString dest, const EcString s
     
     ecencrypt_aes_destroy (&aes);
     
-    eclogger_fmt (LL_WARN, "ENTC", "enc file", "can't open dest file '%s'", dest);
+    eclog_fmt (LL_WARN, "ENTC", "enc file", "can't open dest file '%s'", dest);
     
     return ENTC_ERR_PROCESS_FAILED;
   }
   
-  eclogger_fmt (LL_TRACE, "ENTC", "end file", "encrypt file");
+  eclog_fmt (LL_TRACE, "ENTC", "end file", "encrypt file");
   
   res = ecencrypt_file_copy (aes, fhIn, fhOut);
   
@@ -437,7 +437,7 @@ int ecdecrypt_file_copy (EcDecryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     bytesWritten = ecfh_writeBuffer (fhOut, ben, ben->size);
     if (bytesWritten < 0)
     {
-      eclogger_fmt (LL_ERROR, "ENTC", "dec file", "can't write bytes");
+      eclog_fmt (LL_ERROR, "ENTC", "dec file", "can't write bytes");
       
       return ENTC_ERR_PROCESS_FAILED;
     }
@@ -475,7 +475,7 @@ int ecdecrypt_file (const EcString source, const EcString dest, const EcString s
   {
     ecdecrypt_aes_destroy (&aes);
     
-    eclogger_fmt (LL_WARN, "ENTC", "dec file", "can't open original file '%s'", source);
+    eclog_fmt (LL_WARN, "ENTC", "dec file", "can't open original file '%s'", source);
     
     return ENTC_ERR_PROCESS_FAILED;
   }
@@ -487,12 +487,12 @@ int ecdecrypt_file (const EcString source, const EcString dest, const EcString s
     
     ecdecrypt_aes_destroy (&aes);
     
-    eclogger_fmt (LL_WARN, "ENTC", "dec file", "can't open dest file '%s'", dest);
+    eclog_fmt (LL_WARN, "ENTC", "dec file", "can't open dest file '%s'", dest);
     
     return ENTC_ERR_PROCESS_FAILED;
   }
   
-  eclogger_fmt (LL_TRACE, "ENTC", "dec file", "decrypt file");
+  eclog_fmt (LL_TRACE, "ENTC", "dec file", "decrypt file");
   
   res = ecdecrypt_file_copy (aes, fhIn, fhOut);
   

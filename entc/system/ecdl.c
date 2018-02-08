@@ -21,7 +21,7 @@
 
 #include "system/ecdefs.h"
 #include "system/ecfile.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -106,9 +106,9 @@ EcLibraryHandle ecdl_new (const EcString filename)
     else
     {
 #ifdef _WIN32
-      eclogger_errno (LL_WARN, "_SYS", "dl", "can't load library");
+      eclog_errno (LL_WARN, "_SYS", "dl", "can't load library");
 #else
-      eclogger_fmt (LL_WARN, "_SYS", "dl", "can't load library: %s", dlerror());
+      eclog_fmt (LL_WARN, "_SYS", "dl", "can't load library: %s", dlerror());
 #endif
 	}
     return 0;
@@ -159,9 +159,9 @@ EcLibraryHandle ecdl_fromName (const EcString path, const EcString name)
   else
   {
 #ifdef _WIN32
-    eclogger_errno (LL_WARN, "_SYS", "dl", "can't load library '%s' from '%s'", name, fullpath);
+    eclog_errno (LL_WARN, "_SYS", "dl", "can't load library '%s' from '%s'", name, fullpath);
 #else
-    eclogger_fmt (LL_WARN, "_SYS", "dl", "can't load library '%s' : %s", name, dlerror());
+    eclog_fmt (LL_WARN, "_SYS", "dl", "can't load library '%s' : %s", name, dlerror());
 #endif
   }
   

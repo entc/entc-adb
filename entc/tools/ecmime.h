@@ -25,8 +25,8 @@
 // entc includes
 #include "types/ecerr.h"
 #include "types/ecstring.h"
-#include "types/ecmapchar.h"
 #include "types/ecbuffer.h"
+#include "types/ecmap.h"
 
 //=============================================================================
 
@@ -42,7 +42,7 @@ struct EcMultipartParser_s; typedef struct EcMultipartParser_s* EcMultipartParse
 
 //-----------------------------------------------------------------------------
 
-typedef void   (__STDCALL *ecmultipartparser_callback)  (void* ptr, EcBuffer*, EcMapChar*);
+typedef void   (__STDCALL *ecmultipartparser_callback)  (void* ptr, EcBuffer*, EcMap*);
 typedef char*  (__STDCALL *http_content_callback)       (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes);
 
 //-----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ __LIBEX int ecmultipartparser_process (EcMultipartParser, ulong_t size);
 
 __LIBEX EcString echttpheader_parseLine (const EcString line, const EcString key);
 
-__LIBEX void echttpheader_parseParam (EcMapChar map, const EcString line);
+__LIBEX void echttpheader_parseParam (EcMap map, const EcString line);
 
 //=============================================================================
 
