@@ -26,8 +26,6 @@
 
 __CPP_EXTERN______________________________________________________________________________START
 
-__LIB_EXPORT AdboContext adbo_context_create (EcEventFiles files, const EcString configpath, const EcString execpath);
-
 __LIB_EXPORT AdboContext adbo_context_createJson (const EcString configpath, const EcString execpath);
 
 __LIB_EXPORT void adbo_context_destroy (AdboContext*);

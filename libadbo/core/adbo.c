@@ -21,8 +21,11 @@
 #include "adbo_node.h"
 #include "adbo_context_intern.h"
 #include "adbo_data.h"
-#include <tools/ecjson.h>
 #include "adbo_context.h"
+
+// entc includes
+#include <system/ecmutex.h>
+#include <tools/ecjson.h>
 
 //----------------------------------------------------------------------------------------
 
@@ -206,6 +209,7 @@ struct Adbo_s
   EcUdc root;
   
   EcMutex mutex;
+  
 };
 
 //----------------------------------------------------------------------------------------
