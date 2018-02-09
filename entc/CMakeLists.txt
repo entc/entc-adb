@@ -224,7 +224,7 @@ set_target_properties(entc PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
 
 SET (CMAKE_INSTALL_PREFIX /opt/entc_1_3/)
 
-install (TARGETS entc DESTINATION bin)
+install (TARGETS entc DESTINATION lib)
 install (FILES ${ENTC_SYS_HEADERS} DESTINATION include/entc/system)
 install (FILES ${ENTC_AIO_HEADERS} DESTINATION include/entc/aio)
 install (FILES ${ENTC_TYPES_HEADERS} DESTINATION include/entc/types)

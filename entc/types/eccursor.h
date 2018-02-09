@@ -22,8 +22,7 @@
 
 #include "system/macros.h"
 #include "system/types.h"
-
-#include "ectable.h"
+#include "types/ectable.h"
 
 struct EcCursor_s; typedef struct EcCursor_s* EcCursor;
 
