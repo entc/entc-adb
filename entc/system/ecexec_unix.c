@@ -1,5 +1,6 @@
 #include "ecexec.h"
 
+#include "system/macros.h"
 #include "types/ecstream.h"
 #include "tools/eclog.h"
 

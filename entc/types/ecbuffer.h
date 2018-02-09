@@ -20,83 +20,79 @@
 #ifndef ENTC_TYPES_BUFFER_H
 #define ENTC_TYPES_BUFFER_H 1
 
-#include "system/macros.h"
+#include "system/ecdefs.h"
 #include "system/types.h"
 
 #include "types/ecstring.h"
 #include "types/ecerr.h"
 
+//=============================================================================
+
 #pragma pack(push, 16)
 typedef struct { unsigned char* buffer; unsigned long size; } EcBuffer_s, * EcBuffer;
 #pragma pack(pop)
 
-__CPP_EXTERN______________________________________________________________________________START
+//-----------------------------------------------------------------------------
   
 // constructor and destructors
 
-__LIB_EXPORT EcBuffer ecbuf_create (uint_t size);
+__LIBEX EcBuffer ecbuf_create (uint_t size);
   
-__LIB_EXPORT EcBuffer ecbuf_create_str_cp (const EcString s);
+__LIBEX EcBuffer ecbuf_create_str_cp (const EcString s);
 
-__LIB_EXPORT EcBuffer ecbuf_create_str_mv (EcString* s);
+__LIBEX EcBuffer ecbuf_create_str_mv (EcString* s);
 
-__LIB_EXPORT EcBuffer ecbuf_create_buffer_cp (const unsigned char*, uint_t size);
+__LIBEX EcBuffer ecbuf_create_buffer_cp (const unsigned char*, uint_t size);
 
-__LIB_EXPORT EcBuffer ecbuf_create_buffer_mv (unsigned char*, uint_t size);
+__LIBEX EcBuffer ecbuf_create_buffer_mv (unsigned char*, uint_t size);
 
-__LIB_EXPORT EcBuffer ecbuf_create_uuid ();
+__LIBEX EcBuffer ecbuf_create_uuid ();
 
-__LIB_EXPORT EcBuffer ecbuf_create_filled (uint_t size, char fillupwith);
+__LIBEX EcBuffer ecbuf_create_filled (uint_t size, char fillupwith);
 
-__LIB_EXPORT void ecbuf_destroy (EcBuffer*);
+__LIBEX void ecbuf_destroy (EcBuffer*);
 
 // manipulators
 
-__LIB_EXPORT void ecbuf_setTerm (EcBuffer, uint_t size);
+__LIBEX void ecbuf_setTerm (EcBuffer, uint_t size);
 
-__LIB_EXPORT void ecbuf_fill (EcBuffer, uint_t size, char fillupwith);
+__LIBEX void ecbuf_fill (EcBuffer, uint_t size, char fillupwith);
 
-__LIB_EXPORT void ecbuf_random (EcBuffer, uint_t size);
+__LIBEX void ecbuf_random (EcBuffer, uint_t size);
   
-__LIB_EXPORT void ecbuf_format (EcBuffer, uint_t size, const char* format, ...);
+__LIBEX void ecbuf_format (EcBuffer, uint_t size, const char* format, ...);
 
-__LIB_EXPORT void ecbuf_resize (EcBuffer, uint_t size);
+__LIBEX void ecbuf_resize (EcBuffer, uint_t size);
 
-__LIB_EXPORT ulong_t ecbuf_encode_base64_calculateSize (ulong_t max);
+__LIBEX ulong_t ecbuf_encode_base64_calculateSize (ulong_t max);
 
-__LIB_EXPORT ulong_t ecbuf_encode_base64_d (EcBuffer, EcBuffer);
+__LIBEX ulong_t ecbuf_encode_base64_d (EcBuffer, EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_encode_base64 (EcBuffer);
+__LIBEX EcBuffer ecbuf_encode_base64 (EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_decode_base64 (EcBuffer);
+__LIBEX EcBuffer ecbuf_decode_base64 (EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_md5 (EcBuffer);
+__LIBEX EcBuffer ecbuf_md5 (EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_sha1 (EcBuffer);
+__LIBEX EcBuffer ecbuf_sha1 (EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_sha_256 (EcBuffer, EcErr);
+__LIBEX EcBuffer ecbuf_sha_256 (EcBuffer, EcErr);
 
-__LIB_EXPORT EcBuffer ecbuf_xor (EcBuffer, EcBuffer);  // uses always the smallest one
+__LIBEX EcBuffer ecbuf_xor (EcBuffer, EcBuffer);  // uses always the smallest one
 
-__LIB_EXPORT EcBuffer ecbuf_concat (EcBuffer, EcBuffer);
+__LIBEX EcBuffer ecbuf_concat (EcBuffer, EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_hex2bin (EcBuffer);
+__LIBEX EcBuffer ecbuf_hex2bin (EcBuffer);
 
-__LIB_EXPORT EcBuffer ecbuf_bin2hex (EcBuffer);
-
-/*
-__LIB_EXPORT EcBuffer ecbuf_decrypt_aes (EcBuffer source, const EcString secret, EcErr);
-
-__LIB_EXPORT EcBuffer ecbuf_encrypt_aes (EcBuffer source, const EcString secret, EcErr);
-*/
+__LIBEX EcBuffer ecbuf_bin2hex (EcBuffer);
  
 // getters
 
-__LIB_EXPORT const EcString ecbuf_const_str (const EcBuffer);
+__LIBEX const EcString ecbuf_const_str (const EcBuffer);
 
-__LIB_EXPORT EcString ecbuf_str (EcBuffer*);    // convert to string
+__LIBEX EcString ecbuf_str (EcBuffer*);    // convert to string
 
-__LIB_EXPORT void ecbuf_replace (EcString*, EcBuffer*);
+__LIBEX void ecbuf_replace (EcString*, EcBuffer*);
 
 // iterators ----------------------------------------------------------------------------
 
@@ -117,12 +113,12 @@ typedef struct
 } EcBufferIterator;
 #pragma pack(pop)
 
-__LIB_EXPORT void ecbuf_iterator (EcBuffer, EcBufferIterator*);
+__LIBEX void ecbuf_iterator (EcBuffer, EcBufferIterator*);
 
-__LIB_EXPORT int ecbufit_readln (EcBufferIterator*);
+__LIBEX int ecbufit_readln (EcBufferIterator*);
 
-__LIB_EXPORT void ecbufit_reset (EcBufferIterator*);
+__LIBEX void ecbufit_reset (EcBufferIterator*);
 
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif

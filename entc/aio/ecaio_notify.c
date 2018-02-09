@@ -1,5 +1,7 @@
 #include "ecaio_notify.h"
 
+#include "system/macros.h"
+
 #if defined __MS_IOCP
 
 //*****************************************************************************

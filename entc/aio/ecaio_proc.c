@@ -1,5 +1,6 @@
 #include "ecaio_proc.h"
 
+#include "system/macros.h"
 #include "system/ecproc.h"
 #include "tools/eclog.h"
 

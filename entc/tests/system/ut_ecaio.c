@@ -1,6 +1,7 @@
 #include "aio/ecaio.h"
 #include "tests/ecenv.h"
 
+#include "system/macros.h"
 #include "system/ecthread.h"
 
 #include <stdio.h>

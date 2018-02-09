@@ -919,6 +919,7 @@ int ecaio_abort (EcAio self, EcErr err)
 #include <sys/event.h>
 #include <errno.h>
 #include <signal.h>
+#include <sys/fcntl.h>
 
 //-----------------------------------------------------------------------------
 

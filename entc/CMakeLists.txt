@@ -152,7 +152,6 @@ SET (ENTC_TYPES_HEADERS
   types/ecmap.h
   types/ecstring.h
   types/ecbuffer.h
-  types/ocstring.h
   types/ecstream.h
   types/eccursor.h
   types/ecudc.h
