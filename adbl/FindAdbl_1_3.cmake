@@ -32,10 +32,7 @@ SET( ADBL_VERSION 1.3.0 )
 
 FIND_LIBRARY(ADBL_LIBRARY NAMES adbl
   HINTS
-  "/usr/lib/"
-  "/usr/local/lib/"
-  "/opt/local/lib/"
-  "$ENV{PROGRAMFILES}/quom/adbl/${ADBL_VERSION}/lib/"
+  "/opt/entc_1_3/lib/"
   VERSION_EQUAL ${ADBL_VERSION}
 )
 MARK_AS_ADVANCED(ADBL_LIBRARY)
@@ -43,12 +40,7 @@ MARK_AS_ADVANCED(ADBL_LIBRARY)
 # Look for the header file.
 FIND_PATH(ADBL_INCLUDE_DIR NAMES adbl.h
   PATHS 
-  # on Linux/Unix 
-  "/usr/include/libadbl-${ADBL_VERSION}/"
-  # on Mac OSX
-  "/usr/local/include/libadbl-${ADBL_VERSION}/"
-  # on windows
-  "$ENV{PROGRAMFILES}/quom/adbl/${ADBL_VERSION}/include/"
+  "/opt/entc_1_3/include/adbl"
 )
 MARK_AS_ADVANCED(ADBL_INCLUDE_DIR)
 

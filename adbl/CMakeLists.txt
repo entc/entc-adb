@@ -14,6 +14,7 @@ SET (ADBL_HEADERS
   core/adbl_manager.h
   core/adbl_attributes.h
   core/adbl_query.h
+  core/adbl_constraint.h
   core/adbl_insert.h
   core/adbl_update.h
   core/adbl_delete.h

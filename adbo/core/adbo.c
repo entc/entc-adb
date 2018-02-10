@@ -274,19 +274,19 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
 
     return FALSE;
   }
   
-  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] #1", table);
+  //eclog_fmt (LL_TRACE, "ADBO", "insert", "[%s] #1", table);
 
   tableNode = adbo_get_table (self->root, table);
   if (isNotAssigned (tableNode))
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
 
     return FALSE;
   }
@@ -297,7 +297,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   ecudc_add (dataTable, data);
   ecudc_add (dataNode, &dataTable);
 
-  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] #2", table);
+  //eclog_fmt (LL_TRACE, "ADBO", "insert", "[%s] #2", table);
 
   if (caseNode == NULL)
   {
@@ -312,7 +312,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   {
     EcString h = ecjson_toString (dataNode);
     
-    eclogger_fmt (LL_TRACE, "ADBO", "insert D", h);
+    //eclog_fmt (LL_TRACE, "ADBO", "insert D", h);
 
     ecstr_delete(&h);
   }
@@ -320,14 +320,14 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   {
     EcString h = ecjson_toString (params);
     
-    eclogger_fmt (LL_TRACE, "ADBO", "insert P", h);
+    //eclog_fmt (LL_TRACE, "ADBO", "insert P", h);
     
     ecstr_delete(&h);
   }
   
   res = adbo_update (tableNode, params, self->adboctx, dataNode);
 
-  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] done -> %i", table, res);
+  //eclog_fmt (LL_TRACE, "ADBO", "insert", "[%s] done -> %i", table, res);
 
   ecudc_destroy (EC_ALLOC, &dataNode);
   
@@ -338,7 +338,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   
   ecmutex_unlock (self->mutex);
   
-  eclogger_fmt (LL_TRACE, "ADBO", "insert", "[%s] #3", table);
+  //eclog_fmt (LL_TRACE, "ADBO", "insert", "[%s] #3", table);
 
   return res;
 }
@@ -356,7 +356,7 @@ EcUdc adbo_db_cursor (Adbo self, const EcString table, EcUdc params)
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
     
     return NULL;
   }
@@ -366,7 +366,7 @@ EcUdc adbo_db_cursor (Adbo self, const EcString table, EcUdc params)
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
     
     return NULL;
   }
@@ -397,7 +397,7 @@ EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
     
     return NULL;
   }
@@ -407,7 +407,7 @@ EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
     
     return NULL;
   }
@@ -433,7 +433,7 @@ int adbo_db_delete (Adbo self, const EcString table, EcUdc params)
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "delete", "[%s] root is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "delete", "[%s] root is NULL", table);
     
     return ENTC_ERR_PROCESS_FAILED;
   }
@@ -443,7 +443,7 @@ int adbo_db_delete (Adbo self, const EcString table, EcUdc params)
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_fmt (LL_ERROR, "ADBO", "delete", "[%s] table node is NULL", table);
+    eclog_fmt (LL_ERROR, "ADBO", "delete", "[%s] table node is NULL", table);
     
     return ENTC_ERR_PROCESS_FAILED;
   }

@@ -32,22 +32,14 @@ SET( ADBO_VERSION 1.3.0 )
 
 FIND_LIBRARY(ADBO_LIBRARY NAMES adbo
   HINTS
-  "/usr/lib/"
-  "/usr/local/lib/"
-  "/opt/local/lib/"
-  "$ENV{PROGRAMFILES}/quom/adbo/${ADBO_VERSION}/lib/"
+  "/opt/entc_1_3/lib/"
 )
 MARK_AS_ADVANCED(ADBO_LIBRARY)
 
 # Look for the header file.
 FIND_PATH(ADBO_INCLUDE_DIR NAMES adbo_types.h
   PATHS 
-  # on Linux/Unix 
-  "/usr/include/libadbo-${ADBO_VERSION}/"
-  # on Mac OSX
-  "/usr/local/include/libadbo-${ADBO_VERSION}/"
-  # on windows
-  "$ENV{PROGRAMFILES}/quom/adbo/${ADBO_VERSION}/include/"
+  "/opt/entc_1_3/include/adbo"
 )
 MARK_AS_ADVANCED(ADBO_INCLUDE_DIR)
 

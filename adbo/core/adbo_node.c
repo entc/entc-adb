@@ -221,7 +221,7 @@ int adbo_dbkeys_set_constraint (EcUdc item, AdblConstraint* constraint, const Ec
     break;
     default:
     {
-      eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' has not supported type", dbcolumn); 
+      eclog_fmt (LL_WARN, "ADBO", "dkkey", "key '%s' has not supported type", dbcolumn); 
       return FALSE;        
     }
     break;
@@ -238,7 +238,7 @@ int adbo_dbkeys_value_contraint_add (EcUdc value, EcUdc data, AdblConstraint* co
   const EcString dbcolumn = ecudc_name (value);
   if (isNotAssigned (dbcolumn))
   {
-    eclogger_fmt (LL_WARN, "ADBO", "dkkey", "key has no dbcolumn definition"); 
+    eclog_fmt (LL_WARN, "ADBO", "dkkey", "key has no dbcolumn definition"); 
     return FALSE;
   }
 
@@ -679,20 +679,20 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
 
   if (isNotAssigned (cursor))
   {
-    eclogger_msg (LL_ERROR, "ADBO", "cursor", "cursor is NULL");
+    eclog_msg (LL_ERROR, "ADBO", "cursor", "cursor is NULL");
     return FALSE;
   }
   
   if (isNotAssigned (node))
   {
-    eclogger_msg (LL_ERROR, "ADBO", "cursor", "node is NULL");
+    eclog_msg (LL_ERROR, "ADBO", "cursor", "node is NULL");
     return FALSE;
   }
   
   dbtable = ecudc_name (node);
   if (isNotAssigned (dbtable))
   {
-    eclogger_msg (LL_WARN, "ADBO", "cursor", "table name not defined");
+    eclog_msg (LL_WARN, "ADBO", "cursor", "table name not defined");
     return FALSE;
   }
 
@@ -703,7 +703,7 @@ int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc da
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
-    eclogger_fmt (LL_ERROR, "ADBO", "cursor", "can't connect to database '%s'", dbsource);
+    eclog_fmt (LL_ERROR, "ADBO", "cursor", "can't connect to database '%s'", dbsource);
     return FALSE;
   }
   
@@ -754,7 +754,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   const EcString dbtable = ecudc_name (node);
   if (isNotAssigned (dbtable))
   {
-    eclogger_msg (LL_WARN, "ADBO", "fetch", "table name not defined");
+    eclog_msg (LL_WARN, "ADBO", "fetch", "table name not defined");
     return FALSE;
   }
   
@@ -765,7 +765,7 @@ int adbo_node_fetch (EcUdc node, EcUdc data, AdboContext context)
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
-    eclogger_fmt (LL_ERROR, "ADBO", "fetch", "can't connect to database '%s'", dbsource);
+    eclog_fmt (LL_ERROR, "ADBO", "fetch", "can't connect to database '%s'", dbsource);
     return FALSE;
   }
   
@@ -819,14 +819,14 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
   columnName = ecudc_name (columnItem);
   if (isNotAssigned (columnName))
   {
-    eclogger_msg (LL_WARN, "ADBO", "attr", "value in items without dbcolumn");
+    eclog_msg (LL_WARN, "ADBO", "attr", "value in items without dbcolumn");
     return;
   }
 
   dataItem = ecudc_node(dataItems, columnName);
   if (isNotAssigned (dataItem))
   {
-    eclogger_fmt (LL_TRACE, "ADBO", "attr", "node has not item '%s'", columnName);
+    eclog_fmt (LL_TRACE, "ADBO", "attr", "node has not item '%s'", columnName);
     return;
   }
   
@@ -873,7 +873,7 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
         ecudc_add_asString (EC_ALLOC, values, columnName, buffer);
       }
 
-      eclogger_fmt (LL_TRACE, "ADBO", "attr", "add time type");
+      eclog_fmt (LL_TRACE, "ADBO", "attr", "add time type");
     }
     break;
     case ENTC_UDC_NUMBER:
@@ -900,7 +900,7 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
       }
       else
       {
-        eclogger_fmt (LL_WARN, "ADBO", "attr", "column item '%s' has no value", columnName);
+        eclog_fmt (LL_WARN, "ADBO", "attr", "column item '%s' has no value", columnName);
         return;
       }
     }
@@ -945,7 +945,7 @@ int adbo_node_insert (EcUdc node, AdboContext context, AdblSession dbsession, co
     if (adbo_node_primary (node, item_update, context, NULL))
     {
       // good now check if it is in the original
-      eclogger_msg (LL_WARN, "ADBO", "update", "multi update not implemented yet");
+      eclog_msg (LL_WARN, "ADBO", "update", "multi update not implemented yet");
       ret = FALSE;
     }
     else
@@ -1026,7 +1026,7 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
   item_update = ecudc_next (update_data, &cursor_update);  
   if (isNotAssigned (item_update))
   {
-    eclogger_msg (LL_ERROR, "ADBO", "update", "update array is empty");
+    eclog_msg (LL_ERROR, "ADBO", "update", "update array is empty");
     return FALSE;
   }  
   
@@ -1091,7 +1091,7 @@ int adbo_node_update_single (AdboContext context, AdblSession dbsession, const E
   }
   else
   {
-    eclogger_msg (LL_WARN, "ADBO", "update", "nothing to update");    
+    eclog_msg (LL_WARN, "ADBO", "update", "nothing to update");    
   }
   
   adbl_attrs_delete(&attrs);
@@ -1125,20 +1125,20 @@ int adbo_node_update_state (EcUdc node, EcUdc filter, AdboContext context, AdblS
     }
     else
     {
-      eclogger_msg (LL_ERROR, "ADBO", "update", "values and items must be assigned for update");
+      eclog_msg (LL_ERROR, "ADBO", "update", "values and items must be assigned for update");
       ret = FALSE;
     }
   }
   else if (adbo_node_foreign (node, filter, context, constraint))
   {
-    eclogger_msg (LL_TRACE, "ADBO", "update", "using only foreign keys");
+    eclog_msg (LL_TRACE, "ADBO", "update", "using only foreign keys");
 
     // no primary key but foreign key, lets try to insert
     ret = adbo_node_insert (node, context, dbsession, dbtable, filter, update_data, cols, constraint);
   }
   else
   {
-    eclogger_msg (LL_TRACE, "ADBO", "update", "no primary nor foreign keys");
+    eclog_msg (LL_TRACE, "ADBO", "update", "no primary nor foreign keys");
 
     // no primary key nor foreign key, lets try to insert
     ret = adbo_node_insert (node, context, dbsession, dbtable, filter, update_data, cols, NULL);
@@ -1165,7 +1165,7 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   const EcString dbtable = ecudc_name (node);
   if (isNotAssigned (dbtable))
   {
-    eclogger_msg (LL_ERROR, "ADBO", "fetch", ".dbtable not defined");
+    eclog_msg (LL_ERROR, "ADBO", "fetch", ".dbtable not defined");
     return FALSE;
   }
   
@@ -1174,13 +1174,13 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
-    eclogger_fmt (LL_ERROR, "ADBO", "update", "can't connect to database '%s'", dbsource);
+    eclog_fmt (LL_ERROR, "ADBO", "update", "can't connect to database '%s'", dbsource);
     return FALSE;
   }
   
   if (isNotAssigned (data))
   {
-    eclogger_msg (LL_WARN, "ADBO", "update", "no data given");
+    eclog_msg (LL_WARN, "ADBO", "update", "no data given");
     return FALSE;
   }
   
@@ -1188,13 +1188,13 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   update_data = ecudc_node (data, dbtable);
   if (isNotAssigned (update_data))
   {
-    eclogger_fmt (LL_WARN, "ADBO", "update", "missing data for table '%s'", dbtable);
+    eclog_fmt (LL_WARN, "ADBO", "update", "missing data for table '%s'", dbtable);
     return FALSE;    
   }
   
   if (ecudc_type(update_data) != ENTC_UDC_LIST)
   {
-    eclogger_fmt (LL_WARN, "ADBO", "update", "data for '%s' is not a list object", dbtable);
+    eclog_fmt (LL_WARN, "ADBO", "update", "data for '%s' is not a list object", dbtable);
     return FALSE;    
   }
   
@@ -1206,7 +1206,7 @@ int adbo_node_update (EcUdc node, EcUdc filter, AdboContext context, EcUdc data,
   {
     if (!adbo_node_fetch (node, data, context))
     {
-      eclogger_fmt (LL_WARN, "ADBO", "update", "try to fill empty values but failed for '%s'", dbtable);
+      eclog_fmt (LL_WARN, "ADBO", "update", "try to fill empty values but failed for '%s'", dbtable);
       return FALSE; 
     }
     // try again
@@ -1250,7 +1250,7 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
   const EcString dbtable = ecudc_name (node);  
   if (isNotAssigned (dbtable))
   {
-    eclogger_msg (LL_ERROR, "ADBO", "fetch", ".dbtable not defined");
+    eclog_msg (LL_ERROR, "ADBO", "fetch", ".dbtable not defined");
     return FALSE;
   }
   
@@ -1259,7 +1259,7 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
-    eclogger_fmt (LL_ERROR, "ADBO", "update", "can't connect to database '%s'", dbsource);
+    eclog_fmt (LL_ERROR, "ADBO", "update", "can't connect to database '%s'", dbsource);
     return FALSE;
   }
       
@@ -1301,7 +1301,7 @@ int adbo_node_delete (EcUdc node, EcUdc filter, AdboContext context, int withTra
     }
     else
     {
-      eclogger_msg (LL_ERROR, "ADBO", "delete", "needs valid primary or foreign keys");
+      eclog_msg (LL_ERROR, "ADBO", "delete", "needs valid primary or foreign keys");
       ret = FALSE;
     }
 
@@ -1340,7 +1340,7 @@ void adbo_node_updateSize (EcUdc node, AdboContext context)
   // delete all previous entries
   if (isNotAssigned (dbsession))
   {
-    eclogger_fmt (LL_ERROR, "ADBO", "update", "can't connect to database '%s'", dbsource);
+    eclog_fmt (LL_ERROR, "ADBO", "update", "can't connect to database '%s'", dbsource);
     return;
   }
 
