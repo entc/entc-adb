@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.4)
 
+set(CMAKE_MACOSX_RPATH 1)
+
 FIND_LIBRARY(MYSQL_LIBRARY
     NAMES libmysql
     HINTS ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib"
@@ -10,9 +12,9 @@ FIND_LIBRARY(MYSQL_LIBRARY
     NAMES mysqlclient
     HINTS ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib" "/opt/local/lib/mysql57/mysql" "/usr/lib" "/usr/local/lib"
 )
-ENDIF(MYSQL_FOUND)
+ENDIF(NOT MYSQL_FOUND)
 
-MARK_AS_ADVANCED(MYSQL_LIBRARY)
+MARK_AS_ADVANCED(MYSQL_LIBRARY QUIET)
 
 FIND_PATH(MYSQL_INCLUDE_DIR
     NAMES mysql.h

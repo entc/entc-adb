@@ -21,6 +21,7 @@
 #define ADBL_STRUCTS_H
 
 #include "types/ecudc.h"
+#include "types/ecmap.h"
 
 struct AdblSession_s;
 
@@ -40,7 +41,7 @@ typedef struct
 typedef struct 
 {
   
-  EcMapChar columns;
+  EcMap columns;
   
 } AdblAttributes;
 

@@ -17,37 +17,40 @@
  * along with adbl. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADBL_QUERY_H
-#define ADBL_QUERY_H 1
+#ifndef ADBL_CONSTRAINT_H
+#define ADBL_CONSTRAINT_H 1
 
 #include <system/macros.h>
-#include <utils/eclogger.h>
 
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START  
-   
-__LIB_EXPORT AdblQuery* adbl_query_new (void);
-  
-__LIB_EXPORT void adbl_query_delete (AdblQuery**);
-  
-__LIB_EXPORT void adbl_query_clear (AdblQuery*);
-  
-__LIB_EXPORT void adbl_query_setTable (AdblQuery*, const EcString table);
-  
-__LIB_EXPORT void adbl_query_setConstraint (AdblQuery*, AdblConstraint*);
-  
-__LIB_EXPORT void adbl_query_addColumn (AdblQuery*, const EcString column, int order_pos);
-  
-__LIB_EXPORT void adbl_query_addColumnAsSubquery (AdblQuery*, const EcString column, const EcString table, const EcString ref, const EcString value, int order_pos);
-  
-__LIB_EXPORT void adbl_query_setLimit (AdblQuery*, uint_t);
+#define QUOMADBL_CONSTRAINT_AND 0
+#define QUOMADBL_CONSTRAINT_OR 1
+#define QUOMADBL_CONSTRAINT_IN 2
 
-__LIB_EXPORT void adbl_query_setOffset (AdblQuery*, uint_t);
-  
-  // security methods
-__LIB_EXPORT void adbl_query_sec (AdblQuery*, AdblSecurity*);
+#define QUOMADBL_CONSTRAINT_EQUAL 0
+
+__CPP_EXTERN______________________________________________________________________________START  
     
+__LIB_EXPORT AdblConstraint* adbl_constraint_new (ubyte_t type);
+
+__LIB_EXPORT void adbl_constraint_delete (AdblConstraint**);
+  
+__LIB_EXPORT void adbl_constraint_clear (AdblConstraint*);
+  
+__LIB_EXPORT void adbl_constraint_addChar (AdblConstraint*, const EcString column, ubyte_t type, const EcString value);
+  
+__LIB_EXPORT void adbl_constraint_addLong (AdblConstraint*, const EcString column, ubyte_t type, uint_t value);
+  
+__LIB_EXPORT void adbl_constraint_addConstraint (AdblConstraint*, AdblConstraint*);
+  
+__LIB_EXPORT void adbl_constraint_attrs (AdblConstraint*, AdblAttributes*);
+
+__LIB_EXPORT int adbl_constraint_empty (AdblConstraint*);
+  
+  // security methods 
+__LIB_EXPORT void adbl_constraint_sec (AdblConstraint*, AdblSecurity*);
+
 __CPP_EXTERN______________________________________________________________________________END
 
 #endif

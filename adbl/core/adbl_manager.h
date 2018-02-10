@@ -17,34 +17,29 @@
  * along with adbl. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADBL_ATTRIBUTES_H
-#define ADBL_ATTRIBUTES_H 1
+#ifndef ADBL_MANAGER_H
+#define ADBL_MANAGER_H 1
+
+#include "adbl.h"
 
 #include <system/macros.h>
-#include <utils/eclogger.h>
+#include <types/ecstring.h>
 
-#include "adbl_structs.h"
+struct AdblManager_s; typedef struct AdblManager_s* AdblManager;
 
 __CPP_EXTERN______________________________________________________________________________START  
-  
-__LIB_EXPORT AdblAttributes* adbl_attrs_new (void);
-  
-__LIB_EXPORT void adbl_attrs_delete (AdblAttributes**);
-  
-__LIB_EXPORT void adbl_attrs_clear (AdblAttributes*);
-  
-__LIB_EXPORT void adbl_attrs_addChar (AdblAttributes*, const EcString column, const EcString value);
-  
-__LIB_EXPORT void adbl_attrs_addLong (AdblAttributes*, const EcString column, uint_t value);
-  
-__LIB_EXPORT const EcString adbl_attrs_get (AdblAttributes*, const EcString column);
-  
-__LIB_EXPORT int adbl_attrs_empty (AdblAttributes*);
 
-__LIB_EXPORT uint32_t adbl_attrs_size (AdblAttributes*);
+__LIB_EXPORT AdblManager adbl_new ();
+  
+__LIB_EXPORT void adbl_scanJson (AdblManager, const EcString configpath, const EcString execpath);
 
-  // security methods
-__LIB_EXPORT void adbl_attrs_sec (AdblAttributes*, AdblSecurity*);
+__LIB_EXPORT void adbl_delete (AdblManager*);
+  
+__LIB_EXPORT void adbl_setCredentialsFile (AdblManager, const EcString name, const EcString module, const EcString file);
+  
+__LIB_EXPORT AdblSession adbl_openSession (AdblManager, const EcString dbsource);
+
+__LIB_EXPORT void adbl_closeSession (AdblSession*);
   
 __CPP_EXTERN______________________________________________________________________________END
 

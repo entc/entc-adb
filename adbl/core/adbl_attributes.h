@@ -17,29 +17,33 @@
  * along with adbl. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADBL_INSERT_H
-#define ADBL_INSERT_H 1
+#ifndef ADBL_ATTRIBUTES_H
+#define ADBL_ATTRIBUTES_H 1
 
 #include <system/macros.h>
-#include <utils/eclogger.h>
 
-#include "adbl_security.h"
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START
-    
-__LIB_EXPORT AdblInsert* adbl_insert_new (void);
+__CPP_EXTERN______________________________________________________________________________START  
+  
+__LIB_EXPORT AdblAttributes* adbl_attrs_new (void);
+  
+__LIB_EXPORT void adbl_attrs_delete (AdblAttributes**);
+  
+__LIB_EXPORT void adbl_attrs_clear (AdblAttributes*);
+  
+__LIB_EXPORT void adbl_attrs_addChar (AdblAttributes*, const EcString column, const EcString value);
+  
+__LIB_EXPORT void adbl_attrs_addLong (AdblAttributes*, const EcString column, uint_t value);
+  
+__LIB_EXPORT const EcString adbl_attrs_get (AdblAttributes*, const EcString column);
+  
+__LIB_EXPORT int adbl_attrs_empty (AdblAttributes*);
 
-__LIB_EXPORT void adbl_insert_delete (AdblInsert**);
-  
-__LIB_EXPORT void adbl_insert_clear (AdblInsert*);
-  
-__LIB_EXPORT void adbl_insert_setTable (AdblInsert*, const EcString table);
-  
-__LIB_EXPORT void adbl_insert_setAttributes (AdblInsert*, AdblAttributes*);
-  
-  // security methods 
-__LIB_EXPORT void adbl_insert_sec (AdblInsert*, AdblSecurity*);
+__LIB_EXPORT uint32_t adbl_attrs_size (AdblAttributes*);
+
+  // security methods
+__LIB_EXPORT void adbl_attrs_sec (AdblAttributes*, AdblSecurity*);
   
 __CPP_EXTERN______________________________________________________________________________END
 

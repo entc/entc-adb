@@ -4,8 +4,7 @@
 #include <system/ecmutex.h>
 #include <types/ecstream.h>
 #include <types/eclist.h>
-#include <types/ecintmap.h>
-#include <utils/ecmessages.h>
+#include <tools/eclog.h>
 #include <tools/ectokenizer.h>
 
 #include "sqlite3.h"
@@ -69,23 +68,23 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
       int res = sqlite3_open(cp->file, &(conn->handle) );
       if( res == SQLITE_OK )
       {
-        eclogger_fmt (LL_DEBUG, MODULE, "connect", "successful connected to Sqlite3 database '%s'", lrealpath);
+        eclog_fmt (LL_DEBUG, MODULE, "connect", "successful connected to Sqlite3 database '%s'", lrealpath);
       }
       else
       {
-        eclogger_fmt (LL_ERROR, MODULE, "connect", "can't connect error[%i]", res);
+        eclog_fmt (LL_ERROR, MODULE, "connect", "can't connect error[%i]", res);
       }
     }
     else
     {
-      eclogger_fmt (LL_ERROR, MODULE, "connect", "can't resolve path '%s'", cp->file);
+      eclog_fmt (LL_ERROR, MODULE, "connect", "can't resolve path '%s'", cp->file);
     }
     
     ecstr_delete( &lrealpath );
   }
   else
   {
-    eclogger_msg (LL_ERROR, MODULE, "connect", "filename was not set");
+    eclog_msg (LL_ERROR, MODULE, "connect", "filename was not set");
   }
   
   return conn;
@@ -115,14 +114,14 @@ int adbl_preparexec1 (sqlite3* db, const char* statement)
   int res;
   char* errmsg;
   
-  eclogger_msg (LL_TRACE, MODULE, "sql", statement);
+  eclog_msg (LL_TRACE, MODULE, "sql", statement);
 
   res = sqlite3_exec(db, statement, 0, 0, &errmsg );
 
   if( res != SQLITE_OK )
   {
     /* print out the sqlite3 error message */
-    eclogger_fmt (LL_ERROR, MODULE, "prepare", "execute the statement: %s", errmsg);
+    eclog_fmt (LL_ERROR, MODULE, "prepare", "execute the statement: %s", errmsg);
 
     sqlite3_free(errmsg);    
     

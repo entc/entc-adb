@@ -22,10 +22,22 @@
 #include "adbl_security.h"
 
 #include <types/ecstring.h>
-#include <types/ecmapchar.h>
+#include <types/ecmap.h>
 #include <types/ecalloc.h>
 
 #include <stdio.h>
+
+//------------------------------------------------------------------------
+
+static void __STDCALL adbl_attrs_onDestroy (void* key, void* val)
+{
+  {
+    EcString h = key; ecstr_delete (&h);
+  }
+  {
+    EcString h = val; ecstr_delete (&h);
+  }
+}
 
 //------------------------------------------------------------------------
 
@@ -33,7 +45,7 @@ AdblAttributes* adbl_attrs_new (void)
 {
   AdblAttributes* self = ENTC_NEW (AdblAttributes);
   
-  self->columns = ecmapchar_create (EC_ALLOC);
+  self->columns = ecmap_create (NULL, adbl_attrs_onDestroy);
   
   return self;
 }
@@ -44,7 +56,7 @@ void adbl_attrs_delete (AdblAttributes** ptr)
 {
   AdblAttributes* self = *ptr;
   
-  ecmapchar_destroy (EC_ALLOC, &(self->columns));
+  ecmap_destroy (&(self->columns));
   
   ENTC_DEL(ptr, AdblAttributes);
 }
@@ -53,46 +65,44 @@ void adbl_attrs_delete (AdblAttributes** ptr)
 
 void adbl_attrs_clear (AdblAttributes* self)
 {
-  ecmapchar_clear( self->columns );
+  ecmap_clear (self->columns);
 }
 
 //------------------------------------------------------------------------
 
 void adbl_attrs_addChar (AdblAttributes* self, const EcString column, const EcString value)
 {
-  ecmapchar_set( self->columns, column, value );
+  ecmap_insert (self->columns, ecstr_copy (column), ecstr_copy(value));
 }
 
 //------------------------------------------------------------------------
 
 void adbl_attrs_addLong (AdblAttributes* self, const EcString column, uint_t value)
 {
-  EcString cvalue = ecstr_long( value );
-  
-  ecmapchar_set( self->columns, column, cvalue );
-  
-  ecstr_delete( &cvalue );
+  ecmap_insert (self->columns, ecstr_copy (column), ecstr_long(value));
 }
 
 //------------------------------------------------------------------------
 
 const EcString adbl_attrs_get (AdblAttributes* self, const EcString column)
 {
-  return ecmapchar_finddata( self->columns, column );
+  EcMapNode node = ecmap_find (self->columns, (void*)column);
+  
+  return ecmap_node_value (node);
 }
 
 //------------------------------------------------------------------------
 
 int adbl_attrs_empty (AdblAttributes* self)
 {
-  return (ecmapchar_first( self->columns ) == ecmapchar_end( self->columns ));
+  return ecmap_size (self->columns) == 0;
 }
 
 //------------------------------------------------------------------------
 
 uint32_t adbl_attrs_size (AdblAttributes* self)
 {
-  return ecmapchar_count (self->columns);
+  return ecmap_size (self->columns);
 }
 
 //------------------------------------------------------------------------
