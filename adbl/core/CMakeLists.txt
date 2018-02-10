@@ -42,5 +42,3 @@ SET (CMAKE_INSTALL_PREFIX /opt/entc_1_3/)
 
 install (TARGETS adbl DESTINATION lib)
 install (FILES ${ADBL_HEADERS} DESTINATION include/adbl)
-
-INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindAdbl_1_3.cmake)

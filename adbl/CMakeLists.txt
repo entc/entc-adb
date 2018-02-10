@@ -14,3 +14,4 @@ add_subdirectory(adbl_mysql)
 add_subdirectory(adbl_sqlite)
 #add_subdirectory(adbl_oracle)
 
+INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindAdbl_1_3.cmake)
