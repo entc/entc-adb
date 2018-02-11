@@ -17,40 +17,26 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_SYSTEM_AIO_MSG_H
-#define ENTC_SYSTEM_AIO_MSG_H 1
+#ifndef ENTC_SYSTEM_AIO_PROC_H
+#define ENTC_SYSTEM_AIO_PROC_H 1
 
 //-----------------------------------------------------------------------------
 
 #include "types/ecerr.h"
 #include "types/ecbuffer.h"
-#include "system/ecaio.h"
+#include "aio/ecaio.h"
 
 //=============================================================================
 
-struct EcMsgChannel_s; typedef struct EcMsgChannel_s* EcMsgChannel;
+struct EcAioProc_s; typedef struct EcAioProc_s* EcAioProc;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcMsgChannel ecmsg_channel_create ();
+__LIBEX EcAioProc ecaio_proc_create (void* handle);
 
-__LIBEX void ecmsg_channel_destroy (EcMsgChannel*);
+__LIBEX int ecaio_proc_assign (EcAioProc*, EcAio aio, EcErr err);
 
-__LIBEX int ecmsg_channel_init (EcMsgChannel, const EcString name, EcErr err);
-
-__LIBEX void* ecmsg_channel_handle (EcMsgChannel);
-
-//=============================================================================
-
-struct EcAioMsgReader_s; typedef struct EcAioMsgReader_s* EcAioMsgReader;
-
-//-----------------------------------------------------------------------------
-
-__LIBEX EcAioMsgReader ecaio_msgreader_create (void* channelHandle);
-
-__LIBEX int ecaio_msgreader_assign (EcAioMsgReader*, EcAio aio, EcErr err);
-
-__LIBEX void ecaio_msgreader_setCallback (EcAioMsgReader, void*, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
+__LIBEX void ecaio_proc_setCallback (EcAioProc, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
 
 //=============================================================================
 

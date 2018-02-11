@@ -1,7 +1,8 @@
 #include "ecaio_file.h"
 
 // entc includes
-#include "utils/eclogger.h"
+#include "system/macros.h"
+#include "tools/eclog.h"
 
 #define READ_MAX_BUFFER 1024
 #define ENTC_HANDLE long
@@ -535,7 +536,7 @@ int ecaio_filewriter_assign (EcAioFileWriter* pself)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
       {
-        eclogger_fmt (LL_ERROR, "Q6_AIO", "write file", "can't write to pipe");
+        eclog_fmt (LL_ERROR, "Q6_AIO", "write file", "can't write to pipe");
         break;
       }
       else

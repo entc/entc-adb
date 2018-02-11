@@ -1,8 +1,8 @@
 #include "ecenv.h"
 
+#include "system/macros.h"
 #include "types/eclist.h"
-#include "utils/eclogger.h"
-#include "utils/ecmessages.h"
+#include "tools/eclog.h"
 
 // c libs includes
 #include <stdio.h>
@@ -37,7 +37,7 @@ void testctx_destroy (TestEnvContext* pself)
   eclist_destroy (&(self->cmpTextes));
   eclist_destroy (&(self->errors));
   
-  free (self);
+  ENTC_DEL (pself, struct TestEnvContext_s);
 }
 
 //-----------------------------------------------------------------------------
@@ -132,12 +132,10 @@ struct TestEnv_s
 
 TestEnv testenv_create ()
 {
-  TestEnv self = (TestEnv)malloc (sizeof(struct TestEnv_s));
+  TestEnv self = ENTC_NEW (struct TestEnv_s);
   
   self->max = 0;
   self->errors = 0;
-  
-  ecmessages_initialize ();
   
   return self;
 }
@@ -165,8 +163,6 @@ int testenv_destroy (TestEnv* pself)
   free (self);
   *pself = NULL;
   
-  ecmessages_deinitialize ();
-  
   return r;
 }
 
@@ -191,7 +187,7 @@ void testenv_run (TestEnv self)
     
     if (!res)
     {
-      eclogger_fmt (LL_INFO, "TEST", "start", "****");
+      eclog_fmt (LL_INFO, "TEST", "start", "****");
       
       res = ctx->test (ctx->ptr, ctx, err);
       if (res)
@@ -210,12 +206,12 @@ void testenv_run (TestEnv self)
       
       while (eclist_cursor_next (&cursor))
       {
-        eclogger_fmt (LL_ERROR, "TEST", "error", eclist_data (cursor.node));
+        eclog_fmt (LL_ERROR, "TEST", "error", eclist_data (cursor.node));
       }
     }
     else
     {
-      eclogger_fmt (LL_INFO, "TEST", "done", "OK");
+      eclog_fmt (LL_INFO, "TEST", "done", "OK");
     }
     
     if (!res)

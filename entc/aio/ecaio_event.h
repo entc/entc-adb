@@ -4,7 +4,7 @@
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
  * entc-base is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the Events of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -17,26 +17,25 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_SYSTEM_AIO_PROC_H
-#define ENTC_SYSTEM_AIO_PROC_H 1
+#ifndef ENTC_SYSTEM_AIO_EVENT_H
+#define ENTC_SYSTEM_AIO_EVENT_H 1
 
 //-----------------------------------------------------------------------------
 
 #include "types/ecerr.h"
-#include "types/ecbuffer.h"
-#include "system/ecaio.h"
+#include "aio/ecaio.h"
 
 //=============================================================================
 
-struct EcAioProc_s; typedef struct EcAioProc_s* EcAioProc;
+struct EcAioEvent_s; typedef struct EcAioEvent_s* EcAioEvent;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioProc ecaio_proc_create (void* handle);
+__LIBEX EcAioEvent ecaio_event_create (void);
 
-__LIBEX int ecaio_proc_assign (EcAioProc*, EcAio aio, EcErr err);
+__LIBEX int ecaio_event_assign (EcAioEvent*, EcAio aio, void** eventh, EcErr err);
 
-__LIBEX void ecaio_proc_setCallback (EcAioProc, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
+__LIBEX void ecaio_event_setCallback (EcAioEvent, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
 
 //=============================================================================
 

@@ -4,7 +4,7 @@
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
  * entc-base is free software: you can redistribute it and/or modify
- * it under the Events of the GNU General Public License as published by
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -17,25 +17,39 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_SYSTEM_AIO_EVENT_H
-#define ENTC_SYSTEM_AIO_EVENT_H 1
+#ifndef ENTC_SYSTEM_AIO_FILE_H
+#define ENTC_SYSTEM_AIO_FILE_H 1
 
 //-----------------------------------------------------------------------------
 
 #include "types/ecerr.h"
-#include "system/ecaio.h"
+#include "aio/ecaio.h"
 
 //=============================================================================
 
-struct EcAioEvent_s; typedef struct EcAioEvent_s* EcAioEvent;
+struct EcAioFileReader_s; typedef struct EcAioFileReader_s* EcAioFileReader;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioEvent ecaio_event_create (void);
+__LIBEX EcAioFileReader ecaio_filereader_create (void* handle);
 
-__LIBEX int ecaio_event_assign (EcAioEvent*, EcAio aio, void** eventh, EcErr err);
+__LIBEX int ecaio_filereader_assign (EcAioFileReader*, EcAio aio, EcErr err);
 
-__LIBEX void ecaio_event_setCallback (EcAioEvent, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
+__LIBEX void ecaio_filereader_setCallback (EcAioFileReader, void*, fct_ecaio_context_onInit, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
+
+//=============================================================================
+
+struct EcAioFileWriter_s; typedef struct EcAioFileWriter_s* EcAioFileWriter;
+
+//-----------------------------------------------------------------------------
+
+__LIBEX EcAioFileWriter ecaio_filewriter_create (void* handle);
+
+__LIBEX int ecaio_filewriter_assign (EcAioFileWriter*);
+
+__LIBEX void ecaio_filewriter_setBufferCP (EcAioFileWriter, const char* buffer, unsigned long size);
+
+__LIBEX void ecaio_filewriter_setBufferBT (EcAioFileWriter, EcBuffer*);
 
 //=============================================================================
 

@@ -20,16 +20,7 @@
 #ifndef ENTC_TOOLS_MAIL_H
 #define ENTC_TOOLS_MAIL_H 1
 
-/* include external macro for win32 */
-#include "../system/macros.h"
-#include "../system/ecevents.h"
-
-#include "../types/ecstring.h"
-#include "../types/ecstream.h"
-
-#include "../utils/eclogger.h"
-
-struct EcMail_s; typedef struct EcMail_s* EcMail;
+#include "system/ecdefs.h"
 
 __CPP_EXTERN______________________________________________________________________________START
 

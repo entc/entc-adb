@@ -20,7 +20,6 @@
 #ifndef ADBL_STRUCTS_H
 #define ADBL_STRUCTS_H
 
-#include "types/ecmapchar.h"
 #include "types/ecudc.h"
 
 struct AdblSession_s;

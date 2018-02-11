@@ -1,7 +1,8 @@
 #include "ecaio_proc.h"
 
-#include "utils/eclogger.h"
-#include "ecproc.h"
+#include "system/macros.h"
+#include "system/ecproc.h"
+#include "tools/eclog.h"
 
 #if defined __MS_IOCP
 
@@ -190,7 +191,7 @@ static int __STDCALL ecaio_proc_onProcess (void* ptr, EcAioContext ctx, unsigned
 {
   EcAioProc self = ptr;
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
   
   if (self->onNotify)
   {

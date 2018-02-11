@@ -1,8 +1,7 @@
 #include "ecaio.h"
 
-#include "utils/eclogger.h"
-#include "utils/ecmessages.h"
 #include "system/ecmutex.h"
+#include "tools/eclog.h"
 
 //*****************************************************************************
 
@@ -920,6 +919,7 @@ int ecaio_abort (EcAio self, EcErr err)
 #include <sys/event.h>
 #include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 
 //-----------------------------------------------------------------------------
 
@@ -969,7 +969,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
   
   if (ctx == NULL)
   {
-    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
+    eclog_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -996,7 +996,7 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
   
   if (ctx == NULL)
   {
-    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
+    eclog_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1035,7 +1035,7 @@ int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process proces
   EcAioContext context = ecaio_context_create ();
   if (context == NULL)
   {
-    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
+    eclog_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1056,7 +1056,7 @@ int ecaio_appendVNode (EcAio self, int fd, void* data, EcErr err)
   
   if (data == NULL)
   {
-    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
+    eclog_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1082,7 +1082,7 @@ int ecaio_appendPNode (EcAio self, int pid, void* data, EcErr err)
   
   if (data == NULL)
   {
-    eclogger_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
+    eclog_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
     
     return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
   }
@@ -1184,7 +1184,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
     tmout.tv_sec = timeout / 1000;
     tmout.tv_nsec = (timeout % 1000) * 1000;
     
-    eclogger_fmt (LL_TRACE, "ENTC AIO", "wait", "wait for timeout %i seconds", tmout.tv_sec);
+    eclog_fmt (LL_TRACE, "ENTC AIO", "wait", "wait for timeout %i seconds", tmout.tv_sec);
     
     res = kevent (self->kq, NULL, 0, &event, 1, &tmout);
   }
@@ -1270,13 +1270,13 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
       
       if (signalKind)
       {
-        eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", event.ident, signalKind);
+        eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", event.ident, signalKind);
         
         return ecaio_abort (self, err);
       }
       else
       {
-        eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> unknown signal", event.ident);
+        eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> unknown signal", event.ident);
       }
     }
     
@@ -1359,12 +1359,12 @@ static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsig
 {
   EcAio self = ptr;
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "event", "abort");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "event", "abort");
 
   // send again
   ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, NULL);
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "event", "abort all");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "event", "abort all");
 
   return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
 }

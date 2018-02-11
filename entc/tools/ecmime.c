@@ -1,11 +1,11 @@
 #include "ecmime.h"
 
-#include "types/ecbuffer.h"
-#include "types/ecmapchar.h"
-#include "tools/ectokenizer.h"
-#include "types/ecstream.h"
 #include "system/ecfile.h"
-#include "utils/eclogger.h"
+#include "types/ecbuffer.h"
+#include "types/ecstream.h"
+#include "types/ecudc.h"
+#include "tools/eclog.h"
+#include "tools/ectokenizer.h"
 
 //------------------------------------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ const EcString ecmime_getFromFile (const EcString filename)
   }
   else
   {
-    eclogger_fmt (LL_WARN, "ENTC", "mime", "can't extract extension from '%s'", filename);
+    eclog_fmt (LL_WARN, "ENTC", "mime", "can't extract extension from '%s'", filename);
     return "application/octet-stream";
   }
 }
@@ -28,77 +28,76 @@ const EcString ecmime_getFromFile (const EcString filename)
 
 const EcString ecmime_getFromExtension (const EcString ext)
 {
-  static EcMapChar mime_types = NULL;
+  static EcMap mime_types = NULL;
   
   if (mime_types == NULL)
   {
-    eclogger_fmt (LL_TRACE, "ENTC", "mime", "create new mime types");
+    eclog_fmt (LL_TRACE, "ENTC", "mime", "create new mime types");
 
-    mime_types = ecmapchar_create (EC_ALLOC);
+    mime_types = ecmap_create (NULL, NULL);
     
-    ecmapchar_append( mime_types, "pdf",      "application/pdf" );
-    ecmapchar_append( mime_types, "sig",      "application/pgp-signature" );
-    ecmapchar_append( mime_types, "class",    "application/octet-stream" );
-    ecmapchar_append( mime_types, "ps",       "application/postscript" );
-    ecmapchar_append( mime_types, "torrent",  "application/x-bittorrent" );
-    ecmapchar_append( mime_types, "dvi",      "application/x-dvi" );
-    ecmapchar_append( mime_types, "gz",       "application/x-gzip" );
-    ecmapchar_append( mime_types, "pac",      "application/x-ns-proxy-autoconfig" );
-    ecmapchar_append( mime_types, "swf",      "application/x-shockwave-flash" );
+    ecmap_insert( mime_types, "pdf",      "application/pdf" );
+    ecmap_insert( mime_types, "sig",      "application/pgp-signature" );
+    ecmap_insert( mime_types, "class",    "application/octet-stream" );
+    ecmap_insert( mime_types, "ps",       "application/postscript" );
+    ecmap_insert( mime_types, "torrent",  "application/x-bittorrent" );
+    ecmap_insert( mime_types, "dvi",      "application/x-dvi" );
+    ecmap_insert( mime_types, "gz",       "application/x-gzip" );
+    ecmap_insert( mime_types, "pac",      "application/x-ns-proxy-autoconfig" );
+    ecmap_insert( mime_types, "swf",      "application/x-shockwave-flash" );
     
-    ecmapchar_append( mime_types, "tgz",      "application/x-tgz" );
-    ecmapchar_append( mime_types, "tar",      "application/x-tar" );
-    ecmapchar_append( mime_types, "zip",      "application/zip" );
-    ecmapchar_append( mime_types, "mp3",      "audio/mpeg" );
-    ecmapchar_append( mime_types, "m3u",      "audio/x-mpegurl" );
-    ecmapchar_append( mime_types, "wma",      "audio/x-ms-wma" );
-    ecmapchar_append( mime_types, "wax",      "audio/x-ms-wax" );
-    ecmapchar_append( mime_types, "ogg",      "application/ogg" );
-    ecmapchar_append( mime_types, "wav",      "audio/x-wav" );
+    ecmap_insert( mime_types, "tgz",      "application/x-tgz" );
+    ecmap_insert( mime_types, "tar",      "application/x-tar" );
+    ecmap_insert( mime_types, "zip",      "application/zip" );
+    ecmap_insert( mime_types, "mp3",      "audio/mpeg" );
+    ecmap_insert( mime_types, "m3u",      "audio/x-mpegurl" );
+    ecmap_insert( mime_types, "wma",      "audio/x-ms-wma" );
+    ecmap_insert( mime_types, "wax",      "audio/x-ms-wax" );
+    ecmap_insert( mime_types, "ogg",      "application/ogg" );
+    ecmap_insert( mime_types, "wav",      "audio/x-wav" );
     
-    ecmapchar_append( mime_types, "gif",      "image/gif" );
-    ecmapchar_append( mime_types, "jpg",      "image/jpeg" );
-    ecmapchar_append( mime_types, "jpeg",     "image/jpeg" );
-    ecmapchar_append( mime_types, "png",      "image/png" );
-    ecmapchar_append( mime_types, "xbm",      "image/x-xbitmap" );
-    ecmapchar_append( mime_types, "xpm",      "image/x-xpixmap" );
-    ecmapchar_append( mime_types, "xwd",      "image/x-xwindowdump" );
-    ecmapchar_append( mime_types, "svg",      "image/svg+xml");
+    ecmap_insert( mime_types, "gif",      "image/gif" );
+    ecmap_insert( mime_types, "jpg",      "image/jpeg" );
+    ecmap_insert( mime_types, "jpeg",     "image/jpeg" );
+    ecmap_insert( mime_types, "png",      "image/png" );
+    ecmap_insert( mime_types, "xbm",      "image/x-xbitmap" );
+    ecmap_insert( mime_types, "xpm",      "image/x-xpixmap" );
+    ecmap_insert( mime_types, "xwd",      "image/x-xwindowdump" );
+    ecmap_insert( mime_types, "svg",      "image/svg+xml");
     
-    ecmapchar_append( mime_types, "css",      "text/css" );
-    ecmapchar_append( mime_types, "html",     "text/html" );
-    ecmapchar_append( mime_types, "htm",      "text/html" );
-    ecmapchar_append( mime_types, "js",       "text/javascript" );
-    ecmapchar_append( mime_types, "asc",      "text/plain" );
-    ecmapchar_append( mime_types, "c",        "text/plain" );
-    ecmapchar_append( mime_types, "txt",      "text/plain" );
-    ecmapchar_append( mime_types, "json",     "application/json");
-    ecmapchar_append( mime_types, "ico",      "image/x-ico; charset=binary" );
-    ecmapchar_append( mime_types, "map",      "application/json");
+    ecmap_insert( mime_types, "css",      "text/css" );
+    ecmap_insert( mime_types, "html",     "text/html" );
+    ecmap_insert( mime_types, "htm",      "text/html" );
+    ecmap_insert( mime_types, "js",       "text/javascript" );
+    ecmap_insert( mime_types, "asc",      "text/plain" );
+    ecmap_insert( mime_types, "c",        "text/plain" );
+    ecmap_insert( mime_types, "txt",      "text/plain" );
+    ecmap_insert( mime_types, "json",     "application/json");
+    ecmap_insert( mime_types, "ico",      "image/x-ico; charset=binary" );
+    ecmap_insert( mime_types, "map",      "application/json");
     
-    ecmapchar_append( mime_types, "woff",     "application/font-woff");
-    ecmapchar_append( mime_types, "woff2",    "application/font-woff2");
-    ecmapchar_append( mime_types, "ttf",      "application/font-ttf");
-    ecmapchar_append( mime_types, "eot",      "application/vnd.ms-fontobject");
-    ecmapchar_append( mime_types, "otf",      "application/font-otf");
+    ecmap_insert( mime_types, "woff",     "application/font-woff");
+    ecmap_insert( mime_types, "woff2",    "application/font-woff2");
+    ecmap_insert( mime_types, "ttf",      "application/font-ttf");
+    ecmap_insert( mime_types, "eot",      "application/vnd.ms-fontobject");
+    ecmap_insert( mime_types, "otf",      "application/font-otf");
     
-    ecmapchar_append( mime_types, "csv",      "text/csv");
-    ecmapchar_append( mime_types, "xls",      "application/vnd.ms-excel");
+    ecmap_insert( mime_types, "csv",      "text/csv");
+    ecmap_insert( mime_types, "xls",      "application/vnd.ms-excel");
     
-    ecmapchar_append( mime_types, "exe",      "application/octet-stream" );
-    ecmapchar_append( mime_types, "dll",      "application/x-msdownload" );
+    ecmap_insert( mime_types, "exe",      "application/octet-stream" );
+    ecmap_insert( mime_types, "dll",      "application/x-msdownload" );
   }
   
   {
-    EcMapCharNode node = ecmapchar_find( mime_types, ext);
-    
-    if( node != ecmapchar_end( mime_types ))
+    EcMapNode node = ecmap_find (mime_types, (void*)ext);    
+    if (node)
     {
-      return ecmapchar_data( node );
+      return ecmap_node_value (node);
     }
     else
     {
-      eclogger_fmt (LL_WARN, "ENTC", "mime", "can't find mime type from extension '%s'", ext);
+      eclog_fmt (LL_WARN, "ENTC", "mime", "can't find mime type from extension '%s'", ext);
       return "application/octet-stream";
     }
   }
@@ -184,7 +183,7 @@ struct EcMultipartParser_s
   
   EcString fn;
   
-  EcMapChar params;
+  EcMap params;
   
   EcFileHandle fhDebug;
   
@@ -227,6 +226,18 @@ typedef struct
 
 //-----------------------------------------------------------------------------------------------------------
 
+void __STDCALL ecmultipartparser_param_onDestroy (void* key, void* val)
+{
+  {
+    EcString h = key; ecstr_delete(&h);
+  }
+  {
+    EcString h = val; ecstr_delete(&h);
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString path, http_content_callback cb, void* ptr, ecmultipartparser_callback dc, void* obj)
 {
   EcMultipartParser self = ENTC_NEW (struct EcMultipartParser_s);
@@ -243,7 +254,7 @@ EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcStr
   
   self->buffer = ecbuf_create (C_MAX_BUFSIZE);
   self->line = ecstream_create ();
-  self->params = ecmapchar_create (EC_ALLOC); 
+  self->params = ecmap_create (NULL, ecmultipartparser_param_onDestroy); 
   
   self->state = 0;
   self->breakType = 0;
@@ -273,7 +284,7 @@ void ecmultipartparser_destroy (EcMultipartParser* pself)
   
   if (self->params)
   {
-    ecmapchar_destroy(EC_ALLOC, &(self->params));
+    ecmap_destroy (&(self->params));
   }
   
   if (self->content)
@@ -295,26 +306,28 @@ void ecmultipartparser_write (void* ptr, const void* buffer, uint_t nbyte)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void echttpheader_parseParam (EcMapChar map, const EcString line)
+void echttpheader_parseParam (EcMap map, const EcString line)
 {
   // add special header value to map
   EcString key = ecstr_init ();
   EcString val = ecstr_init ();
   
-  if (ecstr_split(line, &key, &val, ':'))
+  if (ecstr_split (line, &key, &val, ':'))
   {
     ecstr_replaceTO (&key, ecstr_trim (key));
     ecstr_replaceTO (&val, ecstr_trim (val));
     
     ecstr_toUpper(key);
     
-    ecmapchar_append (map, key, val);
+    ecmap_insert (map, key, val);  // transfer ownership
     
     //eclogger_fmt (LL_TRACE, "ENTC", "mime", "add param '%s':'%s'", key, val);
   }
-  
-  ecstr_delete (&key);
-  ecstr_delete (&val);
+  else
+  {
+    ecstr_delete (&key);
+    ecstr_delete (&val);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -340,7 +353,7 @@ void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, 
       self->obj_dc (self->obj_ptr, &buf, &(self->params));
 
       // recreate an empty map
-      self->params = ecmapchar_create (EC_ALLOC);
+      self->params = ecmap_create (NULL, ecmultipartparser_param_onDestroy);
     }
     /*
     else if (isAssigned (self->hc))
@@ -362,7 +375,7 @@ void ecmultipartparser_isBoundary (EcMultipartParser self, const EcString line, 
      */
     else
     {
-      eclogger_fmt (LL_WARN, "ENTC", "mime", "no hc, content deleted"); 
+      eclog_fmt (LL_WARN, "ENTC", "mime", "no hc, content deleted"); 
 
       ecstream_destroy (&(self->content));
     }
@@ -441,7 +454,7 @@ int ecmultipartparser_state0 (EcMultipartParser self, EcParserData* pd)
     {
       if (self->breakType > 0)
       {
-        eclogger_msg (LL_WARN, "ENTC", "mime", "wrong sequence of breaks #1"); 
+        eclog_msg (LL_WARN, "ENTC", "mime", "wrong sequence of breaks #1"); 
         return FALSE;
       }
       
@@ -463,7 +476,7 @@ int ecmultipartparser_state0 (EcMultipartParser self, EcParserData* pd)
       }
       else
       {
-        eclogger_msg (LL_WARN, "ENTC", "mime", "wrong sequence of breaks #2"); 
+        eclog_msg (LL_WARN, "ENTC", "mime", "wrong sequence of breaks #2"); 
         return FALSE;
       }
     }
@@ -519,7 +532,7 @@ int ecmultipartparser_state1 (EcMultipartParser self, EcParserData* pd)
     
     if (isNotAssigned (self->content) && ((*c == '\r')||(*c == '\n')))
     {
-      eclogger_fmt (LL_WARN, "ENTC", "mime", "wrong line break type %i with [%i]", self->breakType, *c);      
+      eclog_fmt (LL_WARN, "ENTC", "mime", "wrong line break type %i with [%i]", self->breakType, *c);      
       return FALSE;
     }
     
@@ -562,7 +575,7 @@ int ecmultipartparser_state2 (EcMultipartParser self, EcParserData* pd)
     }
     else
     {
-      eclogger_fmt (LL_WARN, "ENTC", "mime", "wrong sequence of breaks #3, break type %i with [%s]", self->breakType, *c); 
+      eclog_fmt (LL_WARN, "ENTC", "mime", "wrong sequence of breaks #3, break type %i with [%s]", self->breakType, *c); 
       return FALSE;
     }
   }
@@ -1135,7 +1148,7 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         self->fh = ecfh_open (fi->path, O_RDONLY);
         if (isNotAssigned (self->fh))
         {
-          eclogger_fmt (LL_WARN, "ENTC", "mime", "can't open file '%s'", fi->path);
+          eclog_fmt (LL_WARN, "ENTC", "mime", "can't open file '%s'", fi->path);
           // in case of error just continue
           return ecmultipart_nextState (self, buf, MULTIPART_STATE_NEXTITEM);
         }

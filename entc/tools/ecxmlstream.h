@@ -22,11 +22,9 @@
 
 #include "system/macros.h"
 #include "system/types.h"
-
 #include "types/ecstring.h"
-
-#include "utils/eclogger.h"
-#include "types/ecmapchar.h"
+#include "types/ecmap.h"
+#include "tools/eclog.h"
 
 #define ENTC_XMLTYPE_NONE    0
 #define ENTC_XMLTYPE_SINGLE  1
@@ -75,7 +73,7 @@ __LIB_EXPORT void ecxmlstream_parseNodeValue (EcXMLStream, EcString* value, cons
 
 __LIB_EXPORT const EcString ecxmlstream_getNamespace (EcXMLStream, const EcString);
 
-__LIB_EXPORT void ecxmlstream_mapNamespaces (EcXMLStream, EcMapChar);
+__LIB_EXPORT void ecxmlstream_mapNamespaces (EcXMLStream, EcMap);
   
 __CPP_EXTERN______________________________________________________________________________END
 

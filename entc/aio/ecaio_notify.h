@@ -17,30 +17,40 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_SYSTEM_AIO_SENDFILE_H
-#define ENTC_SYSTEM_AIO_SENDFILE_H 1
+#ifndef ENTC_SYSTEM_AIO_NOTIFY_H
+#define ENTC_SYSTEM_AIO_NOTIFY_H 1
 
 //-----------------------------------------------------------------------------
 
 #include "types/ecerr.h"
 #include "types/ecbuffer.h"
-#include "system/ecaio_socket.h"
-
-//=============================================================================
-
-struct EcAioSendFile_s; typedef struct EcAioSendFile_s* EcAioSendFile;
-
-typedef int (__STDCALL *fct_ecaio_sfile_onInit) (void* ptr, EcRefCountedSocket, uint64_t fileSize, const EcString file, const EcString name, EcErr);
+#include "aio/ecaio.h"
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket, void*, fct_ecaio_sfile_onInit);
+#define ENTC_AIO_NOTIFY_NONE        0x0000
+#define ENTC_AIO_NOTIFY_WRITE       0x0001
+#define ENTC_AIO_NOTIFY_SIZE        0x0002
+#define ENTC_AIO_NOTIFY_ATTR        0x0004
+#define ENTC_AIO_NOTIFY_DIR         0x0008
+#define ENTC_AIO_NOTIFY_FILE        0x0010
+#define ENTC_AIO_NOTIFY_DELETE      0x0020
 
-__LIBEX void ecaio_sendfile_destroy (EcAioSendFile*);
+//=============================================================================
 
-__LIBEX int ecaio_sendfile_setSecret (EcAioSendFile, const EcString, EcErr err);
+struct EcAioNotify_s; typedef struct EcAioNotify_s* EcAioNotify;
 
-__LIBEX int ecaio_sendfile_assign (EcAioSendFile*, EcAio aio, EcErr err);
+//-----------------------------------------------------------------------------
+
+__LIBEX EcAioNotify ecaio_notify_create ();
+
+__LIBEX void ecaio_notify_destroy (EcAioNotify*);
+
+__LIBEX int ecaio_notify_init (EcAioNotify, const char* path, EcErr);
+
+__LIBEX int ecaio_notify_assign (EcAioNotify*, EcAio aio, EcErr err);
+
+__LIBEX void ecaio_notify_setCallback (EcAioNotify, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
 
 //=============================================================================
 

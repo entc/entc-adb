@@ -17,39 +17,40 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ENTC_SYSTEM_AIO_FILE_H
-#define ENTC_SYSTEM_AIO_FILE_H 1
+#ifndef ENTC_SYSTEM_AIO_MSG_H
+#define ENTC_SYSTEM_AIO_MSG_H 1
 
 //-----------------------------------------------------------------------------
 
 #include "types/ecerr.h"
-#include "system/ecaio.h"
+#include "types/ecbuffer.h"
+#include "aio/ecaio.h"
 
 //=============================================================================
 
-struct EcAioFileReader_s; typedef struct EcAioFileReader_s* EcAioFileReader;
+struct EcMsgChannel_s; typedef struct EcMsgChannel_s* EcMsgChannel;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioFileReader ecaio_filereader_create (void* handle);
+__LIBEX EcMsgChannel ecmsg_channel_create ();
 
-__LIBEX int ecaio_filereader_assign (EcAioFileReader*, EcAio aio, EcErr err);
+__LIBEX void ecmsg_channel_destroy (EcMsgChannel*);
 
-__LIBEX void ecaio_filereader_setCallback (EcAioFileReader, void*, fct_ecaio_context_onInit, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
+__LIBEX int ecmsg_channel_init (EcMsgChannel, const EcString name, EcErr err);
+
+__LIBEX void* ecmsg_channel_handle (EcMsgChannel);
 
 //=============================================================================
 
-struct EcAioFileWriter_s; typedef struct EcAioFileWriter_s* EcAioFileWriter;
+struct EcAioMsgReader_s; typedef struct EcAioMsgReader_s* EcAioMsgReader;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioFileWriter ecaio_filewriter_create (void* handle);
+__LIBEX EcAioMsgReader ecaio_msgreader_create (void* channelHandle);
 
-__LIBEX int ecaio_filewriter_assign (EcAioFileWriter*);
+__LIBEX int ecaio_msgreader_assign (EcAioMsgReader*, EcAio aio, EcErr err);
 
-__LIBEX void ecaio_filewriter_setBufferCP (EcAioFileWriter, const char* buffer, unsigned long size);
-
-__LIBEX void ecaio_filewriter_setBufferBT (EcAioFileWriter, EcBuffer*);
+__LIBEX void ecaio_msgreader_setCallback (EcAioMsgReader, void*, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
 
 //=============================================================================
 

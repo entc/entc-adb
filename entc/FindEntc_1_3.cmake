@@ -35,6 +35,7 @@ MESSAGE( STATUS "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/lib/")
 # Look for the header file.
 FIND_LIBRARY( ENTC_LIBRARY NAMES entc
   HINTS
+  "/opt/entc_1_3/lib/"
   "/usr/lib/"
   "/usr/local/lib/"
   "/opt/local/lib/"
@@ -46,6 +47,8 @@ FIND_PATH(ENTC_INCLUDE_DIR
   NAMES system/macros.h
   PATHS
   # linux
+  "/opt/entc_1_3/include/entc/"
+  
   "/usr/include/entc-${ENTC_VERSION}/"
   # macosx
   "/usr/local/include/entc-${ENTC_VERSION}/"

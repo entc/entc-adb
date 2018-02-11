@@ -1,10 +1,9 @@
 #include "ecaio_sendf.h"
 
-#include <system/ecfile.h>
-#include <utils/eclogger.h>
-#include <system/ecaio_file.h>
-
-#include <tools/eccrypt.h>
+#include "system/ecfile.h"
+#include "aio/ecaio_file.h"
+#include "tools/eclog.h"
+#include "tools/eccrypt.h"
 
 #if defined __WIN_OS
 #include <windows.h>
@@ -119,7 +118,7 @@ static void __STDCALL ecaio_sendfile_onDestroy (void* ptr)
     res = ecaio_socketwriter_assign (&writer, err);
     if (res)
     {
-      eclogger_fmt (LL_ERROR, "Q6_SOCK", "sfstream", "write to socket %i: %s", ecrefsocket_socket (self->refSocket), err->text);
+      eclog_fmt (LL_ERROR, "Q6_SOCK", "sfstream", "write to socket %i: %s", ecrefsocket_socket (self->refSocket), err->text);
     }
     
     ecerr_destroy(&err);
@@ -169,7 +168,7 @@ static int __STDCALL ecaio_sendfile_onRead (void* ptr, void* handle, const char*
   res = ecaio_socketwriter_assign (&writer, err);
   if (res)
   {
-    eclogger_fmt (LL_ERROR, "Q6_SOCK", "sfstream", "write to socket %i: %s", ecrefsocket_socket (self->refSocket), err->text);
+    eclog_fmt (LL_ERROR, "Q6_SOCK", "sfstream", "write to socket %i: %s", ecrefsocket_socket (self->refSocket), err->text);
   }
   
   //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "write done");

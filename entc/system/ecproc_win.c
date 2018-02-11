@@ -1,11 +1,11 @@
 #include "ecproc.h"
 
 // entc includes
-#include "types/ecbuffer.h"
 #include "system/ecfile.h"
 #include "system/ecmutex.h"
+#include "types/ecbuffer.h"
 #include "types/ecmap.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 #if defined __WIN_OS
 

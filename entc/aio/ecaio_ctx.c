@@ -1,7 +1,8 @@
 #include "ecaio_ctx.h"
 
 // entc includes
-#include <utils/eclogger.h>
+#include "system/macros.h"
+#include "tools/eclog.h"
 
 //*****************************************************************************
 

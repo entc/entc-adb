@@ -20,7 +20,9 @@
 #include "ecmap.h"
 
 #include <string.h>
-#include "utils/eclogger.h"
+
+#include "tools/eclog.h"
+#include "system/macros.h"
 
 // TODO: this object must be review in respect of using a real hashtable
 

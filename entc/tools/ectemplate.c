@@ -4,7 +4,7 @@
 
 // entc includes
 #include "types/ecstream.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 // q6 includes
 #include "types/ecmap.h"
@@ -333,7 +333,7 @@ int ectemplate_compile (EcTemplate self, EcErr err)
   EcFileHandle fh = ecfh_open(self->fileName, O_RDONLY);
   if (fh == NULL)
   {
-    eclogger_fmt (LL_ERROR, "Q6_MSGS", "template", "can't open file '%s'", self->fileName);
+    eclog_fmt (LL_ERROR, "Q6_MSGS", "template", "can't open file '%s'", self->fileName);
 
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }

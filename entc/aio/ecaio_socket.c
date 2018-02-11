@@ -3,9 +3,8 @@
 #define READ_MAX_BUFFER 1024
 
 // entc includes
-#include <system/macros.h>
-#include <utils/eclogger.h>
-#include <utils/ecmessages.h>
+#include "system/macros.h"
+#include "tools/eclog.h"
 
 //*****************************************************************************
 
@@ -1187,7 +1186,7 @@ static int __STDCALL ecaio_socketaccept_fct_process (void* ptr, EcAioContext ctx
   {
     if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
     {
-      eclogger_fmt (LL_TRACE, "Q6_SOCK", "accept", "socket done");
+      eclog_fmt (LL_TRACE, "Q6_SOCK", "accept", "socket done");
       
       return ENTC_AIO_CODE_DONE;
     }
@@ -1205,7 +1204,7 @@ static int __STDCALL ecaio_socketaccept_fct_process (void* ptr, EcAioContext ctx
   {
     if (self->accept (self->ptr, (void*)sock, remoteAddr))
     {
-      eclogger_fmt (LL_WARN, "Q6_SOCK", "accept", "connection dropped");
+      eclog_fmt (LL_WARN, "Q6_SOCK", "accept", "connection dropped");
       
       // abort connection
       close (sock);
