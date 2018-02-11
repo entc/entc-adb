@@ -5,6 +5,7 @@
 #include "system/macros.h"
 #include "types/ecstream.h"
 #include "types/eclist.h"
+#include "utils/eclogger.h"
 
 //-----------------------------------------------------------------------------
 
@@ -763,9 +764,40 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             state = ecjsonparser_item (self, ENTC_JPARSER_OBJECT_TEXT);
             break;
           }
+          case JPARSER_STATE_STR_ESCAPE:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
+            
+            state = JPARSER_STATE_STR_RUN;
+            break;
+          }
           default:
           {
             return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '\"'");
+          }
+        }
+        break;
+      }
+      case '\\':
+      {
+        switch (state)
+        {
+          case JPARSER_STATE_STR_RUN:
+          {
+            state = JPARSER_STATE_STR_ESCAPE;
+            break;
+          }
+          case JPARSER_STATE_STR_ESCAPE:
+          {
+            ecstream_append_c (self->valElement->stream, *c);
+            
+            state = JPARSER_STATE_STR_RUN;
+            break;
+          }
+          default:
+          {
+            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '\\'");
+          
           }
         }
         break;
@@ -1031,6 +1063,38 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
           {
             ecstream_append_c (self->valElement->stream, *c);
             
+            break;
+          }
+          case JPARSER_STATE_STR_ESCAPE:
+          {
+            // check excape sequence
+            switch (*c)
+            {
+              case 'n':
+              {
+                ecstream_append_c (self->valElement->stream, '\n');
+                break;
+              }
+              case 't':
+              {
+                ecstream_append_c (self->valElement->stream, '\t');
+                break;
+              }
+              case 'r':
+              {
+                ecstream_append_c (self->valElement->stream, '\r');
+                break;
+              }
+              default:
+              {
+                eclogger_fmt (LL_WARN, "ENTC", "ecjparser", "unknown escape sequence '%c' -> [%i]", *c, *c);
+                
+                ecstream_append_c (self->valElement->stream, *c);
+                break;
+              }
+            }
+            
+            state = JPARSER_STATE_STR_RUN;
             break;
           }
           case JPARSER_STATE_VAL_BEG:

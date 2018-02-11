@@ -26,6 +26,7 @@ static int __STDCALL test_ecjson_test1 (void* ptr, TestEnvContext tctx, EcErr er
   
   const char* test1 = "{\
   \"Name\":\"Hello World\",\
+  \"Text\":\"\\\"SEQ\\\"TAB\tTAB\\t\",\
   \"Number\":42,\
   \"Double\":23.42,\
   \"True\":true,\
@@ -274,15 +275,26 @@ static int __STDCALL test_ecjson_test10 (void* ptr, TestEnvContext tctx, EcErr e
 {
   EcUdc data;
   
-  ecjson_readFromFile ("json.txt", &data, NULL);
+  int res = ecjson_readFromFile ("json02.txt", &data, NULL);
+  if (res)
+  {
+    return res;
+  }
   
   printf ("read done\n");
   
-  EcString h = ecjson_toString (data);
-  
-  printf ("%s\n", h);
-  
-  ecstr_delete(&h);
+  if (data)
+  {
+    EcString h = ecjson_toString (data);
+    
+    printf ("data: %s\n", h);
+    
+    ecstr_delete(&h);
+  }
+  else
+  {
+    printf ("no data\n");
+  }
   
   ecudc_destroy(EC_ALLOC, &data);
   
@@ -296,22 +308,23 @@ int main(int argc, char* argv[])
   TestEnv te = testenv_create ();
   int i;
   
-  /*
   testenv_reg (te, "Json Reader Test1", test_ecjson_init, test_ecjson_done, test_ecjson_test1);
+  
+  /*
   testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
   testenv_reg (te, "Json Reader Test3", test_ecjson_init, test_ecjson_done, test_ecjson_test3);
   testenv_reg (te, "Json Reader Test4", test_ecjson_init, test_ecjson_done, test_ecjson_test4);
   testenv_reg (te, "Json Reader Test5", test_ecjson_init, test_ecjson_done, test_ecjson_test5);
-   */
-  /*
+  
   testenv_reg (te, "Json Reader Test6", test_ecjson_init, test_ecjson_done, test_ecjson_test6);
   testenv_reg (te, "Json Reader Test7", test_ecjson_init, test_ecjson_done, test_ecjson_test7);
 
   testenv_reg (te, "Json Reader Test8", test_ecjson_init, test_ecjson_done, test_ecjson_test8);
   testenv_reg (te, "Json Reader Test9", test_ecjson_init, test_ecjson_done, test_ecjson_test9);
-*/
+
   testenv_reg (te, "Json Reader Test10", test_ecjson_init, test_ecjson_done, test_ecjson_test10);
-  
+  */
+   
 //for (i = 0; i < 1000; i++)
 //{
   //printf ("[%i]\n", i);
