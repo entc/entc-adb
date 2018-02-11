@@ -34,36 +34,79 @@ EcString eccrypt_aes_getkey (const EcString secret, EcErr err)
 struct EcEncryptAES_s
 {
   
-  int64_t lenTotal;
+  HCRYPTPROV hProvider;
+  
+  EcBuffer buf;
   
 };
 
 //-----------------------------------------------------------------------------
 
+EcEncryptAES ecencrypt_aes_create ()
+{
+  EcEncryptAES self = ENTC_NEW (struct EcEncryptAES_s);
+  
+  self->hProvider = NULL;
+  self->buf = NULL;
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------
+
 void ecencrypt_aes_destroy (EcEncryptAES* pself)
 {
-
+  EcEncryptAES self = *pself;
+  
+  if (self->hProvider)
+  {
+    CryptReleaseContext (self->hProvider, 0);
+  }
+  
+  if (self->buf)
+  {
+    ecbuf_destroy (&(self->buf)); 
+  }
+    
+  ENTC_DEL (pself, struct EcEncryptAES_s);
 }
 
 //-----------------------------------------------------------------------------
 
 EcEncryptAES ecencrypt_aes_initialize (const EcString secret, EcErr err)
 {
-
+  EcEncryptAES self = ecencrypt_aes_create ();
+  
+  if (!CryptAcquireContext (&(self->hProvider), NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
+  {
+    ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    
+    // cleanup
+    ecencrypt_aes_destroy (&self);
+    
+    return NULL;
+  }
+  
+  return self;
 }
 
 //-----------------------------------------------------------------------------
 
 EcBuffer ecencrypt_aes_update (EcEncryptAES self, EcBuffer source, EcErr err)
-{
-
+{  
+  AesBlob128 aes_blob;
+  
+  aes_blob.header.bType = PLAINTEXTKEYBLOB;
+  
+  
+  return self->buf;
 }
 
 //-----------------------------------------------------------------------------
 
 EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
 {
-
+  return self->buf;
 }
 
 //=============================================================================

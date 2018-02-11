@@ -25,7 +25,6 @@ static int __STDCALL test_ecbuffer_sha256 (void* ptr, TestEnvContext tctx, EcErr
   EcBuffer textToEncode = ecbuf_create_str_cp ("1234567890abcdefghif");
   
   EcBuffer sha256 = ecbuf_sha_256 (textToEncode, err);
-  
 
   testctx_push_string (tctx, ecbuf_const_str(sha256));
   
@@ -43,7 +42,7 @@ int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
   
-  //testenv_reg (te, "SHA256", test_ecbuffer_init, test_ecbuffer_done, test_ecbuffer_sha256);
+  testenv_reg (te, "SHA256", test_ecbuffer_init, test_ecbuffer_done, test_ecbuffer_sha256);
   
   testenv_run (te);
   
