@@ -230,6 +230,8 @@ install (FILES ${ENTC_AIO_HEADERS} DESTINATION include/entc/aio)
 install (FILES ${ENTC_TYPES_HEADERS} DESTINATION include/entc/types)
 install (FILES ${ENTC_TOOLS_HEADERS} DESTINATION include/entc/tools)
 
+INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindEntc_1_3.cmake)
+
 #------------------------------------------------------------------------------
 
 find_package(Lua2)
