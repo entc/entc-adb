@@ -548,13 +548,8 @@ EcUdc ecjson_read_buffer (const char* buffer, int64_t size, const EcString name)
   res = ecjsonparser_parse (jparser, buffer, size, err);
   if (res)
   {
-<<<<<<< HEAD
-    eclogger_msg (LL_ERROR, "JSON", "reader", err->text);
-    eclogger_msg (LL_WARN, "JSON", "reader", buffer);
-=======
     eclog_msg (LL_ERROR, "JSON", "reader", err->text);
     eclog_msg (LL_WARN, "JSON", "reader", buffer);
->>>>>>> 5449f7a8667785adc55d6a1ad4e29fc6580a6517
   }
   else
   {
@@ -811,7 +806,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
     
     ecerr_destroy(&err);
     
-    eclogger_msg (LL_ERROR, "JSON", "reader", "can't open file");
+    eclog_msg (LL_ERROR, "JSON", "reader", "can't open file");
 
     return ENTC_ERR_NOT_FOUND;
   }
@@ -845,8 +840,8 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
     res = ecjsonparser_parse (jparser, (const char*)h.buffer, h.size, err);
     if (res)
     {
-      eclogger_fmt (LL_ERROR, "JSON", "reader", "can't parse: %s", err->text);
-      eclogger_msg (LL_WARN, "JSON", "reader", h.buffer);
+      eclog_fmt (LL_ERROR, "JSON", "reader", "can't parse: %s", err->text);
+      eclog_msg (LL_WARN, "JSON", "reader", (char*)h.buffer);
       break;
     }
   }

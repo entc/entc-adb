@@ -5,7 +5,7 @@
 #include "system/macros.h"
 #include "types/ecstream.h"
 #include "types/eclist.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 //-----------------------------------------------------------------------------
 
@@ -1087,7 +1087,7 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
               }
               default:
               {
-                eclogger_fmt (LL_WARN, "ENTC", "ecjparser", "unknown escape sequence '%c' -> [%i]", *c, *c);
+                eclog_fmt (LL_WARN, "ENTC", "ecjparser", "unknown escape sequence '%c' -> [%i]", *c, *c);
                 
                 ecstream_append_c (self->valElement->stream, *c);
                 break;
