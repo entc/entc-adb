@@ -40,10 +40,6 @@ ADD_EXECUTABLE( ut_eclist types/ut_eclist.c )
 TARGET_LINK_LIBRARIES( ut_eclist entc )
 add_test(ut_eclist tests/Debug/ut_eclist)
 
-ADD_EXECUTABLE( ut_ecmap types/ut_ecmap.c )
-TARGET_LINK_LIBRARIES( ut_ecmap entc )
-add_test(ut_ecmap tests/Debug/ut_ecmap)
-
 ADD_EXECUTABLE( ut_ecstream types/ut_ecstream.c )
 TARGET_LINK_LIBRARIES( ut_ecstream entc )
 add_test(ut_ecstream tests/Debug/ut_ecstream)

@@ -156,6 +156,7 @@ SET (ENTC_TYPES_HEADERS
   types/eccursor.h
   types/ecudc.h
   types/ecstack.h
+  types/ectable.h
 )
 
 SET (ENTC_TYPES_SOURCES
@@ -165,13 +166,13 @@ SET (ENTC_TYPES_SOURCES
   types/ecarray.c
   types/eclist.c
   types/ecmap.c
-  types/ectable.c
   types/ecstring.c
   types/ecbuffer.c
   types/ecstream.c
   types/eccursor.c
   types/ecudc.c
   types/ecstack.c
+  types/ectable.c
   types/md5.c
 )
 
@@ -216,7 +217,9 @@ source_group("Types" FILES ${ENTC_TYPES_SOURCES} ${ENTC_TYPES_HEADERS})
 source_group("Tools" FILES ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS})
 source_group("Tests" FILES ${CORE_SOURCES_TESTS})
 
-ADD_LIBRARY( entc SHARED ${ENTC_SYS_SOURCES} ${ENTC_AIO_SOURCES} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${CORE_SOURCES_TESTS})
+set(CMAKE_MACOSX_RPATH 1)
+
+ADD_LIBRARY( entc SHARED ${ENTC_SYS_SOURCES} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${CORE_SOURCES_TESTS})
 
 TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${OPENSSL_LIBRARIES})
 
@@ -234,7 +237,7 @@ INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindEnt
 
 #------------------------------------------------------------------------------
 
-find_package(Lua2)
+find_package(Lua2 QUIET)
 
 IF(LUA_LIBRARIES)
 
