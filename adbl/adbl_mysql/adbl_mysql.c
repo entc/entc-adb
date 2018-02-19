@@ -2,9 +2,7 @@
 #include <system/ecmutex.h>
 #include <types/ecstream.h>
 #include <types/eclist.h>
-#include <types/ecintmap.h>
-#include <utils/ecmessages.h>
-#include <utils/eclogger.h>
+#include <tools/eclog.h>
 
 #include <mysql.h>
 #include "adbl.h"
@@ -253,12 +251,12 @@ void adblmodule_dbdisconnect (void* ptr)
 
   ENTC_DEL (&self, struct AdblMysqlConnection_s);
   
-  eclogger_msg (LL_DEBUG, "MYSQ", "disconnect", "Disconnected from Mysql database" );
+  eclog_msg (LL_DEBUG, "MYSQ", "disconnect", "Disconnected from Mysql database" );
 }
 
 //------------------------------------------------------------------------------------------------------
 
-void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc, const char* table, int ansi, EcIntMap orders, AdblMysqlCursor* cursor, int index)
+void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc, const char* table, int ansi, EcMap orders, AdblMysqlCursor* cursor, int index)
 {
   if( qc->table && qc->ref && qc->value )
   {
@@ -341,11 +339,11 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
     
     if( qc->orderno > 0 )
     {
-      ecintmap_append(orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " ASC"));
+      ecmap_insert (orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " ASC"));
     }
     else
     {
-      ecintmap_append(orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " DESC"));
+      ecmap_insert (orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " DESC"));
     }
     ecbuf_destroy (&buffer);
   }
@@ -353,7 +351,7 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
 
 //------------------------------------------------------------------------------------------------------
 
-void adbl_constructListWithTable (EcStream statement, EcList columns, const char* table, int ansi, EcIntMap orders, AdblMysqlCursor* cursor)
+void adbl_constructListWithTable (EcStream statement, EcList columns, const char* table, int ansi, EcMap orders, AdblMysqlCursor* cursor)
 {
   EcListCursor c;
   eclist_cursor_init (columns, &c, LIST_DIR_NEXT);
@@ -445,13 +443,39 @@ void adbl_constructConstraint (EcStream statement, AdblConstraint* constraint, i
   }  
 }
 
+//------------------------------------------------------------------------
+
+static int __STDCALL adblmodule_dbquery_orders_onCmp (const void* a, const void* b)
+{
+  int ia = (int)a;
+  int ib = (int)b;
+  
+  if (ia > ib)
+  {
+    return 1;
+  }
+  else if (ia < ib)
+  {
+    return -1;
+  }
+  
+  return 0;
+}
+
+//------------------------------------------------------------------------
+
+static void __STDCALL adblmodule_dbquery_orders_onDel (void* key, void* val)
+{
+  EcString h = val; ecstr_delete (&h);
+}
+
 //------------------------------------------------------------------------------------------------------
 
 int adblmodule_createStatement (AdblMysqlConnection self, EcStream statement, AdblQuery* query, AdblMysqlBindVars* bv, AdblMysqlCursor* cursor)
 {
   int cntBinds = 0;
   
-  EcIntMap orders = ecintmap_create (EC_ALLOC);
+  EcMap orders = ecmap_create (adblmodule_dbquery_orders_onCmp, adblmodule_dbquery_orders_onDel);
 
   ecstream_append_str (statement, "SELECT " );
   
@@ -478,36 +502,29 @@ int adblmodule_createStatement (AdblMysqlConnection self, EcStream statement, Ad
     adbl_constructConstraint (statement, query->constraint, self->ansi, bv);
   }
   
-  // apply the order
-  ecintmap_orderAll(orders);
-  
-  if( ecintmap_first(orders) != ecintmap_end(orders) )
+  // apply orders
   {
-    EcIntMapNode orders_node = ecintmap_first(orders);
+    EcMapCursor cursor;
+    ecmap_cursor_init (orders, &cursor, LIST_DIR_NEXT);
     
-    char* alias = ecintmap_data(orders_node);
-    
-    ecstream_append_str (statement, " ORDER BY " );
-    
-    ecstream_append_str (statement, alias );
-    
-    ecstr_delete(&alias);
-    
-    orders_node = ecintmap_next(orders_node);
-    
-    for (; orders_node != ecintmap_end(orders); orders_node = ecintmap_next(orders_node))
+    while (ecmap_cursor_next (&cursor))
     {
-      alias = ecintmap_data(orders_node);
+      EcMapNode node = cursor.node;
       
-      ecstream_append_str (statement, ", " );
-      
-      ecstream_append_str (statement, alias );      
-      
-      ecstr_delete(&alias);
-    }    
+      if (cursor.position > 0)
+      {
+        ecstream_append_str (statement, ", ");
+        ecstream_append_str (statement, ecmap_node_value (node));
+      }
+      else
+      {
+        ecstream_append_str (statement, " ORDER BY ");
+        ecstream_append_str (statement, ecmap_node_value (node));
+      }
+    }
   }
   
-  ecintmap_destroy (EC_ALLOC, &orders);
+  ecmap_destroy (&orders);
   
   if(query->limit > 0)
   {
@@ -556,7 +573,7 @@ int adblmodule_prepared_statement (MYSQL_STMT* stmt, AdblMysqlBindVars* bv, EcSt
   // prepare the statement 
   if (mysql_stmt_prepare (stmt, ecstream_get (stream), ecstream_size (stream)) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#1", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#1", mysql_stmt_error(stmt));
     return FALSE;
   }
   
@@ -565,7 +582,7 @@ int adblmodule_prepared_statement (MYSQL_STMT* stmt, AdblMysqlBindVars* bv, EcSt
   // try to bind all constraint values
   if (mysql_stmt_bind_param (stmt, bv->binds) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#2", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#2", mysql_stmt_error(stmt));
     return FALSE;
   }
   
@@ -608,7 +625,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
   // execute
   if (mysql_stmt_execute (stmt) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#3", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#3", mysql_stmt_error(stmt));
 
     // clean up
     adblmodule_dbcursor_release (cursor);
@@ -617,7 +634,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
   
   if (mysql_stmt_store_result (stmt) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
 
     // clean up
     adblmodule_dbcursor_release (cursor);
@@ -626,7 +643,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
 
   if (mysql_commit (self->conn) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
     
     // clean up
     adblmodule_dbcursor_release (cursor);
@@ -656,7 +673,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   {
     ecmutex_unlock (self->mutex);
 
-    eclogger_msg  (LL_ERROR, C_MODDESC, "query#1", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "query#1", mysql_stmt_error(stmt));
     return NULL;
   }
     
@@ -725,7 +742,7 @@ int adblmodule_dbprocedure_create (AdblMysqlConnection self, AdblProcedure* proc
   // execute
   if (mysql_stmt_execute (stmt) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#3", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#3", mysql_stmt_error(stmt));
     
     return FALSE;
   }
@@ -752,7 +769,7 @@ int adblmodule_dbprocedure (void* ptr, AdblProcedure* proc)
   {
     ecmutex_unlock (self->mutex);
     
-    eclogger_msg  (LL_ERROR, C_MODDESC, "proc#1", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "proc#1", mysql_stmt_error(stmt));
     return FALSE;
   }
   
@@ -836,11 +853,11 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table)
   {
     if (mysql_errno (self->conn))
     {
-      eclogger_msg (LL_ERROR, "MYSQ", "size", mysql_error (self->conn));
+      eclog_msg (LL_ERROR, "MYSQ", "size", mysql_error (self->conn));
     }
     else
     {
-      eclogger_msg (LL_ERROR, "MYSQ", "size", "unknown Mysql error");
+      eclog_msg (LL_ERROR, "MYSQ", "size", "unknown Mysql error");
     }
   }
   
@@ -934,7 +951,7 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
   MYSQL_STMT* stmt = mysql_stmt_init (self->conn);
   if (isNotAssigned (stmt))
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "update#1", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "update#1", mysql_stmt_error(stmt));
     return 0;
   }
       
@@ -988,7 +1005,7 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
     mysql_stmt_close (stmt);
     bindvars_destroy (&bv);
     
-    eclogger_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
     return -1;
   }
 
@@ -999,7 +1016,7 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
   // commit
   if (mysql_commit (self->conn) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
     
     return -1;
   }
@@ -1122,7 +1139,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   MYSQL_STMT* stmt = mysql_stmt_init (self->conn);
   if (isNotAssigned (stmt))
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "delete#1", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "delete#1", mysql_stmt_error(stmt));
     return 0;
   }
   
@@ -1151,7 +1168,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   
   adbl_constructAttributesInsert (statement, bv, insert->attrs, self->ansi);
   
-  eclogger_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_get (statement) );
+  eclog_msg (LL_DEBUG, C_MODDESC, "insert", ecstream_get (statement) );
   
   adblmodule_prepared_statement (stmt, bv, statement);
   
@@ -1161,7 +1178,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
     mysql_stmt_close (stmt);
     bindvars_destroy (&bv);
 
-    eclogger_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
     return 0;
   }
 
@@ -1178,7 +1195,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   // commit
   if (mysql_commit (self->conn) != 0)
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "prepstmt#4", mysql_stmt_error(stmt));
     
     return -1;
   }
@@ -1208,7 +1225,7 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del)
   stmt = mysql_stmt_init (self->conn);
   if (isNotAssigned (stmt))
   {
-    eclogger_msg  (LL_ERROR, C_MODDESC, "delete#1", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "delete#1", mysql_stmt_error(stmt));
     return 0;
   }
   
@@ -1249,7 +1266,7 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del)
     mysql_stmt_close (stmt);
     bindvars_destroy (&bv);
     
-    eclogger_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
+    eclog_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
     return 0;
   }
 
@@ -1269,11 +1286,11 @@ void adblmodule_dbbegin (void* ptr)
 
   if (mysql_errno (self->conn))
   {
-    eclogger_msg (LL_ERROR, "MYSQ", "transaction", mysql_error (self->conn));
+    eclog_msg (LL_ERROR, "MYSQ", "transaction", mysql_error (self->conn));
   }
   else
   {
-    eclogger_msg (LL_DEBUG, C_MODDESC, "transaction", "START TRANSACTION");
+    eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "START TRANSACTION");
   }
 }
 
@@ -1287,11 +1304,11 @@ void adblmodule_dbcommit (void* ptr)
 
   if (mysql_errno (self->conn))
   {
-    eclogger_msg (LL_ERROR, "MYSQ", "transaction", mysql_error (self->conn));
+    eclog_msg (LL_ERROR, "MYSQ", "transaction", mysql_error (self->conn));
   }
   else
   {
-    eclogger_msg (LL_DEBUG, C_MODDESC, "transaction", "COMMIT");
+    eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "COMMIT");
   }
 }
 
@@ -1305,11 +1322,11 @@ void adblmodule_dbrollback (void* ptr)
 
   if (mysql_errno (self->conn))
   {
-    eclogger_msg (LL_ERROR, "MYSQ", "transaction", mysql_error (self->conn));
+    eclog_msg (LL_ERROR, "MYSQ", "transaction", mysql_error (self->conn));
   }
   else
   {
-    eclogger_msg (LL_DEBUG, C_MODDESC, "transaction", "ROLLBACK");
+    eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "ROLLBACK");
   }
 }
 
@@ -1327,17 +1344,17 @@ int adblmodule_dbcursor_next (void* ptr)
     }
     case 1:
     {
-      eclogger_msg  (LL_ERROR, C_MODDESC, "fetch", mysql_stmt_error(self->stmt));
+      eclog_msg  (LL_ERROR, C_MODDESC, "fetch", mysql_stmt_error(self->stmt));
       return FALSE;
     }
     case MYSQL_NO_DATA:
     {
-      //eclogger_msg  (LL_TRACE, C_MODDESC, "fetch", "no data");
+      //eclog_msg  (LL_TRACE, C_MODDESC, "fetch", "no data");
       return FALSE;
     }
     case MYSQL_DATA_TRUNCATED:
     {
-      //eclogger_msg  (LL_WARN, C_MODDESC, "fetch", "data truncated");
+      //eclog_msg  (LL_WARN, C_MODDESC, "fetch", "data truncated");
       return TRUE;
     }
   }
@@ -1356,7 +1373,7 @@ const char* adblmodule_dbcursor_data (void* ptr, uint_t column)
     my_bool* isNull = self->is_null + (column * sizeof(my_bool));
     if (*isNull)
     {
-      //eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got NULL");
+      //eclog_fmt (LL_TRACE, C_MODDESC, "fetch data", "got NULL");
       
       return NULL;
     }
@@ -1371,20 +1388,20 @@ const char* adblmodule_dbcursor_data (void* ptr, uint_t column)
       res = mysql_stmt_fetch_column (self->stmt, &(self->bindResult[column]), column, 0);
       if (res != 0)
       {
-        eclogger_fmt (LL_ERROR, C_MODDESC, "fetch data", "got error %i", res);
+        eclog_fmt (LL_ERROR, C_MODDESC, "fetch data", "got error %i", res);
       }
       
       // set terminator
       ((char*)(self->bindResult[column].buffer))[length] = 0;
       
-      //eclogger_fmt (LL_TRACE, C_MODDESC, "fetch data", "got '%s' len %i", self->bindResult[column].buffer, length);
+      //eclog_fmt (LL_TRACE, C_MODDESC, "fetch data", "got '%s' len %i", self->bindResult[column].buffer, length);
       
       return self->bindResult[column].buffer;
     }
   }
   else
   {
-    eclogger_fmt (LL_WARN, C_MODDESC, "fetch data", "access column %i outside column range %i", column + 1, self->size);
+    eclog_fmt (LL_WARN, C_MODDESC, "fetch data", "access column %i outside column range %i", column + 1, self->size);
     
     return NULL;
   }
@@ -1450,11 +1467,11 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
   {
     if(mysql_errno (self->conn))
     {
-      eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (self->conn));
+      eclog_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (self->conn));
     }
     else
     {
-      eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
+      eclog_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
     }
 
     return NULL;
@@ -1469,7 +1486,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
     {
       if (ecstr_valid (column))
       {
-        eclogger_fmt (LL_ERROR, "MYSQ", "sequence", "Only one auto_increment primary key is allowed for table '%s'", table );
+        eclog_fmt (LL_ERROR, "MYSQ", "sequence", "Only one auto_increment primary key is allowed for table '%s'", table );
         // clean up
         mysql_free_result(res);
         
@@ -1488,7 +1505,7 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
   
   if (!ecstr_valid (column))
   {
-    eclogger_fmt (LL_ERROR, "MYSQ", "sequence", "Please add primary key with auto_increment flag for table '%s'", table );
+    eclog_fmt (LL_ERROR, "MYSQ", "sequence", "Please add primary key with auto_increment flag for table '%s'", table );
 
     return NULL;
   }
@@ -1544,11 +1561,11 @@ uint_t adblmodule_dbsequence_next (void* ptr)
     {
       if (mysql_errno (mysql->conn))
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
       }
       else
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
       }
       
       return 0;
@@ -1579,11 +1596,11 @@ uint_t adblmodule_dbsequence_next (void* ptr)
     {
       if (mysql_errno (mysql->conn))
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
       }
       else
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
       }
     }
   }
@@ -1596,11 +1613,11 @@ uint_t adblmodule_dbsequence_next (void* ptr)
     {
       if (mysql_errno (mysql->conn))
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
       }
       else
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
       }
       
       return 0;
@@ -1642,11 +1659,11 @@ uint_t adblmodule_dbsequence_next (void* ptr)
     {
       if (mysql_errno (mysql->conn))
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
       }
       else
       {
-        eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
+        eclog_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
       }
       
       return 0;
@@ -1660,11 +1677,11 @@ uint_t adblmodule_dbsequence_next (void* ptr)
   {
     if (mysql_errno (mysql->conn))
     {
-      eclogger_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
+      eclog_msg (LL_ERROR, "MYSQ", "sequence", mysql_error (mysql->conn));
     }
     else
     {
-      eclogger_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
+      eclog_msg (LL_ERROR, "MYSQ", "sequence", "unknown Mysql error");
     }
     
     return 0;
