@@ -15,6 +15,7 @@ mkdir build_adbl
 
 cd build_adbl
 
+rm ../adbl/CMakeCache.txt
 cmake --configure ../adbl
 cmake --build . --target install
 

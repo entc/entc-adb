@@ -1,10 +1,8 @@
-#include <utils/eclogger.h>
+#include <tools/eclog.h>
 #include "adbl_mysql.c"
 
 int main (int argc, char *argv[])
 {
-  ecmessages_initialize ();
-
   void* connptr = 0;
   AdblConnectionProperties cp;
   int res = TRUE;
@@ -19,7 +17,7 @@ int main (int argc, char *argv[])
   connptr = adblmodule_dbconnect (&cp);
   if( !connptr )
   {
-    eclogger_msg (LL_ERROR, "TEST", "ps", "Error by connecting");
+    eclog_msg (LL_ERROR, "TEST", "ps", "Error by connecting");
     res = FALSE;
   }
   
@@ -69,8 +67,8 @@ int main (int argc, char *argv[])
     {
       while (adblmodule_dbcursor_next (c1))
       {
-        eclogger_msg (LL_INFO, "TEST", "basic", adblmodule_dbcursor_data (c1, 0));    
-        eclogger_msg (LL_INFO, "TEST", "basic", adblmodule_dbcursor_data (c1, 1));    
+        eclog_msg (LL_INFO, "TEST", "basic", adblmodule_dbcursor_data (c1, 0));
+        eclog_msg (LL_INFO, "TEST", "basic", adblmodule_dbcursor_data (c1, 1));
        // eclogger_log(logger, LL_INFO, "TEST", adblmodule_dbcursor_data (c1, 1));
       }
       
@@ -85,14 +83,12 @@ int main (int argc, char *argv[])
   
   if( res )
   {
-    eclogger_msg (LL_INFO, "TEST", "basic", "TEST SUCCEDED");    
+    eclog_msg (LL_INFO, "TEST", "basic", "TEST SUCCEDED");
   }
   else
   {
-    eclogger_msg (LL_ERROR, "TEST", "basic", "TEST FAILED");        
+    eclog_msg (LL_ERROR, "TEST", "basic", "TEST FAILED");
   }
-  
-  ecmessages_deinitialize ();
   
   return res;
 }

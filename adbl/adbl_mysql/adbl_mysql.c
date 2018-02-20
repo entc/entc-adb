@@ -867,71 +867,35 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table)
 //------------------------------------------------------------------------------------------------------
 
 int adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs, int ansi, AdblMysqlBindVars* bv)
-{  
-  EcMapCharNode node = ecmapchar_first(attrs->columns);
+{
+  EcMapCursor cursor; ecmap_cursor_init (attrs->columns, &cursor, LIST_DIR_NEXT);
   
-  if( node != ecmapchar_end(attrs->columns) )
+  // iterate through all columns
+  while (ecmap_cursor_next (&cursor))
   {
+    EcMapNode node = cursor.node;
+    
+    if (cursor.position > 0)
+    {
+      ecstream_append_str (statement, ", " );
+    }
+
     if(ansi == TRUE)
     {
       ecstream_append_str (statement, "\"" );
-      ecstream_append_str (statement, ecmapchar_key(node) );
+      ecstream_append_str (statement, ecmap_node_key (node));
       ecstream_append_str (statement, "\" = ?" );
-      
-      /*
-      ecstream_append_str (statement, "\" = \'" );
-      ecstream_append_str (statement, ecmapchar_data(node) );
-      ecstream_append_str (statement, "\'" );
-       */
     }
     else
     {
-      ecstream_append_str (statement, ecmapchar_key(node) );
+      ecstream_append_str (statement, ecmap_node_key (node));
       ecstream_append_str (statement, " = ?" );
-
-      /*
-      ecstream_append_str (statement, " = \"" );
-      ecstream_append_str (statement, ecmapchar_data(node) );
-      ecstream_append_str (statement, "\"" );      
-       */
     }
     
-    bindvars_addS (bv, ecmapchar_data(node));
-    
-    node = ecmapchar_next(node);
-    
-    for(; node != ecmapchar_end(attrs->columns); node = ecmapchar_next(node) )
-    {
-      if(ansi == TRUE)
-      {
-        ecstream_append_str (statement, ", \"" );
-        ecstream_append_str (statement, ecmapchar_key(node) );
-        ecstream_append_str (statement, "\" = ?" );
-        
-        /*
-        ecstream_append_str (statement, "\" = \'" );
-        ecstream_append_str (statement, ecmapchar_data(node) );
-        ecstream_append_str (statement, "\'" );
-         */
-      }
-      else
-      {
-        ecstream_append_str (statement, ", " );
-        ecstream_append_str (statement, ecmapchar_key(node) );
-        ecstream_append_str (statement, " = ?" );
-        
-        /*
-        ecstream_append_str (statement, " = \"" );
-        ecstream_append_str (statement, ecmapchar_data(node) );
-        ecstream_append_str (statement, "\"" );      
-         */
-      }      
-      
-      bindvars_addS (bv, ecmapchar_data(node));
-    }
-    return TRUE;
+    bindvars_addS (bv, ecmap_node_value(node));
   }
-  return FALSE;
+  
+  return TRUE;
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -980,7 +944,7 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
     ecstream_append_str (statement, " SET " );    
   }
   
-  bindCnt = ecmapchar_count(update->attrs->columns) + eclist_size(update->constraint->list);
+  bindCnt = ecmap_size (update->attrs->columns) + eclist_size (update->constraint->list);
   
   bv = bindvars_create (bindCnt);
 
@@ -1035,93 +999,57 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
 
 void adbl_constructAttributesInsert (EcStream statement, AdblMysqlBindVars* bv, AdblAttributes* attrs, int ansi)
 {
-  EcMapCharNode node;
-
+  EcStream cols;
+  EcStream vals;
+  
+  EcMapCursor cursor; ecmap_cursor_init (attrs->columns, &cursor, LIST_DIR_NEXT);
+  
   if( !attrs )
   {
     ecstream_append_str (statement, "VALUES()" );
     return;
   }
-  
-  node = ecmapchar_first(attrs->columns);
-  
-  if( node != ecmapchar_end(attrs->columns) )
-  {
-    EcStream cols = ecstream_create ();
-    EcStream values = ecstream_create ();
 
+  cols = ecstream_create ();
+  vals = ecstream_create ();
+  
+  // iterate through all columns
+  while (ecmap_cursor_next (&cursor))
+  {
+    EcMapNode node = cursor.node;
+    
+    if (cursor.position > 0)
+    {
+      ecstream_append_str (cols, ", ");
+      ecstream_append_c (vals, ',');
+    }
+    
     if(ansi == TRUE)
     {
       ecstream_append_c (cols, '"');
-      ecstream_append_str (cols, ecmapchar_key(node));
+      ecstream_append_str (cols, ecmap_node_key (node));
       ecstream_append_c (cols, '"');
-
-      //ecstream_append( values, "\'" );
-      //ecstream_append( values, ecmapchar_data(node) );
-      ecstream_append_c (values, '?');
-      //ecstream_append( values, "\'" );
+      
+      ecstream_append_c (vals, '?');
     }
     else
     {
-      ecstream_append_str (cols, ecmapchar_key(node));
-
-      ecstream_append_c (values, '?');
-      /*
-      ecstream_append( values, "\"" );
-      ecstream_append( values, ecmapchar_data(node) );
-      ecstream_append( values, "\"" );      
-       */
-    }
-    
-    bindvars_addS (bv, ecmapchar_data(node));
-    
-    node = ecmapchar_next(node);
-    
-    for(; node != ecmapchar_end(attrs->columns); node = ecmapchar_next(node) )
-    {
-      if(ansi == TRUE)
-      {
-        ecstream_append_str ( cols, ", \"" );
-        ecstream_append_str ( cols, ecmapchar_key(node) );
-        ecstream_append_str ( cols, "\"" );
-        
-        /*
-        ecstream_append( values, ", \'" );
-        ecstream_append( values, ecmapchar_data(node) );
-        ecstream_append( values, "\'" );
-         */
-        ecstream_append_c (values, '?');
-      }
-      else
-      {
-        ecstream_append_str ( cols, ", " );
-        ecstream_append_str ( cols, ecmapchar_key(node) );
-        
-        ecstream_append_str ( values, ",?" );
-
-        /*
-        ecstream_append( values, ", \"" );
-        ecstream_append( values, ecmapchar_data(node) );
-        ecstream_append( values, "\"" );      
-         */
-      }      
+      ecstream_append_str (cols, ecmap_node_key (node));
       
-      bindvars_addS (bv, ecmapchar_data(node));
+      ecstream_append_c (vals, '?');
     }
     
-    ecstream_append_str (statement, "(" );
-    ecstream_append_stream (statement, cols);
-    ecstream_append_str (statement, ") VALUES (" );
-    ecstream_append_stream (statement, values);
-    ecstream_append_str (statement, ")" );
-    
-    ecstream_destroy (&cols);
-    ecstream_destroy (&values);
+    bindvars_addS (bv, ecmap_node_value (node));
   }
-  else
-  {
-    ecstream_append_str (statement, "VALUES()" );
-  }
+
+  ecstream_append_str (statement, "(" );
+  ecstream_append_stream (statement, cols);
+  ecstream_append_str (statement, ") VALUES (" );
+  ecstream_append_stream (statement, vals);
+  ecstream_append_str (statement, ")" );
+  
+  ecstream_destroy (&cols);
+  ecstream_destroy (&vals);
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -1162,7 +1090,7 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
     ecstream_append_str (statement, " " );    
   }
   
-  bindCnt = ecmapchar_count(insert->attrs->columns);
+  bindCnt = ecmap_size (insert->attrs->columns);
   
   bv = bindvars_create (bindCnt);
   
