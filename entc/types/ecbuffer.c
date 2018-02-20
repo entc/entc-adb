@@ -159,6 +159,26 @@ EcBuffer ecbuf_create_uuid ()
 
 //----------------------------------------------------------------------------------------
 
+EcBuffer ecbuf_create_fmt (uint_t size, const char* format, ...)
+{
+  EcBuffer self = ecbuf_create (size);
+
+  va_list ptr;  
+  va_start(ptr, format);
+#ifdef _WIN32
+  vsnprintf_s( (char*)self->buffer, self->size, size, format, ptr );
+#elif __DOS__
+  vsprintf((char*)self->buffer, format, ptr);
+#else
+  vsnprintf((char*)self->buffer, self->size, format, ptr );
+#endif
+  va_end(ptr);
+
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecbuf_destroy (EcBuffer* pself)
 {
   EcBuffer self = *pself;

@@ -10,7 +10,7 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include "ecthread.h"
+#include "system/ecthread.h"
 #include "ecaio_event.h"
 
 //-----------------------------------------------------------------------------
@@ -46,7 +46,7 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   res = ecproc_waitForProcess (self->handle, err);
   if (res)
   {
-    eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
+    eclog_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
   }
 
   ecaio_triggerENode (self->aio, self->eventh, err);
@@ -62,7 +62,7 @@ static int __STDCALL ecaio_proc_onNotify (void* ptr, int action)
 {
   EcAioProc self = ptr;
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
 
   if (self->onNotify)
   {
@@ -78,7 +78,7 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
 {
   EcAioProc self = ptr;
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy");
 
   ecthread_cancel (self->thread);
   
@@ -91,7 +91,7 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   
   ecthread_delete (&(self->thread));
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc thread", "stopped and destroyed");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc thread", "stopped and destroyed");
 
   ENTC_DEL(&self, struct EcAioProc_s);
 }

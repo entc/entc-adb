@@ -50,6 +50,8 @@ __LIBEX EcBuffer ecbuf_create_uuid ();
 
 __LIBEX EcBuffer ecbuf_create_filled (uint_t size, char fillupwith);
 
+__LIBEX EcBuffer ecbuf_create_fmt (uint_t size, const char* format, ...);
+
 __LIBEX void ecbuf_destroy (EcBuffer*);
 
 // manipulators

@@ -99,6 +99,7 @@ static void __STDCALL ecaio_sendfile_onDestroy (void* ptr)
   
   if (self->aes)
   {
+    EcBuffer g;
     EcErr err = ecerr_create();
     
     EcAioSocketWriter writer;
@@ -106,7 +107,7 @@ static void __STDCALL ecaio_sendfile_onDestroy (void* ptr)
     
     writer = ecaio_socketwriter_create (self->refSocket);
 
-    EcBuffer g = ecdecrypt_aes_finalize (self->aes, err);
+    g = ecdecrypt_aes_finalize (self->aes, err);
     if (g)
     {
       //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "wrote decrypted bytes %i", g->size);
@@ -146,11 +147,12 @@ static int __STDCALL ecaio_sendfile_onRead (void* ptr, void* handle, const char*
   if (self->aes)
   {
     EcBuffer_s h;
-    
+    EcBuffer g;
+
     h.buffer = (unsigned char*)buffer;
     h.size = len;
     
-    EcBuffer g = ecdecrypt_aes_update (self->aes, &h, err);
+    g = ecdecrypt_aes_update (self->aes, &h, err);
     if (g)
     {
       //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "wrote decrypted bytes %i", g->size);

@@ -55,6 +55,8 @@ __LIBEX EcString ecstr_float (double, uint_t n);
 
 __LIBEX EcString ecstr_filled (char c, uint_t n);
 
+__LIBEX EcString ecstr_create_fmt (uint_t size, const EcString format, ...);
+
 __LIBEX EcString ecstr_format (const EcString format, ...);
 
 __LIBEX EcString ecstr_format_list (const EcString format, va_list ptr);

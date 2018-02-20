@@ -92,6 +92,26 @@ EcString ecstr_part (const EcString source, uint_t length)
 
 //----------------------------------------------------------------------------------------
 
+EcString ecstr_create_fmt (uint_t size, const EcString format, ...)
+{
+  EcString self = (char*)ENTC_MALLOC(size + 1);
+
+  va_list ptr;  
+  va_start(ptr, format);
+#ifdef _WIN32
+  vsnprintf_s (self, size, size, format, ptr );
+#elif __DOS__
+  vsprintf (self, format, ptr);
+#else
+  vsnprintf (self, size, format, ptr );
+#endif
+  va_end(ptr);
+
+  return self;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcString ecstr_format_list (const EcString format, va_list ptr)
 {
   char* ret = NULL;

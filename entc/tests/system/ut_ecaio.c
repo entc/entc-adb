@@ -164,7 +164,7 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
 
 	GenerateConsoleCtrlEvent (CTRL_C_EVENT, 0);
 
-	ece_sleep (1000);
+	ecthread_sleep (1000);
 
 	printf ("send SIGTERM\n");
 

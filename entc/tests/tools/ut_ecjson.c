@@ -201,14 +201,15 @@ static int __STDCALL test_ecjson_test7 (void* ptr, TestEnvContext tctx, EcErr er
 {
   EcUdc data;
   EcString key;
-  
+  EcString h;
+
   key = ecstr_copy ("michi79");
   
   ecjson_readFromFile(".meta2", &data, key);
 
   printf ("read done\n");
 
-  EcString h = ecjson_toString (data);
+  h = ecjson_toString (data);
   
   printf ("%s\n", h);
   
@@ -251,12 +252,13 @@ static int __STDCALL test_ecjson_test8 (void* ptr, TestEnvContext tctx, EcErr er
 static int __STDCALL test_ecjson_test9 (void* ptr, TestEnvContext tctx, EcErr err)
 {
   EcUdc data;
+  EcString h;
 
   ecjson_readFromFile (".meta3", &data, NULL);
   
   printf ("read done\n");
   
-  EcString h = ecjson_toString (data);
+  h = ecjson_toString (data);
   
   printf ("%s\n", h);
   

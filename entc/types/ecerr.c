@@ -6,6 +6,13 @@
 #include "types/ecstring.h"
 #include "system/macros.h"
 
+#if defined _WIN64 || defined _WIN32
+
+#include <windows.h>
+#include <stdarg.h>
+
+#endif
+
 //-----------------------------------------------------------------------------
 
 EcErr ecerr_create ()
@@ -58,16 +65,16 @@ int ecerr_set (EcErr self, int lvl, int code, const char* text)
 
 int ecerr_set_fmt (EcErr self, int lvl, int code, const char* text, ...)
 {
-  if (self == NULL)
-  {
-    return code;
-  }
-  
   char buffer [1002];
 
   // variables
   va_list ptr;
-  
+
+  if (self == NULL)
+  {
+    return code;
+  }
+    
   va_start(ptr, text);
   
 #ifdef _WIN32
@@ -111,8 +118,6 @@ int ecerr_setTO (EcErr self, int lvl, int code, char** ptext)
 //-----------------------------------------------------------------------------
 
 #if defined _WIN64 || defined _WIN32
-
-#include <windows.h>
 
 //-----------------------------------------------------------------------------
 

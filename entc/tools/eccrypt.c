@@ -13,12 +13,12 @@
 EcString eccrypt_aes_getkey (const EcString secret, EcErr err)
 {
   EcBuffer_s h;
-  
+  EcBuffer key;
+
   h.buffer = (unsigned char*)secret;
-  h.size = strlen(secret);
+  h.size = ecstr_len(secret);
   
-  EcBuffer key = ecbuf_sha_256 (&h, err);
-  
+  key = ecbuf_sha_256 (&h, err);
   if (key == NULL)
   {
     return NULL;
@@ -26,6 +26,86 @@ EcString eccrypt_aes_getkey (const EcString secret, EcErr err)
   
   return ecbuf_str(&key);
 }
+
+#if defined _WIN32 || defined _WIN64
+
+//=============================================================================
+
+struct EcEncryptAES_s
+{
+  
+  int64_t lenTotal;
+  
+};
+
+//-----------------------------------------------------------------------------
+
+void ecencrypt_aes_destroy (EcEncryptAES* pself)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+EcEncryptAES ecencrypt_aes_initialize (const EcString secret, EcErr err)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+EcBuffer ecencrypt_aes_update (EcEncryptAES self, EcBuffer source, EcErr err)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
+{
+
+}
+
+//=============================================================================
+
+struct EcDecryptAES_s
+{
+
+	int dummy;
+
+};
+
+//-----------------------------------------------------------------------------
+
+EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, EcErr err)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+EcBuffer ecdecrypt_aes_update (EcDecryptAES self, EcBuffer buffer, EcErr err)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+void ecdecrypt_aes_destroy (EcDecryptAES* pself)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+#elif defined __BSD_OS || defined __LINUX_OS
 
 //----------------------------------------------------------------------------------------
 
@@ -319,6 +399,10 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
   
   return self->buf;
 }
+
+//-------------------------------------------------------------------------------------------------------
+
+#endif
 
 //-------------------------------------------------------------------------------------------------------
 

@@ -7,6 +7,8 @@
 #ifdef _WIN32
 
 #include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #else
 
@@ -114,13 +116,13 @@ void eclog_err_os (EcLogLevel lvl, const char* unit, const char* method, const c
 {
   char buffer [1002];
 
+  // variables
+  va_list ptr;
+
   EcErr err = ecerr_create ();
   
   // retrieve the OS error text
   ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
-
-  // variables
-  va_list ptr;
 
   va_start(ptr, format);
 

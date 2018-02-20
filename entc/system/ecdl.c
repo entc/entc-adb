@@ -106,7 +106,7 @@ EcLibraryHandle ecdl_new (const EcString filename)
     else
     {
 #ifdef _WIN32
-      eclog_errno (LL_WARN, "_SYS", "dl", "can't load library");
+      eclog_err_os (LL_WARN, "_SYS", "dl", "can't load library");
 #else
       eclog_fmt (LL_WARN, "_SYS", "dl", "can't load library: %s", dlerror());
 #endif
@@ -159,7 +159,7 @@ EcLibraryHandle ecdl_fromName (const EcString path, const EcString name)
   else
   {
 #ifdef _WIN32
-    eclog_errno (LL_WARN, "_SYS", "dl", "can't load library '%s' from '%s'", name, fullpath);
+    eclog_err_os (LL_WARN, "_SYS", "dl", "can't load library '%s' from '%s'", name, fullpath);
 #else
     eclog_fmt (LL_WARN, "_SYS", "dl", "can't load library '%s' : %s", name, dlerror());
 #endif

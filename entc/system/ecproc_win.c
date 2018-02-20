@@ -207,7 +207,7 @@ int ecproc_command (EcProc self, const EcString folder, const EcString binary, c
 
     if (CreateProcessA (pathbn, realArgs, NULL, NULL, TRUE, 0, NULL, folder, &(self->startupInfo), &(self->processInfo)) == 0)
 	{
-      eclogger_fmt (LL_ERROR, "Q6", "start proc", "can't start '%s' : '%s'", folder, binary);
+      eclog_fmt (LL_ERROR, "Q6", "start proc", "can't start '%s' : '%s'", folder, binary);
 
 	  res = ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
 	}
@@ -291,7 +291,7 @@ void ecproc_terminate (EcProc self)
 
     ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
 
-	eclogger_fmt (LL_WARN, "Q6_PROC", "terminate", "can't terminate '%s'", err->text);
+	eclog_fmt (LL_WARN, "Q6_PROC", "terminate", "can't terminate '%s'", err->text);
 
 	ecerr_destroy (&err);
   }

@@ -23,16 +23,9 @@
 #include "ecmutex.h"
 
 #include "types/ecerr.h"
-#include "utils/eclogger.h"
+#include "tools/eclog.h"
 
 #include <windows.h>
-
-//-----------------------------------------------------------------------------------
-
-void ecthread_schedule(ecthread_main_fct main, int argc, char* argv[])
-{
-  if (main) { main(argc, argv); }
-}
 
 //-----------------------------------------------------------------------------------
 
@@ -62,7 +55,7 @@ DWORD WINAPI ecthread_run(LPVOID ptr)
 
 //-----------------------------------------------------------------------------------
 
-EcThread ecthread_new()
+EcThread ecthread_new (void)
 {
   EcThread self = ENTC_NEW(struct EcThread_s);
   
@@ -120,11 +113,18 @@ void ecthread_cancel(EcThread self)
 
 	  ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
 
-      eclogger_fmt (LL_ERROR, "ENTC", "thread", "can't cancel thread: %s", err->text);
+      eclog_fmt (LL_ERROR, "ENTC", "thread", "can't cancel thread: %s", err->text);
 
 	  ecerr_destroy (&err);
     }
   }
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecthread_sleep (unsigned long milliseconds)
+{
+  Sleep (milliseconds);
 }
 
 //-----------------------------------------------------------------------------------

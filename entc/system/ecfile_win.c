@@ -20,7 +20,8 @@
 #if defined _WIN64 || defined _WIN32
 
 #include "ecfile.h"
-#include "../types/eclist.h"
+#include "types/eclist.h"
+#include "system/macros.h"
 
 #include <stdio.h>
 #include <share.h>
@@ -252,8 +253,8 @@ int ecdh_next (EcDirHandle self, EcFileInfo* pinfo, int fullInfo)
     }
 
     self->info.size = self->data.nFileSizeHigh;
-   self->info.size <<= sizeof(self->data.nFileSizeHigh) * 8;
-   self->info.size |= self->data.nFileSizeLow;
+    self->info.size <<= sizeof(self->data.nFileSizeHigh) * 8;
+	self->info.size |= self->data.nFileSizeLow;
 
     self->info.cdate = self->data.ftCreationTime.dwLowDateTime;
     self->info.mdate = self->data.ftLastWriteTime.dwLowDateTime;
@@ -262,7 +263,7 @@ int ecdh_next (EcDirHandle self, EcFileInfo* pinfo, int fullInfo)
     self->valid = FindNextFile( self->dhandle, &(self->data) );
 
     *pinfo = &(self->info);
-	  return TRUE;
+    return TRUE;
   }
   return FALSE;
 };

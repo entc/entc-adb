@@ -1,7 +1,7 @@
 
 #include "tools/eclparser.h"
 #include "tests/ecenv.h"
-#include <mm_malloc.h>
+#include "system/macros.h"
 
 //=============================================================================
 

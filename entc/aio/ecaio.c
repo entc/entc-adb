@@ -164,7 +164,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
         ecerr_formatErrorOS (err, ENTC_LVL_ERROR, lastError);
 
-		eclogger_fmt (LL_WARN, "ENTC", "wait", "error on io completion port: %s", err->text);
+		eclog_fmt (LL_WARN, "ENTC", "wait", "error on io completion port: %s", err->text);
 
         ecerr_destroy (&err);
 	  }
@@ -227,7 +227,7 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 	  {
         abort = TRUE;
 
-  	    eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+  	    eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
 	  }
 
 	  break;
@@ -236,21 +236,21 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
 	{
       abort = TRUE;
 
-	  eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "shutdown");
+	  eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "shutdown");
 	  break;
 	}
     case CTRL_CLOSE_EVENT:
     {
       abort = TRUE;
 
-	  eclogger_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "close");
+	  eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "close");
 	  break;
 	}
 	default:
 	{
       abort = FALSE;
 
-	  eclogger_fmt (LL_TRACE, "ENTC", "signal", "unknown signal seen [%i]", ctrlType);
+	  eclog_fmt (LL_TRACE, "ENTC", "signal", "unknown signal seen [%i]", ctrlType);
 	  break;
 	}
   }

@@ -42,25 +42,19 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
   
   for (i = 0; i < 10; i++)
   {
-    void* key = malloc(42); 
-    void* val = malloc(42); 
-	
-	snprintf((char*)key, 42, "item [%i]", i);	
-	snprintf((char*)val, 42, "value [%i]", i);
-    
-    ecmap_insert(map01, key, val);
+    void* key = ecstr_create_fmt (42, "item [%i]", i);
+    void* val = ecstr_create_fmt (42, "value [%i]", i);
+
+	ecmap_insert(map01, key, val);
   }
   
   ecmap_clear (map01);
   
   for (i = 0; i < 10; i++)
   {
-    void* key = malloc(42); 
-	void* val = malloc(42); 
-	
-	snprintf((char*)key, 42, "item [%i]", i);	
-	snprintf((char*)val, 42, "value [%i]", i);
-    
+    void* key = ecstr_create_fmt (42, "item [%i]", i);
+    void* val = ecstr_create_fmt (42, "value [%i]", i);
+
     ecmap_insert(map01, key, val);
   }
 
@@ -128,11 +122,8 @@ static int __STDCALL test_ecmap_test2 (void* ptr, TestEnvContext ctx, EcErr err)
   
   for (i = 0; i < 10; i++)
   {
-    void* key = malloc(42); 
-    void* val = malloc(42); 
-	
-	snprintf((char*)key, 42, "item [%i]", i);
-	snprintf((char*)val, 42, "value [%i]", i);
+    void* key = ecstr_create_fmt (42, "item [%i]", i);
+    void* val = ecstr_create_fmt (42, "value [%i]", i);
     
     ecmap_insert(map01, key, val);
   }
@@ -196,11 +187,8 @@ static int __STDCALL test_ecmap_test3 (void* ptr, TestEnvContext ctx, EcErr err)
   
   for (i = 0; i < 10; i++)
   {
-    void* key = malloc(42);
-    void* val = malloc(42);
-    
-    snprintf((char*)key, 42, "item [%i]", i);
-    snprintf((char*)val, 42, "value [%i]", i);
+    void* key = ecstr_create_fmt (42, "item [%i]", i);
+    void* val = ecstr_create_fmt (42, "value [%i]", i);
     
     ecmap_insert(map01, key, val);
   }
