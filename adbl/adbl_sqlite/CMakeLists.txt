@@ -37,3 +37,5 @@ ELSE( SQLITE_LIBRARIES )
 
 ENDIF( SQLITE_LIBRARIES )
 
+install (TARGETS adbl_sqlite3 DESTINATION modules_adbl)
+
