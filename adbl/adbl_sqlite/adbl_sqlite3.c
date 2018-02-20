@@ -550,10 +550,12 @@ void adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs)
 
 void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
 {
-  EcMapCursor cursor; ecmap_cursor_init (attrs->columns, &cursor, LIST_DIR_NEXT);
+  EcMapCursor cursor;
 
   EcStream cols = ecstream_create();
   EcStream values = ecstream_create();
+
+  ecmap_cursor_init (attrs->columns, &cursor, LIST_DIR_NEXT);
 
   // iterate through all columns
   while (ecmap_cursor_next (&cursor))
