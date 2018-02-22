@@ -281,7 +281,7 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
   res = ecproc_waitForProcess ((void*)self->pid, err);
   if (res)
   {
-    eclogger_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
+    eclog_fmt (LL_ERROR, "ENTC AIO", "proc thread", "can't wait for process %s", err->text);
   }
 
   printf("t1 [%lu]\n", (unsigned long)self->pid);
@@ -297,7 +297,7 @@ static int __STDCALL ecaio_proc_thread (void* ptr)
 
   ecerr_destroy (&err);
 
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc thread", "done");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc thread", "done");
   
   return FALSE;
 }
@@ -308,7 +308,7 @@ static int __STDCALL ecaio_proc_onNotify (void* ptr, int action)
 {
   EcAioProc self = ptr;
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "onNotify");
 
   if (self->onNotify)
   {
@@ -324,7 +324,7 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
 {
   EcAioProc self = ptr;
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy [%lu]", (unsigned long)self->pid);
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy [%lu]", (unsigned long)self->pid);
 
   self->onNotify = NULL;
   
@@ -337,7 +337,7 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   
   ecthread_delete (&(self->thread));
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "proc event", "stopped [%lu]", (unsigned long)self->pid);
+  eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "stopped [%lu]", (unsigned long)self->pid);
   
   ENTC_DEL(&self, struct EcAioProc_s);
 }
