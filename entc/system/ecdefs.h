@@ -54,7 +54,7 @@
 //----------------------------------------------------------------------------------
 #elif __linux__
 
-#define __LINUX_OS
+#define __LINUX_OS 1
 
 #define __LIBEX __EXTERN_C
 #define __STDCALL
