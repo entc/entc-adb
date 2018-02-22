@@ -216,16 +216,17 @@ struct Adbo_s
 
 Adbo adbo_create (const EcString confPath, const EcString binPath, const EcString objFile)
 {
+  EcXMLStream xmlstream;
+  
   Adbo self = ENTC_NEW (struct Adbo_s);
   
   self->adboctx = adbo_context_createJson (confPath, binPath);
   self->root = NULL;
   self->mutex = ecmutex_new ();
   
+  xmlstream = ecxmlstream_openfile (objFile, confPath);
+  if (xmlstream)
   {
-    EcXMLStream xmlstream;
-    
-    xmlstream = ecxmlstream_openfile (objFile, confPath);
     /* parse the xml structure */
     while( ecxmlstream_nextNode( xmlstream ) )
     {
@@ -235,9 +236,9 @@ Adbo adbo_create (const EcString confPath, const EcString binPath, const EcStrin
       }
     }
     
-    ecxmlstream_close(xmlstream);
+    ecxmlstream_destroy (&xmlstream);
   }
-
+  
   return self;
 }
 

@@ -43,7 +43,7 @@ __LIB_EXPORT EcXMLStream ecxmlstream_openpath (const char* path, const char* fil
 
 __LIB_EXPORT EcXMLStream ecxmlstream_openbuffer (const char* buffer);
 
-__LIB_EXPORT void ecxmlstream_close (EcXMLStream);
+__LIB_EXPORT void ecxmlstream_destroy (EcXMLStream*);
   
 __LIB_EXPORT int ecxmlstream_nextNode (EcXMLStream);
   

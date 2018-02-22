@@ -95,7 +95,57 @@ EcXMLStream ecxmlstream_new (void)
   return self;
 }
 
-/*------------------------------------------------------------------------*/
+//-----------------------------------------------------------------------------
+
+void ecxmlstream_clean (EcXMLStream self)
+{
+  /* delete all remaining node names */
+  EcXMLTag tag = ecstack_top (self->nodes);
+  
+  while (isAssigned (tag))
+  {
+    // clean the tag
+    ecstr_delete (&(tag->name));
+    ecstr_delete (&(tag->namespace));
+    
+    ENTC_DEL (&tag, EcXMLTag_s);
+    /* get the element */
+    ecstack_pop (self->nodes);
+    /* get next char* */
+    tag = ecstack_top (self->nodes);
+  }
+  
+  ecmap_clear (self->namespaces);
+}
+
+//-----------------------------------------------------------------------------
+
+void ecxmlstream_destroy (EcXMLStream* pself)
+{
+  EcXMLStream self = *pself;
+  
+  ecxmlstream_clean (self);
+  
+  /* delete the readbuffer */
+  if( self->readbuffer )
+  {
+    ecreadbuffer_destroy (&(self->readbuffer));
+  }
+  
+  ecstack_delete( &(self->nodes) );
+  
+  ecmap_destroy (&(self->lastattrs));
+  
+  ecstr_delete( &(self->value) );
+  
+  ecstr_delete( &(self->filename) );
+  
+  ecmap_destroy (&(self->namespaces));
+  
+  ENTC_DEL(pself, struct EcXMLStream_s);
+}
+
+//-----------------------------------------------------------------------------
 
 EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir)
 {
@@ -105,7 +155,8 @@ EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir)
   EcFileHandle fh = ecfh_open (filename, O_RDONLY);
   if (fh == NULL)
   {
-    
+    ecxmlstream_destroy (&self);
+    return NULL;
   }
   
   self->readbuffer = ecreadbuffer_create (fh, TRUE);
@@ -138,54 +189,6 @@ EcXMLStream ecxmlstream_openbuffer (const char* buffer)
   //eclogger_msg (LL_TRACE, "ENTC", "xml", buffer);
 
   return self;
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecxmlstream_clean (EcXMLStream self)
-{
-  /* delete all remaining node names */
-  EcXMLTag tag = ecstack_top (self->nodes);
-
-  while (isAssigned (tag))
-  {
-    // clean the tag
-    ecstr_delete (&(tag->name));
-    ecstr_delete (&(tag->namespace));
-    
-    ENTC_DEL (&tag, EcXMLTag_s);    
-    /* get the element */    
-    ecstack_pop (self->nodes);
-    /* get next char* */
-    tag = ecstack_top (self->nodes);
-  }
-
-  ecmap_clear (self->namespaces);
-}
-
-/*------------------------------------------------------------------------*/
-
-void ecxmlstream_close( EcXMLStream self )
-{
-  ecxmlstream_clean( self );
-
-  /* delete the readbuffer */
-  if( self->readbuffer )
-  {
-    ecreadbuffer_destroy (&(self->readbuffer));
-  }
-
-  ecstack_delete( &(self->nodes) );
-
-  ecmap_destroy (&(self->lastattrs));
-  
-  ecstr_delete( &(self->value) );
-  
-  ecstr_delete( &(self->filename) );
-  
-  ecmap_destroy (&(self->namespaces));
-
-  ENTC_DEL(&self, struct EcXMLStream_s);
 }
 
 //-----------------------------------------------------------------------------------------------------------

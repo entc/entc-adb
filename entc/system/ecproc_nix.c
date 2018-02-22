@@ -225,7 +225,7 @@ int ecproc_start (EcProc self, const char* command, const char* args, EcErr err)
         ecproc_addParameter (arguments, self->fifoIn);
       }
       
-      eclog_fmt (LL_DEBUG, "ENTC", "start proc", "%s | %s | %s", arguments[0], arguments[1], arguments[2]);
+      //eclog_fmt (LL_DEBUG, "ENTC", "start proc", "%s | %s | %s", arguments[0], arguments[1], arguments[2]);
       
       execv(arguments[0], arguments);
       

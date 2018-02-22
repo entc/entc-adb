@@ -423,7 +423,7 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
   {
     EcList engines = eclist_create (adbl_validate_config_engines_onDestroy);
     
-    eclog_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);
+    //eclog_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);
     
     // fill a list with all files in that directory
     if (!ecdh_scan(self->path, engines, ENTC_FILETYPE_ISFILE))
@@ -459,7 +459,7 @@ void adbl_scanJsonFromFile (const EcString configpath, EcUdc* pdata)
   int res;
   EcString filename = ecfs_mergeToPath (configpath, "adbl.json");
   
-  eclog_fmt (LL_TRACE, MODULE, "scan", "using config '%s'", filename);
+  //eclog_fmt (LL_TRACE, MODULE, "scan", "using config '%s'", filename);
   
   res = ecjson_readFromFile (filename, pdata, NULL);
   if (res)

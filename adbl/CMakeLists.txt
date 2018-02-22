@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 2.4)
 PROJECT(adbl)
 
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
-SET(CMAKE_MACOSX_RPATH 1)
-SET(CMAKE_INSTALL_PREFIX /opt/entc_1_3/)
+SET(CMAKE_MACOSX_RPATH 0)
+SET(CMAKE_INSTALL_PREFIX /opt/entc_1_4/)
 
-find_package(Entc_1_3)
+find_package(Entc_1_4)
 
 SET (ADBL_HEADERS
 
@@ -45,12 +45,12 @@ INCLUDE_DIRECTORIES( ${ENTC_INCLUDE_DIRS} )
 
 TARGET_LINK_LIBRARIES( adbl ${ENTC_LIBRARIES} )
 
-set_target_properties(adbl PROPERTIES VERSION 1.3.0 SOVERSION 1.3.0)
+set_target_properties(adbl PROPERTIES VERSION 1.4.0 SOVERSION 1.4.0)
 
 install (TARGETS adbl DESTINATION lib)
 install (FILES ${ADBL_HEADERS} DESTINATION include/adbl)
 
-INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindAdbl_1_3.cmake)
+INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindAdbl_1_4.cmake)
 
 add_subdirectory(adbl_mysql)
 add_subdirectory(adbl_sqlite)

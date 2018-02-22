@@ -48,6 +48,8 @@ IF(MYSQL_FOUND)
     ADD_EXECUTABLE(test_adbl_mysql_ps test_adbl_mysql_ps.c )
     TARGET_LINK_LIBRARIES(test_adbl_mysql_ps adbl_mysql ${ENTC_LIBRARIES})
 
+  install (TARGETS adbl_mysql DESTINATION modules_adbl)
+
 ELSE(MYSQL_FOUND)
 
   MESSAGE(WARNING "mysqlclient was not found on your system" )

@@ -1178,6 +1178,8 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
   if (timeout == ENTC_INFINITE)
   {
     res = kevent (self->kq, NULL, 0, &event, 1, NULL);
+    
+    //eclog_fmt (LL_TRACE, "ENTC AIO", "wait", "wait for event");
   }
   else
   {
@@ -1189,6 +1191,8 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
     res = kevent (self->kq, NULL, 0, &event, 1, &tmout);
   }
   
+  //eclog_fmt (LL_TRACE, "ENTC AIO", "wait", "event seend");
+ 
   if( res == -1 )
   {
     if( errno == EINTR )
@@ -1334,6 +1338,8 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
     {
       return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
     }
+    
+    //eclog_fmt (LL_TRACE, "ENTC AIO", "register", "register terminal event [SIGINT]");
   }
   {
     struct kevent kev;
@@ -1346,6 +1352,8 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
     {
       return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
     }
+
+    //eclog_fmt (LL_TRACE, "ENTC AIO", "register", "register event [SIGTERM]");
   }
   
   ecaio_reset_signals (err);
