@@ -245,8 +245,8 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
 
 //*****************************************************************************
 
-#include "ecthread.h"
-#include "ecaio_event.h"
+#include "system/ecthread.h"
+#include "aio/ecaio_event.h"
 
 //-----------------------------------------------------------------------------
 
