@@ -492,7 +492,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
       return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_NOT_SUPPORTED, "file descriptor don't support epoll");
     }
     
-    eclogger_fmt (LL_ERROR, "ENTC", "append", "append failed with error %i", s);
+    eclog_fmt (LL_ERROR, "ENTC", "append", "append failed with error %i", s);
     
     return ecerr_formatErrorOS(err, ENTC_LVL_ERROR, errCode);
   }
@@ -579,7 +579,7 @@ void ecaio_abortall (EcAio self)
 {
   ecmutex_lock (self->eventsm);
   
-  eclogger_fmt (LL_TRACE, "ENTC AIO", "abortall", "{%p} clear all events [%i]", self, eclist_size(self->events));
+  eclog_fmt (LL_TRACE, "ENTC AIO", "abortall", "{%p} clear all events [%i]", self, eclist_size(self->events));
   
   eclist_clear (self->events);
   
@@ -819,19 +819,19 @@ static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned
     {
       case SIGINT:
       {
-        eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> SIGINT", info.ssi_signo);
+        eclog_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> SIGINT", info.ssi_signo);
         
         return ENTC_AIO_CODE_ABORTALL;
       }
       case SIGTERM:
       {
-        eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> SIGTERM", info.ssi_signo);
+        eclog_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> SIGTERM", info.ssi_signo);
         
         return ENTC_AIO_CODE_ABORTALL;
       }
       default:
       {
-        eclogger_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> unknown", info.ssi_signo);
+        eclog_fmt (LL_TRACE, "ENTC", "signal", "received signal [%i] -> unknown", info.ssi_signo);
         
         return ENTC_AIO_CODE_CONTINUE;
       }
