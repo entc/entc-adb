@@ -309,6 +309,9 @@ int ecaio_abort (EcAio self, EcErr err)
 
 //*****************************************************************************
 
+// entc includes
+#include <types/eclist.h>
+
 #include <signal.h>
 #include <errno.h>
 #include <sys/epoll.h>
