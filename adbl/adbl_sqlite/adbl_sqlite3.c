@@ -425,7 +425,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     }
   }
   
-  eclog_msg (LL_TRACE, MODULE, "query", ecstream_get (statement));
+  //eclog_msg (LL_TRACE, MODULE, "query", ecstream_get (statement));
   
   res = sqlite3_prepare_v2( conn->handle,
                             ecstream_get( statement ),
