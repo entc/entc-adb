@@ -901,7 +901,7 @@ EcBuffer ecbuf_sha_256 (EcBuffer b1, EcErr err)
   int i = 0;
   for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
   {
-    snprintf((char*)(outb->buffer) + (i * 2), 2, "%02x", hash[i]);
+    snprintf((char*)(outb->buffer) + (i * 2), 4, "%02x", hash[i]);
   }
 
   return outb;
