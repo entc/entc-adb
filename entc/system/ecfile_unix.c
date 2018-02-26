@@ -214,7 +214,7 @@ EcString ecfh_md5 (EcFileHandle self)
 
   for (i = 0; i < MD5_DIGEST_LENGTH; i++)
   {
-    snprintf((char*)(ret->buffer) + (i * 2), 2, "%02x", c[i]);
+    snprintf((char*)(ret->buffer) + (i * 2), 4, "%02x", c[i]);
   }
 
   ecbuf_destroy (&buf);
