@@ -7,9 +7,16 @@
 
 //-----------------------------------------------------------------------------
 
+// state
 #define SLP_STATE_TEXT     0
 #define SLP_STATE_BR_R     1
 #define SLP_STATE_BR_N     2
+
+// mode
+#define SLP_MODE_BR_NONE   0
+#define SLP_MODE_BR_R      1
+#define SLP_MODE_BR_N      2
+#define SLP_MODE_BR_RN     3
 
 //-----------------------------------------------------------------------------
 
@@ -20,6 +27,8 @@ struct EcLineParser_s
   void* ptr;
   
   int state;   // for the state machine
+  
+  int mode;
   
   EcStream stream;
   
@@ -35,6 +44,7 @@ EcLineParser eclineparser_create (fct_eclineparser_onLine onLine, void* ptr)
   self->ptr = ptr;
   
   self->state = SLP_STATE_TEXT;
+  self->mode = SLP_MODE_BR_NONE;
   
   self->stream = ecstream_create ();
   
@@ -92,26 +102,53 @@ void eclineparser_parse (EcLineParser self, const char* buffer, int size)
       }
       case '\r':
       {
-        switch (self->state)
+        switch (self->mode)
         {
-          case SLP_STATE_TEXT:
+          case SLP_MODE_BR_R:
+          {
+            // record line break
+            eclineparser_recordLineBreak (self);
+            break;            
+          }
+          case SLP_MODE_BR_N:
+          {
+            // wrong line break -> ignore ??
+            break;
+          }
+          case SLP_MODE_BR_RN:
           {
             self->state = SLP_STATE_BR_R;
             break;
           }
-          case SLP_STATE_BR_R:
+          default: 
           {
-            // record line break
-            eclineparser_recordLineBreak (self);
-            
-            break;
-          }
-          case SLP_STATE_BR_N:
-          {
-            // record line break
-            eclineparser_recordLineBreak (self);
-            
-            self->state = SLP_STATE_BR_R;
+            switch (self->state)
+            {
+              case SLP_STATE_TEXT:
+              {
+                self->state = SLP_STATE_BR_R;
+                break;          
+              }
+              case SLP_STATE_BR_R:
+              {
+                // set new mode
+                self->mode = SLP_MODE_BR_R;
+                self->state = SLP_STATE_TEXT;
+                
+                // record line break
+                eclineparser_recordLineBreak (self);
+                break;
+              }
+              case SLP_STATE_BR_N:
+              {
+                // not supported mode
+                self->state = SLP_STATE_TEXT;
+                
+                // record line break
+                eclineparser_recordLineBreak (self);
+                break;
+              }
+            }
             break;
           }
         }
@@ -119,24 +156,62 @@ void eclineparser_parse (EcLineParser self, const char* buffer, int size)
       }
       case '\n':
       {
-        switch (self->state)
+        switch (self->mode)
         {
-          case SLP_STATE_TEXT:
+          case SLP_MODE_BR_R:
           {
-            self->state = SLP_STATE_BR_N;
-            break;
+            // wrong line break -> ignore ??
+            break;            
           }
-          case SLP_STATE_BR_R:
+          case SLP_MODE_BR_N:
           {
-            self->state = SLP_STATE_BR_N;
-            break;
-          }
-          case SLP_STATE_BR_N:
-          {
-            // record line break
+            // record line break            
             eclineparser_recordLineBreak (self);
-            
             break;
+          }
+          case SLP_MODE_BR_RN:
+          {
+            if (self->state == SLP_STATE_BR_R)
+            {
+              self->state = SLP_STATE_TEXT;
+              eclineparser_recordLineBreak (self);
+            }
+            else
+            {
+              // wrong line break -> ignore ??  
+            }
+            break;
+          }
+          default:
+          {
+            switch (self->state)
+            {
+              case SLP_STATE_TEXT:
+              {
+                self->state = SLP_STATE_BR_N;
+                break;
+              }
+              case SLP_STATE_BR_R:
+              {
+                // set new mode
+                self->mode = SLP_MODE_BR_RN;
+                self->state = SLP_STATE_TEXT;
+
+                // record line break
+                eclineparser_recordLineBreak (self);
+                break;
+              }
+              case SLP_STATE_BR_N:
+              {
+                // set new mode
+                self->mode = SLP_MODE_BR_N;
+                self->state = SLP_STATE_TEXT;
+
+                // record line break
+                eclineparser_recordLineBreak (self);
+                break;
+              }
+            }
           }
         }
         break;
@@ -147,18 +222,22 @@ void eclineparser_parse (EcLineParser self, const char* buffer, int size)
         {
           case SLP_STATE_BR_R:
           {
+            // set new mode
+            self->mode = SLP_MODE_BR_R;
+            self->state = SLP_STATE_TEXT;
+
             // record line break
             eclineparser_recordLineBreak (self);
-            
-            self->state = SLP_STATE_TEXT;
             break;
           }
           case SLP_STATE_BR_N:
           {
+            // set new mode
+            self->mode = SLP_MODE_BR_N;
+            self->state = SLP_STATE_TEXT;
+
             // record line break
             eclineparser_recordLineBreak (self);
-            
-            self->state = SLP_STATE_TEXT;
             break;
           }
         }
@@ -170,6 +249,26 @@ void eclineparser_parse (EcLineParser self, const char* buffer, int size)
       }
     }
   }
+  
+  switch (self->state)
+  {
+    case SLP_STATE_BR_R:
+    {
+      self->state = SLP_STATE_TEXT;
+      
+      // record line break
+      eclineparser_recordLineBreak (self);
+      break;
+    }
+    case SLP_STATE_BR_N:
+    {
+      self->state = SLP_STATE_TEXT;
+      
+      // record line break
+      eclineparser_recordLineBreak (self);
+      break;
+    }
+  }  
 }
 
 //-----------------------------------------------------------------------------

@@ -79,7 +79,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
     
     while (eclist_cursor_prev (cursor))
     {
-      void* data = eclist_data (cursor->node);
+      char* data = eclist_data (cursor->node);
       
       printf ("data: %s\n", data);
     }
@@ -90,7 +90,7 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   // combine
   {
     EcListCursor* cursor = eclist_cursor_create (h, 1);
-    void* data;    
+    char* data;    
 
     eclist_cursor_next (cursor);    // 0
     eclist_cursor_next (cursor);    // 1
@@ -217,7 +217,7 @@ static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx, EcErr e
     
     while (eclist_cursor_next (&cursor))
     {
-      void* data = eclist_data(cursor.node);
+      char* data = eclist_data(cursor.node);
       printf ("data: %s\n", data);
     }
   }
@@ -257,7 +257,7 @@ static int __STDCALL test_stdlist_test4 (void* ptr, TestEnvContext tctx, EcErr e
     
     while (eclist_cursor_next (cursor))
     {
-      void* data = eclist_data (cursor->node);
+      char* data = eclist_data (cursor->node);
       
       printf ("data: %s\n", data);
     }
@@ -271,7 +271,7 @@ static int __STDCALL test_stdlist_test4 (void* ptr, TestEnvContext tctx, EcErr e
     
     while (eclist_cursor_prev (cursor))
     {
-      void* data = eclist_data (cursor->node);
+      char* data = eclist_data (cursor->node);
       
       printf ("data: %s\n", data);
     }

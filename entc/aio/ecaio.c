@@ -317,6 +317,7 @@ int ecaio_abort (EcAio self, EcErr err)
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/signalfd.h>
+#include <unistd.h>
 
 #define Q6_EPOLL_MAXEVENTS 1
 
@@ -476,7 +477,7 @@ int ecaio_init (EcAio self, EcErr err)
 int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
 {
   struct epoll_event event;
-  uint64_t hfd = handle;
+  uint64_t hfd = (int)handle;
   
   event.data.ptr = ctx;
   event.events = EPOLLET | EPOLLONESHOT | EPOLLIN;
@@ -681,7 +682,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
       if (cont == ENTC_AIO_CODE_CONTINUE)
       {
-        epoll_ctl (self->efd, EPOLL_CTL_MOD, handle, &(events[i]));
+        epoll_ctl (self->efd, EPOLL_CTL_MOD, (int)handle, &(events[i]));
         // continue
       }
       else if (cont == ENTC_AIO_CODE_ABORTALL)
@@ -700,7 +701,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
         //eclogger_fmt (LL_TRACE, "ENTC", "context", "remove %i %p", ctx->handle, ctx);
         // remove
         struct epoll_event event = {0}; // see bugs
-        int s = epoll_ctl (self->efd, EPOLL_CTL_DEL, handle, &event);
+        int s = epoll_ctl (self->efd, EPOLL_CTL_DEL, (int)handle, &event);
         if (s < 0)
         {
 
@@ -811,7 +812,7 @@ int ecaio_reset_signals (EcErr err)
 static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   struct signalfd_siginfo info;
-  unsigned long bytes = read(ptr, &info, sizeof(struct signalfd_siginfo));
+  unsigned long bytes = read ((int)ptr, &info, sizeof(struct signalfd_siginfo));
   
   if (bytes == sizeof(struct signalfd_siginfo))
   {
@@ -901,7 +902,7 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
 }

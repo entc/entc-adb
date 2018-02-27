@@ -916,7 +916,7 @@ static void __STDCALL ecaio_socketreader_fct_destroy (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_socketreader_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_socketreader_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   int count;
   
@@ -1170,7 +1170,7 @@ void ecaio_socketaccept_setCallback (EcAioSocketAccept self, void* ptr, fct_ecai
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_socketaccept_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_socketaccept_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   EcAioSocketAccept self = ptr;
   

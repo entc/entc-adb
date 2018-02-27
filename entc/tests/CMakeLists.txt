@@ -30,6 +30,12 @@ ADD_EXECUTABLE( ut_ecexec system/ut_ecexec.c )
 TARGET_LINK_LIBRARIES( ut_ecexec entc )
 add_test(ut_ecexec tests/Debug/ut_ecexec)
 
+#----------- aio ----------------------------------------------
+
+ADD_EXECUTABLE( ut_ecaio_webserver aio/ut_ecaio_webserver.c )
+TARGET_LINK_LIBRARIES( ut_ecaio_webserver entc )
+add_test(ut_ecaio_webserver tests/Debug/ut_ecaio_webserver)
+
 #----------- types -----------------------------------------------
 
 ADD_EXECUTABLE( ut_ecmap types/ut_ecmap.c )

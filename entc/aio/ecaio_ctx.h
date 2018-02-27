@@ -27,17 +27,19 @@
 
 //-----------------------------------------------------------------------------
 
-#define ENTC_AIO_CODE_UNKNOWN        0
-#define ENTC_AIO_CODE_CONTINUE      10
-#define ENTC_AIO_CODE_DONE          11
-#define ENTC_AIO_CODE_ABORTALL      12
-#define ENTC_AIO_CODE_ONCE          13
+typedef enum {
+  ENTC_AIO_CODE_UNKNOWN = 0,
+  ENTC_AIO_CODE_CONTINUE = 10,
+  ENTC_AIO_CODE_DONE = 11,
+  ENTC_AIO_CODE_ABORTALL = 12,
+  ENTC_AIO_CODE_ONCE = 13
+} EcAioStatus;
 
 //=============================================================================
 
 struct EcAioContext_s; typedef struct EcAioContext_s* EcAioContext;
 
-typedef int  (__STDCALL *fct_ecaio_context_process)  (void* ptr, EcAioContext, unsigned long, unsigned long);
+typedef EcAioStatus (__STDCALL *fct_ecaio_context_process)  (void* ptr, EcAioContext, unsigned long, unsigned long);
 typedef void (__STDCALL *fct_ecaio_context_destroy)  (void* ptr);
 typedef int  (__STDCALL *fct_ecaio_context_onRead)   (void* ptr, void* handle, const char* buffer, unsigned long);
 typedef int  (__STDCALL *fct_ecaio_context_onInit)   (void* ptr, EcErr);

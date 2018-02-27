@@ -106,7 +106,7 @@ int ecaio_notify_read (EcAioNotify self, EcAioContext ctx)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_notify_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
+static EcAioStatus __STDCALL ecaio_notify_fct_process (void* ptr, EcAioContext ctx, unsigned long len, unsigned long opt)
 {
   EcAioNotify self = ptr;
   
@@ -228,7 +228,7 @@ int ecaio_notify_init (EcAioNotify self, const char* path, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_notify_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_notify_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   EcAioNotify self = ptr;
   
@@ -277,7 +277,7 @@ int ecaio_notify_init (EcAioNotify self, const char* path, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_notify_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_notify_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   return ENTC_AIO_CODE_CONTINUE;
 }

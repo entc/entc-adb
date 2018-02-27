@@ -383,7 +383,7 @@ static void __STDCALL ecaio_filereader_fct_destroy (void* ptr)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_filereader_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_filereader_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   EcAioFileReader self = (EcAioFileReader)ptr;
   

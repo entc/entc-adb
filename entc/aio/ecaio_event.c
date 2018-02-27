@@ -36,7 +36,7 @@ void ecaio_event_destroy (EcAioEvent* pself)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_event_onProcess (void* ptr, EcAioContext ctx, unsigned long flags, unsigned long filter)
+static EcAioStatus __STDCALL ecaio_event_onProcess (void* ptr, EcAioContext ctx, unsigned long flags, unsigned long filter)
 {
   EcAioEvent self = ptr;
   
