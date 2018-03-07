@@ -83,18 +83,8 @@ typedef struct
   
   EcMapNode node;
   
-  /*
-  int position;
-  
   int direction;
 
-  EcMap tree;
-  
-  EcMapNode path[RB_ITER_MAX_HEIGHT];      // Traversal path
-  
-  int top;   // Top of stack
-   */
-  
   EcListCursor cursor;
   
   int position;

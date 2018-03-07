@@ -268,31 +268,6 @@ void eclineparser_parse (EcLineParser self, const char* buffer, int size)
       eclineparser_recordLineBreak (self);
       break;
     }
-  }  
-}
-
-//-----------------------------------------------------------------------------
-
-void eclineparser_done (EcLineParser self)
-{
-  eclineparser_recordLineBreak (self);
-  
-  switch (self->state)
-  {
-    case SLP_STATE_BR_R:
-    {
-      // record line break
-      eclineparser_recordLineBreak (self);
-      
-      break;
-    }
-    case SLP_STATE_BR_N:
-    {
-      // record line break
-      eclineparser_recordLineBreak (self);
-      
-      break;
-    }
   }
 }
 

@@ -39,8 +39,6 @@ __LIBEX void eclineparser_destroy (EcLineParser* pself);
 
 __LIBEX void eclineparser_parse (EcLineParser, const char* buffer, int size);
 
-__LIBEX void eclineparser_done (EcLineParser);
-
 //-----------------------------------------------------------------------------
 
 #endif

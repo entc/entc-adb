@@ -69,8 +69,6 @@ static int __STDCALL test_stdlparser_test1 (void* ptr, TestEnvContext tctx, EcEr
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);
   
-  eclineparser_done (slp);
-  
   return 0;
 }
 
@@ -100,7 +98,6 @@ static int __STDCALL test_stdlparser_test2 (void* ptr, TestEnvContext tctx, EcEr
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);
   
-  eclineparser_done (slp);
   
   return 0;
 }
@@ -130,8 +127,6 @@ static int __STDCALL test_stdlparser_test3 (void* ptr, TestEnvContext tctx, EcEr
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);
   
-  eclineparser_done (slp);
-  
   return 0;
 }
 
@@ -159,8 +154,6 @@ static int __STDCALL test_stdlparser_test4 (void* ptr, TestEnvContext tctx, EcEr
   
   eclineparser_parse (slp, buf1, 10);
   eclineparser_parse (slp, buf1 + 10, 20);
-  
-  eclineparser_done (slp);
   
   return 0;
 }
