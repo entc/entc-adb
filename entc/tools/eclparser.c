@@ -86,7 +86,7 @@ void eclineparser_recordLineBreak (EcLineParser self)
 
 //-----------------------------------------------------------------------------
 
-void eclineparser_parse (EcLineParser self, const char* buffer, int size)
+void eclineparser_parse (EcLineParser self, const char* buffer, int size, int last)
 {
   int i;
   const char* c = buffer;
@@ -266,6 +266,15 @@ void eclineparser_parse (EcLineParser self, const char* buffer, int size)
       
       // record line break
       eclineparser_recordLineBreak (self);
+      break;
+    }
+    case SLP_STATE_TEXT:
+    {
+      if (last)
+      {
+        eclineparser_recordLineBreak (self);    
+      }
+     
       break;
     }
   }

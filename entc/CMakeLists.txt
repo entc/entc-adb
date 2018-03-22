@@ -164,7 +164,7 @@ SET (ENTC_TYPES_SOURCES
   types/ecarray.c
   types/eclist.c
   types/ecmap.c
-  types/ecmap_new2.c
+  #types/ecmap_new2.c
   types/ecstring.c
   types/ecbuffer.c
   types/ecstream.c

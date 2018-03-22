@@ -94,7 +94,8 @@ static int __STDCALL text_ecaio_reader_onRead (void* ptr, void* handle, const ch
 {
   TestParserCtx* ctx = ptr;
 
-  eclineparser_parse (ctx->lp, buffer, size);
+  // we don't know if this was the last line
+  eclineparser_parse (ctx->lp, buffer, size, FALSE);
 
   if (ctx->done)
   {
