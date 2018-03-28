@@ -115,6 +115,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         {
           sd->state01 = 0;
           ecstream_append_c (sd->sb, '{');
+          ecstream_append_c (sd->sb, *c);
         }
       }
       break;
@@ -155,6 +156,7 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         {
           sd->state01 = 0;
           ecstream_append_c (sd->sb, '[');
+          ecstream_append_c (sd->sb, *c);
         }
       }
       break;
