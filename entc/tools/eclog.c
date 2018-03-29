@@ -45,7 +45,7 @@ static const char* clr_matrix[7] = { "0", "0;31", "1;31", "1;33", "0;32", "0;34"
 
 void eclog_msg (EcLogLevel lvl, const char* unit, const char* method, const char* msg)
 {
-  static char buffer [2050];
+  char buffer [2050];
 
   if (lvl > 6)
   {
