@@ -142,7 +142,7 @@ typedef struct
 
 __LIBEX int ecfs_move (const EcString source, const EcString dest);
 
-__LIBEX int ecfs_copy (const EcString source, const EcString dest);
+__LIBEX int ecfs_cpfile (const EcString source, const EcString dest, EcErr err);
 
 __LIBEX int ecfs_cpdir (const EcString source, const EcString dest, EcErr err);
 

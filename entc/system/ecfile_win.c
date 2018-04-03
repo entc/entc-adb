@@ -284,9 +284,14 @@ int ecfs_move(const EcString source, const EcString dest)
 
 /*------------------------------------------------------------------------*/
 
-int ecfs_copy (const EcString source, const EcString dest)
+int ecfs_cpfile (const EcString source, const EcString dest, EcErr err)
 {
-  return CopyFile (source, dest, TRUE);
+  if(!CopyFile (source, dest, TRUE))
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  return ENTC_ERR_NONE;
 }
 
 /*------------------------------------------------------------------------*/

@@ -1,29 +1,18 @@
-
-#include "types/ecmap.h"
 #include "tests/ecenv.h"
+#include "system/ecfile.h"
 
 #include <stdio.h>
 
 //=============================================================================
 
-static void* __STDCALL test_stdlist_init ()
+static int __STDCALL test_copydir (void* ptr, TestEnvContext ctx, EcErr err)
 {
-  return NULL;
-}
-
-//---------------------------------------------------------------------------
-
-static void __STDCALL test_stdlist_done (void* ptr)
-{
-
-}
-
-//---------------------------------------------------------------------------
-
-static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr err)
-{
+  printf ("copy directory\n");
   
-  return 0;
+  int res = ecfs_cpdir ("test_dir", "copy_dir", err);
+  
+  
+  return res;
 }
 
 //=============================================================================
@@ -32,7 +21,7 @@ int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
   
-  testenv_reg (te, "Test1", test_stdlist_init, test_stdlist_done, test_stdlist_test1);
+  testenv_reg (te, "Test1", NULL, NULL, test_copydir);
   
   testenv_run (te);
   

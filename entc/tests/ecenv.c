@@ -181,7 +181,14 @@ void testenv_run (TestEnv self)
     
     EcErr err = ecerr_create();
     
-    ctx->ptr = ctx->init (err);
+    if (ctx->init)
+    {
+      ctx->ptr = ctx->init (err);
+    }
+    else
+    {
+      ctx->ptr = NULL;
+    }
     
     res = testctx_err (ctx, err);
     
@@ -192,7 +199,8 @@ void testenv_run (TestEnv self)
       res = ctx->test (ctx->ptr, ctx, err);
       if (res)
       {
-        
+        // record this error
+        testctx_err (ctx, err);
       }
     }
     
@@ -214,7 +222,7 @@ void testenv_run (TestEnv self)
       eclog_fmt (LL_INFO, "TEST", "done", "OK");
     }
     
-    if (!res)
+    if (!res && ctx->done)
     {
       ctx->done (ctx->ptr);
     }

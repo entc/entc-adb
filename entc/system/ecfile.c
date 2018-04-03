@@ -39,6 +39,103 @@ int ecdh_scan (const EcString path, EcList entries, int filetype)
   return TRUE;
 }
 
+//--------------------------------------------------------------------------------
+// as long there is no OS specific way, the generic implementation follows
+
+// forward declaration
+int ecfs_copy_file_directory (EcFileInfo finfo, const EcString source, const EcString dest, EcErr err);
+
+//--------------------------------------------------------------------------------
+
+int ecfs_copy_directory (EcDirHandle dh, const EcString source, const EcString dest, EcErr err)
+{
+  EcFileInfo finfo;
+  
+  // iterate through all files
+  while (ecdh_next (dh, &finfo, TRUE))
+  {
+    int res;
+    
+    // ignore these 
+    if (ecstr_equal (finfo->name, ".") || ecstr_equal (finfo->name, ".."))
+    {
+      continue;
+    }
+
+    {
+      EcString found_source = ecfs_mergeToPath (source, finfo->name);
+      EcString found_dest = ecfs_mergeToPath (dest, finfo->name);
+      
+      res = ecfs_copy_file_directory (finfo, found_source, found_dest, err);
+      
+      ecstr_delete (&found_source);
+      ecstr_delete (&found_dest);
+    }
+    
+    if (res)
+    {
+      return res;
+    }
+  }
+ 
+  return ENTC_ERR_NONE;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecfs_copy_file_directory (EcFileInfo finfo, const EcString source, const EcString dest, EcErr err)
+{
+  switch (finfo->type)
+  {
+    case ENTC_FILETYPE_ISDIR:
+    {
+      EcDirHandle dh;
+        
+      // create directory
+      if (!ecfs_createDirIfNotExists (dest))
+      {
+        return ecerr_lastErrorOS(err, ENTC_LVL_ERROR);
+      }      
+            
+      dh = ecdh_create (source);
+      if (dh)
+      {
+        int res = ecfs_copy_directory (dh, source, dest, err);
+        
+        // clean up
+        ecdh_destroy (&dh);
+        
+        return res;
+      }
+      else
+      {
+        return ecerr_lastErrorOS(err, ENTC_LVL_ERROR);
+      }
+    }
+    case ENTC_FILETYPE_ISFILE:
+    {
+      return ecfs_cpfile (source, dest, err);
+    }
+  }  
+  
+  return ENTC_ERR_NONE;
+}
+
+//--------------------------------------------------------------------------------
+
+int ecfs_cpdir (const EcString source, const EcString dest, EcErr err)
+{
+  EcFileInfo_s sinfo;
+  
+  // get the fileinfo of the source
+  if (!ecfs_fileInfo (&sinfo, source))
+  {
+    return ecerr_lastErrorOS(err, ENTC_LVL_ERROR);
+  }
+  
+  return ecfs_copy_file_directory (&sinfo, source, dest, err);
+}
+
 /*------------------------------------------------------------------------*/
 
 EcString ecfs_mergeToPath(const EcString path, const EcString file)

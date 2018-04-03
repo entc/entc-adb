@@ -373,11 +373,16 @@ int ecfs_move (const EcString source, const EcString dest)
 
 //--------------------------------------------------------------------------------
 
-int ecfs_copy (const EcString source, const EcString dest)
+int ecfs_cpfile (const EcString source, const EcString dest, EcErr err)
 {
 #ifdef __APPLE_CC__
   
-  return copyfile (source, dest, 0, COPYFILE_ACL | COPYFILE_XATTR | COPYFILE_DATA) == 0;
+  if (copyfile (source, dest, 0, COPYFILE_ACL | COPYFILE_XATTR | COPYFILE_DATA) != 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  
+  return ENTC_ERR_NONE;
   
 #elif __LINUX_OS
   
@@ -393,7 +398,7 @@ int ecfs_copy (const EcString source, const EcString dest)
   close (sfd);
   close (dfd);
   
-  return TRUE;
+  return ENTC_ERR_NONE;
 
 #else
   
@@ -405,7 +410,7 @@ int ecfs_copy (const EcString source, const EcString dest)
   fhin = ecfh_open (source, O_RDONLY);
   if (fhin == NULL)
   {
-    return FALSE; 
+    return ecerr_lastErrorOS(err, ENTC_LVL_ERROR); 
   }
   
   fhout = ecfh_open (dest, O_WRONLY | O_CREAT);
@@ -413,7 +418,7 @@ int ecfs_copy (const EcString source, const EcString dest)
   {
     ecfh_close (&fhin);
     
-    return FALSE;     
+    return ecerr_lastErrorOS(err, ENTC_LVL_ERROR);     
   }
   
   buf = ecbuf_create (10000);
@@ -437,17 +442,8 @@ int ecfs_copy (const EcString source, const EcString dest)
   ecfh_close (&fhin);
   ecfh_close (&fhout);
   
-  return TRUE;
-#endif
-}
-
-//--------------------------------------------------------------------------------
-
-int ecfs_cpdir (const EcString source, const EcString dest, EcErr err)
-{
-  
-  
   return ENTC_ERR_NONE;
+#endif
 }
 
 //--------------------------------------------------------------------------------
