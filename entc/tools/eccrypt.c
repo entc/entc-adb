@@ -11,6 +11,22 @@
 
 //=============================================================================
 
+HCRYPTPROV ecencrypt_aes_acquireContext (unsigned int type, EcErr err)
+{
+  HCRYPTPROV handle;  
+  
+  /*
+  if (!CryptAcquireContextW(&hProv, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
+  {
+    return NULL;
+  }
+  */
+  
+  return handle;
+}
+
+//=============================================================================
+
 struct EcEncryptAES_s
 {
   
@@ -27,9 +43,9 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
 
 //-----------------------------------------------------------------------------
 
-EcEncryptAES ecencrypt_aes_initialize (const EcString secret, EcErr err)
+EcEncryptAES ecencrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr err)
 {
-
+  
 }
 
 //-----------------------------------------------------------------------------
@@ -57,7 +73,7 @@ struct EcDecryptAES_s
 
 //-----------------------------------------------------------------------------
 
-EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, EcErr err)
+EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr err)
 {
 
 }
@@ -146,6 +162,13 @@ EcString eccrypt_aes_getkey (const EcString secret, int padding, const EVP_CIPHE
       // add the last byte (padding)
       memset (key->buffer + keyLength - 1, diffSize, 1);
       
+      // for debug
+      {
+        EcBuffer h = ecbuf_bin2hex(key);
+        
+        eclog_fmt (LL_TRACE, "ENTC", "eccrypt", ecbuf_const_str(h));
+      }
+
       return ecbuf_str (&key);     
     }
   }
