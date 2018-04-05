@@ -29,12 +29,17 @@
 //=============================================================================
 
 #define ENTC_AES_TYPE_CBC                0x01
-#define ENTC_AES_TYPE_CFB_1              0x02
-#define ENTC_AES_TYPE_CFB_8              0x03
-#define ENTC_AES_TYPE_CFB_128            0x04
+#define ENTC_AES_TYPE_CFB                0x02
+
+#define ENTC_AES_TYPE_CFB_1              0xF2
+#define ENTC_AES_TYPE_CFB_8              0xF3
+#define ENTC_AES_TYPE_CFB_128            0xF4
 
 #define ENTC_KEY_PADDING_SHA256          0x00     // default
 #define ENTC_KEY_PADDING_ANSI_X923       0x01
+#define ENTC_KEY_PADDING_ZEROS           0x02
+#define ENTC_KEY_PADDING_PKCS7           0x03
+#define ENTC_KEY_PASSPHRASE              0x04
 
 //=============================================================================
 

@@ -105,10 +105,30 @@ void ecdecrypt_aes_destroy (EcDecryptAES* pself)
 
 //----------------------------------------------------------------------------------------
 
-EcString eccrypt_aes_getkey (const EcString secret, int padding, const EVP_CIPHER* cypher, EcErr err)
+EcString eccrypt_aes_getkey (const EcString secret, int padding, const EVP_CIPHER* cypher, const char* data, EcErr err)
 {
   switch (padding)
   {
+    case ENTC_KEY_PADDING_ZEROS:
+    {
+      int size = ecstr_len (secret);
+
+      // cypher options
+      int keyLength = EVP_CIPHER_key_length (cypher);
+            
+      // using the whole keylength for padding
+      EcBuffer key = ecbuf_create (keyLength);
+
+      //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (ANSI X.923) with key-length %i, filling %i", keyLength, keyLength - size);
+      
+      // add the zeros (padding)
+      memset (key->buffer, 0, keyLength);
+
+      // fill the buffer with they key
+      memcpy (key->buffer, secret, size);
+      
+      return ecbuf_str (&key);
+    }
     case ENTC_KEY_PADDING_SHA256:
     {
       int keyLength = EVP_CIPHER_key_length (cypher);
@@ -162,6 +182,48 @@ EcString eccrypt_aes_getkey (const EcString secret, int padding, const EVP_CIPHE
       
       return ecbuf_str (&key);     
     }
+    case ENTC_KEY_PADDING_PKCS7:
+    {
+      int size = ecstr_len (secret);
+
+      // cypher options
+      int keyLength = EVP_CIPHER_key_length (cypher);
+      
+      int diff = keyLength - size;
+            
+      // using the whole keylength for padding
+      EcBuffer key = ecbuf_create (keyLength);
+
+      // add the padding
+      memset (key->buffer, diff, keyLength);
+
+      // fill the buffer with they key
+      memcpy (key->buffer, secret, size);
+      
+      return ecbuf_str (&key);     
+    }
+    case ENTC_KEY_PASSPHRASE:
+    {
+      //bzero(key,sizeof(key));
+      //bzero(iv,sizeof(iv));
+      EcBuffer key = ecbuf_create(265);
+      EcBuffer iv = ecbuf_create(265);
+      
+      EVP_BytesToKey(cypher, EVP_sha1(), NULL, (unsigned char*)secret, ecstr_len(secret), 1, key->buffer, iv->buffer);  
+     
+      {
+        EcBuffer h1 = ecbuf_bin2hex(key);
+        EcBuffer h2 = ecbuf_bin2hex(iv);
+        
+        eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "secret as passphrase key: %s", h1->buffer);
+        eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "secret as passphrase iv: %s", h2->buffer);
+        
+        
+      }
+      
+      
+      return ecbuf_str(&key);
+    }
   }
   
   return NULL;
@@ -189,14 +251,30 @@ int eccrypt_aes_handleError (EVP_CIPHER_CTX* ctx, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-const EVP_CIPHER* eccrypt_aes_getCipher (unsigned int type)
+const EVP_CIPHER* eccrypt_aes_getCipher (unsigned int type, int* padding)
 {
   switch (type)
   {
-    case ENTC_AES_TYPE_CBC: return EVP_aes_256_cbc();
-    case ENTC_AES_TYPE_CFB_1: return EVP_aes_256_cfb1();
-    case ENTC_AES_TYPE_CFB_8: return EVP_aes_256_cfb8();
-    case ENTC_AES_TYPE_CFB_128: return EVP_aes_256_cfb128();
+    case ENTC_AES_TYPE_CBC:
+    {
+      return EVP_aes_256_cbc();
+    }
+    case ENTC_AES_TYPE_CFB:
+    {
+      return EVP_aes_256_cfb();
+    }
+    case ENTC_AES_TYPE_CFB_1:
+    {
+      return EVP_aes_256_cfb1();
+    }
+    case ENTC_AES_TYPE_CFB_8:
+    {
+      return EVP_aes_256_cfb8();
+    }
+    case ENTC_AES_TYPE_CFB_128:
+    {
+      return EVP_aes_256_cfb128();
+    }
   }
   
   return EVP_aes_256_cbc();
@@ -251,13 +329,14 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
 
 //-----------------------------------------------------------------------------
 
-EcEncryptAES ecencrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr err)
+EcEncryptAES ecencrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int orig_padding, EcErr err)
 {
   int res;  
+  int padding = orig_padding;
   EcEncryptAES self = ecencrypt_aes_create ();
   
   // get the cypher
-  const EVP_CIPHER* cypher = eccrypt_aes_getCipher (type);
+  const EVP_CIPHER* cypher = eccrypt_aes_getCipher (type, &padding);
   
   EcString key = eccrypt_aes_getkey (secret, padding, cypher, err);
   if (key == NULL)
@@ -390,13 +469,14 @@ void ecdecrypt_aes_destroy (EcDecryptAES* pself)
 
 //-----------------------------------------------------------------------------
 
-EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr err)
+EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int orig_padding, EcErr err)
 {
   int res;
+  int padding = orig_padding;
   EcDecryptAES self = ecdecrypt_aes_create ();
   
   // get the cypher
-  const EVP_CIPHER* cypher = eccrypt_aes_getCipher (type);
+  const EVP_CIPHER* cypher = eccrypt_aes_getCipher (type, &padding);
   
   EcString key = eccrypt_aes_getkey (secret, padding, cypher, err);
   if (key == NULL)

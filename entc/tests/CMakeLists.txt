@@ -80,6 +80,10 @@ ADD_EXECUTABLE( ut_ecjson tools/ut_ecjson )
 TARGET_LINK_LIBRARIES( ut_ecjson entc )
 add_test(ut_ecjson tests/Debug/ut_ecjson)
 
+ADD_EXECUTABLE( ut_eccrypt tools/ut_eccrypt )
+TARGET_LINK_LIBRARIES( ut_eccrypt entc )
+add_test(ut_eccrypt tests/Debug/ut_eccrypt)
+
 #-----------------------------------------------------------------
 
 
