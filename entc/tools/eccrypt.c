@@ -145,22 +145,20 @@ EcString eccrypt_aes_getkey (const EcString secret, int padding, const EVP_CIPHE
       // cypher options
       int keyLength = EVP_CIPHER_key_length (cypher);
       int blockSize = EVP_CIPHER_block_size (cypher);
-      
-      int diffSize = keyLength - size;
-      
+            
       // using the whole keylength for padding
       EcBuffer key = ecbuf_create (keyLength);
 
-      eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (ANSI X.923) with key-length %i, block-size %i", keyLength, blockSize);
+      eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (ANSI X.923) with key-length %i, filling %i", keyLength, keyLength - size);
       
+      // add the zeros (padding)
+      memset (key->buffer, 0, keyLength);
+
       // fill the buffer with they key
       memcpy (key->buffer, secret, size);
       
-      // add the zeros (padding)
-      memset (key->buffer + size, 0, diffSize);
-
       // add the last byte (padding)
-      memset (key->buffer + keyLength - 1, diffSize, 1);
+      memset (key->buffer + keyLength - 1, keyLength - size, 1);
       
       // for debug
       {
