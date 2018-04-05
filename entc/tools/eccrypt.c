@@ -149,7 +149,7 @@ EcString eccrypt_aes_getkey (const EcString secret, int padding, const EVP_CIPHE
       // using the whole keylength for padding
       EcBuffer key = ecbuf_create (keyLength);
 
-      eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (ANSI X.923) with key-length %i, filling %i", keyLength, keyLength - size);
+      //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (ANSI X.923) with key-length %i, filling %i", keyLength, keyLength - size);
       
       // add the zeros (padding)
       memset (key->buffer, 0, keyLength);
@@ -160,13 +160,6 @@ EcString eccrypt_aes_getkey (const EcString secret, int padding, const EVP_CIPHE
       // add the last byte (padding)
       memset (key->buffer + keyLength - 1, keyLength - size, 1);
       
-      // for debug
-      {
-        EcBuffer h = ecbuf_bin2hex(key);
-        
-        eclog_fmt (LL_TRACE, "ENTC", "eccrypt", ecbuf_const_str(h));
-      }
-
       return ecbuf_str (&key);     
     }
   }
