@@ -771,7 +771,7 @@ EcString ecjson_toString (const EcUdc source)
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString secret)
+int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString secret, unsigned int sectype)
 {
   int res;
   int bytesRead;
@@ -787,7 +787,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
   // create crypto object
   if (secret)
   {
-    aes = ecdecrypt_aes_initialize (secret, err);
+    aes = ecdecrypt_aes_initialize (secret, sectype, err);
     if (aes == NULL)
     {
       ecerr_destroy(&err);
@@ -888,7 +888,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcString secret)
+int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcString secret, unsigned int sectype)
 {
   EcErr err = ecerr_create();
   EcFileHandle fh;
@@ -898,7 +898,7 @@ int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcStr
 
   if (secret)
   {
-    aes = ecencrypt_aes_initialize (secret, err);
+    aes = ecencrypt_aes_initialize (secret, sectype, err);
     if (aes == NULL)
     {
       res = err->code;

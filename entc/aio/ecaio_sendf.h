@@ -38,7 +38,7 @@ __LIBEX EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString
 
 __LIBEX void ecaio_sendfile_destroy (EcAioSendFile*);
 
-__LIBEX int ecaio_sendfile_setSecret (EcAioSendFile, const EcString, EcErr err);
+__LIBEX int ecaio_sendfile_setSecret (EcAioSendFile, const EcString, unsigned int sectype, EcErr err);
 
 __LIBEX int ecaio_sendfile_assign (EcAioSendFile*, EcAio aio, EcErr err);
 

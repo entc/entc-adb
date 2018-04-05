@@ -115,6 +115,21 @@ EcBuffer ecstream_tobuf (EcStream* pself)
 
 //-----------------------------------------------------------------------------
 
+EcString ecstream_tostr (EcStream* pself)
+{
+  EcStream self = *pself;  
+  EcString ret = self->buffer;
+  
+  // set terminator
+  *(self->pos) = 0;
+  
+  ENTC_DEL(pself, struct EcStream_s);
+   
+  return ret;
+}
+
+//-----------------------------------------------------------------------------
+
 void ecstream_clear (EcStream self)
 {
   self->pos = self->buffer;
@@ -152,6 +167,19 @@ void ecstream_append_buf (EcStream self, const char* buffer, unsigned long size)
     memcpy (self->pos, buffer, size);
     self->pos += size;
   }
+}
+
+//-----------------------------------------------------------------------------
+
+void ecstream_append_ecbuf (EcStream self, const EcBuffer buf)
+{
+  if (buf->size > 0)
+  {
+    ecstream_reserve (self, buf->size);
+    
+    memcpy (self->pos, buf->buffer, buf->size);
+    self->pos += buf->size;
+  }  
 }
 
 //-----------------------------------------------------------------------------

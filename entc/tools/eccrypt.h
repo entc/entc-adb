@@ -28,11 +28,18 @@
 
 //=============================================================================
 
+#define ENTC_AES_TYPE_CBC          0x01
+#define ENTC_AES_TYPE_CFB_1        0x02
+#define ENTC_AES_TYPE_CFB_8        0x03
+#define ENTC_AES_TYPE_CFB_128      0x04
+
+//=============================================================================
+
 struct EcEncryptAES_s; typedef struct EcEncryptAES_s* EcEncryptAES;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcEncryptAES ecencrypt_aes_initialize (const EcString secret, EcErr);
+__LIBEX EcEncryptAES ecencrypt_aes_initialize (const EcString secret, unsigned int type, EcErr);
 
 __LIBEX EcBuffer ecencrypt_aes_update (EcEncryptAES, EcBuffer, EcErr);
 
@@ -46,7 +53,7 @@ struct EcDecryptAES_s; typedef struct EcDecryptAES_s* EcDecryptAES;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, EcErr);
+__LIBEX EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, unsigned int type, EcErr);
 
 __LIBEX EcBuffer ecdecrypt_aes_update (EcDecryptAES, EcBuffer, EcErr);
 
@@ -56,8 +63,8 @@ __LIBEX void ecdecrypt_aes_destroy (EcDecryptAES* pself);
 
 //=============================================================================
 
-__LIBEX int ecencrypt_file (const EcString source, const EcString dest, const EcString secret, EcErr);
+__LIBEX int ecencrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr);
 
-__LIBEX int ecdecrypt_file (const EcString source, const EcString dest, const EcString secret, EcErr);
+__LIBEX int ecdecrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr);
 
 #endif

@@ -78,10 +78,10 @@ void ecaio_sendfile_destroy (EcAioSendFile* pself)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_sendfile_setSecret (EcAioSendFile self, const EcString secret, EcErr err)
+int ecaio_sendfile_setSecret (EcAioSendFile self, const EcString secret, unsigned int sectype, EcErr err)
 {
   // initialize the decryption
-  self->aes = ecdecrypt_aes_initialize (secret, err);
+  self->aes = ecdecrypt_aes_initialize (secret, sectype, err);
   
   if (self->aes == NULL)
   {

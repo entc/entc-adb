@@ -127,6 +127,21 @@ int eccrypt_aes_handleError (EVP_CIPHER_CTX* ctx, EcErr err)
   return res;
 }
 
+//-----------------------------------------------------------------------------
+
+const EVP_CIPHER* eccrypt_aes_getCipher (unsigned int type)
+{
+  switch (type)
+  {
+    case ENTC_AES_TYPE_CBC: return EVP_aes_256_cbc();
+    case ENTC_AES_TYPE_CFB_1: return EVP_aes_256_cfb1();
+    case ENTC_AES_TYPE_CFB_8: return EVP_aes_256_cfb8();
+    case ENTC_AES_TYPE_CFB_128: return EVP_aes_256_cfb128();
+  }
+  
+  return EVP_aes_256_cbc();
+}
+
 //=============================================================================
 
 struct EcEncryptAES_s
@@ -176,9 +191,9 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
 
 //-----------------------------------------------------------------------------
 
-EcEncryptAES ecencrypt_aes_initialize (const EcString secret, EcErr err)
+EcEncryptAES ecencrypt_aes_initialize (const EcString secret, unsigned int type, EcErr err)
 {
-  int res;
+  int res;  
   EcEncryptAES self = ecencrypt_aes_create ();
   
   EcString key = eccrypt_aes_getkey (secret, err);
@@ -188,8 +203,8 @@ EcEncryptAES ecencrypt_aes_initialize (const EcString secret, EcErr err)
     
     return NULL;
   }
-  
-  res = EVP_EncryptInit (&(self->ctx), EVP_aes_256_cbc(), (unsigned char*)key, NULL);
+    
+  res = EVP_EncryptInit (&(self->ctx), eccrypt_aes_getCipher (type), (unsigned char*)key, NULL);
   
   ecstr_delete (&key);
   
@@ -312,7 +327,7 @@ void ecdecrypt_aes_destroy (EcDecryptAES* pself)
 
 //-----------------------------------------------------------------------------
 
-EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, EcErr err)
+EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, unsigned int type, EcErr err)
 {
   int res;
   EcDecryptAES self = ecdecrypt_aes_create ();
@@ -325,7 +340,7 @@ EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, EcErr err)
     return NULL;
   }
   
-  res = EVP_DecryptInit (&(self->ctx), EVP_aes_256_cbc(), (unsigned char*)key, NULL);
+  res = EVP_DecryptInit (&(self->ctx), eccrypt_aes_getCipher (type), (unsigned char*)key, NULL);
   
   ecstr_delete (&key);
   
@@ -448,7 +463,7 @@ int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
 
 //-----------------------------------------------------------------------------
 
-int ecencrypt_file (const EcString source, const EcString dest, const EcString secret, EcErr err)
+int ecencrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr err)
 {
   EcEncryptAES aes;
   EcFileHandle fhIn;
@@ -456,7 +471,7 @@ int ecencrypt_file (const EcString source, const EcString dest, const EcString s
   
   int res;
   
-  aes = ecencrypt_aes_initialize (secret, err);
+  aes = ecencrypt_aes_initialize (secret, type, err);
   if (aes == NULL)
   {
     return ENTC_ERR_PROCESS_FAILED;
@@ -540,7 +555,7 @@ int ecdecrypt_file_copy (EcDecryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
 
 //-----------------------------------------------------------------------------
 
-int ecdecrypt_file (const EcString source, const EcString dest, const EcString secret, EcErr err)
+int ecdecrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr err)
 {
   EcDecryptAES aes;
   EcFileHandle fhIn;
@@ -548,7 +563,7 @@ int ecdecrypt_file (const EcString source, const EcString dest, const EcString s
   
   int res;
   
-  aes = ecdecrypt_aes_initialize (secret, err);
+  aes = ecdecrypt_aes_initialize (secret, type, err);
   if (aes == NULL)
   {
     return ENTC_ERR_PROCESS_FAILED;

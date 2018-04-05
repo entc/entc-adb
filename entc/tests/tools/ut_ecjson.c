@@ -188,7 +188,7 @@ static int __STDCALL test_ecjson_test6 (void* ptr, TestEnvContext tctx, EcErr er
     ecudc_add (data, &item);
   }
   
-  ecjson_writeToFile (".meta2", data, "michi79");
+  ecjson_writeToFile (".meta2", data, "michi79", 0);
   
   ecudc_destroy(EC_ALLOC, &data);
   
@@ -205,7 +205,7 @@ static int __STDCALL test_ecjson_test7 (void* ptr, TestEnvContext tctx, EcErr er
 
   key = ecstr_copy ("michi79");
   
-  ecjson_readFromFile(".meta2", &data, key);
+  ecjson_readFromFile(".meta2", &data, key, 0);  // use the default encryption
 
   printf ("read done\n");
 
@@ -240,7 +240,7 @@ static int __STDCALL test_ecjson_test8 (void* ptr, TestEnvContext tctx, EcErr er
     ecudc_add (data, &item);
   }
   
-  ecjson_writeToFile (".meta3", data, NULL);
+  ecjson_writeToFile (".meta3", data, NULL, 0);
   
   ecudc_destroy(EC_ALLOC, &data);
   
@@ -254,7 +254,7 @@ static int __STDCALL test_ecjson_test9 (void* ptr, TestEnvContext tctx, EcErr er
   EcUdc data;
   EcString h;
 
-  ecjson_readFromFile (".meta3", &data, NULL);
+  ecjson_readFromFile (".meta3", &data, NULL, 0);
   
   printf ("read done\n");
   
@@ -275,7 +275,7 @@ static int __STDCALL test_ecjson_test10 (void* ptr, TestEnvContext tctx, EcErr e
 {
   EcUdc data;
   
-  int res = ecjson_readFromFile ("json02.txt", &data, NULL);
+  int res = ecjson_readFromFile ("json02.txt", &data, NULL, 0);
   if (res)
   {
     return res;
@@ -310,7 +310,6 @@ int main(int argc, char* argv[])
   
   testenv_reg (te, "Json Reader Test1", test_ecjson_init, test_ecjson_done, test_ecjson_test1);
   
-  /*
   testenv_reg (te, "Json Reader Test2", test_ecjson_init, test_ecjson_done, test_ecjson_test2);
   testenv_reg (te, "Json Reader Test3", test_ecjson_init, test_ecjson_done, test_ecjson_test3);
   testenv_reg (te, "Json Reader Test4", test_ecjson_init, test_ecjson_done, test_ecjson_test4);
@@ -322,8 +321,7 @@ int main(int argc, char* argv[])
   testenv_reg (te, "Json Reader Test8", test_ecjson_init, test_ecjson_done, test_ecjson_test8);
   testenv_reg (te, "Json Reader Test9", test_ecjson_init, test_ecjson_done, test_ecjson_test9);
 
-  testenv_reg (te, "Json Reader Test10", test_ecjson_init, test_ecjson_done, test_ecjson_test10);
-  */
+  //testenv_reg (te, "Json Reader Test10", test_ecjson_init, test_ecjson_done, test_ecjson_test10);
    
 //for (i = 0; i < 1000; i++)
 //{

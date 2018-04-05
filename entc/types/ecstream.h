@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2017 "Alexander Kalkhof" [email:alex@kalkhof.org]
+ * Copyright (c) 2010-2018 "Alexander Kalkhof" [email:alex@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -32,39 +32,47 @@ struct EcStream_s; typedef struct EcStream_s* EcStream;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcStream ecstream_create (void);
+__LIBEX EcStream        ecstream_create (void);
 
-__LIBEX void ecstream_destroy (EcStream*);
+__LIBEX void            ecstream_destroy (EcStream*);
 
-__LIBEX void ecstream_clear (EcStream);
+__LIBEX void            ecstream_clear (EcStream);
 
-__LIBEX const char* ecstream_get (EcStream);
+__LIBEX const char*     ecstream_get (EcStream);
 
-__LIBEX unsigned long ecstream_size (EcStream);
-
-__LIBEX EcBuffer ecstream_tobuf (EcStream*);
+__LIBEX unsigned long   ecstream_size (EcStream);
 
 //-----------------------------------------------------------------------------
+// convert to other types
 
-__LIBEX void ecstream_append_str (EcStream, const char*);
+__LIBEX EcBuffer        ecstream_tobuf (EcStream*);
 
-__LIBEX void ecstream_append_buf (EcStream, const char*, unsigned long size);
+__LIBEX EcString        ecstream_tostr (EcStream*);
 
-__LIBEX void ecstream_append_fmt (EcStream, const char*, ...);
+//-----------------------------------------------------------------------------
+// append functions
 
-__LIBEX void ecstream_append_c (EcStream, char);
+__LIBEX void            ecstream_append_str (EcStream, const char*);
 
-__LIBEX void ecstream_append_u (EcStream, unsigned long);
+__LIBEX void            ecstream_append_buf (EcStream, const char*, unsigned long size);
 
-__LIBEX void ecstream_append_u64 (EcStream, uint64_t);
+__LIBEX void            ecstream_append_ecbuf (EcStream, const EcBuffer);
 
-__LIBEX void ecstream_append_i (EcStream, long);
+__LIBEX void            ecstream_append_fmt (EcStream, const char*, ...);
 
-__LIBEX void ecstream_append_i64 (EcStream, int64_t);
+__LIBEX void            ecstream_append_c (EcStream, char);
 
-__LIBEX void ecstream_append_time (EcStream, const time_t*);
+__LIBEX void            ecstream_append_u (EcStream, unsigned long);
 
-__LIBEX void ecstream_append_stream (EcStream, EcStream);
+__LIBEX void            ecstream_append_u64 (EcStream, uint64_t);
+
+__LIBEX void            ecstream_append_i (EcStream, long);
+
+__LIBEX void            ecstream_append_i64 (EcStream, int64_t);
+
+__LIBEX void            ecstream_append_time (EcStream, const time_t*);
+
+__LIBEX void            ecstream_append_stream (EcStream, EcStream);
 
 //=============================================================================
 
