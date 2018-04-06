@@ -187,7 +187,7 @@ void ecaio_proc_destroy (EcAioProc* pself)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_proc_onProcess (void* ptr, EcAioContext ctx, unsigned long flags, unsigned long filter)
+static EcAioStatus __STDCALL ecaio_proc_onProcess (void* ptr, EcAioContext ctx, unsigned long flags, unsigned long filter)
 {
   EcAioProc self = ptr;
   

@@ -1367,7 +1367,7 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   EcAio self = ptr;
   

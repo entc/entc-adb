@@ -14,8 +14,8 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
   
   EcBuffer_s data;
   
-  data.buffer = (const char*)"U2FsdGVkX19nJLLyxozdLWV5mBklYSDB65xlDysflRI=";
-  data.size = strlen(data.buffer);
+  data.buffer = (unsigned char*)"U2FsdGVkX19nJLLyxozdLWV5mBklYSDB65xlDysflRI=";
+  data.size = strlen((const char*)data.buffer);
   
   EcBuffer data2 = ecbuf_decode_base64(&data);
   
@@ -23,11 +23,7 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
   
   printf ("%s\n", data3->buffer);
   
-  dec = ecdecrypt_aes_initialize ("mysecretvault", ENTC_AES_TYPE_CFB, ENTC_KEY_PASSPHRASE, err);
-  if (dec == NULL)
-  {
-    return err->code;
-  }
+  dec = ecdecrypt_aes_create ("mysecretvault", ENTC_AES_TYPE_CFB, ENTC_KEY_PASSPHRASE_DATA);
   
   buf = ecdecrypt_aes_update (dec, data2, err);
   if (buf == NULL)

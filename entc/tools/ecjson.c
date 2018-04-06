@@ -787,12 +787,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
   // create crypto object
   if (secret)
   {
-    aes = ecdecrypt_aes_initialize (secret, sectype, 0, err);
-    if (aes == NULL)
-    {
-      ecerr_destroy(&err);
-      return err->code;
-    }
+    aes = ecdecrypt_aes_create (secret, sectype, 0);
   }
 
   // open file
@@ -898,15 +893,7 @@ int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcStr
 
   if (secret)
   {
-    aes = ecencrypt_aes_initialize (secret, sectype, 0, err);
-    if (aes == NULL)
-    {
-      res = err->code;
-
-      ecerr_destroy (&err);
-      
-      return res;
-    }
+    aes = ecencrypt_aes_create (secret, sectype, 0);
   }
     
   fh = ecfh_open (filename, O_CREAT | O_RDWR | O_TRUNC);

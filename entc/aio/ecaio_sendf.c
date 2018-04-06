@@ -81,12 +81,7 @@ void ecaio_sendfile_destroy (EcAioSendFile* pself)
 int ecaio_sendfile_setSecret (EcAioSendFile self, const EcString secret, unsigned int sectype, EcErr err)
 {
   // initialize the decryption
-  self->aes = ecdecrypt_aes_initialize (secret, sectype, 0, err);
-  
-  if (self->aes == NULL)
-  {
-    return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't set AES secret");
-  }
+  self->aes = ecdecrypt_aes_create (secret, sectype, 0);
   
   return ENTC_ERR_NONE;
 }

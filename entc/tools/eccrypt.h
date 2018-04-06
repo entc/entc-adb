@@ -39,7 +39,7 @@
 #define ENTC_KEY_PADDING_ANSI_X923       0x01
 #define ENTC_KEY_PADDING_ZEROS           0x02
 #define ENTC_KEY_PADDING_PKCS7           0x03
-#define ENTC_KEY_PASSPHRASE              0x04
+#define ENTC_KEY_PASSPHRASE_DATA         0x04
 
 //=============================================================================
 
@@ -47,13 +47,13 @@ struct EcEncryptAES_s; typedef struct EcEncryptAES_s* EcEncryptAES;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcEncryptAES ecencrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr);
+__LIBEX EcEncryptAES ecencrypt_aes_create (const EcString secret, uint_t cypher_type, uint_t key_type);
+
+__LIBEX void ecencrypt_aes_destroy (EcEncryptAES* pself);
 
 __LIBEX EcBuffer ecencrypt_aes_update (EcEncryptAES, EcBuffer, EcErr);
 
 __LIBEX EcBuffer ecencrypt_aes_finalize (EcEncryptAES, EcErr);
-
-__LIBEX void ecencrypt_aes_destroy (EcEncryptAES* pself);
 
 //=============================================================================
 
@@ -61,13 +61,13 @@ struct EcDecryptAES_s; typedef struct EcDecryptAES_s* EcDecryptAES;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr);
+__LIBEX EcDecryptAES ecdecrypt_aes_create (const EcString secret, uint_t cypher_type, uint_t key_type);
+
+__LIBEX void ecdecrypt_aes_destroy (EcDecryptAES* pself);
 
 __LIBEX EcBuffer ecdecrypt_aes_update (EcDecryptAES, EcBuffer, EcErr);
 
 __LIBEX EcBuffer ecdecrypt_aes_finalize (EcDecryptAES, EcErr);
-
-__LIBEX void ecdecrypt_aes_destroy (EcDecryptAES* pself);
 
 //=============================================================================
 
