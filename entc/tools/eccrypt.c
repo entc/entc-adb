@@ -111,17 +111,54 @@ typedef struct
   EcBuffer key;
   
   EcBuffer iv;
-
-  EcBuffer salt;
   
 } EcCryptKeys;
 
 //----------------------------------------------------------------------------------------
 
-EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const EVP_CIPHER* cypher, EcBuffer source, EcErr err)
+EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const EVP_CIPHER* cypher, EcBuffer source, uint_t* bufOffset, EcErr err)
 {
   switch (key_type)
   {
+    case ENTC_KEY_SHA256:
+    {
+      int keyLength = EVP_CIPHER_key_length (cypher);
+      
+      //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (SHA256) with key-length %i", keyLength);
+      
+      // length in 8 bit blocks
+      if (keyLength == 32)   // 8 * 32 = 256
+      {
+        EcCryptKeys* keys = ENTC_NEW (EcCryptKeys);
+
+        EcBuffer_s h;
+
+        //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (SHA256) with secret %s", secret);
+        
+        h.buffer = (unsigned char*)secret;
+        h.size = ecstr_len(secret);
+        
+        // convert key into sha256 buffer, which has exactly the correct size (no padding needed)
+        keys->key = ecbuf_sha_256 (&h, err);
+        if (keys->key == NULL)
+        {
+          return NULL;
+        }
+        
+        //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "padding (SHA256) with buf-length %i | %s", keys->key->size, keys->key->buffer);
+        
+        // the rest is empty
+        keys->iv = NULL;
+        
+        return keys;
+      }
+      else
+      {
+        eclog_fmt (LL_ERROR, "ENTC", "eccrypt", "cypher has not supported key-length for padding (SHA256): %i", keyLength);
+      }
+      
+      return NULL;
+    }
     case ENTC_KEY_PADDING_ZEROS:
     {
       EcCryptKeys* keys = ENTC_NEW (EcCryptKeys);
@@ -142,43 +179,8 @@ EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const E
       
       // the rest is empty
       keys->iv = NULL;
-      keys->salt = NULL;
       
       return keys;
-    }
-    case ENTC_KEY_PADDING_SHA256:
-    {
-      int keyLength = EVP_CIPHER_key_length (cypher);
-      
-      // length in 8 bit blocks
-      if (keyLength == 32)   // 8 * 32 = 256
-      {
-        EcCryptKeys* keys = ENTC_NEW (EcCryptKeys);
-
-        EcBuffer_s h;
-
-        h.buffer = (unsigned char*)secret;
-        h.size = ecstr_len(secret);
-        
-        // convert key into sha256 buffer, which has exactly the correct size (no padding needed)
-        keys->key = ecbuf_sha_256 (&h, err);
-        if (keys->key == NULL)
-        {
-          return NULL;
-        }
-        
-        // the rest is empty
-        keys->iv = NULL;
-        keys->salt = NULL;
-        
-        return keys;
-      }
-      else
-      {
-        eclog_fmt (LL_ERROR, "ENTC", "eccrypt", "cypher has not supported key-length for padding (SHA256): %i", keyLength);
-      }
-      
-      return NULL;
     }
     case ENTC_KEY_PADDING_ANSI_X923:
     {
@@ -205,7 +207,6 @@ EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const E
       
       // the rest is empty
       keys->iv = NULL;
-      keys->salt = NULL;
       
       return keys;
     }
@@ -231,40 +232,26 @@ EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const E
       
       // the rest is empty
       keys->iv = NULL;
-      keys->salt = NULL;
       
       return keys;
     }
-    case ENTC_KEY_PASSPHRASE_DATA:
+    case ENTC_KEY_PASSPHRASE_MD5:
     {
       EcCryptKeys* keys = ENTC_NEW (EcCryptKeys);
       
-      keys->key = ecbuf_create(32);
-      keys->iv = ecbuf_create(16);
+      // cypher options
+      int keyLength = EVP_CIPHER_key_length (cypher);
+      
+      //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "passphrase with key-length %i", keyLength);
+      
+      keys->key = ecbuf_create (keyLength);
+      keys->iv = ecbuf_create (16);
+      
+      *bufOffset = 16;
       
       EVP_BytesToKey(cypher, EVP_md5(), source->buffer + 8, (unsigned char*)secret, ecstr_len(secret), 1, keys->key->buffer, keys->iv->buffer);
-     
-      keys->key->buffer[265] = 0;
-      keys->iv->buffer[128] = 0;
-      
-      keys->key = ecbuf_bin2hex(keys->key);
-      keys->iv = ecbuf_bin2hex(keys->iv);
-      
-      ecstr_toUpper(keys->key->buffer);
-      ecstr_toUpper(keys->iv->buffer);
-      
-      {
-        /*
-        EcBuffer h1 =
-        EcBuffer h2 = ecbuf_bin2hex(keys->iv);
-         */
-        
-        eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "secret as passphrase key: %s", ecbuf_const_str(keys->key));
-        eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "secret as passphrase iv: %s", ecbuf_const_str(keys->iv));
-        
-        return keys;
-      }
-      
+
+      return keys;
     }
   }
   
@@ -320,6 +307,18 @@ const EVP_CIPHER* eccrypt_aes_getCipher (uint_t type)
   }
   
   return EVP_aes_256_cbc();
+}
+
+//-----------------------------------------------------------------------------
+
+unsigned char* eccrypt_keybuffer (EcBuffer buf)
+{
+  if (buf)
+  {
+    return buf->buffer;
+  }
+
+  return NULL;
 }
 
 //=============================================================================
@@ -382,6 +381,19 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
     ecbuf_destroy (&(self->buf));
   }
   
+  if (self->keys)
+  {
+      if (self->keys->key)
+      {
+        ecbuf_destroy (&(self->keys->key));
+      }
+      
+      if (self->keys->iv)
+      {
+        ecbuf_destroy (&(self->keys->iv));
+      }
+  }
+  
   ENTC_DEL(pself, struct EcEncryptAES_s);
 }
 
@@ -390,17 +402,18 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
 int ecencrypt_aes_initialize (EcEncryptAES self, EcBuffer source, EcErr err)
 {
   int res;  
+  uint_t offset = 0;
   
   // get the cypher
   const EVP_CIPHER* cypher = eccrypt_aes_getCipher (self->cypher_type);
   
-  self->keys = eccrypt_aes_getkey (self->secret, self->key_type, cypher, source, err);
+  self->keys = eccrypt_aes_getkey (self->secret, self->key_type, cypher, source, &offset, err);
   if (self->keys == NULL)
   {
     return err->code;
   }
     
-  res = EVP_EncryptInit (&(self->ctx), cypher, (unsigned char*)self->keys->key, (unsigned char*)self->keys->iv);
+  res = EVP_EncryptInit_ex (&(self->ctx), cypher, NULL, eccrypt_keybuffer (self->keys->key), eccrypt_keybuffer (self->keys->iv));
   
   if (res == 0)
   {
@@ -538,26 +551,67 @@ void ecdecrypt_aes_destroy (EcDecryptAES* pself)
   {
     ecbuf_destroy (&(self->buf));
   }
+  
+  ecstr_delete(&(self->secret));
+  
+  if (self->keys)
+  {
+      if (self->keys->key)
+      {
+        ecbuf_destroy (&(self->keys->key));
+      }
+      
+      if (self->keys->iv)
+      {
+        ecbuf_destroy (&(self->keys->iv));
+      }
+      
+      ENTC_DEL(&(self->keys), EcCryptKeys);
+  }
 
   ENTC_DEL(pself, struct EcDecryptAES_s);
 }
 
 //-----------------------------------------------------------------------------
 
-int ecdecrypt_aes_initialize (EcDecryptAES self, EcBuffer source, EcErr err)
+int ecdecrypt_aes_initialize (EcDecryptAES self, EcBuffer source, uint_t* bufoffset, EcErr err)
 {
   int res;
   
   // get the cypher
   const EVP_CIPHER* cypher = eccrypt_aes_getCipher (self->cypher_type);
   
-  self->keys = eccrypt_aes_getkey (self->secret, self->key_type, cypher, source, err);
+  self->keys = eccrypt_aes_getkey (self->secret, self->key_type, cypher, source, bufoffset, err);
   if (self->keys == NULL)
   {
     return err->code;
   }
   
-  res = EVP_DecryptInit (&(self->ctx), cypher, (unsigned char*)self->keys->key, (unsigned char*)self->keys->iv);
+  {
+    /*
+    if (self->keys->key)
+    {
+      EcBuffer h1 = ecbuf_bin2hex(self->keys->key);
+    
+      eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "secret key: %s", ecbuf_const_str(h1));
+
+      ecbuf_destroy(&h1);
+    }
+      
+    if (self->keys->iv)
+    {
+      EcBuffer h2 = ecbuf_bin2hex(self->keys->iv);
+      
+      eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "secret iv: %s", ecbuf_const_str(h2));
+      
+      ecbuf_destroy(&h2);
+    }
+    */  
+  } 
+    
+  res = EVP_DecryptInit_ex (&(self->ctx), cypher, NULL, eccrypt_keybuffer (self->keys->key), eccrypt_keybuffer (self->keys->iv));
+    
+  
   if (res == 0)
   {
     eccrypt_aes_handleError (&(self->ctx), err);
@@ -575,9 +629,11 @@ int ecdecrypt_aes_initialize (EcDecryptAES self, EcBuffer source, EcErr err)
 
 EcBuffer ecdecrypt_aes_update (EcDecryptAES self, EcBuffer source, EcErr err)
 {
+  uint_t bufoffset = 0;
+  
   if (self->keys == NULL)
   {
-    int res = ecdecrypt_aes_initialize (self, source, err);
+    int res = ecdecrypt_aes_initialize (self, source, &bufoffset, err);
     if (res)
     {
       return NULL;
@@ -596,7 +652,7 @@ EcBuffer ecdecrypt_aes_update (EcDecryptAES self, EcBuffer source, EcErr err)
   
   int lenLast;
   
-  if (EVP_DecryptUpdate (&(self->ctx), self->buf->buffer, &lenLast, source->buffer, source->size) == 0)
+  if (EVP_DecryptUpdate (&(self->ctx), self->buf->buffer, &lenLast, source->buffer + bufoffset, source->size) == 0)
   {
     eccrypt_aes_handleError (&(self->ctx), err);
     return NULL;

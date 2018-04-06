@@ -35,11 +35,15 @@
 #define ENTC_AES_TYPE_CFB_8              0xF3
 #define ENTC_AES_TYPE_CFB_128            0xF4
 
-#define ENTC_KEY_PADDING_SHA256          0x00     // default
+#define ENTC_KEY_SHA256                  0x00     // default
+
+// paddings for keys
 #define ENTC_KEY_PADDING_ANSI_X923       0x01
 #define ENTC_KEY_PADDING_ZEROS           0x02
 #define ENTC_KEY_PADDING_PKCS7           0x03
-#define ENTC_KEY_PASSPHRASE_DATA         0x04
+
+// other options
+#define ENTC_KEY_PASSPHRASE_MD5          0x04     // default for passphrase
 
 //=============================================================================
 
