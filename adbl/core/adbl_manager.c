@@ -461,7 +461,7 @@ void adbl_scanJsonFromFile (const EcString configpath, EcUdc* pdata)
   
   //eclog_fmt (LL_TRACE, MODULE, "scan", "using config '%s'", filename);
   
-  res = ecjson_readFromFile (filename, pdata, NULL);
+  res = ecjson_readFromFile (filename, pdata, NULL, 0);
   if (res)
   {
     eclog_fmt (LL_WARN, MODULE, "scan", "can't read json file '%s'", filename);
