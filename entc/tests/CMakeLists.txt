@@ -84,6 +84,10 @@ ADD_EXECUTABLE( ut_eccrypt tools/ut_eccrypt )
 TARGET_LINK_LIBRARIES( ut_eccrypt entc )
 add_test(ut_eccrypt tests/Debug/ut_eccrypt)
 
+ADD_EXECUTABLE( ut_echash tools/ut_echash )
+TARGET_LINK_LIBRARIES( ut_echash entc )
+add_test(ut_echash tests/Debug/ut_echash)
+
 #-----------------------------------------------------------------
 
 

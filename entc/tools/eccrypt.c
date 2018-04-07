@@ -1,5 +1,8 @@
 #include "eccrypt.h"
+
 #include "tools/eclog.h"
+#include "tools/echash.h"
+
 #include "types/ecstream.h"
 
 #include <openssl/aes.h>
@@ -139,7 +142,7 @@ EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const E
         h.size = ecstr_len(secret);
         
         // convert key into sha256 buffer, which has exactly the correct size (no padding needed)
-        keys->key = ecbuf_sha_256 (&h, err);
+        keys->key = echash_sha256 (&h, err);
         if (keys->key == NULL)
         {
           return NULL;

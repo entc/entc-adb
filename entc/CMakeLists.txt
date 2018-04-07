@@ -186,6 +186,7 @@ SET (ENTC_TOOLS_HEADERS
   tools/ectokenizer.h
   tools/ectemplate.h
   tools/eccrypt.h
+  tools/echash.h
   tools/ecreadbuffer.h
 )
 
@@ -200,6 +201,7 @@ SET (ENTC_TOOLS_SOURCES
   tools/ectokenizer.c
   tools/ectemplate.c
   tools/eccrypt.c
+  tools/echash.c
   tools/ecreadbuffer.c
 )
 
