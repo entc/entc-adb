@@ -84,9 +84,13 @@ ADD_EXECUTABLE( ut_eccrypt tools/ut_eccrypt )
 TARGET_LINK_LIBRARIES( ut_eccrypt entc )
 add_test(ut_eccrypt tests/Debug/ut_eccrypt)
 
-ADD_EXECUTABLE( ut_echash tools/ut_echash )
-TARGET_LINK_LIBRARIES( ut_echash entc )
-add_test(ut_echash tests/Debug/ut_echash)
+ADD_EXECUTABLE( ut_eccode tools/ut_eccode )
+TARGET_LINK_LIBRARIES( ut_eccode entc )
+add_test(ut_eccode tests/Debug/ut_eccode)
+
+ADD_EXECUTABLE( ut_ecmime tools/ut_ecmime )
+TARGET_LINK_LIBRARIES( ut_ecmime entc )
+add_test(ut_ecmime tests/Debug/ut_ecmime)
 
 #-----------------------------------------------------------------
 

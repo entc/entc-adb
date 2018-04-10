@@ -66,19 +66,19 @@ __LIBEX void ecbuf_format (EcBuffer, uint_t size, const char* format, ...);
 
 __LIBEX void ecbuf_resize (EcBuffer, uint_t size);
 
-__LIBEX ulong_t ecbuf_encode_base64_calculateSize (ulong_t max);
+//__LIBEX ulong_t ecbuf_encode_base64_calculateSize (ulong_t max);
 
-__LIBEX ulong_t ecbuf_encode_base64_d (EcBuffer, EcBuffer);
+//__LIBEX ulong_t ecbuf_encode_base64_d (EcBuffer, EcBuffer);
 
-__LIBEX EcBuffer ecbuf_encode_base64 (EcBuffer);
+//__LIBEX EcBuffer ecbuf_encode_base64 (EcBuffer);
 
-__LIBEX EcBuffer ecbuf_decode_base64 (EcBuffer);
+//__LIBEX EcBuffer ecbuf_decode_base64 (EcBuffer);
 
-__LIBEX EcBuffer ecbuf_md5 (EcBuffer);
+//__LIBEX EcBuffer ecbuf_md5 (EcBuffer);
 
-__LIBEX EcBuffer ecbuf_sha1 (EcBuffer);
+//__LIBEX EcBuffer ecbuf_sha1 (EcBuffer);
 
-__LIBEX EcBuffer ecbuf_sha_256 (EcBuffer, EcErr);
+//__LIBEX EcBuffer ecbuf_sha_256 (EcBuffer, EcErr);
 
 __LIBEX EcBuffer ecbuf_xor (EcBuffer, EcBuffer);  // uses always the smallest one
 

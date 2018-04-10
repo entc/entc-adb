@@ -6,6 +6,7 @@
 #include "types/ecudc.h"
 #include "tools/eclog.h"
 #include "tools/ectokenizer.h"
+#include "tools/eccode.h"
 
 //------------------------------------------------------------------------------------------------------
 
@@ -794,6 +795,8 @@ struct EcMultipart_s {
   
   EcFileHandle fh;
   
+  EcBase64Encode base64Encode;
+  
 };
 
 //------------------------------------------------------------------------------------------------------
@@ -824,6 +827,7 @@ EcMultipart ecmultipart_create (const EcString boundary, const EcString header)
   self->item = NULL;
   self->cursor = NULL;
   self->fh = NULL;
+  self->base64Encode = NULL;
   
   return self;
 }
@@ -838,6 +842,11 @@ void ecmultipart_destroy (EcMultipart* pself)
   ecstr_delete(&(self->header));
   
   ecudc_destroy(EC_ALLOC, &(self->sections));
+  
+  if (self->base64Encode)
+  {
+    eccode_base64_encode_destroy (&(self->base64Encode));  
+  }
   
   ENTC_DEL(pself, struct EcMultipart_s);
 }
@@ -1178,33 +1187,55 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           self->buffer = ecstream_tobuf (&stream);
           self->bufpos = 0;
         }
+        
+        self->base64Encode = eccode_base64_encode_create ();
       }
       else if (self->buffer == NULL)
       {
-        ulong_t size = ecbuf_encode_base64_calculateSize (buf->size);
-        
-        EcBuffer h = ecbuf_create (size);
-        
-        uint_t readBytes = ecfh_readBuffer (self->fh, h);
-        if (readBytes == 0) // EOF reached
+        if (self->base64Encode)
         {
-          ecbuf_destroy(&h);
+          ulong_t res;
           
-          ecfh_close (&(self->fh));
-          return ecmultipart_nextState (self, buf, MULTIPART_STATE_FILE_EOF);
-        }
-        else
-        {
-          ulong_t res = ecbuf_encode_base64_d (h, buf);
+          // find the reverse size which can be meximal read to reach buf->size
+          ulong_t size = eccode_base64_encode_sourceSize (buf->size);
           
+          EcBuffer h = ecbuf_create (size);
+          
+          uint_t readBytes = ecfh_readBuffer (self->fh, h);
+          if (readBytes == 0) // EOF reached
+          { 
+            //eclog_fmt (LL_TRACE, "ENTC", "mime", "finalize");
+      
+            res = eccode_base64_encode_finalize (self->base64Encode, buf, NULL);
+            
+            eccode_base64_encode_destroy (&(self->base64Encode));
+
+            //eclog_fmt (LL_TRACE, "ENTC", "mime", "to base64 %i into buf of %i", res, buf->size);
+          }
+          else
+          {
+            //eclog_fmt (LL_TRACE, "ENTC", "mime", "read from file %i", readBytes);
+
+            // correct size
+            h->size = readBytes;
+            
+            res = eccode_base64_encode_update (self->base64Encode, buf, h, NULL);
+            
+            //eclog_fmt (LL_TRACE, "ENTC", "mime", "to base64 %i into buf of %i", res, buf->size);
+          }          
+
           ecbuf_destroy(&h);
 
           return res;
         }
+        else
+        {
+          ecfh_close (&(self->fh));
+          
+          return ecmultipart_nextState (self, buf, MULTIPART_STATE_FILE_EOF);
+        }
       }
-
-      //eclogger_fmt (LL_TRACE, "ENTC", "mime", "file done");
-
+      
       return ecmultipart_handleBuffer (self, buf, MULTIPART_STATE_FILE);
     }
     case MULTIPART_STATE_FILE_EOF:

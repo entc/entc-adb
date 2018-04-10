@@ -293,9 +293,9 @@ EcProc ecproc_get (int argc, char* argv[], EcErr err)
 
 void ecproc_terminateProcess (void* handle)
 {
-  kill((int)handle, SIGTERM);
+  kill((long)handle, SIGTERM);
   
-  eclog_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", (int)handle);
+  eclog_fmt (LL_TRACE, "ENTC", "ecproc", "send terminate signal to [%i]", (long)handle);
 }
 
 //-----------------------------------------------------------------------------

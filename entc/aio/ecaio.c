@@ -477,7 +477,7 @@ int ecaio_init (EcAio self, EcErr err)
 int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
 {
   struct epoll_event event;
-  uint64_t hfd = (int)handle;
+  uint64_t hfd = (uint64_t)handle;
   
   event.data.ptr = ctx;
   event.events = EPOLLET | EPOLLONESHOT | EPOLLIN;
@@ -682,7 +682,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
       if (cont == ENTC_AIO_CODE_CONTINUE)
       {
-        epoll_ctl (self->efd, EPOLL_CTL_MOD, (int)handle, &(events[i]));
+        epoll_ctl (self->efd, EPOLL_CTL_MOD, (long)handle, &(events[i]));
         // continue
       }
       else if (cont == ENTC_AIO_CODE_ABORTALL)
@@ -701,7 +701,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
         //eclogger_fmt (LL_TRACE, "ENTC", "context", "remove %i %p", ctx->handle, ctx);
         // remove
         struct epoll_event event = {0}; // see bugs
-        int s = epoll_ctl (self->efd, EPOLL_CTL_DEL, (int)handle, &event);
+        int s = epoll_ctl (self->efd, EPOLL_CTL_DEL, (long)handle, &event);
         if (s < 0)
         {
 
@@ -812,7 +812,7 @@ int ecaio_reset_signals (EcErr err)
 static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   struct signalfd_siginfo info;
-  unsigned long bytes = read ((int)ptr, &info, sizeof(struct signalfd_siginfo));
+  unsigned long bytes = read ((long)ptr, &info, sizeof(struct signalfd_siginfo));
   
   if (bytes == sizeof(struct signalfd_siginfo))
   {

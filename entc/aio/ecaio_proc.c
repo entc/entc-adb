@@ -259,7 +259,7 @@ struct EcAioProc_s
   
   fct_ecaio_context_onNotify onNotify;
   
-  int pid;
+  long pid;
   
   EcThread thread;
   

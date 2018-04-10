@@ -5,6 +5,7 @@
 #include "types/ecstream.h"
 
 #include "tools/eccrypt.h"
+#include "tools/eccode.h"
 
 //---------------------------------------------------------------------------
 
@@ -24,7 +25,7 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
   stream = ecstream_create();
   
   {
-    EcBuffer data2 = ecbuf_decode_base64(&data);
+    EcBuffer data2 = eccode_base64_decode (&data);
   
     dec = ecdecrypt_aes_create ("mysecretvault", ENTC_AES_TYPE_CFB, ENTC_KEY_PASSPHRASE_MD5);
   
@@ -36,12 +37,12 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
 
     ecbuf_destroy(&data2);
     
-    printf("D %i :%s\n", buf->size, buf->buffer);
+    printf("D %lu :%s\n", buf->size, buf->buffer);
     
     {
       EcBuffer h = ecbuf_bin2hex(buf);
       
-      printf("F %i :%s\n", h->size, h->buffer);
+      printf("F %lu :%s\n", h->size, h->buffer);
     }
     
     ecstream_append_ecbuf(stream, buf);
@@ -53,7 +54,7 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
     return err->code;    
   }
     
-  printf("E %i :%s\n", buf->size, buf->buffer);
+  printf("E %lu :%s\n", buf->size, buf->buffer);
     
   ecstream_append_ecbuf(stream, buf);
   

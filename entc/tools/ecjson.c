@@ -492,7 +492,7 @@ static void __STDCALL ecjson_read_onItem (void* ptr, void* obj, int type, void* 
     {
       EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_BOOL, key);
       
-      int dat = (int)val;
+      long dat = (long)val;
       ecudc_setBool(h, dat);
       
       ecudc_add (obj, &h);

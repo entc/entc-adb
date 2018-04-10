@@ -295,6 +295,7 @@ void ecbuf_replace (EcString* s, EcBuffer* pself)
 #include <wincrypt.h>
 #pragma comment (lib, "Crypt32.lib")
 
+/*
 EcBuffer ecbuf_encode_base64 (EcBuffer self)
 {
   EcBuffer ret = ENTC_NEW (EcBuffer_s);
@@ -350,14 +351,15 @@ ulong_t ecbuf_encode_base64_calculateSize (ulong_t max)
 {
   return ((max - 1) / 4 * 3);
 }
-
+*/
 #else
 
+/*
 //----------------------------------------------------------------------------------------
 
 static const unsigned char pr2six[256] =
 {
-  /* ASCII table */
+  // ASCII table 
   64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
   64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
   64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
@@ -392,9 +394,10 @@ int ecbuf_decode_base64_len (const char *bufcoded)
   
   return nbytesdecoded + 1;
 }
-
+*/
 //----------------------------------------------------------------------------------------
 
+/*
 EcBuffer ecbuf_decode_base64 (EcBuffer self)
 {
   int nbytesdecoded;
@@ -426,7 +429,7 @@ EcBuffer ecbuf_decode_base64 (EcBuffer self)
     nprbytes -= 4;
   }
   
-  /* Note: (nprbytes == 1) would be an error, so just ingore that case */
+  // Note: (nprbytes == 1) would be an error, so just ingore that case 
   if (nprbytes > 1)
   {
     *(bufout++) =
@@ -451,9 +454,11 @@ EcBuffer ecbuf_decode_base64 (EcBuffer self)
     
   return ret;    
 }
+*/
 
 //----------------------------------------------------------------------------------------
 
+/*
 static const char basis_64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 int ecbuf_encode_base64_len (int len)
@@ -559,7 +564,7 @@ EcBuffer ecbuf_encode_base64 (EcBuffer self)
 
   return ret;    
 }
-
+*/
 //----------------------------------------------------------------------------------------
 
 #endif

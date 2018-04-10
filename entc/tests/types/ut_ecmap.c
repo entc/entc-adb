@@ -64,8 +64,8 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     
     while (ecmap_cursor_next (cursor))
     {
-      void* key = ecmap_node_key (cursor->node);
-      void* val = ecmap_node_value (cursor->node);
+      char* key = ecmap_node_key (cursor->node);
+      char* val = ecmap_node_value (cursor->node);
 
       printf ("map item '%s':'%s'\n", key, val);
     }
@@ -79,8 +79,8 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     
     while (ecmap_cursor_prev (cursor))
     {
-      void* key = ecmap_node_key (cursor->node);
-      void* val = ecmap_node_value (cursor->node);
+      char* key = ecmap_node_key (cursor->node);
+      char* val = ecmap_node_value (cursor->node);
       
       printf ("map item '%s':'%s'\n", key, val);
     }
@@ -99,8 +99,8 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     ecmap_cursor_prev (cursor);    // 1
     
     {
-      void* key = ecmap_node_key (cursor->node);
-      void* val = ecmap_node_value (cursor->node);
+      char* key = ecmap_node_key (cursor->node);
+      char* val = ecmap_node_value (cursor->node);
       
       printf ("map item '%s':'%s'\n", key, val);
     }
@@ -136,8 +136,8 @@ static int __STDCALL test_ecmap_test2 (void* ptr, TestEnvContext ctx, EcErr err)
     ecmap_cursor_erase (map01, &cursor);
 
     {
-      void* key = ecmap_node_key (cursor.node);
-      void* val = ecmap_node_value (cursor.node);
+      char* key = ecmap_node_key (cursor.node);
+      char* val = ecmap_node_value (cursor.node);
       
       printf ("cur [%lu] item '%s':'%s'\n", ecmap_size (map01), key, val);
     }
@@ -201,8 +201,8 @@ static int __STDCALL test_ecmap_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     
     while (ecmap_cursor_next (cursor))
     {
-      void* key = ecmap_node_key (cursor->node);
-      void* val = ecmap_node_value (cursor->node);
+      char* key = ecmap_node_key (cursor->node);
+      char* val = ecmap_node_value (cursor->node);
       
       printf ("map item '%s':'%s'\n", key, val);
     }

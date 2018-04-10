@@ -1,7 +1,7 @@
 #include "eccrypt.h"
 
 #include "tools/eclog.h"
-#include "tools/echash.h"
+#include "tools/eccode.h"
 
 #include "types/ecstream.h"
 
@@ -12,20 +12,31 @@
 
 #if defined _WIN32 || defined _WIN64
 
+#include <windows.h>
+#include <wincrypt.h>
+#pragma comment (lib, "Crypt32.lib")
+
 //=============================================================================
 
-HCRYPTPROV ecencrypt_aes_acquireContext (unsigned int type, EcErr err)
+HCRYPTPROV ecencrypt_aes_acquireContext (DWORD provType, EcErr err)
 {
-  HCRYPTPROV handle;  
+  HCRYPTPROV provHandle = (HCRYPTPROV)NULL; 
   
-  /*
-  if (!CryptAcquireContextW(&hProv, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
+  if (!CryptAcquireContext (&provHandle, NULL, NULL, provType, 0))
   {
-    return NULL;
+    DWORD errCode = GetLastError ();
+
+    if (errCode == NTE_BAD_KEYSET)
+    {
+      if (!CryptAcquireContext (&provHandle, NULL, NULL, provType, CRYPT_NEWKEYSET))
+      {
+        ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+        return NULL;
+      }
+    }
   }
-  */
   
-  return handle;
+  return provHandle;
 }
 
 //=============================================================================

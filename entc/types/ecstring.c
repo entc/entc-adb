@@ -123,8 +123,19 @@ EcString ecstr_format_list (const EcString format, va_list ptr)
 
     vsnprintf_s (ret, len, len, format, ptr);
   }
+#elif defined(__STRICT_ANSI__)
+
+  {
+    int len = 1024;
+    ret = (char*)ENTC_MALLOC(len);
+    
+    vsnprintf (ret, len, format, ptr);
+  }
+
 #else
-  vasprintf (&ret, format, ptr);
+  
+  vasprintf (&ret, format, ptr);  
+  
 #endif
 
   return ret;
