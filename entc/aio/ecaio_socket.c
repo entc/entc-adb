@@ -120,8 +120,10 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcEr
   if (listen(sock, SOMAXCONN) == SOCKET_ERROR)
   {
     closesocket(sock);
-    return ecerr_set (err,ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't listen");
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't listen");
   }
+  
+  eclog_fmt (LL_TRACE, "ENTC_AIO", "socket", "listen on [%s:%i]", host, port);
   
   self->handle = sock;
   
@@ -743,6 +745,8 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcEr
   
   // cannot fail
   listen(sock, SOMAXCONN);
+  
+  eclog_fmt (LL_TRACE, "ENTC_AIO", "socket", "listen on [%s:%i]", host, port);
   
   self->socket = sock;
   

@@ -38,18 +38,29 @@ __LIBEX void ecaio_destroy (EcAio*);
 
 __LIBEX int ecaio_init (EcAio, EcErr);
 
-__LIBEX int ecaio_append (EcAio, void* handle, EcAioContext ctx, EcErr);
-
 __LIBEX int ecaio_abort (EcAio, EcErr);
-
-__LIBEX int ecaio_addQueueEvent (EcAio, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
 
 __LIBEX int ecaio_waitForNextEvent (EcAio, unsigned long timeout, EcErr);
 
 __LIBEX int ecaio_wait (EcAio, EcErr);
 
-__LIBEX int ecaio_addContextToEvent (EcAio, EcAioContext ctx, EcErr err);
+//-----------------------------------------------------------------------------
 
+// add context to the handle event
+__LIBEX int ecaio_append (EcAio, void* handle, EcAioContext ctx, EcErr);
+
+// add callbacks to the handle event
+__LIBEX int ecaio_append_cb (EcAio, void* handle, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
+
+// add context to the internal queue
+__LIBEX int ecaio_queue_append (EcAio, EcAioContext ctx, EcErr);
+
+// helper to create a queued event
+__LIBEX int ecaio_queue_append_cb (EcAio, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
+
+//-----------------------------------------------------------------------------
+
+// helper for controling userinput on a terminal
 __LIBEX int ecaio_registerTerminateControls (EcAio, int noKeyboardInterupt, EcErr);
 
 //-----------------------------------------------------------------------------
