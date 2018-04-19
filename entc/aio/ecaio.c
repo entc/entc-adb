@@ -93,16 +93,11 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy, EcErr err)
+int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
 {
   DWORD t = 0;
   ULONG_PTR ptr2 = (ULONG_PTR)NULL;
-  
-  // create a new aio context
-  EcAioContext ctx = ecaio_context_create ();
-  
-  ecaio_context_setCallbacks (ctx, ptr, process, destroy);
-  
+
   // add the context to the completion port
   PostQueuedCompletionStatus (self->port, t, ptr2, (LPOVERLAPPED)ecaio_context_getOverlapped (ctx));
   
@@ -159,15 +154,15 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
     {
       DWORD lastError = GetLastError ();
       
-	  {
+      {
         EcErr err = ecerr_create ();
 
         ecerr_formatErrorOS (err, ENTC_LVL_ERROR, lastError);
 
-		eclog_fmt (LL_WARN, "ENTC", "wait", "error on io completion port: %s", err->text);
+        eclog_fmt (LL_WARN, "ENTC", "wait", "error on io completion port: %s", err->text);
 
         ecerr_destroy (&err);
-	  }
+      }
 
       if (ecaio_context_continue (ovl, FALSE, numOfBytes))
       {        
@@ -222,48 +217,49 @@ static int ecaio_wait_ctrl_handler (unsigned long ctrlType)
   switch( ctrlType )
   {
     case CTRL_C_EVENT:
-	{
+    {
       if (g_termOnly == FALSE)
-	  {
+      {
         abort = TRUE;
 
-  	    eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
-	  }
+        eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "ctrl-c");
+      }
 
-	  break;
-	}
+      break;
+    }
     case CTRL_SHUTDOWN_EVENT:
-	{
+    {
       abort = TRUE;
 
-	  eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "shutdown");
-	  break;
-	}
+      eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "shutdown");
+      break;
+    }
     case CTRL_CLOSE_EVENT:
     {
       abort = TRUE;
 
-	  eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "close");
-	  break;
-	}
-	default:
-	{
+      eclog_fmt (LL_TRACE, "ENTC", "signal", "signal seen [%i] -> %s", ctrlType, "close");
+      break;
+    }
+    default:
+    {
       abort = FALSE;
 
-	  eclog_fmt (LL_TRACE, "ENTC", "signal", "unknown signal seen [%i]", ctrlType);
-	  break;
-	}
+      eclog_fmt (LL_TRACE, "ENTC", "signal", "unknown signal seen [%i]", ctrlType);
+      break;
+    }
   }
+  
   if (abort)
   {
-	  int res;
-      EcErr err = ecerr_create ();
+    int res;
+    EcErr err = ecerr_create ();
       
-      res = ecaio_abort (g_aio, err);
+    res = ecaio_abort (g_aio, err);
       
-      ecerr_destroy (&err);
+    ecerr_destroy (&err);
       
-      //Sleep (5000);
+    //Sleep (5000);
   }
 
   return TRUE;
@@ -291,7 +287,7 @@ static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsig
   EcAio self = ptr;
   
   // send again
-  ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, NULL);
+  ecaio_queue_append_cb (self, self, ecaio_abort_fct_process, NULL, NULL);
   
   return ENTC_AIO_CODE_ABORTALL;  // just tell to abort all
 }
@@ -300,7 +296,7 @@ static int __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ctx, unsig
 
 int ecaio_abort (EcAio self, EcErr err)
 {
-  return ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, err);
+  return ecaio_queue_append_cb (self, self, ecaio_abort_fct_process, NULL, err);
 }
 
 //*****************************************************************************
@@ -318,6 +314,7 @@ int ecaio_abort (EcAio self, EcErr err)
 #include <sys/eventfd.h>
 #include <sys/signalfd.h>
 #include <unistd.h>
+#include <termios.h>
 
 #define Q6_EPOLL_MAXEVENTS 1
 
@@ -537,12 +534,12 @@ int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
   
   ecmutex_unlock (self->eventsm);
 
-  return ecaio_addContextToEvent (self, ctx, err);
+  return ecaio_queue_append (self, ctx, err);
 }
 
 //-----------------------------------------------------------------------------
 
-int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
+int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
 {
   ecmutex_lock (self->mutex);
   
@@ -558,20 +555,6 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
   //eclogger_fmt (LL_TRACE, "ENTC", "context", "wrote %u", u);
   
   return ENTC_ERR_NONE;
-}
-
-//-----------------------------------------------------------------------------
-
-int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy, EcErr err)
-{
-  // create a new aio context
-  EcAioContext ctx = ecaio_context_create ();
-  
-  ecaio_context_setCallbacks (ctx, ptr, process, destroy);
-  
-  //eclogger_fmt (LL_TRACE, "ENTC", "context", "new ctx %p", ctx);
-  
-  return ecaio_addContextToEvent (self, ctx, err);
 }
 
 //-----------------------------------------------------------------------------
@@ -757,7 +740,6 @@ int ecaio_wait (EcAio self, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-/*
 int ecaio_reset_signals (EcErr err)
 {
   int res;
@@ -805,11 +787,10 @@ int ecaio_reset_signals (EcErr err)
   
   return ENTC_ERR_NONE;
 }
- */
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
+static EcAioStatus __STDCALL ecaio_signal_onProcess (void* ptr, EcAioContext ctx, unsigned long val1, unsigned long val2)
 {
   struct signalfd_siginfo info;
   unsigned long bytes = read ((long)ptr, &info, sizeof(struct signalfd_siginfo));
@@ -843,12 +824,18 @@ static int __STDCALL ecaio_signal_process (void* ptr, EcAioContext ctx, unsigned
 
 //-----------------------------------------------------------------------------
 
+void __STDCALL ecaio_signal_onDestroy (void* ptr)
+{
+  eclog_fmt (LL_TRACE, "ENTC", "signal", "turn off signal-handling");
+}
+
+//-----------------------------------------------------------------------------
+
 int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr err)
 {
-  /*
   int res;
   EcAioContext ctx;
-  int sfd;
+  long sfd;
 
   sigset_t mask;
   memset(&mask, 0, sizeof(sigset_t));
@@ -873,6 +860,20 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
     {
       return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
     }
+    
+    /*
+    {
+      struct termios orig_termios;
+      struct termios raw = orig_termios;
+      
+      // turn off echoing
+      tcgetattr (STDIN_FILENO, &orig_termios);
+
+      raw.c_lflag &= ~(ECHO | ICANON | IEXTEN);
+
+      tcsetattr (STDIN_FILENO, TCSAFLUSH, &raw);
+    }
+    */
   }
 
   res = sigaddset (&mask, SIGTERM);
@@ -887,17 +888,7 @@ int ecaio_registerTerminateControls (EcAio self, int noKeyboardInterupt, EcErr e
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
-  {
-    // create a new aio context
-    ctx = ecaio_context_create ();
-    
-    ecaio_context_setCallbacks (ctx, sfd, ecaio_signal_process, NULL);
-    
-    ecaio_append (self, sfd, ctx, err);
-  }
-   */
-  
-  return ENTC_ERR_NONE;
+  return ecaio_append_cb (self, (void*)sfd, (void*)sfd, ecaio_signal_onProcess, ecaio_signal_onDestroy, err);
 }
 
 //-----------------------------------------------------------------------------
@@ -911,7 +902,7 @@ static EcAioStatus __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ct
 
 int ecaio_abort (EcAio self, EcErr err)
 {
-  return ecaio_addQueueEvent (self, NULL, ecaio_abort_fct_process, NULL, err);
+  return ecaio_queue_append_cb (self, NULL, ecaio_abort_fct_process, NULL, err);
 }
 
 //*****************************************************************************
@@ -991,7 +982,7 @@ int ecaio_append (EcAio self, void* handle, EcAioContext ctx, EcErr err)
 
 //-----------------------------------------------------------------------------
 
-int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
+int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
 {
   int res;
   
@@ -1028,25 +1019,6 @@ int ecaio_addContextToEvent (EcAio self, EcAioContext ctx, EcErr err)
   
   return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "not supported on this system");  
 #endif
-  
-}
-
-//-----------------------------------------------------------------------------
-
-int ecaio_addQueueEvent (EcAio self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy, EcErr err)
-{
-  // create a new aio context
-  EcAioContext context = ecaio_context_create ();
-  if (context == NULL)
-  {
-    eclog_fmt (LL_FATAL, "ENTC", "add event", "context is NULL");
-    
-    return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_WRONG_VALUE, "ctx is null");
-  }
-  
-  ecaio_context_setCallbacks (context, ptr, process, destroy);
-  
-  return ecaio_addContextToEvent (self, context, err);
 }
 
 //-----------------------------------------------------------------------------
@@ -1374,7 +1346,7 @@ static EcAioStatus __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ct
   eclog_fmt (LL_TRACE, "ENTC AIO", "event", "abort");
 
   // send again
-  ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, NULL);
+  ecaio_queue_append_cb (self, self, ecaio_abort_fct_process, NULL, NULL);
   
   eclog_fmt (LL_TRACE, "ENTC AIO", "event", "abort all");
 
@@ -1385,7 +1357,7 @@ static EcAioStatus __STDCALL ecaio_abort_fct_process (void* ptr, EcAioContext ct
 
 int ecaio_abort (EcAio self, EcErr err)
 {
-  return ecaio_addQueueEvent (self, self, ecaio_abort_fct_process, NULL, err);
+  return ecaio_queue_append_cb (self, self, ecaio_abort_fct_process, NULL, err);
 }
 
 //*****************************************************************************
@@ -1393,3 +1365,29 @@ int ecaio_abort (EcAio self, EcErr err)
 #endif
 
 //*****************************************************************************
+
+int ecaio_queue_append_cb (EcAio self, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy, EcErr err)
+{
+  // create a new aio context
+  EcAioContext ctx = ecaio_context_create ();
+  
+  ecaio_context_setCallbacks (ctx, ptr, process, destroy);
+  
+  //eclogger_fmt (LL_TRACE, "ENTC", "context", "new ctx %p", ctx);
+  
+  return ecaio_queue_append (self, ctx, err);
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_append_cb (EcAio self, void* handle, void* ptr, fct_ecaio_context_process onProcess, fct_ecaio_context_destroy onDestroy, EcErr err)
+{
+  // create a new aio context
+  EcAioContext ctx = ecaio_context_create ();
+
+  ecaio_context_setCallbacks (ctx, ptr, onProcess, onDestroy);
+    
+  return ecaio_append (self, handle, ctx, err);
+}
+
+//-----------------------------------------------------------------------------

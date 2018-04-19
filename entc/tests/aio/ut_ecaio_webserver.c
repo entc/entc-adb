@@ -8,6 +8,7 @@
 #include "system/ecthread.h"
 #include "tools/eclparser.h"
 #include "types/ecstream.h"
+#include "tools/eclog.h"
 
 #include <stdio.h>
 
@@ -94,11 +95,15 @@ static int __STDCALL text_ecaio_reader_onRead (void* ptr, void* handle, const ch
 {
   TestParserCtx* ctx = ptr;
 
+  eclog_fmt (LL_TRACE, "TEST", "reading", "parse");
+
   // we don't know if this was the last line
   eclineparser_parse (ctx->lp, buffer, size, FALSE);
-
+  
   if (ctx->done)
   {
+    eclog_fmt (LL_TRACE, "TEST", "reading", "got request");
+    
     // last line seen, send content
     EcAioSendFile sf = ecaio_sendfile_create ("index.html", NULL, ctx->refsock, NULL, text_ecaio_sendfile_onInit);
     
@@ -136,6 +141,8 @@ static int __STDCALL test_ecaio_onAccept (void* ptr, void* socket, const char* r
   
   //printf ("accept connection: %s\n", remoteAddress);
   
+  eclog_fmt (LL_TRACE, "TEST", "accept", "accept connection: %s", remoteAddress);
+  
   // create an aio reader on the socket
   EcAioSocketReader readerAio = ecaio_socketreader_create (socket);
 
@@ -171,6 +178,24 @@ static int __STDCALL test_ecaio_onAccept (void* ptr, void* socket, const char* r
 
 //---------------------------------------------------------------------------
 
+static int __STDCALL test_ecaio_worker (void* ptr)
+{
+  int res;
+  EcErr err = ecerr_create();
+  
+  EcAio aio = ptr;
+  
+  eclog_fmt (LL_TRACE, "TEST", "start", "wait for AIO events");
+  
+  res = ecaio_wait (aio, err);
+
+  ecerr_destroy (&err);
+  
+  return 0;
+}
+
+//---------------------------------------------------------------------------
+
 static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
   int res;
@@ -179,12 +204,16 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
   // create accept socket
   EcAcceptSocket acceptSocket = ecacceptsocket_create ();
 
+  //eclog_fmt (LL_TRACE, "TEST", "start", "about to create the listen socket");
+  
   res = ecacceptsocket_listen (acceptSocket, "127.0.0.1", 8080, err);
   if (res)
   {
     return res;
   }
   
+  //eclog_fmt (LL_TRACE, "TEST", "start", "link socket to AIO");
+
   EcAioSocketAccept acceptAio = ecaio_socketaccept_create (ecacceptsocket_socket (acceptSocket));
 
   ecaio_socketaccept_setCallback (acceptAio, aio, test_ecaio_onAccept);
@@ -195,12 +224,33 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
     return res;
   }
   
-  res = ecaio_wait (aio, err);
+  res = ecaio_registerTerminateControls (aio, FALSE, err);
   if (res)
   {
     return res;
   }
   
+  {
+    int i;
+    EcThread threads [16];
+    
+    for (i = 0; i < 16; i++)
+    {
+      threads [i] = ecthread_new (NULL);
+     
+      ecthread_start (threads [i], test_ecaio_worker, aio);
+    }
+    
+    for (i = 0; i < 16; i++)
+    {
+      ecthread_join (threads [i]);
+      
+      ecthread_delete (&(threads[i]));
+    }
+  }    
+    
+  eclog_fmt (LL_TRACE, "TEST", "start", "wait done");
+
   ecacceptsocket_destroy (&acceptSocket);
 
   return 0;

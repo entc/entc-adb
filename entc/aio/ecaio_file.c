@@ -465,7 +465,7 @@ int ecaio_filereader_assign (EcAioFileReader* pself, EcAio aio, EcErr err)
       //eclogger_fmt (LL_TRACE, "Q6_AIO", "freader", err->text);
       
       // try to just create an event instead
-      res = ecaio_addContextToEvent (aio, ctx, err);
+      res = ecaio_queue_append (aio, ctx, err);
     }
     else
     {
