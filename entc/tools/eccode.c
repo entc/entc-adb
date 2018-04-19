@@ -321,7 +321,9 @@ EcBuffer eccode_base64_decode (EcBuffer source)
   EcBuffer ret = ecbuf_create (source->size + 1);
   
   // openssl function
-  ret->size = EVP_DecodeBlock (ret->buffer, source->buffer, source->size) - 1;  // it adds an extra ZERO at the end??
+  ret->size = EVP_DecodeBlock (ret->buffer, source->buffer, source->size);
+
+  //ret->size = EVP_DecodeBlock (ret->buffer, source->buffer, source->size) - 1;  // it adds an extra ZERO at the end??
   
   return ret;
 }
