@@ -1355,6 +1355,21 @@ EcBuffer ecudc_get_asB (const EcUdc self, const EcString name, const EcBuffer al
 
 //----------------------------------------------------------------------------------------
 
+int ecudc_get_asBool (const EcUdc self, const EcString name, int alt)
+{
+  const EcUdc res = ecudc_node (self, name);
+  if (isAssigned (res))
+  {
+    return ecudc_asBool (res);
+  }
+  else
+  {
+    return alt;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecudc_add_asP (EcAlloc alloc, EcUdc node, const EcString name, void* value)
 {
   // create new item as reference

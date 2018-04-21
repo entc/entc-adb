@@ -211,6 +211,8 @@ __LIB_EXPORT const time_t* ecudc_get_asTime (const EcUdc, const EcString name, c
 
 __LIB_EXPORT EcBuffer ecudc_get_asB (const EcUdc, const EcString name, const EcBuffer alt);
 
+__LIB_EXPORT int ecudc_get_asBool (const EcUdc, const EcString name, int alt);
+
 // helper setter
 
 __LIB_EXPORT void ecudc_add_asP (EcAlloc, EcUdc, const EcString name, void* value);
