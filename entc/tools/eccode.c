@@ -309,9 +309,17 @@ EcBuffer eccode_base64_encode (EcBuffer source)
   EcBuffer ret = ecbuf_create (((source->size + 2) / 3 * 4) + 1);
   
   // openssl function
-  ret->size = EVP_EncodeBlock (ret->buffer, source->buffer, source->size);
+  int decodedSize = EVP_EncodeBlock (ret->buffer, source->buffer, source->size);
   
-  return ret;
+  // everything worked fine
+  if (decodedSize > 0)
+  {
+    ret->size = decodedSize;
+    return ret;
+  }
+  
+  ecbuf_destroy (&ret);
+  return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -320,14 +328,18 @@ EcBuffer eccode_base64_decode (EcBuffer source)
 {
   EcBuffer ret = ecbuf_create (source->size + 1);
   
-  printf ("SOURCE SIZE: %lu\n", source->size);
-  
   // openssl function
-  ret->size = EVP_DecodeBlock (ret->buffer, source->buffer, source->size);
+  int decodedSize = EVP_DecodeBlock (ret->buffer, source->buffer, source->size);
 
-  printf ("RET SIZE: %lu\n", ret->size);
+  // everything worked fine
+  if (decodedSize > 0)
+  {
+    ret->size = decodedSize;
+    return ret;
+  }
 
-  return ret;
+  ecbuf_destroy (&ret);
+  return NULL;
 }
 
 //=============================================================================
