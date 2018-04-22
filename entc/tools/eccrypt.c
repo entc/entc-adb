@@ -251,21 +251,31 @@ EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const E
     }
     case ENTC_KEY_PASSPHRASE_MD5:
     {
-      EcCryptKeys* keys = ENTC_NEW (EcCryptKeys);
-      
-      // cypher options
-      int keyLength = EVP_CIPHER_key_length (cypher);
-      
-      //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "passphrase with key-length %i", keyLength);
-      
-      keys->key = ecbuf_create (keyLength);
-      keys->iv = ecbuf_create (16);
-      
-      *bufOffset = 16;
-      
-      EVP_BytesToKey(cypher, EVP_md5(), source->buffer + 8, (unsigned char*)secret, ecstr_len(secret), 1, keys->key->buffer, keys->iv->buffer);
-
-      return keys;
+      // do some pre-checks
+      if (source->size > 16)
+      {
+        EcCryptKeys* keys = ENTC_NEW (EcCryptKeys);
+        
+        // cypher options
+        int keyLength = EVP_CIPHER_key_length (cypher);
+        
+        //eclog_fmt (LL_TRACE, "ENTC", "eccrypt", "passphrase with key-length %i", keyLength);
+        
+        keys->key = ecbuf_create (keyLength);
+        keys->iv = ecbuf_create (16);
+        
+        *bufOffset = 16;
+        
+        EVP_BytesToKey(cypher, EVP_md5(), source->buffer + 8, (unsigned char*)secret, ecstr_len(secret), 1, keys->key->buffer, keys->iv->buffer);
+        
+        return keys;
+      }
+      else
+      {
+        ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_WRONG_STATE, "source buffer has less than 16 bytes");
+        
+        eclog_fmt (LL_ERROR, "ENTC", "eccrypt", "source buffer has less than 16 bytes");
+      }
     }
   }
   
