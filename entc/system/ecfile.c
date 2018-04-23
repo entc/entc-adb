@@ -40,6 +40,53 @@ int ecdh_scan (const EcString path, EcList entries, int filetype)
 }
 
 //--------------------------------------------------------------------------------
+
+uint64_t ecdh_size (EcDirHandle self, int recursive)
+{
+  EcFileInfo info;
+  uint64_t size = 0;
+  
+  while (ecdh_next (self, &info, TRUE))
+  {
+    if (ecstr_equal(info->name, ".") || ecstr_equal(info->name, ".."))
+    {
+      continue;
+    }
+    
+    switch (info->type)
+    {
+      case ENTC_FILETYPE_ISDIR:
+      {
+        if (recursive)
+        {
+          EcString subdir = ecfs_mergeToPath (ecdh_path (self), info->name);
+          
+          EcDirHandle dh = ecdh_create (subdir);
+          if (dh)
+          {
+            size += ecdh_size (dh, recursive);
+            
+            ecdh_destroy (&dh);
+          }
+          
+          ecstr_delete (&subdir);
+        }
+        
+        break;
+      }
+      case ENTC_FILETYPE_ISFILE:
+      {
+        size += info->size;
+        
+        break;
+      }
+    }
+  }
+  
+  return size;
+}
+
+//--------------------------------------------------------------------------------
 // as long there is no OS specific way, the generic implementation follows
 
 // forward declaration

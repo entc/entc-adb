@@ -184,9 +184,9 @@ struct EcFileHandle_s; typedef struct EcFileHandle_s* EcFileHandle;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcFileHandle ecfh_open(const EcString filename, int flags);
+__LIBEX EcFileHandle ecfh_open (const EcString filename, int flags);
   
-__LIBEX void ecfh_close(EcFileHandle*);
+__LIBEX void ecfh_close (EcFileHandle*);
 
 __LIBEX uint64_t ecfh_size (EcFileHandle);
   
@@ -208,7 +208,7 @@ __LIBEX int ecfh_fileno(EcFileHandle);
 
 __LIBEX EcString ecfh_md5(EcFileHandle);
   
-__LIBEX FILE* ecfh_file(EcFileHandle, EcString type);
+__LIBEX FILE* ecfh_file (EcFileHandle, EcString type);
 
 //=============================================================================
 
@@ -221,15 +221,19 @@ __LIBEX EcDirHandle ecdh_create (const EcString path);
 __LIBEX void ecdh_destroy (EcDirHandle*);
   
 __LIBEX int ecdh_next (EcDirHandle, EcFileInfo*, int fullInfo);
-  
-// fills a list with all files found -> filename as list entry
-__LIBEX int ecdh_scan (const EcString path, EcList entries, int filetype);
-  
+
 __LIBEX void ecdh_seekType (const EcString path, EcFileInfo entry);
 
 __LIBEX void ecfi_clone (const EcFileInfo, EcFileInfo);
 
 __LIBEX const EcString ecdh_path (EcDirHandle);
+
+__LIBEX uint64_t ecdh_size (EcDirHandle, int recursive);
+
+//-----------------------------------------------------------------------------
+
+// fills a list with all files found -> filename as list entry
+__LIBEX int ecdh_scan (const EcString path, EcList entries, int filetype);
 
 //-----------------------------------------------------------------------------
  
