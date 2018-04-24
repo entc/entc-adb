@@ -3,8 +3,10 @@
 
 #include "types/ecbuffer.h"
 #include "types/ecstream.h"
+#include "types/ecudc.h"
 
 #include "tools/eccode.h"
+#include "tools/ecjson.h"
 
 #include <stdio.h>
 
@@ -94,6 +96,31 @@ static int __STDCALL test_base64_test1 (void* ptr, TestEnvContext tctx, EcErr er
 
 //---------------------------------------------------------------------------
 
+static int __STDCALL test_base64_test2 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc node1 = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, NULL);
+  
+  ecudc_add_asNumber (EC_ALLOC, node1, "num1", 23);
+  ecudc_add_asNumber (EC_ALLOC, node1, "num2", 42);
+  ecudc_add_asString (EC_ALLOC, node1, "num2", "hello world!!");
+  
+  EcBuffer buf1 = ecjson_write (node1);
+  
+  printf ("BUF1: %s\n", buf1->buffer);
+  
+  EcBuffer buf1_base64 = eccode_base64_encode (buf1);
+  
+  printf ("BA64: %s\n", buf1_base64->buffer);
+
+  EcBuffer buf2 = eccode_base64_decode (buf1_base64);
+  
+  printf ("BUF2: %s\n", buf2->buffer);
+
+  EcUdc node2 = ecjson_read_ecbuf (buf2, NULL);
+}
+
+//---------------------------------------------------------------------------
+
 int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
@@ -101,6 +128,7 @@ int main(int argc, char* argv[])
   
   testenv_reg (te, "SHA256 Test1", NULL, NULL, test_crypt_test1);
   testenv_reg (te, "BASE64 Test1", NULL, NULL, test_base64_test1);
+  testenv_reg (te, "JSON Test1", NULL, NULL, test_base64_test2);
     
   testenv_run (te);
     

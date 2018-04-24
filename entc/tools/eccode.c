@@ -329,7 +329,7 @@ EcBuffer eccode_base64_decode (EcBuffer source)
   EcBuffer ret = ecbuf_create (source->size + 2);
   
   // openssl function
-  int decodedSize = EVP_DecodeBlock (ret->buffer, source->buffer, source->size);
+  int decodedSize = EVP_DecodeBlock (ret->buffer, source->buffer, source->size) - 1;
 
   // everything worked fine
   if ((decodedSize > 0) && (decodedSize < ret->size))
