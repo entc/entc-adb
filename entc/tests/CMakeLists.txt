@@ -14,6 +14,10 @@ ADD_EXECUTABLE( ut_ecfile system/ut_ecfile.c )
 TARGET_LINK_LIBRARIES( ut_ecfile entc )
 add_test(ut_ecfile tests/Debug/ut_ecfile)
 
+ADD_EXECUTABLE( ut_ectime system/ut_ectime.c )
+TARGET_LINK_LIBRARIES( ut_ectime entc )
+add_test(ut_ectime tests/Debug/ut_ectime)
+
 ADD_EXECUTABLE( ut_ecaio system/ut_ecaio.c )
 TARGET_LINK_LIBRARIES( ut_ecaio entc )
 add_test(ut_ecaio tests/Debug/ut_ecaio)
