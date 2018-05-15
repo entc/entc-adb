@@ -37,7 +37,9 @@ typedef struct {
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void ectime_utc_time (EcTime*);
+__LIBEX void ectime_utc_current_time (EcTime*);
+
+__LIBEX void ectime_from_ttime (EcTime*, time_t* time);
 
 //=============================================================================
 

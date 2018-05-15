@@ -24,7 +24,7 @@
 
 //-----------------------------------------------------------------------------------
 
-void ectime_utc_time (EcTime* ectime)
+void ectime_utc_current_time (EcTime* ectime)
 {
 
 #if defined _WIN64 || defined _WIN32
@@ -45,6 +45,14 @@ void ectime_utc_time (EcTime* ectime)
   
 #endif
   
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_from_ttime (EcTime* ectime, time_t* time)
+{
+  ectime->sec = *time;  // we have only precision in seconds
+  ectime->msec = 0;
 }
 
 //-----------------------------------------------------------------------------------
