@@ -28,12 +28,14 @@
 
 #include <time.h>
 
+#pragma pack(push, 16)
 typedef struct {
   
   uint_t msec;
   uint_t sec;
   
 } EcTime;
+#pragma pack(pop)
 
 //-----------------------------------------------------------------------------
 
@@ -43,6 +45,7 @@ __LIBEX void ectime_from_ttime (EcTime*, const time_t* time);
 
 //=============================================================================
 
+#pragma pack(push, 16)
 typedef struct {
 
   uint_t day;
@@ -59,6 +62,7 @@ typedef struct {
   int isdst;
   
 } EcDate;
+#pragma pack(pop)
 
 //-----------------------------------------------------------------------------
 

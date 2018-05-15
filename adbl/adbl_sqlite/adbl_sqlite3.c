@@ -169,7 +169,7 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
   
   if( qc->orderno != 0 )
   {
-    uint_t abs_orderno = abs(qc->orderno);
+    int64_t abs_orderno = abs(qc->orderno);
     
     EcBuffer buffer = ecbuf_create (10);
     ecbuf_format (buffer, 10, "C%u", abs_orderno );      

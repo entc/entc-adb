@@ -1085,6 +1085,11 @@ EcString ecstr_shrink (const EcString source, char from, char to)
   const char* pos1;
   const char* pos2;
 
+  if (source == NULL)
+  {
+    return NULL;
+  }
+  
   pos1 = strchr(source, from);
   if (isNotAssigned (pos1))
   {

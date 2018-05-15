@@ -611,13 +611,6 @@ void jsonwriter_escape (EcStream stream, const EcString source)
           ecstream_append_c (stream, '"');
           break;
         }
-        /*
-        case '\'':
-        {
-          ecstream_append_str (stream, "\\u0027");
-          break;
-        }
-        */
         case '\\':
         {
           ecstream_append_c (stream, '\\');
@@ -670,14 +663,14 @@ void jsonwriter_escape (EcStream stream, const EcString source)
           }
           else if ((*c & 0xE0) == 0xC0) //  (0xC2 <= c[0] && c[0] <= 0xDF) && (0x80 <= c[1] && c[1] <= 0xBF))
           {
-            char buffer[7];
+            char buffer[8];
             // convert UTF8 into 4 hex digits 
             wchar_t wc;
             
             wc = (c[0] & 0x1F) << 6;
             wc |= (c[1] & 0x3F);
 
-            sprintf (buffer, "\\u%.4x\n", wc);             
+            sprintf (buffer, "\\u%.4x", wc);
 
             ecstream_append_buf (stream, buffer, 6);
             
@@ -696,7 +689,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
                     (0x80 <= c[2] && c[2] <= 0xBF))) 
                     */
           {
-            char buffer[7];
+            char buffer[8];
             wchar_t wc;
             
             wc = (c[0] & 0xF) << 12;
@@ -705,7 +698,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             
             c += 2;
 
-            sprintf (buffer, "\\u%.4x\n", wc);             
+            sprintf (buffer, "\\u%.4x", wc);
 
             ecstream_append_buf (stream, buffer, 6); 
           }
@@ -884,7 +877,7 @@ EcString ecjson_toString (const EcUdc source)
 
 int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString secret, unsigned int sectype)
 {
-  int res;
+  int res = ENTC_ERR_NONE;
   int bytesRead;
 
   EcFileHandle fh;
@@ -953,7 +946,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
   }
   
   // finalize decryption
-  if (aes && res == ENTC_ERR_NONE)
+  if (aes && (res == ENTC_ERR_NONE))
   {
     EcBuffer pbuf = NULL;
     
@@ -962,8 +955,10 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
     {
       res = err->code;
     }
-    
-    res = ecjsonparser_parse (jparser, (const char*)pbuf->buffer, pbuf->size, err);
+    else
+    {
+      res = ecjsonparser_parse (jparser, (const char*)pbuf->buffer, pbuf->size, err);
+    }
   }
 
   if (res == ENTC_ERR_NONE)

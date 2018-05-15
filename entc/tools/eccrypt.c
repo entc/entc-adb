@@ -156,6 +156,7 @@ EcCryptKeys* eccrypt_aes_getkey (const EcString secret, uint_t key_type, const E
         keys->key = echash_sha256 (&h, err);
         if (keys->key == NULL)
         {
+          ENTC_DEL (&keys, EcCryptKeys);
           return NULL;
         }
         
@@ -722,7 +723,7 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut)
+int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut, EcErr err)
 {
   EcBuffer ben;
   EcBuffer bin = ecbuf_create (1024);
@@ -736,10 +737,10 @@ int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     h.buffer = bin->buffer;
     h.size = bytesRead;
     
-    ben = ecencrypt_aes_update (aes, &h, NULL);
+    ben = ecencrypt_aes_update (aes, &h, err);
     if (ben == NULL)
     {
-      return ENTC_ERR_PROCESS_FAILED;
+      return err->code;
     }
     
     bytesWritten = ecfh_writeBuffer (fhOut, ben, ben->size);
@@ -747,14 +748,14 @@ int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     {
       eclog_fmt (LL_ERROR, "ENTC", "enc file", "can't write bytes");
       
-      return ENTC_ERR_PROCESS_FAILED;
+      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't write bytes");
     }
   }
   
-  ben = ecencrypt_aes_finalize (aes, NULL);
+  ben = ecencrypt_aes_finalize (aes, err);
   if (ben == NULL)
   {
-    return ENTC_ERR_PROCESS_FAILED;
+    return err->code;
   }
   
   ecfh_writeBuffer (fhOut, ben, ben->size);
@@ -781,7 +782,7 @@ int ecencrypt_file (const EcString source, const EcString dest, const EcString s
     
     eclog_fmt (LL_WARN, "ENTC", "enc file", "can't open original file '%s'", source);
     
-    return ENTC_ERR_PROCESS_FAILED;
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't open original file");
   }
   
   fhOut = ecfh_open (dest, O_CREAT | O_TRUNC | O_WRONLY);
@@ -793,12 +794,12 @@ int ecencrypt_file (const EcString source, const EcString dest, const EcString s
     
     eclog_fmt (LL_WARN, "ENTC", "enc file", "can't open dest file '%s'", dest);
     
-    return ENTC_ERR_PROCESS_FAILED;
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't open dest file");
   }
   
   eclog_fmt (LL_TRACE, "ENTC", "end file", "encrypt file");
   
-  res = ecencrypt_file_copy (aes, fhIn, fhOut);
+  res = ecencrypt_file_copy (aes, fhIn, fhOut, err);
   
   ecfh_close (&fhIn);
   ecfh_close (&fhOut);
@@ -810,7 +811,7 @@ int ecencrypt_file (const EcString source, const EcString dest, const EcString s
 
 //-------------------------------------------------------------------------------------------------------
 
-int ecdecrypt_file_copy (EcDecryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut)
+int ecdecrypt_file_copy (EcDecryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut, EcErr err)
 {
   EcBuffer ben;
   EcBuffer bin = ecbuf_create (1024);
@@ -824,10 +825,10 @@ int ecdecrypt_file_copy (EcDecryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     h.buffer = bin->buffer;
     h.size = bytesRead;
     
-    ben = ecdecrypt_aes_update (aes, &h, NULL);
+    ben = ecdecrypt_aes_update (aes, &h, err);
     if (ben == NULL)
     {
-      return ENTC_ERR_PROCESS_FAILED;
+      return err->code;
     }
     
     bytesWritten = ecfh_writeBuffer (fhOut, ben, ben->size);
@@ -835,14 +836,14 @@ int ecdecrypt_file_copy (EcDecryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     {
       eclog_fmt (LL_ERROR, "ENTC", "dec file", "can't write bytes");
       
-      return ENTC_ERR_PROCESS_FAILED;
+      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't write bytes");
     }
   }
   
-  ben = ecdecrypt_aes_finalize (aes, NULL);
+  ben = ecdecrypt_aes_finalize (aes, err);
   if (ben == NULL)
   {
-    return ENTC_ERR_PROCESS_FAILED;
+    return err->code;
   }
   
   ecfh_writeBuffer (fhOut, ben, ben->size);
@@ -869,7 +870,7 @@ int ecdecrypt_file (const EcString source, const EcString dest, const EcString s
     
     eclog_fmt (LL_WARN, "ENTC", "dec file", "can't open original file '%s'", source);
     
-    return ENTC_ERR_PROCESS_FAILED;
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't open original file");
   }
   
   fhOut = ecfh_open (dest, O_CREAT | O_TRUNC | O_WRONLY);
@@ -881,12 +882,12 @@ int ecdecrypt_file (const EcString source, const EcString dest, const EcString s
     
     eclog_fmt (LL_WARN, "ENTC", "dec file", "can't open dest file '%s'", dest);
     
-    return ENTC_ERR_PROCESS_FAILED;
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't open dest file");
   }
   
   eclog_fmt (LL_TRACE, "ENTC", "dec file", "decrypt file");
   
-  res = ecdecrypt_file_copy (aes, fhIn, fhOut);
+  res = ecdecrypt_file_copy (aes, fhIn, fhOut, err);
   
   ecfh_close (&fhIn);
   ecfh_close (&fhOut);

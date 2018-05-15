@@ -271,7 +271,7 @@ void ecstream_append_u64 (EcStream self, uint64_t val)
 
 #else
 
-  self->pos += snprintf(self->pos, 24, "%lu", val);
+  self->pos += snprintf(self->pos, 24, "%llu", val);
 
 #endif
 }
@@ -305,7 +305,7 @@ void ecstream_append_i64 (EcStream self, int64_t val)
 
 #else
  
-  self->pos += snprintf(self->pos, 24, "%li", val);
+  self->pos += snprintf(self->pos, 24, "%lli", val);
 
 #endif
 }

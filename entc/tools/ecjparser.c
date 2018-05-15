@@ -117,7 +117,7 @@ struct EcJsonParser_s
   EcJsonParserItem* valElement;
   
   // for unicode decoding
-  unsigned char unicode_data[7];
+  unsigned char unicode_data[10];
   int unicode_pos;
 };
 
@@ -321,7 +321,7 @@ void ecjsonparser_decode_unicode_hex (EcJsonParser self, EcStream dest)
   // convert from hex into decimal
   wchar_t wc = strtol ((const char*)self->unicode_data, NULL, 16);
   
-  printf ("HEX: %s -> %u\n", self->unicode_data, wc);
+  //printf ("HEX: %s -> %u\n", self->unicode_data, wc);
   
   if ( 0 <= wc && wc <= 0x7f )
   {
