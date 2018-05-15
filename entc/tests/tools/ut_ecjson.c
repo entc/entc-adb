@@ -303,6 +303,33 @@ static int __STDCALL test_ecjson_test10 (void* ptr, TestEnvContext tctx, EcErr e
 
 //---------------------------------------------------------------------------
 
+static int __STDCALL test_ecjson_test11 (void* ptr, TestEnvContext tctx, EcErr err)
+{
+  EcUdc node;
+  const EcString unicodedText = "'\n\r\t\b\f/äאט流水";
+  
+  node = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+  
+  ecudc_add_asString (EC_ALLOC, node, "text1", unicodedText);
+  
+  EcString h = ecjson_toString (node);
+  
+  printf ("%s\n", h);
+  
+  EcUdc node2 = ecjson_read_s(h, NULL);
+
+  const EcString h2 = ecudc_get_asString (node2, "text1", NULL);
+  
+  if (!ecstr_equal(h2, unicodedText))
+  {
+    printf ("ERROR: not euqal\n");
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//---------------------------------------------------------------------------
+
 int main(int argc, char* argv[])
 {
   TestEnv te = testenv_create ();
@@ -323,7 +350,9 @@ int main(int argc, char* argv[])
 
   //testenv_reg (te, "Json Reader Test10", test_ecjson_init, test_ecjson_done, test_ecjson_test10);
    
-//for (i = 0; i < 1000; i++)
+  testenv_reg (te, "Json Reader Test11", NULL, NULL, test_ecjson_test11);
+
+  //for (i = 0; i < 1000; i++)
 //{
   //printf ("[%i]\n", i);
   

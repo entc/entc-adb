@@ -600,35 +600,146 @@ void jsonwriter_escape (EcStream stream, const EcString source)
 {
   if (ecstr_valid (source))
   {
-    const char* c;
+    const unsigned char* c;
     for (c = source; *c; c++)
     {
       switch (*c)
       {
         case '"':
+        {
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, '"');
+          break;
+        }
+        /*
+        case '\'':
+        {
+          ecstream_append_str (stream, "\\u0027");
+          break;
+        }
+        */
         case '\\':
         {
           ecstream_append_c (stream, '\\');
-          ecstream_append_c (stream, *c);
+          ecstream_append_c (stream, '\\');
+          break;
         }
-        break;
+        case '/':
+        {
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, '/');
+          break;
+        }
         case '\r':
         {
           ecstream_append_c (stream, '\\');
           ecstream_append_c (stream, 'r');
+          break;
         }
-        break;
         case '\n':
         {
           ecstream_append_c (stream, '\\');
           ecstream_append_c (stream, 'n');
+          break;
         }
-        break;
+        case '\t':
+        {
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, 't');
+          break;
+        }
+        case '\b':
+        {
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, 'b');
+          break;
+        }
+        case '\f':
+        {
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, 'f');
+          break;
+        }
         default:
         {
-          if (*c <= 0x7e)
+          if ((*c & 0x80) == 0) // 0x20 <= *c && *c <= 0x7E)
           {
+            //printf ("UTF8 [0] %c\n", *c);
+            
             ecstream_append_c (stream, *c);
+          }
+          else if ((*c & 0xE0) == 0xC0) //  (0xC2 <= c[0] && c[0] <= 0xDF) && (0x80 <= c[1] && c[1] <= 0xBF))
+          {
+            char buffer[7];
+            // convert UTF8 into 4 hex digits 
+            wchar_t wc;
+            
+            wc = (c[0] & 0x1F) << 6;
+            wc |= (c[1] & 0x3F);
+
+            sprintf (buffer, "\\u%.4x\n", wc);             
+
+            ecstream_append_buf (stream, buffer, 6);
+            
+            c += 1;
+          }
+          else if ((*c & 0xF0) == 0xE0) // (c[0] == 0xE0 && (0xA0 <= c[1] && c[1] <= 0xBF) && (0x80 <= c[2] && c[2] <= 0xBF)) ||
+            /*   
+            (// straight 3-byte
+                    ((0xE1 <= c[0] && c[0] <= 0xEC) || c[0] == 0xEE || c[0] == 0xEF) &&
+                    (0x80 <= c[1] && c[1] <= 0xBF) &&
+                    (0x80 <= c[2] && c[2] <= 0xBF)
+                ) ||
+                (// excluding surrogates
+                    c[0] == 0xED &&
+                    (0x80 <= c[1] && c[1] <= 0x9F) &&
+                    (0x80 <= c[2] && c[2] <= 0xBF))) 
+                    */
+          {
+            char buffer[7];
+            wchar_t wc;
+            
+            wc = (c[0] & 0xF) << 12;
+            wc |= (c[1] & 0x3F) << 6;
+            wc |= (c[2] & 0x3F);
+            
+            c += 2;
+
+            sprintf (buffer, "\\u%.4x\n", wc);             
+
+            ecstream_append_buf (stream, buffer, 6); 
+          }
+          else if( (// planes 1-3
+                    c[0] == 0xF0 &&
+                    (0x90 <= c[1] && c[1] <= 0xBF) &&
+                    (0x80 <= c[2] && c[2] <= 0xBF) &&
+                    (0x80 <= c[3] && c[3] <= 0xBF)
+                ) ||
+                (// planes 4-15
+                    (0xF1 <= c[0] && c[0] <= 0xF3) &&
+                    (0x80 <= c[1] && c[1] <= 0xBF) &&
+                    (0x80 <= c[2] && c[2] <= 0xBF) &&
+                    (0x80 <= c[3] && c[3] <= 0xBF)
+                ) ||
+                (// plane 16
+                    c[0] == 0xF4 &&
+                    (0x80 <= c[1] && c[1] <= 0x8F) &&
+                    (0x80 <= c[2] && c[2] <= 0xBF) &&
+                    (0x80 <= c[3] && c[3] <= 0xBF)
+                )
+            ) 
+          {
+            c += 3;
+
+            printf ("UTF8 [3]\n");
+          }
+          else
+          {
+            printf ("UTF8 [X] %c -> [%.1x]\n", *c, c[0]);
+            
+            ecstream_append_c (stream, *c);
+
+            ecstream_append_c (stream, *c);  
           }
         }
       }

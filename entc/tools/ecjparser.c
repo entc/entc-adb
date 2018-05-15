@@ -9,19 +9,20 @@
 
 //-----------------------------------------------------------------------------
 
-#define JPARSER_STATE_NONE        0
-#define JPARSER_STATE_KEY_BEG     1
-#define JPARSER_STATE_LIST        2
-#define JPARSER_STATE_KEY_RUN     3
-#define JPARSER_STATE_KEY_END     4
-#define JPARSER_STATE_VAL_BEG     5
+#define JPARSER_STATE_NONE           0
+#define JPARSER_STATE_KEY_BEG        1
+#define JPARSER_STATE_LIST           2
+#define JPARSER_STATE_KEY_RUN        3
+#define JPARSER_STATE_KEY_END        4
+#define JPARSER_STATE_VAL_BEG        5
 
-#define JPARSER_STATE_STR_RUN     6
-#define JPARSER_STATE_NODE_RUN    7
-#define JPARSER_STATE_LIST_RUN    8
-#define JPARSER_STATE_NUMBER_RUN  9
-#define JPARSER_STATE_FLOAT_RUN   10
-#define JPARSER_STATE_STR_ESCAPE  11
+#define JPARSER_STATE_STR_RUN        6
+#define JPARSER_STATE_NODE_RUN       7
+#define JPARSER_STATE_LIST_RUN       8
+#define JPARSER_STATE_NUMBER_RUN     9
+#define JPARSER_STATE_FLOAT_RUN     10
+#define JPARSER_STATE_STR_ESCAPE    11
+#define JPARSER_STATE_STR_UNICODE   12
 
 //=============================================================================
 
@@ -59,7 +60,7 @@ EcJsonParserItem* ecjsonparser_item_create (int type, int state, EcJsonParser pa
   self->type = type;
   self->state = state;
   self->obj = NULL;
-  
+    
   self->parser = parser;
   self->onDestroy = onDestroy;
   
@@ -115,6 +116,9 @@ struct EcJsonParser_s
   EcJsonParserItem* keyElement;
   EcJsonParserItem* valElement;
   
+  // for unicode decoding
+  unsigned char unicode_data[7];
+  int unicode_pos;
 };
 
 //-----------------------------------------------------------------------------
@@ -155,6 +159,15 @@ EcJsonParser ecjsonparser_create (fct_ecjparser_onItem onItem, fct_ecjparser_onO
   self->valElement = ecjsonparser_item_create (ENTC_JPARSER_UNDEFINED, JPARSER_STATE_NONE, self, ecjsonparser_element_push_onObjDestroy);
   
   self->stack = eclist_create (ecjsonparser_create_stack_onDestroy);
+  
+  // prepare the hex notation 0x0000
+  self->unicode_data [0] = '0';
+  self->unicode_data [1] = 'x';
+  self->unicode_data [2] = '\0';
+  self->unicode_data [3] = '\0';
+  self->unicode_data [4] = '\0';
+  self->unicode_data [5] = '\0';
+  self->unicode_data [6] = '\0';
   
   return self;
 }
@@ -303,6 +316,56 @@ unsigned int ecjsonparser_decode_unicode_point (const char** pc)
 
 //-----------------------------------------------------------------------------
 
+void ecjsonparser_decode_unicode_hex (EcJsonParser self, EcStream dest)
+{
+  // convert from hex into decimal
+  wchar_t wc = strtol ((const char*)self->unicode_data, NULL, 16);
+  
+  //printf ("HEX: %s -> %u\n", self->unicode_data, n);
+  
+  if ( 0 <= wc && wc <= 0x7f )
+  {
+    ecstream_append_c (dest, wc);
+  }
+  else if ( 0x80 <= wc && wc <= 0x7ff )
+  {
+    ecstream_append_c (dest, 0xc0 | (wc >> 6));
+    ecstream_append_c (dest, 0x80 | (wc & 0x3f));
+  }
+  else if ( 0x800 <= wc && wc <= 0xffff )
+  {
+    ecstream_append_c (dest, 0xe0 | (wc >> 12));
+    ecstream_append_c (dest, 0x80 | ((wc >> 6) & 0x3f));
+    ecstream_append_c (dest, 0x80 | (wc & 0x3f));
+  }
+  else if ( 0x10000 <= wc && wc <= 0x1fffff )
+  {
+    ecstream_append_c (dest, 0xf0 | (wc >> 18));
+    ecstream_append_c (dest, 0x80 | ((wc >> 12) & 0x3f));
+    ecstream_append_c (dest, 0x80 | ((wc >> 6) & 0x3f));
+    ecstream_append_c (dest, 0x80 | (wc & 0x3f));
+  }
+  else if ( 0x200000 <= wc && wc <= 0x3ffffff )
+  {
+    ecstream_append_c (dest, 0xf8 | (wc >> 24));
+    ecstream_append_c (dest, 0x80 | ((wc >> 18) & 0x3f));
+    ecstream_append_c (dest, 0x80 | ((wc >> 12) & 0x3f));
+    ecstream_append_c (dest, 0x80 | ((wc >> 6) & 0x3f));
+    ecstream_append_c (dest, 0x80 | (wc & 0x3f));
+  }
+  else if ( 0x4000000 <= wc && wc <= 0x7fffffff )
+  {
+    ecstream_append_c (dest, 0xfc | (wc >> 30) );
+    ecstream_append_c (dest, 0x80 | ((wc >> 24) & 0x3f) );
+    ecstream_append_c (dest, 0x80 | ((wc >> 18) & 0x3f) );
+    ecstream_append_c (dest, 0x80 | ((wc >> 12) & 0x3f) );
+    ecstream_append_c (dest, 0x80 | ((wc >> 6) & 0x3f) );
+    ecstream_append_c (dest, 0x80 | (wc & 0x3f) );
+  }
+}
+
+//-----------------------------------------------------------------------------
+
 void ecjsonparser_decode_str (const char* source, EcStream dest)
 {
   int status = 0;
@@ -312,7 +375,7 @@ void ecjsonparser_decode_str (const char* source, EcStream dest)
   {
     if (status)
     {
-      switch (*c)
+      switch (*c)  // TODO: obsolete
       {
         case '"':   ecstream_append_c (dest, '"');   break;
         case '/':   ecstream_append_c (dest, '/');   break;
@@ -346,11 +409,13 @@ void ecjsonparser_decode_str (const char* source, EcStream dest)
     {
       switch (*c)
       {
+        /*
         case '\\':
         {
           status = 1;
           break;
         }
+        */
         default:
         {
           ecstream_append_c (dest, *c);
@@ -958,6 +1023,19 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             
             break;
           }
+          case JPARSER_STATE_STR_UNICODE:
+          {
+            self->unicode_data [self->unicode_pos + 2] = *c;
+            self->unicode_pos++;
+            
+            if (self->unicode_pos == 4)
+            {
+              ecjsonparser_decode_unicode_hex (self, self->valElement->stream);              
+              state = JPARSER_STATE_STR_RUN;
+            }
+           
+            break;
+          }
           default:
           {
             return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state by number");
@@ -1070,19 +1148,54 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             // check excape sequence
             switch (*c)
             {
+              case '/':
+              {
+                ecstream_append_c (self->valElement->stream, '/');
+
+                state = JPARSER_STATE_STR_RUN;
+                break;
+              }
               case 'n':
               {
                 ecstream_append_c (self->valElement->stream, '\n');
+
+                state = JPARSER_STATE_STR_RUN;
                 break;
               }
               case 't':
               {
                 ecstream_append_c (self->valElement->stream, '\t');
+
+                state = JPARSER_STATE_STR_RUN;
                 break;
               }
               case 'r':
               {
                 ecstream_append_c (self->valElement->stream, '\r');
+
+                state = JPARSER_STATE_STR_RUN;
+                break;
+              }
+              case 'b':
+              {
+                ecstream_append_c (self->valElement->stream, '\b');
+
+                state = JPARSER_STATE_STR_RUN;
+                break;
+              }
+              case 'f':
+              {
+                ecstream_append_c (self->valElement->stream, '\f');
+
+                state = JPARSER_STATE_STR_RUN;
+                break;
+              }
+              case 'u':
+              {
+                // hex encoded unicode
+                state = JPARSER_STATE_STR_UNICODE;                
+                self->unicode_pos = 0;
+                
                 break;
               }
               default:
@@ -1090,11 +1203,25 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
                 eclog_fmt (LL_WARN, "ENTC", "ecjparser", "unknown escape sequence '%c' -> [%i]", *c, *c);
                 
                 ecstream_append_c (self->valElement->stream, *c);
+
+                state = JPARSER_STATE_STR_RUN;
                 break;
               }
             }
             
-            state = JPARSER_STATE_STR_RUN;
+            break;
+          }
+          case JPARSER_STATE_STR_UNICODE:
+          {
+            self->unicode_data [self->unicode_pos + 2] = *c;
+            self->unicode_pos++;
+            
+            if (self->unicode_pos == 4)
+            {
+              ecjsonparser_decode_unicode_hex (self, self->valElement->stream);
+              state = JPARSER_STATE_STR_RUN;
+            }
+           
             break;
           }
           case JPARSER_STATE_VAL_BEG:

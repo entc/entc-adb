@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 "Alexander Kalkhof" [email:entc@kalkhof.org]
+ * Copyright (c) 2010-2018 "Alexander Kalkhof" [email:entc@kalkhof.org]
  *
  * This file is part of the extension n' tools (entc-base) framework for C.
  *
@@ -20,8 +20,11 @@
 #ifndef ENTC_SYSTEM_TIME_H
 #define ENTC_SYSTEM_TIME_H 1
 
-#include <system/macros.h>
 #include <system/types.h>
+#include <system/ecdefs.h>
+#include <types/ecbuffer.h>
+
+//=============================================================================
 
 #include <time.h>
 
@@ -31,6 +34,12 @@ typedef struct {
   uint_t sec;
   
 } EcTime;
+
+//-----------------------------------------------------------------------------
+
+__LIBEX void ectime_utc_time (EcTime*);
+
+//=============================================================================
 
 typedef struct {
 
@@ -44,54 +53,59 @@ typedef struct {
   uint_t usec;
   uint_t msec;
   uint_t sec;
+
+  int isdst;
   
 } EcDate;
 
-struct EcStopWatch_s; typedef struct EcStopWatch_s* EcStopWatch;
+//-----------------------------------------------------------------------------
 
-__CPP_EXTERN______________________________________________________________________________START
+__LIBEX void ectime_utc_date (EcDate*);
 
-__LIB_EXPORT void ectime_getTime (EcTime*);
+__LIBEX void ectime_local_date (EcDate*);
 
-__LIB_EXPORT void ectime_getDate (EcDate*);
+//=============================================================================
 
-__LIB_EXPORT void ectime_toTimeInfo (struct tm*, const time_t*);
-
-__LIB_EXPORT void ectime_toGmtString (const time_t*, char* buffer, ulong_t size);
+// Sun, 11 May 2018 17:05:40 GMT
+__LIBEX void ectime_toGmtString (EcBuffer buf, const EcDate*);
 
 // %Y%m%dT%H%M%SZ
-__LIB_EXPORT void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size);
+__LIBEX void ectime_toISO8601 (EcBuffer buf, const EcDate*);
 
-__LIB_EXPORT void ectime_toAlphaNum (const time_t* t, char* buffer, ulong_t size);
+__LIBEX void ectime_toAlphaNum (EcBuffer buf, const EcDate*);
 
 // YYYY-MM-DD HH:NN:SS
-__LIB_EXPORT void ectime_toString (const time_t* t, char* buffer, ulong_t size);
+__LIBEX void ectime_toString (EcBuffer buf, const EcDate*);
 
 // YYYY_MM_DD__HH_NN_SS__
-__LIB_EXPORT void ectime_toPrefix (const time_t* t, char* buffer, ulong_t size);
+__LIBEX void ectime_toPrefix (EcBuffer buf, const EcDate*);
 
-__LIB_EXPORT void ectime_parseISO8601 (time_t* t, const char* stime);
+__LIBEX void ectime_toPaddedTimestamp (EcBuffer buf, const EcDate*);
 
-__LIB_EXPORT void ectime_toPaddedTimestamp (time_t* t, char* buffer, ulong_t size);
+__LIBEX void ectime_parseISO8601 (time_t* t, const char* stime);
 
-// stop watch
+//=============================================================================
 
-__LIB_EXPORT EcStopWatch ecstopwatch_create (ulong_t timeout);
+struct EcStopWatch_s; typedef struct EcStopWatch_s* EcStopWatch;
 
-__LIB_EXPORT void ecstopwatch_destroy (EcStopWatch*);
+//-----------------------------------------------------------------------------
 
-__LIB_EXPORT void ecstopwatch_start (EcStopWatch);
+__LIBEX EcStopWatch ecstopwatch_create (ulong_t timeout);
 
-__LIB_EXPORT ulong_t ecstopwatch_stop (EcStopWatch);
+__LIBEX void ecstopwatch_destroy (EcStopWatch*);
 
-__LIB_EXPORT int ecstopwatch_timedOut (EcStopWatch);
+__LIBEX void ecstopwatch_start (EcStopWatch);
 
-__LIB_EXPORT int ecstopwatch_timedOutRef (EcStopWatch, EcStopWatch ref);
+__LIBEX ulong_t ecstopwatch_stop (EcStopWatch);
 
-__LIB_EXPORT void ecstopwatch_destroy (EcStopWatch*);
+__LIBEX int ecstopwatch_timedOut (EcStopWatch);
 
-__LIB_EXPORT ulong_t ecstopwatch_timeout (EcStopWatch);
+__LIBEX int ecstopwatch_timedOutRef (EcStopWatch, EcStopWatch ref);
 
-__CPP_EXTERN______________________________________________________________________________END
+__LIBEX void ecstopwatch_destroy (EcStopWatch*);
+
+__LIBEX ulong_t ecstopwatch_timeout (EcStopWatch);
+
+//-----------------------------------------------------------------------------
 
 #endif

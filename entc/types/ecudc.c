@@ -1160,8 +1160,7 @@ int64_t ecudc_asNumber (EcUdc self)
       const EcString h = ecudc_asString (self);
       if (isAssigned (h))
       {
-        // can be transformed ?
-        return atoi(h);
+        return strtoll (h, NULL, 10);
       }
     }
   }        
@@ -1182,7 +1181,7 @@ double ecudc_asDouble (EcUdc self)
       if (isAssigned (h))
       {
         // can be transformed ?
-        return atof(h);
+        return strtod (h, NULL);
       }
     }
   }        

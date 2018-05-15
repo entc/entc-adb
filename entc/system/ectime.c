@@ -2,6 +2,7 @@
 
 #include "types/ecstring.h"
 #include "tools/eclog.h"
+#include "system/macros.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@
 
 //-----------------------------------------------------------------------------------
 
-void ectime_getTime (EcTime* ectime)
+void ectime_utc_time (EcTime* ectime)
 {
 
 #if defined _WIN64 || defined _WIN32
@@ -48,7 +49,64 @@ void ectime_getTime (EcTime* ectime)
 
 //-----------------------------------------------------------------------------------
 
-void ectime_getDate (EcDate* ecdate)
+void ectime_convert_ecdate_to_timeinfo (struct tm* timeinfo, const EcDate* ecdate)
+{
+  // fill the timeinfo
+  timeinfo->tm_sec   = ecdate->sec;
+  timeinfo->tm_hour  = ecdate->hour;
+  timeinfo->tm_min   = ecdate->minute;
+  
+  timeinfo->tm_mday  = ecdate->day;
+  timeinfo->tm_mon   = ecdate->month - 1;
+  timeinfo->tm_year  = ecdate->year - 1900;  
+  
+  timeinfo->tm_isdst = ecdate->isdst;
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_convert_timeinfo_to_ecdate (EcDate* ecdate, const struct tm* timeinfo)
+{
+  // fill the timeinfo
+  ecdate->sec = timeinfo->tm_sec;
+  ecdate->msec = 0;
+  ecdate->usec = 0;
+
+  ecdate->minute = timeinfo->tm_min;
+  ecdate->hour = timeinfo->tm_hour;
+  
+  ecdate->isdst = timeinfo->tm_isdst;
+  
+  ecdate->day = timeinfo->tm_mday;
+  ecdate->month = timeinfo->tm_mon + 1;
+  ecdate->year = timeinfo->tm_year + 1900; 
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_utc_date (EcDate* ecdate)
+{
+#if defined _WIN64 || defined _WIN32
+ 
+#else
+  
+  struct timeval time;  
+  struct tm* l01;
+
+  gettimeofday (&time, NULL);
+  l01 = gmtime (&(time.tv_sec));
+  
+  ectime_convert_timeinfo_to_ecdate (ecdate, l01); 
+ 
+  ecdate->msec = time.tv_usec / 1000;
+  ecdate->usec = time.tv_usec;
+  
+#endif
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_local_date (EcDate* ecdate)
 {
 
 #if defined _WIN64 || defined _WIN32
@@ -75,16 +133,10 @@ void ectime_getDate (EcDate* ecdate)
   gettimeofday (&time, NULL);
   l01 = localtime (&(time.tv_sec));
   
-  ecdate->sec = l01->tm_sec;
+  ectime_convert_timeinfo_to_ecdate (ecdate, l01);
+  
   ecdate->msec = time.tv_usec / 1000;
-  ecdate->usec = time.tv_usec;
-
-  ecdate->minute = l01->tm_min;
-  ecdate->hour = l01->tm_hour;
-  
-  ecdate->day = l01->tm_mday;
-  ecdate->month = l01->tm_mon;
-  ecdate->year = l01->tm_year + 1900;
+  ecdate->usec = time.tv_usec;  
   
 #endif
   
@@ -92,78 +144,98 @@ void ectime_getDate (EcDate* ecdate)
 
 //-----------------------------------------------------------------------------------
 
-void ectime_toTimeInfo (struct tm* timeinfo, const time_t* t)
+void ectime_toGmtString (EcBuffer buf, const EcDate* ecdate)
 {
-#if defined _WIN64 || defined _WIN32
-  gmtime_s (timeinfo, t);
+  struct tm timeinfo;
+
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+  
+  mktime (&timeinfo);
+  
+  // create buffer with timeinfo as string
+  strftime ((char*)buf->buffer, buf->size, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_toISO8601 (EcBuffer buf, const EcDate* ecdate)
+{
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+  
+  // create buffer with timeinfo as string
+  strftime ((char*)buf->buffer, buf->size, "%Y%m%dT%H%M%SZ", &timeinfo);
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_toString (EcBuffer buf, const EcDate* ecdate)
+{
+  struct tm timeinfo;
+
+  // fill the timeinfo
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+
+  // create buffer with timeinfo as string
+  strftime ((char*)buf->buffer, buf->size, "%Y-%m-%d %H:%M:%S", &timeinfo);  
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_toPrefix (EcBuffer buf, const EcDate* ecdate)
+{
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+  
+  // create buffer with timeinfo as string
+  strftime ((char*)buf->buffer, buf->size, "%Y_%m_%d__%H_%M_%S__", &timeinfo);
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_toAlphaNum (EcBuffer buf, const EcDate* ecdate)
+{
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+
+  // recalculate day of the week
+  mktime (&timeinfo);
+
+  // create buffer with timeinfo as string
+  strftime ((char*)buf->buffer, buf->size, "%a, %e %b %Y %H:%M:%S %z", &timeinfo);
+}
+
+//-----------------------------------------------------------------------------------
+
+void ectime_toPaddedTimestamp (EcBuffer buf, const EcDate* ecdate)
+{
+  EcString h;
+
+#ifdef _WIN32
+
+  _snprintf_s(buffer, size, size, "%li", *t); 
+
 #else
-  gmtime_r (t, timeinfo);
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+
+  // create buffer with timeinfo as string
+  strftime ((char*)buf->buffer, buf->size, "%s", &timeinfo);
+
 #endif
-}
 
-//-----------------------------------------------------------------------------------
-
-void ectime_toGmtString (const time_t* t, char* buffer, ulong_t size)
-{
-  struct tm timeinfo;
-
-  // fill the timeinfo
-  ectime_toTimeInfo (&timeinfo, t);
-
-  // create buffer with timeinfo as string
-  strftime (buffer, size, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectime_toISO8601 (const time_t* t, char* buffer, ulong_t size)
-{
-  struct tm timeinfo;
+  h = ecstr_lpad ((char*)buf->buffer, '0', buf->size);
   
-  // fill the timeinfo
-  ectime_toTimeInfo (&timeinfo, t);
-  
-  // create buffer with timeinfo as string
-  strftime (buffer, size, "%Y%m%dT%H%M%SZ", &timeinfo);
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectime_toString (const time_t* t, char* buffer, ulong_t size)
-{
-  struct tm timeinfo;
-
-  // fill the timeinfo
-  ectime_toTimeInfo (&timeinfo, t);
-
-  // create buffer with timeinfo as string
-  strftime (buffer, size, "%Y-%m-%d %H:%M:%S", &timeinfo);  
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectime_toPrefix (const time_t* t, char* buffer, ulong_t size)
-{
-  struct tm timeinfo;
-  
-  // fill the timeinfo
-  ectime_toTimeInfo (&timeinfo, t);
-  
-  // create buffer with timeinfo as string
-  strftime (buffer, size, "%Y_%m_%d__%H_%M_%S__", &timeinfo);
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectime_toAlphaNum (const time_t* t, char* buffer, ulong_t size)
-{
-  struct tm timeinfo;
-  
-  // fill the timeinfo
-  ectime_toTimeInfo (&timeinfo, t);
-
-  // create buffer with timeinfo as string
-  strftime (buffer, size, "%a, %e %b %Y %H:%M:%S %z", &timeinfo);
+  memcpy (buf->buffer, h, buf->size);
+  buf->buffer [buf->size] = 0;
 }
 
 //-----------------------------------------------------------------------------------
@@ -196,33 +268,6 @@ void ectime_parseISO8601 (time_t* t, const char* stime)
   timeinfo.tm_isdst = 1;
   
   *t = mktime (&timeinfo);
-}
-
-//-----------------------------------------------------------------------------------
-
-void ectime_toPaddedTimestamp (time_t* t, char* buffer, ulong_t size)
-{
-  EcString h;
-
-#ifdef _WIN32
-
-  _snprintf_s(buffer, size, size, "%li", *t); 
-
-#else
-  struct tm timeinfo;
-  
-  // fill the timeinfo
-  ectime_toTimeInfo (&timeinfo, t);
-
-  // create buffer with timeinfo as string
-  strftime (buffer, size, "%s", &timeinfo);
-
-#endif
-
-  h = ecstr_lpad (buffer, '0', size);
-  
-  memcpy (buffer, h, size);
-  buffer [size] = 0;
 }
 
 //-----------------------------------------------------------------------------------
