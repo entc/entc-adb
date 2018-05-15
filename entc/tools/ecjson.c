@@ -600,8 +600,8 @@ void jsonwriter_escape (EcStream stream, const EcString source)
 {
   if (ecstr_valid (source))
   {
-    const unsigned char* c;
-    for (c = source; *c; c++)
+    const unsigned char* c = (const unsigned char*)source;
+    for (; *c; c++)
     {
       switch (*c)
       {
@@ -646,6 +646,12 @@ void jsonwriter_escape (EcStream stream, const EcString source)
         {
           ecstream_append_c (stream, '\\');
           ecstream_append_c (stream, 't');
+          break;
+        }
+        case '\a':
+        {
+          ecstream_append_c (stream, '\\');
+          ecstream_append_c (stream, 'a');
           break;
         }
         case '\b':
@@ -735,11 +741,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
           }
           else
           {
-            printf ("UTF8 [X] %c -> [%.1x]\n", *c, c[0]);
-            
-            ecstream_append_c (stream, *c);
-
-            ecstream_append_c (stream, *c);  
+            // not supported character
           }
         }
       }
