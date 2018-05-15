@@ -554,12 +554,16 @@ EcUdc ecjson_read_buffer (const char* buffer, int64_t size, const EcString name)
   else
   {
     ret = ecjsonparser_lastObject (jparser);
-  }
-  
-  if (ret)
-  {
-    // set name
-    ecudc_setName (ret, name);
+    
+    if (ret)
+    {
+      // set name
+      ecudc_setName (ret, name);
+    }
+    else
+    {
+      //eclog_msg (LL_WARN, "JSON", "reader", "returned NULL object as node");
+    }
   }
   
   // clean up

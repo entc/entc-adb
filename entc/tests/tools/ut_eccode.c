@@ -117,6 +117,19 @@ static int __STDCALL test_base64_test2 (void* ptr, TestEnvContext tctx, EcErr er
   printf ("BUF2: %s\n", buf2->buffer);
 
   EcUdc node2 = ecjson_read_ecbuf (buf2, NULL);
+  
+  EcBuffer buf3_base64 = ecbuf_create_str_cp ("eyJoYSI6IjAwMDE1MjQ1OTgzMjQ5MTAiLCJpZCI6IjQxMzVhYTlkYzFiODQyYTY1M2RlYTg0NjkwM2RkYjk1YmZiOGM1YTEwYzUwNGE3ZmExNmUxMGJjMzFkMWZkZjAiLCJkYSI6ImJlMzQ0ZTg0NDc0Nzk0NTU3MGMyZDBhYjE4Nzk5MDkzNDhkOTJlYzQ5YzliMWRhNmY2ODhmOGZmODYxNDg5ZDUiLCJ3cGlkIjoiMyJ9");
+
+  EcBuffer buf3 = eccode_base64_decode (buf3_base64);
+
+  printf ("BUF3: %s\n", buf3->buffer);
+
+  EcUdc node3 = ecjson_read_ecbuf (buf3, NULL);
+  
+  if (node3 == NULL)
+  {
+    printf ("no node\n");
+  }
 }
 
 //---------------------------------------------------------------------------

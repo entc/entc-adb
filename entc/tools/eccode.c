@@ -326,14 +326,20 @@ EcBuffer eccode_base64_encode (EcBuffer source)
 
 EcBuffer eccode_base64_decode (EcBuffer source)
 {
-  EcBuffer ret = ecbuf_create (source->size + 2);
+  EcBuffer ret = ecbuf_create (((source->size + 3) / 4 * 3) + 1);
   
   // openssl function
-  int decodedSize = EVP_DecodeBlock (ret->buffer, source->buffer, source->size) - 1;
+  int decodedSize = EVP_DecodeBlock (ret->buffer, source->buffer, source->size);
 
   // everything worked fine
   if ((decodedSize > 0) && (decodedSize < ret->size))
   {
+    // trim the last bytes which are 0
+    while ((ret->buffer[decodedSize - 1] == '\0') && (decodedSize > 0))
+    {
+      decodedSize--;
+    }
+    
     ret->size = decodedSize;
     return ret;
   }
