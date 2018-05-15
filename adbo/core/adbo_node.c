@@ -862,20 +862,23 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
     case ENTC_UDC_TIME:
     {
       EcTime ectime;
+      EcDate ecdate;
       EcBuffer buf;
 
       // convert into EcTime
       ectime_from_ttime (&ectime, ecudc_asTime (dataItem));
       
+      ectime_date_from_time (&ecdate, &ectime);
+      
       buf = ecbuf_create (40);
       
-      ectime_toString (buf, &ectime);
+      ectime_toString (buf, &ecdate);
       
-      adbl_attrs_addChar (attrs, columnName, buf->buffer);
+      adbl_attrs_addChar (attrs, columnName, (const char*)buf->buffer);
       
       if (isAssigned(values))
       {
-        ecudc_add_asString (EC_ALLOC, values, columnName, buf->buffer);
+        ecudc_add_asString (EC_ALLOC, values, columnName, (const char*)buf->buffer);
       }
 
       eclog_fmt (LL_TRACE, "ADBO", "attr", "add time type");
