@@ -662,7 +662,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
         }
         default:
         {
-          if ((*c & 0x80) == 0) // 0x20 <= *c && *c <= 0x7E)
+          if (0x20 <= *c && *c <= 0x7E) // )
           {
             //printf ("UTF8 [0] %c\n", *c);
             
