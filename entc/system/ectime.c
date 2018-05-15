@@ -49,7 +49,7 @@ void ectime_utc_current_time (EcTime* ectime)
 
 //-----------------------------------------------------------------------------------
 
-void ectime_from_ttime (EcTime* ectime, time_t* time)
+void ectime_from_ttime (EcTime* ectime, const time_t* time)
 {
   ectime->sec = *time;  // we have only precision in seconds
   ectime->msec = 0;
