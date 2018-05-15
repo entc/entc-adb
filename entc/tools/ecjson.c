@@ -648,12 +648,6 @@ void jsonwriter_escape (EcStream stream, const EcString source)
           ecstream_append_c (stream, 't');
           break;
         }
-        case '\a':
-        {
-          ecstream_append_c (stream, '\\');
-          ecstream_append_c (stream, 'a');
-          break;
-        }
         case '\b':
         {
           ecstream_append_c (stream, '\\');

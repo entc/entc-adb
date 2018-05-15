@@ -1176,13 +1176,6 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
                 state = JPARSER_STATE_STR_RUN;
                 break;
               }
-              case 'a':
-              {
-                ecstream_append_c (self->valElement->stream, '\a');
-                
-                state = JPARSER_STATE_STR_RUN;
-                break;
-              }
               case 'b':
               {
                 ecstream_append_c (self->valElement->stream, '\b');
