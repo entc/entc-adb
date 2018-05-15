@@ -92,6 +92,16 @@ void ectime_convert_timeinfo_to_ecdate (EcDate* ecdate, const struct tm* timeinf
 
 //-----------------------------------------------------------------------------------
 
+void ectime_date_from_time (EcDate* ecdate, const EcTime* ectime)
+{
+  time_t t = ectime->sec;
+  struct tm* l01 = gmtime (&t);
+  
+  ectime_convert_timeinfo_to_ecdate (ecdate, l01); 
+}
+
+//-----------------------------------------------------------------------------------
+
 void ectime_utc_date (EcDate* ecdate)
 {
 #if defined _WIN64 || defined _WIN32
