@@ -9,7 +9,7 @@ static int __STDCALL test_time1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
   EcTime t1;
   
-  ectime_utc_time (&t1);
+  ectime_utc_current_time (&t1);
   
   printf ("T1: %i | %i\n", t1.sec, t1.msec);
   
