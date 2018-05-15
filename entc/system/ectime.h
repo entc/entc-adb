@@ -66,6 +66,8 @@ __LIBEX void ectime_utc_date (EcDate*);
 
 __LIBEX void ectime_local_date (EcDate*);
 
+__LIBEX void ectime_date_from_time (EcDate*, const EcTime*);
+
 //=============================================================================
 
 // Sun, 11 May 2018 17:05:40 GMT
