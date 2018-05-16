@@ -69,9 +69,17 @@ void eclog_msg (EcLogLevel lvl, const char* unit, const char* method, const char
         SetConsoleTextAttribute (hStdout, info.wAttributes);
       }
 #else
-      snprintf (buffer, 2048, "%-12s %s|%-8s] %s", method, msg_matrix[lvl], unit, msg);
 
-      printf("\033[%sm%s\033[0m\n", clr_matrix[lvl], buffer);
+  if (msg)
+  {
+    snprintf (buffer, 2048, "%-12s %s|%-8s] %s", method, msg_matrix[lvl], unit, msg);
+  }
+  else
+  {
+    snprintf (buffer, 2048, "%-12s %s|%-8s]", method, msg_matrix[lvl], unit);
+  }
+  
+  printf("\033[%sm%s\033[0m\n", clr_matrix[lvl], buffer);
 #endif  
 }
 
