@@ -23,6 +23,8 @@
 #define JPARSER_STATE_FLOAT_RUN     10
 #define JPARSER_STATE_STR_ESCAPE    11
 #define JPARSER_STATE_STR_UNICODE   12
+#define JPARSER_STATE_KEY_ESCAPE    13
+#define JPARSER_STATE_KEY_UNICODE   14
 
 //=============================================================================
 
@@ -829,6 +831,18 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             state = ecjsonparser_item (self, ENTC_JPARSER_OBJECT_TEXT);
             break;
           }
+          case JPARSER_STATE_KEY_ESCAPE:
+          {
+            EcJsonParserItem* element = self->keyElement;
+            
+            if (element)
+            {
+              ecstream_append_c (element->stream, *c);
+            }
+            
+            state = JPARSER_STATE_KEY_RUN;
+            break;
+          }
           case JPARSER_STATE_STR_ESCAPE:
           {
             ecstream_append_c (self->valElement->stream, *c);
@@ -847,9 +861,26 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
       {
         switch (state)
         {
+          case JPARSER_STATE_KEY_RUN:
+          {
+            state = JPARSER_STATE_KEY_ESCAPE;
+            break;
+          }
           case JPARSER_STATE_STR_RUN:
           {
             state = JPARSER_STATE_STR_ESCAPE;
+            break;
+          }
+          case JPARSER_STATE_KEY_ESCAPE:
+          {
+            EcJsonParserItem* element = self->keyElement;
+            
+            if (element)
+            {
+              ecstream_append_c (element->stream, *c);
+            }
+            
+            state = JPARSER_STATE_KEY_RUN;
             break;
           }
           case JPARSER_STATE_STR_ESCAPE:
@@ -861,7 +892,7 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
           }
           default:
           {
-            return ecerr_set(err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state in '\\'");
+            return ecerr_set_fmt (err, ENTC_LVL_ERROR, ENTC_ERR_PARSER, "unexpected state [%i] in '\\'", (int)state);
           
           }
         }
@@ -1023,6 +1054,25 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             
             break;
           }
+          case JPARSER_STATE_KEY_UNICODE:
+          {
+            self->unicode_data [self->unicode_pos + 2] = *c;
+            self->unicode_pos++;
+            
+            if (self->unicode_pos == 4)
+            {
+              EcJsonParserItem* element = self->keyElement;
+              
+              if (element)
+              {
+                ecjsonparser_decode_unicode_hex (self, element->stream);
+              }
+              
+              state = JPARSER_STATE_KEY_RUN;
+            }
+            
+            break;
+          }
           case JPARSER_STATE_STR_UNICODE:
           {
             self->unicode_data [self->unicode_pos + 2] = *c;
@@ -1143,6 +1193,74 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
             
             break;
           }
+          case JPARSER_STATE_KEY_ESCAPE:
+          {
+            EcJsonParserItem* element = self->keyElement;
+            
+            if (element) switch (*c)
+            {
+              case '/':
+              {
+                ecstream_append_c (element->stream, '/');
+                
+                state = JPARSER_STATE_KEY_RUN;
+                break;
+              }
+              case 'n':
+              {
+                ecstream_append_c (element->stream, '\n');
+                
+                state = JPARSER_STATE_KEY_RUN;
+                break;
+              }
+              case 't':
+              {
+                ecstream_append_c (element->stream, '\t');
+                
+                state = JPARSER_STATE_KEY_RUN;
+                break;
+              }
+              case 'r':
+              {
+                ecstream_append_c (element->stream, '\r');
+                
+                state = JPARSER_STATE_KEY_RUN;
+                break;
+              }
+              case 'b':
+              {
+                ecstream_append_c (element->stream, '\b');
+                
+                state = JPARSER_STATE_KEY_RUN;
+                break;
+              }
+              case 'f':
+              {
+                ecstream_append_c (element->stream, '\f');
+                
+                state = JPARSER_STATE_KEY_RUN;
+                break;
+              }
+              case 'u':
+              {
+                // hex encoded unicode
+                state = JPARSER_STATE_KEY_UNICODE;
+                self->unicode_pos = 0;
+                
+                break;
+              }
+              default:
+              {
+                eclog_fmt (LL_WARN, "ENTC", "ecjparser", "unknown escape sequence '%c' -> [%i]", *c, *c);
+                
+                ecstream_append_c (element->stream, *c);
+                
+                state = JPARSER_STATE_KEY_RUN;
+                break;
+              }
+            }
+            break;
+          }
           case JPARSER_STATE_STR_ESCAPE:
           {
             // check excape sequence
@@ -1207,6 +1325,25 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr er
                 state = JPARSER_STATE_STR_RUN;
                 break;
               }
+            }
+            
+            break;
+          }
+          case JPARSER_STATE_KEY_UNICODE:
+          {
+            self->unicode_data [self->unicode_pos + 2] = *c;
+            self->unicode_pos++;
+            
+            if (self->unicode_pos == 4)
+            {
+              EcJsonParserItem* element = self->keyElement;
+              
+              if (element)
+              {
+                ecjsonparser_decode_unicode_hex (self, element->stream);
+              }
+              
+              state = JPARSER_STATE_KEY_RUN;
             }
             
             break;
