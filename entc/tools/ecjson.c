@@ -617,12 +617,14 @@ void jsonwriter_escape (EcStream stream, const EcString source)
           ecstream_append_c (stream, '\\');
           break;
         }
+        /*
         case '/':
         {
           ecstream_append_c (stream, '\\');
           ecstream_append_c (stream, '/');
           break;
         }
+        */
         case '\r':
         {
           ecstream_append_c (stream, '\\');
@@ -655,13 +657,16 @@ void jsonwriter_escape (EcStream stream, const EcString source)
         }
         default:
         {
+          // implementation taken from https://gist.github.com/rechardchen/3321830
+          // 
           if (0x20 <= *c && *c <= 0x7E) // )
           {
             //printf ("UTF8 [0] %c\n", *c);
             
             ecstream_append_c (stream, *c);
           }
-          else if ((*c & 0xE0) == 0xC0) //  (0xC2 <= c[0] && c[0] <= 0xDF) && (0x80 <= c[1] && c[1] <= 0xBF))
+          else if ((*c & 0xE0) == 0xC0) 
+          //  (0xC2 <= c[0] && c[0] <= 0xDF) && (0x80 <= c[1] && c[1] <= 0xBF))
           {
             char buffer[8];
             // convert UTF8 into 4 hex digits 
@@ -670,14 +675,15 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             wc = (c[0] & 0x1F) << 6;
             wc |= (c[1] & 0x3F);
 
+            // TODO: there might be a better way to do it
             sprintf (buffer, "\\u%.4x", wc);
 
             ecstream_append_buf (stream, buffer, 6);
             
             c += 1;
           }
-          else if ((*c & 0xF0) == 0xE0) // (c[0] == 0xE0 && (0xA0 <= c[1] && c[1] <= 0xBF) && (0x80 <= c[2] && c[2] <= 0xBF)) ||
-            /*   
+          else if ((*c & 0xF0) == 0xE0) 
+          /* (c[0] == 0xE0 && (0xA0 <= c[1] && c[1] <= 0xBF) && (0x80 <= c[2] && c[2] <= 0xBF)) ||
             (// straight 3-byte
                     ((0xE1 <= c[0] && c[0] <= 0xEC) || c[0] == 0xEE || c[0] == 0xEF) &&
                     (0x80 <= c[1] && c[1] <= 0xBF) &&
@@ -687,7 +693,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
                     c[0] == 0xED &&
                     (0x80 <= c[1] && c[1] <= 0x9F) &&
                     (0x80 <= c[2] && c[2] <= 0xBF))) 
-                    */
+          */
           {
             char buffer[8];
             wchar_t wc;
@@ -702,7 +708,8 @@ void jsonwriter_escape (EcStream stream, const EcString source)
 
             ecstream_append_buf (stream, buffer, 6); 
           }
-          else if( (// planes 1-3
+          else if ( (*c & 0xF8) == 0xF0 )
+          /*( (// planes 1-3
                     c[0] == 0xF0 &&
                     (0x90 <= c[1] && c[1] <= 0xBF) &&
                     (0x80 <= c[2] && c[2] <= 0xBF) &&
@@ -720,11 +727,56 @@ void jsonwriter_escape (EcStream stream, const EcString source)
                     (0x80 <= c[2] && c[2] <= 0xBF) &&
                     (0x80 <= c[3] && c[3] <= 0xBF)
                 )
-            ) 
+          ) */
           {
-            c += 3;
+            char buffer[8];
+            wchar_t wc;
 
-            printf ("UTF8 [3]\n");
+            wc = (c[0] & 0x7) << 18;
+            wc |= (c[1] & 0x3F) << 12;
+            wc |= (c[2] & 0x3F) << 6;
+            wc |= (c[3] & 0x3F);
+
+            c += 3;
+            
+            sprintf (buffer, "\\u%.4x", wc);
+
+            ecstream_append_buf (stream, buffer, 6); 
+          }
+          else if ( (*c & 0xFC) == 0xF8 )
+          {
+            char buffer[8];
+            wchar_t wc;
+
+            wc = (c[0] & 0x3) << 24;
+            wc |= (c[1] & 0x3F) << 18;
+            wc |= (c[2] & 0x3F) << 12;
+            wc |= (c[3] & 0x3F) << 6;
+            wc |= (c[4] & 0x3F);
+              
+            c += 4;
+
+            sprintf (buffer, "\\u%.4x", wc);
+
+            ecstream_append_buf (stream, buffer, 6); 
+          }
+          else if ( (*c & 0xFE) == 0xFC )
+          {
+            char buffer[8];
+            wchar_t wc;
+
+            wc = (c[0] & 0x1) << 30;
+            wc |= (c[1] & 0x3F) << 24;
+            wc |= (c[2] & 0x3F) << 18;
+            wc |= (c[3] & 0x3F) << 12;
+            wc |= (c[4] & 0x3F) << 6;
+            wc |= (c[5] & 0x3F);
+              
+            c += 5;
+
+            sprintf (buffer, "\\u%.4x", wc);
+
+            ecstream_append_buf (stream, buffer, 6); 
           }
           else
           {

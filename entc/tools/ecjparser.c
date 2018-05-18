@@ -368,119 +368,65 @@ void ecjsonparser_decode_unicode_hex (EcJsonParser self, EcStream dest)
 
 //-----------------------------------------------------------------------------
 
-void ecjsonparser_decode_str (const char* source, EcStream dest)
-{
-  int status = 0;
-  
-  const char* c;
-  for (c = source; *c; c++)
-  {
-    if (status)
-    {
-      switch (*c)  // TODO: obsolete
-      {
-        case '"':   ecstream_append_c (dest, '"');   break;
-        case '/':   ecstream_append_c (dest, '/');   break;
-        case '\\':  ecstream_append_c (dest, '\\');  break;
-        case 'b':   ecstream_append_c (dest, '\b');  break;
-        case 'f':   ecstream_append_c (dest, '\f');  break;
-        case 'n':   ecstream_append_c (dest, '\n');  break;
-        case 'r':   ecstream_append_c (dest, '\r');  break;
-        case 't':   ecstream_append_c (dest, '\t');  break;
-        case 'u':
-        {
-          unsigned int unicode;
-          c++;
-          
-          unicode = ecjsonparser_decode_unicode_point (&c);
-          
-          ecjsonparser_decode_unicode (unicode, dest);
-          
-          break;
-        }
-        default:
-        {
-          // "Bad escape sequence in string"
-          break;
-        }
-      }
-      
-      status = 0;
-    }
-    else
-    {
-      switch (*c)
-      {
-        /*
-        case '\\':
-        {
-          status = 1;
-          break;
-        }
-        */
-        default:
-        {
-          ecstream_append_c (dest, *c);
-          break;
-        }
-      }
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------
-
 void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int index)
 {
   switch (type)
   {
     case ENTC_JPARSER_OBJECT_TEXT:
     {
-      EcStream s = ecstream_create ();
-      
-      ecjsonparser_decode_str (ecstream_get (self->valElement->stream), s);
-      
       if (self->onItem)
       {
         // void* ptr, void* obj, int type, const char* key, void* val
-        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_TEXT, (void*)ecstream_get (s), key, index);
+        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_TEXT, (void*)ecstream_get (self->valElement->stream), key, index);
       }
-      
-      ecstream_destroy (&s);
       
       ecstream_clear (self->valElement->stream);
       break;
     }
     case ENTC_JPARSER_OBJECT_NUMBER:
     {
-      const char* val = ecstream_get (self->valElement->stream);
-      
-      unsigned long dat = atoi (val);
-      
       if (self->onItem)
       {
-        // void* ptr, void* obj, int type, const char* key, void* val
-        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_NUMBER, (void*)&dat, key, index);
+        char* endptr = NULL;
+        const char* val = ecstream_get (self->valElement->stream);
+
+        int64_t dat = strtoll (val, &endptr, 10);
+        if (endptr == NULL)
+        {
+          // was not able to transform
+          
+        }
+        else
+        {
+          // void* ptr, void* obj, int type, const char* key, void* val
+          self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_NUMBER, (void*)&dat, key, index);
+        }        
       }
       
       ecstream_clear (self->valElement->stream);
-      
       break;
     }
     case ENTC_JPARSER_OBJECT_FLOAT:
-    {
-      const char* val = ecstream_get (self->valElement->stream);
-      
-      double dat = atof (val);
-      
+    {      
       if (self->onItem)
       {
+        char* endptr = NULL;
+        const char* val = ecstream_get (self->valElement->stream);
+        
+        double dat = strtod (val, &endptr);
+        if (endptr == NULL)
+        {
+          // was not able to transform
+          
+        }
+        else
+        {
         // void* ptr, void* obj, int type, const char* key, void* val
-        self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_FLOAT, (void*)&dat, key, index);
+          self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_FLOAT, (void*)&dat, key, index);
+        }
       }
       
       ecstream_clear (self->valElement->stream);
-      
       break;
     }
     case ENTC_JPARSER_UNDEFINED:
