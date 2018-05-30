@@ -19,7 +19,7 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
   EcBuffer_s data;
   
   
-  data.buffer = (unsigned char*)"U2FsdGVkX19nJLLyxozdLWV5mBklYSDB65xlDysflRI=";
+  data.buffer = (unsigned char*)"U2FsdGVkX19tIyDM2JVgynpk/ZRYHqoFNgtr+eiDQxY=";
   data.size = strlen((const char*)data.buffer);
   
   stream = ecstream_create();
@@ -27,6 +27,12 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
   {
     EcBuffer data2 = eccode_base64_decode (&data);
   
+    {
+      EcBuffer h = ecbuf_bin2hex(data2);
+      
+      printf ("HEX:\n%s\n", h->buffer);
+    }
+    
     dec = ecdecrypt_aes_create ("mysecretvault", ENTC_AES_TYPE_CFB, ENTC_KEY_PASSPHRASE_MD5);
   
     buf = ecdecrypt_aes_update (dec, data2, err);

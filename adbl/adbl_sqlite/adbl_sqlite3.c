@@ -564,14 +564,15 @@ void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
     
     if (cursor.position > 0)
     {
-      ecstream_append_str (cols, ", ");
+      ecstream_append_c (cols, ',');
+      ecstream_append_c (values, ',');
     }
     
     ecstream_append_str (cols, ecmap_node_key (node));
     
-    ecstream_append_str (values, "\"");
+    ecstream_append_c (values, '"');
     ecstream_append_str (values, ecmap_node_value (node));
-    ecstream_append_str (values, "\"");
+    ecstream_append_c (values, '"');
   }
 
   if (ecstream_size (cols) > 0)
@@ -580,7 +581,7 @@ void adbl_constructAttributesInsert (EcStream statement, AdblAttributes* attrs)
     ecstream_append_stream (statement, cols);
     ecstream_append_str (statement, ") VALUES (");
     ecstream_append_stream (statement, values);
-    ecstream_append_str (statement, ")");
+    ecstream_append_c (statement, ')');
   }
   else
   {
