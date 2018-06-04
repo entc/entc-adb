@@ -1051,7 +1051,7 @@ int ecjson_writeToFile (const EcString filename, const EcUdc source, const EcStr
 
   if (secret)
   {
-    aes = ecencrypt_aes_create (secret, sectype, 0);
+    aes = ecencrypt_aes_create (sectype, 0, secret, 0);
   }
     
   fh = ecfh_open (filename, O_CREAT | O_RDWR | O_TRUNC);

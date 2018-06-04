@@ -197,6 +197,10 @@ EcCryptKeys* eccrypt_padding_zero (const EcString secret, const EVP_CIPHER* cyph
     
 //-----------------------------------------------------------------------------
 
+
+
+//-----------------------------------------------------------------------------
+
 EcCryptKeys* eccrypt_padding_ansiX923 (const EcString secret, const EVP_CIPHER* cypher)
 {
   EcCryptKeys* keys = ENTC_NEW (EcCryptKeys);
@@ -332,6 +336,8 @@ struct EcEncryptAES_s
   
   uint_t cypher_type;
   
+  uint_t padding_type;
+  
   uint_t key_type;
   
   // this are our secrets
@@ -346,7 +352,7 @@ struct EcEncryptAES_s
 
 //-----------------------------------------------------------------------------
 
-EcEncryptAES ecencrypt_aes_create (const EcString secret, uint_t cypher_type, uint_t key_type)
+EcEncryptAES ecencrypt_aes_create (uint_t cypher_type, uint_t padding_type, const EcString secret, uint_t key_type)
 {
   EcEncryptAES self = ENTC_NEW(struct EcEncryptAES_s);
   
@@ -356,13 +362,16 @@ EcEncryptAES ecencrypt_aes_create (const EcString secret, uint_t cypher_type, ui
   self->lenTotal = 0;
   
   self->buf = NULL;
-  
+
+  // cipher settings
   self->cypher_type = cypher_type;
+  self->padding_type = padding_type;
+  
+  // key settings
+  self->secret = ecstr_copy (secret);
   self->key_type = key_type;
   
-  self->secret = ecstr_copy (secret);
   self->keys = NULL;
-  
   self->bufoffset = 0;
   
   return self;
@@ -418,17 +427,17 @@ int ecencrypt_aes_initialize (EcEncryptAES self, EcBuffer source, EcErr err)
       self->keys = eccrypt_padding_sha256 (self->secret, cypher, err);
       break;
     }
-    case ENTC_KEY_PADDING_ZEROS:
+    case ENTC_PADDING_ZEROS:
     {
       self->keys = eccrypt_padding_zero (self->secret, cypher);
       break;
     }
-    case ENTC_KEY_PADDING_ANSI_X923:
+    case ENTC_PADDING_ANSI_X923:
     {
       self->keys = eccrypt_padding_ansiX923 (self->secret, cypher);
       break;
     }
-    case ENTC_KEY_PADDING_PKCS7:
+    case ENTC_PADDING_PKCS7:
     {
       self->keys = eccrypt_padding_pkcs7 (self->secret, cypher);
       break;
@@ -494,6 +503,16 @@ int ecencrypt_aes_initialize (EcEncryptAES self, EcBuffer source, EcErr err)
   // check for the blocksize
   self->blocksize = EVP_CIPHER_CTX_block_size(&(self->ctx));
   
+  if (self->padding_type)
+  {
+    // disable automatic padding 
+    EVP_CIPHER_CTX_set_padding (&(self->ctx), 0);
+  }
+  else
+  {
+    EVP_CIPHER_CTX_set_padding (&(self->ctx), 1);
+  }
+  
   return ENTC_ERR_NONE;
 }
 
@@ -542,16 +561,35 @@ EcBuffer ecencrypt_aes_update (EcEncryptAES self, EcBuffer source, EcErr err)
 
 EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
 {
-  // check buffer size
-  if (self->buf)
+  switch (self->padding_type)
   {
-    ecbuf_resize (self->buf, self->blocksize);
+    default:
+    {
+      // check buffer size
+      if (self->buf)
+      {
+        ecbuf_resize (self->buf, self->blocksize);
+      }
+      else
+      {
+        self->buf = ecbuf_create (self->blocksize);
+      }     
+      
+      break;
+    }
+    case ENTC_PADDING_ANSI_X923:   // force padding
+    {
+      // we need to encrypt the padding
+      // calculate how much we need to pad
+      uint64_t padlen = ((self->lenTotal / 32) + 1) * 32 - self->lenTotal;
+      
+      printf ("H1: %u\n", padlen);
+      
+    
+      break;
+    }
   }
-  else
-  {
-    self->buf = ecbuf_create (self->blocksize);
-  }
-
+  
   int lenLast;
 
   if (EVP_EncryptFinal_ex(&(self->ctx), self->buf->buffer, &lenLast) == 0)
@@ -661,17 +699,17 @@ int ecdecrypt_aes_initialize (EcDecryptAES self, EcBuffer source, uint_t* bufoff
       self->keys = eccrypt_padding_sha256 (self->secret, cypher, err);
       break;
     }
-    case ENTC_KEY_PADDING_ZEROS:
+    case ENTC_PADDING_ZEROS:
     {
       self->keys = eccrypt_padding_zero (self->secret, cypher);
       break;
     }
-    case ENTC_KEY_PADDING_ANSI_X923:
+    case ENTC_PADDING_ANSI_X923:
     {
       self->keys = eccrypt_padding_ansiX923 (self->secret, cypher);
       break;
     }
-    case ENTC_KEY_PADDING_PKCS7:
+    case ENTC_PADDING_PKCS7:
     {
       self->keys = eccrypt_padding_pkcs7 (self->secret, cypher);
       break;
@@ -870,7 +908,7 @@ int ecencrypt_file (const EcString source, const EcString dest, const EcString s
   
   int res;
   
-  aes = ecencrypt_aes_create (secret, type, 0);
+  aes = ecencrypt_aes_create (type, 0, secret, 0);
   
   fhIn = ecfh_open (source, O_RDONLY);
   if (fhIn == NULL)
