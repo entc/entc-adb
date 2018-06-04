@@ -73,14 +73,14 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
 
 static int __STDCALL test_crypt_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
-  EcBuffer data1 = ecbuf_create_str_cp ("Hello World!");
+  EcBuffer data1 = ecbuf_create_str_cp ("Max");
   EcStream s = ecstream_create();
   EcBuffer data2;
   
   {
     EcBuffer buf;
     
-    EcEncryptAES enc = ecencrypt_aes_create ("qwe!#jHKk34", ENTC_AES_TYPE_CFB, ENTC_KEY_PASSPHRASE_MD5);
+    EcEncryptAES enc = ecencrypt_aes_create (ENTC_AES_TYPE_CFB, ENTC_PADDING_ANSI_X923, "qwe!#jHKk34", ENTC_KEY_PASSPHRASE_MD5);
   
     buf = ecencrypt_aes_update (enc, data1, err);
     if (buf == NULL)
@@ -103,7 +103,14 @@ static int __STDCALL test_crypt_test2 (void* ptr, TestEnvContext tctx, EcErr err
 
   data2 = ecstream_tobuf (&s);
   s = ecstream_create();
+  
+  {
+    EcBuffer h = eccode_base64_encode(data2);
     
+    printf ("CRYPT: %s", h->buffer);
+   
+  }
+  
   {
     EcBuffer buf;
     

@@ -38,9 +38,9 @@
 #define ENTC_KEY_SHA256                  0x00     // default
 
 // paddings for keys
-#define ENTC_KEY_PADDING_ANSI_X923       0x01
-#define ENTC_KEY_PADDING_ZEROS           0x02
-#define ENTC_KEY_PADDING_PKCS7           0x03
+#define ENTC_PADDING_ANSI_X923           0x01
+#define ENTC_PADDING_ZEROS               0x02
+#define ENTC_PADDING_PKCS7               0x03
 
 // other options
 #define ENTC_KEY_PASSPHRASE_MD5          0x04     // default for passphrase
@@ -51,7 +51,7 @@ struct EcEncryptAES_s; typedef struct EcEncryptAES_s* EcEncryptAES;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcEncryptAES ecencrypt_aes_create (const EcString secret, uint_t cypher_type, uint_t key_type);
+__LIBEX EcEncryptAES ecencrypt_aes_create (uint_t cypher_type, uint_t padding_type, const EcString secret, uint_t key_type);
 
 __LIBEX void ecencrypt_aes_destroy (EcEncryptAES* pself);
 
