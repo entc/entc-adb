@@ -197,7 +197,16 @@ EcCryptKeys* eccrypt_padding_zero (const EcString secret, const EVP_CIPHER* cyph
     
 //-----------------------------------------------------------------------------
 
+void eccrypt_padding_ansiX923_pad (EcBuffer buffer, int64_t offset)
+{
+  int64_t diff = buffer->size - offset;  // calculate the difference
+  
+  // add the zeros (padding)
+  memset (buffer->buffer + offset, 0, diff);
 
+  // add the last byte (padding)
+  memset (buffer->buffer + buffer->size - 1, diff, 1);
+}
 
 //-----------------------------------------------------------------------------
 
@@ -559,45 +568,75 @@ EcBuffer ecencrypt_aes_update (EcEncryptAES self, EcBuffer source, EcErr err)
 
 //-----------------------------------------------------------------------------
 
+void ecencrypt_aes_reserveBuffer (EcEncryptAES self, int64_t offset)
+{
+  // check buffer size
+  if (self->buf)
+  {
+    ecbuf_resize (self->buf, self->blocksize);
+  }
+  else
+  {
+    self->buf = ecbuf_create (self->blocksize);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
 EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
 {
   switch (self->padding_type)
   {
     default:
     {
-      // check buffer size
-      if (self->buf)
-      {
-        ecbuf_resize (self->buf, self->blocksize);
-      }
-      else
-      {
-        self->buf = ecbuf_create (self->blocksize);
-      }     
+      ecencrypt_aes_reserveBuffer (self, 0);
+      
+      self->bufoffset = 0;
       
       break;
     }
     case ENTC_PADDING_ANSI_X923:   // force padding
     {
+      EcBuffer padding;
+      
       // we need to encrypt the padding
       // calculate how much we need to pad
-      uint64_t padlen = ((self->lenTotal / 32) + 1) * 32 - self->lenTotal;
+      uint64_t padlen = ((self->lenTotal / 8) + 1) * 8 - self->lenTotal;
       
-      printf ("H1: %u\n", padlen);
+      padding = ecbuf_create (padlen);
       
-    
+      printf ("PAD: padding %u\n", padlen);
+      
+      eccrypt_padding_ansiX923_pad (padding, 0);
+      
+      ecencrypt_aes_reserveBuffer (self, padlen);
+
+      {
+        int lenLast;
+        if (EVP_EncryptUpdate(&(self->ctx), self->buf->buffer, &lenLast, padding->buffer, padding->size) == 0)
+        {
+          eccrypt_aes_handleError (&(self->ctx), err);
+          return NULL;
+        }
+        
+        self->bufoffset = lenLast;
+        self->lenTotal += lenLast;
+      }
+        
       break;
     }
   }
   
   int lenLast;
 
-  if (EVP_EncryptFinal_ex(&(self->ctx), self->buf->buffer, &lenLast) == 0)
+  if (EVP_EncryptFinal_ex(&(self->ctx), self->buf->buffer + self->bufoffset, &lenLast) == 0)
   {
     eccrypt_aes_handleError (&(self->ctx), err);
     return NULL;
   }
 
+  lenLast += self->bufoffset;
+  
   self->buf->size = lenLast;
   self->lenTotal += lenLast;
 
