@@ -8,13 +8,13 @@
 static int __STDCALL test_time1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
   EcTime t1;
+  EcDate d1;
+  EcBuffer buf;
   
   ectime_utc_current_time (&t1);
   
   printf ("T1: %i | %i\n", t1.sec, t1.msec);
-  
-  EcDate d1;
-  
+    
   ectime_utc_date (&d1);
   
   printf ("UTC Time: %i-%02i-%02i %02i:%02i:%02i.%03i\n", d1.year, d1.month, d1.day, d1.hour, d1.minute, d1.sec, d1.msec);
@@ -23,8 +23,7 @@ static int __STDCALL test_time1 (void* ptr, TestEnvContext ctx, EcErr err)
   
   printf ("LCL Time: %i-%02i-%02i %02i:%02i:%02i.%03i\n", d1.year, d1.month, d1.day, d1.hour, d1.minute, d1.sec, d1.msec);
   
-  
-  EcBuffer buf = ecbuf_create (40);
+  buf = ecbuf_create (40);
   
   ectime_toGmtString (buf, &d1);
   

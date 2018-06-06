@@ -67,6 +67,9 @@ static void __STDCALL text_ecaio_reader_onLine (void* ptr, const EcString line)
 
 static int __STDCALL text_ecaio_sendfile_onInit (void* ptr, EcRefCountedSocket refsock, uint64_t fileSize, const EcString file, const EcString name, EcErr err)
 {
+  EcBuffer buf;
+  EcAioSocketWriter aioWriter;
+
   // add http header
   EcStream stream = ecstream_create ();
   
@@ -78,9 +81,9 @@ static int __STDCALL text_ecaio_sendfile_onInit (void* ptr, EcRefCountedSocket r
   ecstream_append_str(stream, "\n\n");
   
   // convert to buffer
-  EcBuffer buf = ecstream_tobuf (&stream);
+  buf = ecstream_tobuf (&stream);
   
-  EcAioSocketWriter aioWriter = ecaio_socketwriter_create (refsock);
+  aioWriter = ecaio_socketwriter_create (refsock);
 
   ecaio_socketwriter_setBufferBT (aioWriter, &buf);  
 
@@ -102,10 +105,12 @@ static int __STDCALL text_ecaio_reader_onRead (void* ptr, void* handle, const ch
   
   if (ctx->done)
   {
+    EcAioSendFile sf;
+
     eclog_fmt (LL_TRACE, "TEST", "reading", "got request");
     
     // last line seen, send content
-    EcAioSendFile sf = ecaio_sendfile_create ("index.html", NULL, ctx->refsock, NULL, text_ecaio_sendfile_onInit);
+    sf = ecaio_sendfile_create ("index.html", NULL, ctx->refsock, NULL, text_ecaio_sendfile_onInit);
     
     // transfer ownership to aio
     ecaio_sendfile_assign (&sf, ctx->aio, NULL);
@@ -137,6 +142,8 @@ static void __STDCALL text_ecaio_reader_onDestroy (void* ptr)
 
 static int __STDCALL test_ecaio_onAccept (void* ptr, void* socket, const char* remoteAddress)
 {
+  EcAioSocketReader readerAio;
+
   EcAio aio = ptr;
   
   //printf ("accept connection: %s\n", remoteAddress);
@@ -144,7 +151,7 @@ static int __STDCALL test_ecaio_onAccept (void* ptr, void* socket, const char* r
   eclog_fmt (LL_TRACE, "TEST", "accept", "accept connection: %s", remoteAddress);
   
   // create an aio reader on the socket
-  EcAioSocketReader readerAio = ecaio_socketreader_create (socket);
+  readerAio = ecaio_socketreader_create (socket);
 
   {
     // create the 'parser' context  
@@ -199,6 +206,8 @@ static int __STDCALL test_ecaio_worker (void* ptr)
 static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
   int res;
+  EcAioSocketAccept acceptAio;
+
   EcAio aio = ptr;
   
   // create accept socket
@@ -214,7 +223,7 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
   
   //eclog_fmt (LL_TRACE, "TEST", "start", "link socket to AIO");
 
-  EcAioSocketAccept acceptAio = ecaio_socketaccept_create (ecacceptsocket_socket (acceptSocket));
+  acceptAio = ecaio_socketaccept_create (ecacceptsocket_socket (acceptSocket));
 
   ecaio_socketaccept_setCallback (acceptAio, aio, test_ecaio_onAccept);
 

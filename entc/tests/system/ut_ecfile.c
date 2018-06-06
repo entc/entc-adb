@@ -7,8 +7,6 @@
 
 static int __STDCALL test_copydir (void* ptr, TestEnvContext ctx, EcErr err)
 {
-  printf ("copy directory\n");
-  
   int res = ecfs_cpdir ("test_dir", "copy_dir", err);
   
   

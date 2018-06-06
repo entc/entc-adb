@@ -177,6 +177,8 @@ struct EcDirHandle_s
   EcFileInfo_s info;
 
   int valid;
+
+  EcString path;
 };
 
 /*------------------------------------------------------------------------*/
@@ -212,6 +214,8 @@ EcDirHandle ecdh_create (const EcString path)
   self->dhandle = dhandle;
   self->data = ddata;
 
+  self->path = ecstr_copy (path);
+
   self->valid = TRUE;
 
   /* init */
@@ -225,12 +229,25 @@ EcDirHandle ecdh_create (const EcString path)
 
 void ecdh_destroy (EcDirHandle* pself)
 {
-  if(!*pself) return;
-  /* clsoe the handle */
-  FindClose ((*pself)->dhandle);
-  /* destroy the structures */
+  EcDirHandle self = *pself;
+
+  if (self == NULL) return;
+
+  ecstr_delete (&(self->path));
+
+  // clsoe the handle
+  FindClose (self->dhandle);
+
+  // destroy the structures
   ENTC_DEL(pself, struct EcDirHandle_s);
 };
+
+/*------------------------------------------------------------------------*/
+
+const EcString ecdh_path (EcDirHandle self)
+{
+  return self->path;
+}
 
 /*------------------------------------------------------------------------*/
 

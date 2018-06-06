@@ -8,6 +8,7 @@
 
 static int __STDCALL test_mime_multipart (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  EcBuffer buf;
   EcFileHandle fh = ecfh_open ("message.eml", O_TRUNC | O_CREAT | O_RDWR);
 
   EcMultipart mp = ecmultipart_create (NULL, "From: John Doe <example@example.com>\r\n");
@@ -16,7 +17,7 @@ static int __STDCALL test_mime_multipart (void* ptr, TestEnvContext tctx, EcErr 
   ecmultipart_addFile (mp, ".", "test.pdf", 1);
   
   // use a very small buffer
-  EcBuffer buf = ecbuf_create(10000);
+  buf = ecbuf_create(10000);
   
   while (TRUE)
   {

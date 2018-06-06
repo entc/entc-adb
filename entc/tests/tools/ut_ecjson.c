@@ -305,20 +305,23 @@ static int __STDCALL test_ecjson_test10 (void* ptr, TestEnvContext tctx, EcErr e
 
 static int __STDCALL test_ecjson_test11 (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  EcString h;
+  const EcString h2;
   EcUdc node;
+  EcUdc node2;
   const EcString unicodedText = "'\n\r\t\b\f/äאט流水";
   
   node = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
   
   ecudc_add_asString (EC_ALLOC, node, "text1", unicodedText);
   
-  EcString h = ecjson_toString (node);
+  h = ecjson_toString (node);
   
   printf ("%s\n", h);
   
-  EcUdc node2 = ecjson_read_s(h, NULL);
+  node2 = ecjson_read_s(h, NULL);
 
-  const EcString h2 = ecudc_get_asString (node2, "text1", NULL);
+  h2 = ecudc_get_asString (node2, "text1", NULL);
   
   if (!ecstr_equal(h2, unicodedText))
   {

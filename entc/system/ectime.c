@@ -237,7 +237,15 @@ void ectime_toPaddedTimestamp (EcBuffer buf, const EcDate* ecdate)
 
 #ifdef _WIN32
 
-  _snprintf_s(buffer, size, size, "%li", *t); 
+  time_t t;
+  struct tm timeinfo;
+  
+  // fill the timeinfo
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+
+  t = mktime (&timeinfo);
+
+  _snprintf_s(buf->buffer, buf->size, buf->size, "%li", t); 
 
 #else
   struct tm timeinfo;

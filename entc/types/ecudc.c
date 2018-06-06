@@ -1160,7 +1160,11 @@ int64_t ecudc_asNumber (EcUdc self)
       const EcString h = ecudc_asString (self);
       if (isAssigned (h))
       {
+#ifdef _WIN32
+		return atol (h);
+#else
         return atoll(h);
+#endif
       }
     }
   }        

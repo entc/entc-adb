@@ -43,23 +43,23 @@ HCRYPTPROV ecencrypt_aes_acquireContext (DWORD provType, EcErr err)
 
 struct EcEncryptAES_s
 {
-  
-  int64_t lenTotal;
-  
+
+	int dummy;
+
 };
 
 //-----------------------------------------------------------------------------
 
-void ecencrypt_aes_destroy (EcEncryptAES* pself)
+EcEncryptAES ecencrypt_aes_create (uint_t cypher_type, uint_t padding_type, const EcString secret, uint_t key_type)
 {
 
 }
 
 //-----------------------------------------------------------------------------
 
-EcEncryptAES ecencrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr err)
+void ecencrypt_aes_destroy (EcEncryptAES* pself)
 {
-  
+
 }
 
 //-----------------------------------------------------------------------------
@@ -87,21 +87,7 @@ struct EcDecryptAES_s
 
 //-----------------------------------------------------------------------------
 
-EcDecryptAES ecdecrypt_aes_initialize (const EcString secret, unsigned int type, unsigned int padding, EcErr err)
-{
-
-}
-
-//-----------------------------------------------------------------------------
-
-EcBuffer ecdecrypt_aes_update (EcDecryptAES self, EcBuffer buffer, EcErr err)
-{
-
-}
-
-//-----------------------------------------------------------------------------
-
-EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
+EcDecryptAES ecdecrypt_aes_create (const EcString secret, uint_t cypher_type, uint_t key_type)
 {
 
 }
@@ -109,6 +95,20 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
 //-----------------------------------------------------------------------------
 
 void ecdecrypt_aes_destroy (EcDecryptAES* pself)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+EcBuffer ecdecrypt_aes_update (EcDecryptAES self, EcBuffer source, EcErr err)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+
+EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
 {
 
 }

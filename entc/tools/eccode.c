@@ -66,7 +66,7 @@ EcBuffer echash_sha_1 (EcBuffer source, EcErr err)
     return NULL;
   }
   
-  if (!CryptCreateHash (provHandle, CALG_SHA_1, 0, 0, &hashHandle))
+  if (!CryptCreateHash (provHandle, CALG_SHA1, 0, 0, &hashHandle))
   {
     ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
     CryptReleaseContext (provHandle, 0);
@@ -180,13 +180,13 @@ EcBuffer eccode_base64_encode (EcBuffer source)
   EcBuffer ret = ENTC_NEW (EcBuffer_s);
 
   // calculate the size of the buffer
-  CryptBinaryToString (self->buffer, self->size, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &(ret->size));
+  CryptBinaryToString (source->buffer, source->size, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &(ret->size));
 
   // allocate the buffer
   ret->buffer = (unsigned char*)ENTC_MALLOC (ret->size + 1);
 
   // encrypt
-  CryptBinaryToString (self->buffer, self->size, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, ret->buffer, &(ret->size));
+  CryptBinaryToString (source->buffer, source->size, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, ret->buffer, &(ret->size));
   ret->buffer [ret->size] = 0; 
 
   return ret;  
@@ -199,16 +199,62 @@ EcBuffer eccode_base64_decode (EcBuffer source)
   EcBuffer ret = ENTC_NEW (EcBuffer_s);
 
   // calculate the size of the buffer
-  CryptStringToBinary (self->buffer, 0, CRYPT_STRING_BASE64, NULL, &(ret->size), NULL, NULL); 
+  CryptStringToBinary (source->buffer, 0, CRYPT_STRING_BASE64, NULL, &(ret->size), NULL, NULL); 
 
   // allocate the buffer
   ret->buffer = (unsigned char*)ENTC_MALLOC (ret->size + 1);
 
   // decrypt
-  CryptStringToBinary (self->buffer, 0, CRYPT_STRING_BASE64, ret->buffer, &(ret->size), NULL, NULL);
+  CryptStringToBinary (source->buffer, 0, CRYPT_STRING_BASE64, ret->buffer, &(ret->size), NULL, NULL);
   ret->buffer [ret->size] = 0; 
 
   return ret;  
+}
+
+//=============================================================================
+
+struct EcBase64Encode_s
+{
+  
+  int dyummy;
+  
+};
+
+//-----------------------------------------------------------------------------
+
+EcBase64Encode eccode_base64_encode_create (void)
+{
+  EcBase64Encode self = ENTC_NEW(struct EcBase64Encode_s);
+  
+ return self;
+}
+
+//-----------------------------------------------------------------------------
+
+void eccode_base64_encode_destroy (EcBase64Encode* pself)
+{
+  ENTC_DEL (pself, struct EcBase64Encode_s);
+}
+
+//-----------------------------------------------------------------------------
+
+uint_t eccode_base64_encode_update (EcBase64Encode self, EcBuffer dest, EcBuffer source, EcErr err)
+{
+  
+}
+
+//-----------------------------------------------------------------------------
+
+uint_t eccode_base64_encode_finalize (EcBase64Encode self, EcBuffer dest, EcErr err)
+{
+  
+}
+
+//-----------------------------------------------------------------------------
+
+uint_t eccode_base64_encode_sourceSize (uint_t max)
+{
+  return (max / 4 * 2.7) - 64;
 }
 
 //=============================================================================
@@ -407,5 +453,3 @@ uint_t eccode_base64_encode_sourceSize (uint_t max)
 //-----------------------------------------------------------------------------
 
 #endif
-
-//=============================================================================

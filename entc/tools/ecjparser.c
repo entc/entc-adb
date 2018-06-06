@@ -390,6 +390,9 @@ void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int i
         char* endptr = NULL;
         const char* val = ecstream_get (self->valElement->stream);
 
+#ifdef _WIN32
+		int64_t dat = atoi (val);
+#else
         int64_t dat = strtoll (val, &endptr, 10);
         if (endptr == NULL)
         {
@@ -401,6 +404,7 @@ void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int i
           // void* ptr, void* obj, int type, const char* key, void* val
           self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_NUMBER, (void*)&dat, key, index);
         }        
+#endif
       }
       
       ecstream_clear (self->valElement->stream);

@@ -98,33 +98,41 @@ static int __STDCALL test_base64_test1 (void* ptr, TestEnvContext tctx, EcErr er
 
 static int __STDCALL test_base64_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
+  EcBuffer buf1;
+  EcBuffer buf1_base64;
+  EcBuffer buf2;
+  EcBuffer buf3;
+  EcBuffer buf3_base64;
+  EcUdc node2;
+  EcUdc node3;
+
   EcUdc node1 = ecudc_create(EC_ALLOC, ENTC_UDC_NODE, NULL);
   
   ecudc_add_asNumber (EC_ALLOC, node1, "num1", 23);
   ecudc_add_asNumber (EC_ALLOC, node1, "num2", 42);
   ecudc_add_asString (EC_ALLOC, node1, "num2", "hello world!!");
   
-  EcBuffer buf1 = ecjson_write (node1);
+  buf1 = ecjson_write (node1);
   
   printf ("BUF1: %s\n", buf1->buffer);
   
-  EcBuffer buf1_base64 = eccode_base64_encode (buf1);
+  buf1_base64 = eccode_base64_encode (buf1);
   
   printf ("BA64: %s\n", buf1_base64->buffer);
 
-  EcBuffer buf2 = eccode_base64_decode (buf1_base64);
+  buf2 = eccode_base64_decode (buf1_base64);
   
   printf ("BUF2: %s\n", buf2->buffer);
 
-  EcUdc node2 = ecjson_read_ecbuf (buf2, NULL);
+  node2 = ecjson_read_ecbuf (buf2, NULL);
   
-  EcBuffer buf3_base64 = ecbuf_create_str_cp ("eyJoYSI6IjAwMDE1MjQ1OTgzMjQ5MTAiLCJpZCI6IjQxMzVhYTlkYzFiODQyYTY1M2RlYTg0NjkwM2RkYjk1YmZiOGM1YTEwYzUwNGE3ZmExNmUxMGJjMzFkMWZkZjAiLCJkYSI6ImJlMzQ0ZTg0NDc0Nzk0NTU3MGMyZDBhYjE4Nzk5MDkzNDhkOTJlYzQ5YzliMWRhNmY2ODhmOGZmODYxNDg5ZDUiLCJ3cGlkIjoiMyJ9");
+  buf3_base64 = ecbuf_create_str_cp ("eyJoYSI6IjAwMDE1MjQ1OTgzMjQ5MTAiLCJpZCI6IjQxMzVhYTlkYzFiODQyYTY1M2RlYTg0NjkwM2RkYjk1YmZiOGM1YTEwYzUwNGE3ZmExNmUxMGJjMzFkMWZkZjAiLCJkYSI6ImJlMzQ0ZTg0NDc0Nzk0NTU3MGMyZDBhYjE4Nzk5MDkzNDhkOTJlYzQ5YzliMWRhNmY2ODhmOGZmODYxNDg5ZDUiLCJ3cGlkIjoiMyJ9");
 
-  EcBuffer buf3 = eccode_base64_decode (buf3_base64);
+  buf3 = eccode_base64_decode (buf3_base64);
 
   printf ("BUF3: %s\n", buf3->buffer);
 
-  EcUdc node3 = ecjson_read_ecbuf (buf3, NULL);
+  node3 = ecjson_read_ecbuf (buf3, NULL);
   
   if (node3 == NULL)
   {
