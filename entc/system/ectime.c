@@ -105,7 +105,21 @@ void ectime_date_from_time (EcDate* ecdate, const EcTime* ectime)
 void ectime_utc_date (EcDate* ecdate)
 {
 #if defined _WIN64 || defined _WIN32
- 
+
+  SYSTEMTIME time;
+  GetSystemTime(&time);
+  
+  ecdate->sec = time.wSecond;
+  ecdate->msec = time.wMilliseconds;
+  ecdate->usec = 0;
+  
+  ecdate->minute = time.wMinute;
+  ecdate->hour = time.wHour;
+  
+  ecdate->day = time.wDay;
+  ecdate->month = time.wMonth;
+  ecdate->year = time.wYear;
+
 #else
   
   struct timeval time;  
@@ -130,7 +144,7 @@ void ectime_local_date (EcDate* ecdate)
 #if defined _WIN64 || defined _WIN32
   
   SYSTEMTIME time;
-  GetSystemTime(&time);
+  GetLocalTime(&time);
   
   ecdate->sec = time.wSecond;
   ecdate->msec = time.wMilliseconds;
