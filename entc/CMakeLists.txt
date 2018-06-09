@@ -94,6 +94,7 @@ SET (ENTC_SYS_HEADERS
   system/ecexec.h
   system/ecrefcnt.h
   system/ecproc.h
+  system/ecdaemon.h
 
 )
 
@@ -117,6 +118,7 @@ SET (ENTC_SYS_SOURCES
   system/ecrefcnt.c
   system/ecproc_win.c
   system/ecproc_nix.c
+  system/ecdaemon.c
 
 )
 
