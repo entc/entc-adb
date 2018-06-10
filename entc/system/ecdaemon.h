@@ -24,18 +24,24 @@
 
 #include "system/ecdefs.h"
 #include "types/ecerr.h"
+#include "types/ecstring.h"
 
 //-----------------------------------------------------------------------------
 
 struct EcDaemon_s; typedef struct EcDaemon_s* EcDaemon;
 
+typedef int (__STDCALL *ecdaemon_onRun) (void* ptr, EcErr err);
+typedef int (__STDCALL *ecdaemon_onShutdown) (void* ptr, EcErr err);
+
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDaemon ecdaemon_create ();
+__LIBEX EcDaemon ecdaemon_create (const EcString name);
 
 __LIBEX void ecdaemon_delete (EcDaemon*);
 
-__LIBEX int ecdaemon_install (EcDaemon self, EcErr err);
+__LIBEX int ecdaemon_install (EcDaemon, EcErr err);
+
+__LIBEX int ecdaemon_run (EcDaemon, void* ptr, ecdaemon_onRun, ecdaemon_onShutdown, EcErr err);
 
 //-----------------------------------------------------------------------------
 
