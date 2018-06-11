@@ -16,17 +16,21 @@ struct EcDaemon_s
 {
   EcString name;
   
+  EcString path;
+  
   FILE* stream;
 
 };
 
 //-----------------------------------------------------------------------------
 
-EcDaemon ecdaemon_create (const EcString name)
+EcDaemon ecdaemon_create (int argc, char *argv[])
 {
   EcDaemon self = ENTC_NEW (struct EcDaemon_s);
+
+  // fetch the path and the name from the current running process
+  ecfs_getExecutable (&(self->path), &(self->name), argc, argv);
   
-  self->name = ecstr_copy (name);
   self->stream = NULL;
   
   return self;
@@ -264,7 +268,7 @@ struct EcDaemon_s
 
 //-----------------------------------------------------------------------------
 
-EcDaemon ecdaemon_create (const EcString name)
+EcDaemon ecdaemon_create (int argc, char *argv[])
 {
   EcDaemon self = ENTC_NEW (struct EcDaemon_s);
   

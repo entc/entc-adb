@@ -455,6 +455,21 @@ EcString ecfs_getExecutablePath (int argc, char *argv[])
 
 //------------------------------------------------------------------------------------------------------------
 
+void ecfs_getExecutable (EcString* ppath, EcString* pname, int argc, char *argv[])
+{
+  // reserve executable path
+  char buffer [MAX_PATH];
+  
+  // retrieve path of the current process
+  GetModuleFileName (NULL, buffer, MAX_PATH);
+
+  // override values
+  ecstr_replaceTO (ppath, ecfs_getDirectory (buffer));
+  ecstr_replaceTO (pname, ecfs_extractFileName (buffer));
+}
+
+//------------------------------------------------------------------------------------------------------------
+
 int ecfs_createDirIfNotExists (const EcString path)
 {
   if (CreateDirectory (path, NULL) == 0)

@@ -162,6 +162,8 @@ __LIBEX int ecfs_exists (const EcString path);
 
 __LIBEX EcString ecfs_getExecutablePath (int argc, char *argv[]);
 
+__LIBEX void ecfs_getExecutable (EcString* path, EcString* name, int argc, char *argv[]);
+
 __LIBEX EcString ecfs_getRealPath(const EcString path);
 
 __LIBEX EcString ecfs_mergeToPath(const EcString path, const EcString file);
