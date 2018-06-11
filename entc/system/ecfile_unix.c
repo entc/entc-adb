@@ -900,6 +900,20 @@ int ecfs_createDirIfNotExists (const EcString path)
   return res == 0 || errno == EEXIST;
 }
 
+//------------------------------------------------------------------------------------------------------------
+
+int ecfs_chdir (const EcString path, EcErr err)
+{
+  if (chdir (path) != 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  else
+  {
+    return ENTC_ERR_NONE;
+  }
+}
+
 //-------------------------------------------------------------------------
 
 int ecfs_exists (const EcString path)

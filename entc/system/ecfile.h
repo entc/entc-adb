@@ -158,6 +158,8 @@ __LIBEX int ecfs_createDirIfNotExists (const EcString path);
 
 __LIBEX int ecfs_exists (const EcString path);
 
+__LIBEX int ecfs_chdir (const EcString path, EcErr err);
+
 /* **** path string operations **** */
 
 __LIBEX EcString ecfs_getExecutablePath (int argc, char *argv[]);
