@@ -535,10 +535,10 @@ int ecjsonparser_item (EcJsonParser self, int type)
 
 //-----------------------------------------------------------------------------
 
-int ecjsonparser_parse (EcJsonParser self, const char* buffer, int len, EcErr err)
+int ecjsonparser_parse (EcJsonParser self, const char* buffer, int64_t len, EcErr err)
 {
   const char* c = buffer;
-  int i;
+  int64_t i;
   
   int state = self->valElement->state;
   

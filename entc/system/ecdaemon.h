@@ -35,7 +35,7 @@ typedef int (__STDCALL *ecdaemon_onShutdown) (void* ptr, EcErr err);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDaemon ecdaemon_create (int argc, char *argv[]);
+__LIBEX EcDaemon ecdaemon_create (int argc, char *argv[], const EcString name);
 
 __LIBEX void ecdaemon_delete (EcDaemon*);
 

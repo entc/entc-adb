@@ -411,7 +411,7 @@ EcString ecfs_getCurrentDirectory()
   }
   
   //return _getcwd( NULL, 0 );
-  return buffer;
+  return ecstr_copy (buffer);
 }
 
 //------------------------------------------------------------------------------------------------------------

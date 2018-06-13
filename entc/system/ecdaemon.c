@@ -3,6 +3,7 @@
 // entc includes
 #include "system/macros.h"
 #include "tools/eclog.h"
+#include "system/ecfile.h"
 
 #if defined _WIN64 || defined _WIN32
 
@@ -14,9 +15,11 @@
 
 struct EcDaemon_s
 {
-  EcString name;
+  EcString exec;
   
   EcString path;
+
+  EcString name;
   
   FILE* stream;
 
@@ -24,13 +27,20 @@ struct EcDaemon_s
 
 //-----------------------------------------------------------------------------
 
-EcDaemon ecdaemon_create (int argc, char *argv[])
+EcDaemon ecdaemon_create (int argc, char *argv[], const EcString name)
 {
   EcDaemon self = ENTC_NEW (struct EcDaemon_s);
 
+  self->path = NULL;
+  self->exec = NULL;
+
   // fetch the path and the name from the current running process
-  ecfs_getExecutable (&(self->path), &(self->name), argc, argv);
+  ecfs_getExecutable (&(self->path), &(self->exec), argc, argv);
   
+  self->name = ecstr_copy (name);
+
+  eclog_fmt (LL_TRACE, "ENTC SYS", "daemon", "create '%s' : '%s' -> '%s'", self->name, self->path, self->exec);
+
   self->stream = NULL;
   
   return self;
@@ -48,6 +58,8 @@ void ecdaemon_delete (EcDaemon* pself)
   }
   
   ecstr_delete (&(self->name));
+  ecstr_delete (&(self->path));
+  ecstr_delete (&(self->exec));
   
   ENTC_DEL (pself, struct EcDaemon_s);
 }
@@ -179,14 +191,19 @@ int ecdaemon_service (EcDaemon self, EcErr err)
 int ecdaemon_reroute_stdout (EcDaemon self, EcErr err)
 {
   int res;
+  EcString logFile;
+
+  logFile = ecfs_mergeToPath (self->path, "q6daemon.log");
 
   // Reassign "stderr" to "freopen.out":
-  res = freopen_s (&(self->stream), "log.out", "w", stdout);
+  res = freopen_s (&(self->stream), logFile, "w", stdout);
+
+  ecstr_delete (&logFile);
+
   if (err != 0)
   {
-	eclog_fmt (LL_TRACE, "ENTC SYS", "daemon", "**** starting '%s' ****", self->name);
-
-	return ENTC_ERR_NONE;
+	// change to real path
+	return ecfs_chdir (self->path, err);
   }
   else
   {

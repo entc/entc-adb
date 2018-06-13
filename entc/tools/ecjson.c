@@ -675,8 +675,12 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             wc = (c[0] & 0x1F) << 6;
             wc |= (c[1] & 0x3F);
 
-            // TODO: there might be a better way to do it
+#if defined _WIN64 || defined _WIN32
+			sprintf_s (buffer, 8, "\\u%.4x", wc);
+#else
+			// TODO: there might be a better way to do it
             sprintf (buffer, "\\u%.4x", wc);
+#endif
 
             ecstream_append_buf (stream, buffer, 6);
             
@@ -704,8 +708,12 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             
             c += 2;
 
+#if defined _WIN64 || defined _WIN32
+			sprintf_s (buffer, 8, "\\u%.4x", wc);
+#else
+			// TODO: there might be a better way to do it
             sprintf (buffer, "\\u%.4x", wc);
-
+#endif
             ecstream_append_buf (stream, buffer, 6); 
           }
           else if ( (*c & 0xF8) == 0xF0 )
@@ -739,7 +747,12 @@ void jsonwriter_escape (EcStream stream, const EcString source)
 
             c += 3;
             
+#if defined _WIN64 || defined _WIN32
+			sprintf_s (buffer, 8, "\\u%.4x", wc);
+#else
+			// TODO: there might be a better way to do it
             sprintf (buffer, "\\u%.4x", wc);
+#endif
 
             ecstream_append_buf (stream, buffer, 6); 
           }
@@ -756,7 +769,12 @@ void jsonwriter_escape (EcStream stream, const EcString source)
               
             c += 4;
 
+ #if defined _WIN64 || defined _WIN32
+			sprintf_s (buffer, 8, "\\u%.4x", wc);
+#else
+			// TODO: there might be a better way to do it
             sprintf (buffer, "\\u%.4x", wc);
+#endif
 
             ecstream_append_buf (stream, buffer, 6); 
           }
@@ -774,7 +792,12 @@ void jsonwriter_escape (EcStream stream, const EcString source)
               
             c += 5;
 
+#if defined _WIN64 || defined _WIN32
+			sprintf_s (buffer, 8, "\\u%.4x", wc);
+#else
+			// TODO: there might be a better way to do it
             sprintf (buffer, "\\u%.4x", wc);
+#endif
 
             ecstream_append_buf (stream, buffer, 6); 
           }
