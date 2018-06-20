@@ -573,11 +573,11 @@ void ecencrypt_aes_reserveBuffer (EcEncryptAES self, int64_t offset)
   // check buffer size
   if (self->buf)
   {
-    ecbuf_resize (self->buf, self->blocksize);
+    ecbuf_resize (self->buf, self->blocksize + offset);
   }
   else
   {
-    self->buf = ecbuf_create (self->blocksize);
+    self->buf = ecbuf_create (self->blocksize + offset);
   }
 }
 
@@ -597,6 +597,8 @@ EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
     }
     case ENTC_PADDING_ANSI_X923:   // force padding
     {
+      int lenLast;
+      int encrRes;
       EcBuffer padding;
       
       // we need to encrypt the padding
@@ -605,24 +607,23 @@ EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
       
       padding = ecbuf_create (padlen);
       
-      printf ("PAD: padding %u\n", padlen);
-      
       eccrypt_padding_ansiX923_pad (padding, 0);
       
       ecencrypt_aes_reserveBuffer (self, padlen);
 
+      encrRes = EVP_EncryptUpdate(&(self->ctx), self->buf->buffer, &lenLast, padding->buffer, padding->size);
+      
+      ecbuf_destroy (&padding);
+        
+      if (encrRes == 0)
       {
-        int lenLast;
-        if (EVP_EncryptUpdate(&(self->ctx), self->buf->buffer, &lenLast, padding->buffer, padding->size) == 0)
-        {
-          eccrypt_aes_handleError (&(self->ctx), err);
-          return NULL;
-        }
-        
-        self->bufoffset = lenLast;
-        self->lenTotal += lenLast;
+        eccrypt_aes_handleError (&(self->ctx), err);
+        return NULL;
       }
-        
+      
+      self->bufoffset = lenLast;
+      self->lenTotal += lenLast;
+
       break;
     }
   }

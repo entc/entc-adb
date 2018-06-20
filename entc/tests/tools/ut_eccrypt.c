@@ -31,6 +31,8 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
       EcBuffer h = ecbuf_bin2hex(data2);
       
       printf ("HEX:\n%s\n", h->buffer);
+      
+      ecbuf_destroy (&h);
     }
     
     dec = ecdecrypt_aes_create ("mysecretvault", ENTC_AES_TYPE_CFB, ENTC_KEY_PASSPHRASE_MD5);
@@ -62,7 +64,7 @@ static int __STDCALL test_crypt_test1 (void* ptr, TestEnvContext tctx, EcErr err
     return err->code;    
   }
     
-  printf("E %lu :%s\n", buf->size, buf->buffer);
+  //printf("E %lu :%s\n", buf->size, buf->buffer);
     
   ecstream_append_ecbuf(stream, buf);
   
@@ -115,6 +117,7 @@ static int __STDCALL test_crypt_test2 (void* ptr, TestEnvContext tctx, EcErr err
     
     printf ("CRYPT: %s", h->buffer);
    
+    ecbuf_destroy (&h);
   }
   
   {
