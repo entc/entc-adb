@@ -285,7 +285,7 @@ struct EcDaemon_s
 
 //-----------------------------------------------------------------------------
 
-EcDaemon ecdaemon_create (int argc, char *argv[])
+EcDaemon ecdaemon_create (int argc, char *argv[], const EcString name)
 {
   EcDaemon self = ENTC_NEW (struct EcDaemon_s);
   
