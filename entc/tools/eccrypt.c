@@ -5,11 +5,6 @@
 
 #include "types/ecstream.h"
 
-#include <openssl/aes.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-
 #if defined _WIN32 || defined _WIN64
 
 #include <windows.h>
@@ -116,6 +111,11 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
 //-----------------------------------------------------------------------------
 
 #elif defined __BSD_OS || defined __LINUX_OS
+
+#include <openssl/aes.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
 
 //----------------------------------------------------------------------------------------
 

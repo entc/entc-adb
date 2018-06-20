@@ -394,7 +394,38 @@ char* ecfs_getRealPath(const EcString path)
 
 EcString ecfs_getCurrentDirectory()
 {
-  return _getcwd( NULL, 0 );
+  TCHAR buffer [MAX_PATH + 1];
+  DWORD dwRet;
+  
+  dwRet = GetCurrentDirectory (MAX_PATH, buffer);
+  
+  if (dwRet == 0)
+  {
+    return NULL;
+  }
+  
+  if(dwRet > MAX_PATH)
+  {
+    //printf("Buffer too small; need %d characters\n", dwRet);
+    return NULL;
+  }
+  
+  //return _getcwd( NULL, 0 );
+  return ecstr_copy (buffer);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ecfs_chdir (const EcString path, EcErr err)
+{
+  if (SetCurrentDirectory (path))
+  {
+    return ENTC_ERR_NONE;
+  }
+  else
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -451,6 +482,21 @@ EcString ecfs_getExecutablePath (int argc, char *argv[])
     GetModuleFileName (NULL, szFileName, MAX_PATH);
 
     return ecfs_getDirectory (szFileName);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+void ecfs_getExecutable (EcString* ppath, EcString* pname, int argc, char *argv[])
+{
+  // reserve executable path
+  char buffer [MAX_PATH];
+  
+  // retrieve path of the current process
+  GetModuleFileName (NULL, buffer, MAX_PATH);
+
+  // override values
+  ecstr_replaceTO (ppath, ecfs_getDirectory (buffer));
+  ecstr_replaceTO (pname, ecfs_extractFileName (buffer));
 }
 
 //------------------------------------------------------------------------------------------------------------

@@ -871,12 +871,47 @@ EcString ecfs_getExecutablePath (int argc, char *argv[])
 #endif
 }
 
+//------------------------------------------------------------------------------------------------------------
+
+void ecfs_getExecutable (EcString* ppath, EcString* pname, int argc, char *argv[])
+{
+#ifdef __APPLE__
+  // reserve executable path
+  char buffer [PATH_MAX + 1];
+  unsigned int bufsize = sizeof(buffer);
+  
+  _NSGetExecutablePath (buffer, &bufsize);
+  
+  // override values
+  ecstr_replaceTO (ppath, ecfs_getDirectory (buffer));
+  ecstr_replaceTO (pname, ecfs_extractFileName (buffer));
+#else
+  // override values
+  ecstr_replaceTO (ppath, ecfs_getDirectory (argv[0]));
+  ecstr_replaceTO (pname, ecfs_extractFileName (argv[0]));
+#endif
+}
+
 //-----------------------------------------------------------------------------------
 
 int ecfs_createDirIfNotExists (const EcString path)
 {
   int res = mkdir (path, 0770);    
   return res == 0 || errno == EEXIST;
+}
+
+//------------------------------------------------------------------------------------------------------------
+
+int ecfs_chdir (const EcString path, EcErr err)
+{
+  if (chdir (path) != 0)
+  {
+    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+  }
+  else
+  {
+    return ENTC_ERR_NONE;
+  }
 }
 
 //-------------------------------------------------------------------------

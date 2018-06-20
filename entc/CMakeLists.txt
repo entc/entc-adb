@@ -9,71 +9,75 @@ SET(CMAKE_BUILD_TYPE Debug)
 
 SET( SYSTEM_LIBRARIES )
 
-find_package(OpenSSL)
+IF (WIN32)
+  # we can use windows onw crypto libs
+ELSE()
+  find_package(OpenSSL)
 
-#************* PTHREAD LIBRARY ***************************
+  #************* PTHREAD LIBRARY ***************************
 
-IF( DISSABLE_EXTERN_PTHREAD )
+  IF( DISSABLE_EXTERN_PTHREAD )
 
-  MESSAGE(STATUS "external pthread library was disabled" )
+    MESSAGE(STATUS "external pthread library was disabled" )
 
-ELSE( DISSABLE_EXTERN_PTHREAD )
+  ELSE( DISSABLE_EXTERN_PTHREAD )
 
-  FIND_LIBRARY( PTHREAD_LIBRARIES NAMES pthread
+    FIND_LIBRARY( PTHREAD_LIBRARIES NAMES pthread
+      HINTS
+      "/usr/lib/"
+      "/usr/local/lib/"
+      "/opt/local/lib/"
+    )
+
+    IF( PTHREAD_LIBRARIES )
+
+      MESSAGE(STATUS "pthread library found at ${PTHREAD_LIBRARIES}" )
+    
+      SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${PTHREAD_LIBRARIES} )
+
+    ENDIF( PTHREAD_LIBRARIES )
+
+  ENDIF( DISSABLE_EXTERN_PTHREAD )  
+
+  #************* LD LIBRARY ***************************
+
+  FIND_LIBRARY( DL_LIBRARIES NAMES dl      
     HINTS
     "/usr/lib/"
     "/usr/local/lib/"
     "/opt/local/lib/"
   )
 
-  IF( PTHREAD_LIBRARIES )
+  IF( DL_LIBRARIES )
 
-    MESSAGE(STATUS "pthread library found at ${PTHREAD_LIBRARIES}" )
+    MESSAGE(STATUS "dl library found at ${DL_LIBRARIES}" )          
+
+    SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${DL_LIBRARIES} )
+
+  ENDIF( DL_LIBRARIES )  
+
+  MESSAGE(STATUS "configured with system libraries: ${SYSTEM_LIBRARIES}" )
   
-    SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${PTHREAD_LIBRARIES} )
+  #************* LD LIBRARY ***************************
 
-  ENDIF( PTHREAD_LIBRARIES )
+  FIND_LIBRARY( DL_LIBRARIES NAMES dl      
+    HINTS
+    "/usr/lib/"
+    "/usr/local/lib/"
+    "/opt/local/lib/"
+  )
 
-ENDIF( DISSABLE_EXTERN_PTHREAD )
+  IF( DL_LIBRARIES )
 
-#************* LD LIBRARY ***************************
+    MESSAGE(STATUS "dl library found at ${DL_LIBRARIES}" )          
 
-FIND_LIBRARY( DL_LIBRARIES NAMES dl      
-  HINTS
-  "/usr/lib/"
-  "/usr/local/lib/"
-  "/opt/local/lib/"
-)
+    SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${DL_LIBRARIES} )
 
-IF( DL_LIBRARIES )
+  ENDIF( DL_LIBRARIES )  
 
-  MESSAGE(STATUS "dl library found at ${DL_LIBRARIES}" )          
-
-  SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${DL_LIBRARIES} )
-
-ENDIF( DL_LIBRARIES )  
-
-MESSAGE(STATUS "configured with system libraries: ${SYSTEM_LIBRARIES}" )
-
-
-#************* LD LIBRARY ***************************
-
-FIND_LIBRARY( DL_LIBRARIES NAMES dl      
-  HINTS
-  "/usr/lib/"
-  "/usr/local/lib/"
-  "/opt/local/lib/"
-)
-
-IF( DL_LIBRARIES )
-
-  MESSAGE(STATUS "dl library found at ${DL_LIBRARIES}" )          
-
-  SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${DL_LIBRARIES} )
-
-ENDIF( DL_LIBRARIES )  
-
-MESSAGE(STATUS "configured with system libraries: ${SYSTEM_LIBRARIES}" )
+  MESSAGE(STATUS "configured with system libraries: ${SYSTEM_LIBRARIES}" )
+  
+ENDIF(WIN32)
 
 SET (ENTC_SYS_HEADERS
 
@@ -90,6 +94,7 @@ SET (ENTC_SYS_HEADERS
   system/ecexec.h
   system/ecrefcnt.h
   system/ecproc.h
+  system/ecdaemon.h
 
 )
 
@@ -113,6 +118,7 @@ SET (ENTC_SYS_SOURCES
   system/ecrefcnt.c
   system/ecproc_win.c
   system/ecproc_nix.c
+  system/ecdaemon.c
 
 )
 

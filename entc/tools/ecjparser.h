@@ -51,7 +51,7 @@ __LIBEX EcJsonParser ecjsonparser_create (fct_ecjparser_onItem, fct_ecjparser_on
 
 __LIBEX void ecjsonparser_destroy (EcJsonParser* pself);
 
-__LIBEX int ecjsonparser_parse (EcJsonParser, const char* buffer, int size, EcErr err);
+__LIBEX int ecjsonparser_parse (EcJsonParser, const char* buffer, int64_t size, EcErr err);
 
 __LIBEX void* ecjsonparser_lastObject (EcJsonParser);
 
