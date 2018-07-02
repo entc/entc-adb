@@ -25,6 +25,7 @@
 #include <system/ecdefs.h>
 #include <types/ecerr.h>
 #include <types/ecudc.h>
+#include <types/ecstring.h>
 
 //-----------------------------------------------------------------------------
 
@@ -46,17 +47,27 @@ __LIBEX int adbo2_trx_delete      (Adbo2Transaction, const EcString table, EcUdc
 
 //-----------------------------------------------------------------------------
 
+struct Adbo2Context_s; typedef struct Adbo2Context_s* Adbo2Context;
+
+//-----------------------------------------------------------------------------
+
+__LIBEX void adbo2_ctx_destroy (Adbo2Context*);
+
+__LIBEX Adbo2Transaction adbo2_ctx_transaction (Adbo2Context);
+
+//-----------------------------------------------------------------------------
+
 struct Adbo2_s; typedef struct Adbo2_s* Adbo2;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX Adbo2 adbo2_create (const EcString confPath, const EcString binPath);
+__LIBEX Adbo2 adbo2_create (const EcString confPath, const EcString binPath, const EcString adboSubPath);
 
 __LIBEX void adbo2_destroy (Adbo2*);
 
-__LIBEX int adbo2_init (Adbo2, const EcString jsonConf);
+__LIBEX Adbo2Context adbo2_ctx (Adbo2, const EcString jsonConf, const EcString entity);
 
-__LIBEX Adbo2Transaction adbo2_transaction (Adbo2);
+
 
 //-----------------------------------------------------------------------------
 

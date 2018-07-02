@@ -29,3 +29,5 @@ install (TARGETS adbo2 DESTINATION lib)
 install (FILES ${ADBO_HEADERS} DESTINATION include/adbo2)
 
 INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindAdbo_2_0.cmake)
+
+SUBDIRS(tests)

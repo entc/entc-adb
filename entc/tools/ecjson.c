@@ -980,7 +980,7 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
     
     ecerr_destroy(&err);
     
-    eclog_msg (LL_ERROR, "JSON", "reader", "can't open file");
+    eclog_fmt (LL_ERROR, "JSON", "reader", "can't open file '%s'", filename);
 
     return ENTC_ERR_NOT_FOUND;
   }

@@ -465,6 +465,9 @@ void adbl_scanJsonFromFile (const EcString configpath, EcUdc* pdata)
   if (res)
   {
     eclog_fmt (LL_WARN, MODULE, "scan", "can't read json file '%s'", filename);
+
+    ecstr_delete(&filename);
+
     return;
   }
   

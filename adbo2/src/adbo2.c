@@ -1,5 +1,8 @@
 #include "adbo2.h"
 
+// entc includes
+#include <tools/ecjson.h>
+
 // adbl includes
 #include <adbl.h>
 #include <adbl_structs.h>
@@ -9,17 +12,19 @@
 
 struct Adbo2Transaction_s
 {
-  AdblSession session;
+  AdblSession session;  // reference
   
+  EcUdc config;         // reference
 };
 
 //-----------------------------------------------------------------------------
 
-Adbo2Transaction adbo2_trx_create (struct AdblManager_s* adblm)
+Adbo2Transaction adbo2_trx_create (AdblSession session, EcUdc config)
 {
   Adbo2Transaction self = ENTC_NEW (struct Adbo2Transaction_s);
   
-  self->session = adbl_openSession (adblm, "default");
+  self->session = session;
+  self->config = config;
   
   // start transaction in the database
   adbl_dbbegin (self->session);
@@ -33,7 +38,7 @@ void adbo2_trx_destroy (Adbo2Transaction* pself)
 {
   Adbo2Transaction self = *pself;
   
-  adbl_closeSession (&(self->session));
+
   
   ENTC_DEL (pself, struct Adbo2Transaction_s);
 }
@@ -115,27 +120,100 @@ int adbo2_trx_delete (Adbo2Transaction self, const EcString table, EcUdc params,
   }
   else
   {
-    
+    return ENTC_ERR_NONE;
   }
+}
+
+//-----------------------------------------------------------------------------
+
+struct Adbo2Context_s
+{
+  AdblSession session; 
+  
+  EcUdc config;
+};
+
+//-----------------------------------------------------------------------------
+
+Adbo2Context adbo2_ctx_create (struct AdblManager_s* adblm, const EcString jsonConfig, const EcString entity)
+{
+  EcUdc config;
+  
+  // read config from file
+  int res = ecjson_readFromFile (jsonConfig, &config, NULL, 0);
+  if (res)
+  {
+    return NULL;
+  }
+  
+  {
+    Adbo2Context self = ENTC_NEW (struct Adbo2Context_s);
+    
+    self->session = adbl_openSession (adblm, entity);  
+    self->config = config;
+    
+    return self;
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+void adbo2_ctx_destroy (Adbo2Context* pself)
+{
+  Adbo2Context self = *pself;
+  
+  if (self->session)
+  {
+    adbl_closeSession (&(self->session)); 
+  }
+  
+  if (self->config)
+  {    
+    ecudc_destroy(EC_ALLOC, &(self->config));
+  }
+  
+  ENTC_DEL (pself, struct Adbo2Context_s);
+}
+
+//-----------------------------------------------------------------------------
+
+Adbo2Transaction adbo2_ctx_transaction (Adbo2Context self)
+{
+  return adbo2_trx_create (self->session, self->config);
 }
 
 //-----------------------------------------------------------------------------
 
 struct Adbo2_s
 {
-  
   struct AdblManager_s* adblm;
   
+  EcString confPath;
 };
 
 //-----------------------------------------------------------------------------
 
-Adbo2 adbo2_create (const EcString confPath, const EcString binPath)
+Adbo2 adbo2_create (const EcString confPath, const EcString binPath, const EcString adboSubPath)
 {
   Adbo2 self = ENTC_NEW (struct Adbo2_s);
   
+  // create a new instance
+  self->adblm = adbl_new ();
   
+  if (adboSubPath)
+  {
+    self->confPath = ecfs_mergeToPath (confPath, adboSubPath);
+  }
+  else
+  {
+    self->confPath = ecstr_copy (confPath);
+  }
   
+  // create folder
+  ecfs_createDirIfNotExists (self->confPath);
+  
+  // apply config
+  adbl_scanJson (self->adblm, confPath, binPath);
   
   return self;
 }
@@ -144,22 +222,26 @@ Adbo2 adbo2_create (const EcString confPath, const EcString binPath)
 
 void adbo2_destroy (Adbo2* pself)
 {
+  Adbo2 self = *pself;
   
-}
-
-//-----------------------------------------------------------------------------
-
-int adbo2_init (Adbo2 self, const EcString jsonConf)
-{
+  adbl_delete (&(self->adblm));
   
+  ecstr_delete (&(self->confPath));
+  
+  ENTC_DEL (pself, struct Adbo2_s);
 }
 
 //-----------------------------------------------------------------------------
 
-Adbo2Transaction adbo2_transaction (Adbo2 self)
+Adbo2Context adbo2_ctx (Adbo2 self, const EcString jsonConf, const EcString entity)
 {
-  return adbo2_trx_create (self->adblm);
+  EcString jsonConfigFile = ecfs_mergeToPath (self->confPath, jsonConf == NULL ? "adbo.json" : jsonConf);
+   
+  Adbo2Context ret = adbo2_ctx_create (self->adblm, jsonConfigFile, entity == NULL ? "default" : entity);
+  
+  ecstr_delete (&jsonConfigFile);
+  
+  return ret;
 }
 
 //-----------------------------------------------------------------------------
-
