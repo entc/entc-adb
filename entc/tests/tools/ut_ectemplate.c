@@ -8,7 +8,7 @@
 
 static void* __STDCALL test_ectemplate_init (EcErr err)
 {
-  return ectemplate_create ("templates", "test1", "en", err);
+  return ectemplate_create ();
 }
 
 //---------------------------------------------------------------------------
@@ -45,6 +45,9 @@ static int __STDCALL test_ectemplate_test1 (void* ptr, TestEnvContext ctx, EcErr
   EcUdc data = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
   
   ecudc_add_asString(EC_ALLOC, data, "topic", "Hello");
+  
+
+  int res = ectemplate_compile_file (h, "templates", "test1", "en", err);
   
   ectemplate_apply (h, data, NULL, test_ectemplate_test1_onText, test_ectemplate_test1_onFile, err);
   testctx_err (ctx, err);

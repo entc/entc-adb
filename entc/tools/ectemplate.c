@@ -392,7 +392,7 @@ int ectemplate_filename (EcTemplate self, const char* path, const char* name, co
 
 //-----------------------------------------------------------------------------
 
-EcTemplate ectemplate_create (const char* path, const char* name, const char* lang, EcErr err)
+EcTemplate ectemplate_create (void)
 {
   int res;
   
@@ -401,17 +401,6 @@ EcTemplate ectemplate_create (const char* path, const char* name, const char* la
   self->parts = eclist_create (ectemplate_create_parts_onDestroy);
   self->fileName = NULL;
 
-  res = ectemplate_filename (self, path, name, lang, err);
-  if (res == 0)
-  {
-    res = ectemplate_compile (self, err);
-  }
-  
-  if (res)
-  {
-    ectemplate_destroy (&self);
-  }
-  
   return self;
 }
 
@@ -425,6 +414,39 @@ void ectemplate_destroy (EcTemplate* pself)
   eclist_destroy (&(self->parts));
   
   ENTC_DEL(pself, struct EcTemplate_s);
+}
+
+//-----------------------------------------------------------------------------
+
+int ectemplate_compile_file (EcTemplate self, const char* path, const char* name, const char* lang, EcErr err)
+{
+  int res;
+  
+  res = ectemplate_filename (self, path, name, lang, err);
+  if (res)
+  {
+    return res;
+  }
+  
+  return ectemplate_compile (self, err);
+}
+
+//-----------------------------------------------------------------------------
+
+int ectemplate_compile_str (EcTemplate self, const char* content, EcErr err)
+{
+  int res;
+  
+  struct EcTemplateStateData_s sd;
+  sd.state01 = 0;
+  sd.sb = ecstream_create ();
+
+  // do the parsing
+  res = ectemplate_parse (self, &sd, content, ecstr_len (content), err);
+    
+  ecstream_destroy (&(sd.sb));
+
+  return res;
 }
 
 //-----------------------------------------------------------------------------
