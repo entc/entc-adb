@@ -185,19 +185,29 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
         }
       }
       break;
-      case 7:
+      case 7:   // special state
       {
         if ((*c == '\n')||(*c == '\r'))
         {
           ecstream_append_c (sd->sb, *c);
           ectemplate_newPart (self, sd, PART_TYPE_CR);
+
+          sd->state01 = 0;
         }
+        else if (*c == '{')
+        {
+          sd->state01 = 1;
+        }
+        else if (*c == '[')
+        {
+          sd->state01 = 4;
+        }        
         else
         {
           ecstream_append_c (sd->sb, *c);
+
+          sd->state01 = 0;
         }
-        
-        sd->state01 = 0;
       }
       break;
     }
