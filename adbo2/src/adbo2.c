@@ -69,9 +69,165 @@ void adbo2_trx_rollback (Adbo2Transaction* pself)
 
 //-----------------------------------------------------------------------------
 
+void adbo2_trx_addConstraint (EcUdc knode, EcUdc param, AdblConstraint* constraints)
+{
+  const EcString key = NULL;
+        
+  switch (ecudc_type(knode))
+  {
+    case ENTC_UDC_NODE:    // special config
+    {
+      // TODO:
+      
+      return;
+    }
+    case ENTC_UDC_STRING:  // simple config
+    {
+      key = ecudc_asString (knode);
+      break;
+    }
+    default:
+    {
+      // error
+      return;
+    }
+  }
+  
+  // check key
+  if (key == NULL)
+  {
+    return;
+  }
+  
+  // **** map UDC value to constraint ***
+  
+  switch (ecudc_type (param))
+  {
+    case ENTC_UDC_NUMBER:
+    {
+      adbl_constraint_addLong (constraints, key, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asNumber (param));
+      break;
+    }
+    case ENTC_UDC_STRING:
+    {
+      adbl_constraint_addChar (constraints, key, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asString (param));      
+      break;
+    }
+    case ENTC_UDC_BOOL:
+    {
+      adbl_constraint_addLong (constraints, key, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asBool (param) ? 1 : 0);      
+      break;
+    }
+    case ENTC_UDC_DOUBLE:
+    {
+      adbl_constraint_addChar (constraints, key, QUOMADBL_CONSTRAINT_EQUAL, ecudc_asString (param));      
+      break;
+    }
+    case ENTC_UDC_NODE:
+    {
+      // TODO: 
+      break;
+    }
+    case ENTC_UDC_LIST:
+    {
+      // TODO:
+      break;
+    }
+    default:
+    {
+     
+      // not supported
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+int adbo2_trx_check_pk (EcUdc tconfig, EcUdc params, AdblConstraint* constraints)
+{
+  int pksActive = 0;
+  int pksFound = 0;
+  
+  EcUdc pkeys = ecudc_node (tconfig, "pk");
+  if (pkeys)
+  {
+    void* cursor = NULL;
+    EcUdc pk;
+    
+    for (pk = ecudc_next (pkeys, &cursor); pk; pk = ecudc_next (pkeys, &cursor))
+    {
+      EcUdc param = ecudc_node (params, ecudc_name (pk));
+      if (param)
+      {
+        adbo2_trx_addConstraint (pk, param, constraints);
+        pksFound++;
+      }
+      
+      pksActive++;
+    }
+  }
+  
+  return pksFound;
+}
+
+//-----------------------------------------------------------------------------
+
+int adbo2_trx_check_fk (EcUdc tconfig, EcUdc params, AdblConstraint* constraints)
+{
+  int pksActive = 0;
+  int pksFound = 0;
+  
+  EcUdc fkeys = ecudc_node (tconfig, "fk");
+  if (fkeys)
+  {
+    void* cursor = NULL;
+    EcUdc pk;
+    
+    for (pk = ecudc_next (fkeys, &cursor); pk; pk = ecudc_next (fkeys, &cursor))
+    {
+      EcUdc param = ecudc_node (params, ecudc_name (pk));
+      if (param)
+      {
+        adbo2_trx_addConstraint (pk, param, constraints);
+        pksFound++;
+      }
+      
+      pksActive++;
+    }
+  }
+  
+  return pksFound;
+}
+
+//-----------------------------------------------------------------------------
+
 int adbo2_trx_query (Adbo2Transaction self, const EcString table, EcUdc params, EcUdc data, EcErr err)
 {
+  // find table in config
+  EcUdc tconfig = ecudc_node (self->config, table);
+  if (tconfig == NULL)
+  {
+    return ecerr_set_fmt(err, ENTC_LVL_ERROR, ENTC_ERR_NOT_FOUND, "can't find table '%s' in ADBO config", table);
+  }
+    
+  AdblConstraint* constraints = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
+    
+  // check for primary key (PK)
+  int pksFound = adbo2_trx_check_pk (tconfig, params, constraints);
+  if (pksFound == 0)
+  {
+    // check for foreign keys
+    int fksFound = adbo2_trx_check_fk (tconfig, params, constraints);
+    if (fksFound == 0)
+    {
+      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_MISSING_PARAM, "no primary or foreign keys found in parameters");
+    }
+  }
   
+    
+  adbl_constraint_delete (&constraints);
+  
+  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
