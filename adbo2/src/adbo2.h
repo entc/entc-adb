@@ -47,13 +47,13 @@ __LIBEX int adbo2_trx_delete      (Adbo2Transaction, const EcString table, EcUdc
 
 //-----------------------------------------------------------------------------
 
-struct Adbo2Context_s; typedef struct Adbo2Context_s* Adbo2Context;
+struct Adbo2Session_s; typedef struct Adbo2Session_s* Adbo2Session;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void adbo2_ctx_destroy (Adbo2Context*);
+__LIBEX void adbo2_session_destroy (Adbo2Session*);
 
-__LIBEX Adbo2Transaction adbo2_ctx_transaction (Adbo2Context);
+__LIBEX Adbo2Transaction adbo2_session_transaction (Adbo2Session);
 
 //-----------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ __LIBEX Adbo2 adbo2_create (const EcString confPath, const EcString binPath, con
 
 __LIBEX void adbo2_destroy (Adbo2*);
 
-__LIBEX Adbo2Context adbo2_ctx (Adbo2, const EcString jsonConf, const EcString entity);
+__LIBEX Adbo2Session adbo2_session_get (Adbo2, const EcString jsonConf, const EcString entity);
 
 
 

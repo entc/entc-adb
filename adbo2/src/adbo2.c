@@ -2,6 +2,7 @@
 
 // entc includes
 #include <tools/ecjson.h>
+#include <tools/eclog.h>
 
 // adbl includes
 #include <adbl.h>
@@ -69,33 +70,44 @@ void adbo2_trx_rollback (Adbo2Transaction* pself)
 
 //-----------------------------------------------------------------------------
 
-void adbo2_trx_addConstraint (EcUdc knode, EcUdc param, AdblConstraint* constraints)
+const char* adbo2_trx_getColName (EcUdc knode)
 {
   const EcString key = NULL;
         
-  switch (ecudc_type(knode))
+  switch (ecudc_type (knode))
   {
-    case ENTC_UDC_NODE:    // special config
+    case ENTC_UDC_NODE:    // default config
     {
-      // TODO:
-      
-      return;
+      key = ecudc_name (knode);
+      break;
     }
-    case ENTC_UDC_STRING:  // simple config
+    case ENTC_UDC_STRING:  // override 
     {
       key = ecudc_asString (knode);
       break;
     }
     default:
     {
+      eclog_msg (LL_ERROR, "ADBO_2", "constraint", "type for key is not supported");
       // error
-      return;
+      return NULL;
     }
   }
+
+  return key;
+}
+
+//-----------------------------------------------------------------------------
+
+void adbo2_trx_addConstraint (EcUdc knode, EcUdc param, AdblConstraint* constraints)
+{
+  const EcString key = adbo2_trx_getColName (knode);
   
   // check key
   if (key == NULL)
   {
+    eclog_msg (LL_ERROR, "ADBO_2", "constraint", "can't retrieve the column name");
+
     return;
   }
   
@@ -201,8 +213,37 @@ int adbo2_trx_check_fk (EcUdc tconfig, EcUdc params, AdblConstraint* constraints
 
 //-----------------------------------------------------------------------------
 
+void adbo2_trx_add_columns (EcUdc tconfig, AdblQuery* query)
+{
+  EcUdc cols = ecudc_node (tconfig, "cols");
+  if (cols)
+  {
+    void* cursor = NULL;
+    EcUdc col;
+    
+    for (col = ecudc_next (cols, &cursor); col; col = ecudc_next (cols, &cursor))
+    {
+      const EcString key = adbo2_trx_getColName (col);
+  
+      // check key
+      if (key == NULL)
+      {
+        eclog_msg (LL_ERROR, "ADBO_2", "constraint", "can't retrieve the column name");
+
+        return;
+      }      
+      
+      adbl_query_addColumn (query, key, 0);
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+
 int adbo2_trx_query (Adbo2Transaction self, const EcString table, EcUdc params, EcUdc data, EcErr err)
 {
+  AdblSecurity adblsec;      
+
   // find table in config
   EcUdc tconfig = ecudc_node (self->config, table);
   if (tconfig == NULL)
@@ -210,6 +251,7 @@ int adbo2_trx_query (Adbo2Transaction self, const EcString table, EcUdc params, 
     return ecerr_set_fmt(err, ENTC_LVL_ERROR, ENTC_ERR_NOT_FOUND, "can't find table '%s' in ADBO config", table);
   }
     
+  AdblQuery* query = adbl_query_new ();
   AdblConstraint* constraints = adbl_constraint_new (QUOMADBL_CONSTRAINT_AND);
     
   // check for primary key (PK)
@@ -224,8 +266,40 @@ int adbo2_trx_query (Adbo2Transaction self, const EcString table, EcUdc params, 
     }
   }
   
+  adbl_query_setTable (query, table);
+  
+  adbl_query_setConstraint (query, constraints);
+  
+  // add columns
+  adbo2_trx_add_columns (tconfig, query);
+  
+  AdblCursor* cursor = adbl_dbquery (self->session, query, &adblsec);
+  if (cursor)
+  {
+    while (adbl_dbcursor_next (cursor))
+    {
+      EcUdc row = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+
+      EcListCursor lcursor; eclist_cursor_init (query->columns, &lcursor, LIST_DIR_NEXT);
+      
+      while (eclist_cursor_next(&lcursor))
+      {
+        AdblQueryColumn* qc = eclist_data (lcursor.node);
+        
+        const char* colName = qc->column;
+        const char* colText = adbl_dbcursor_data (cursor, lcursor.position);
+       
+        ecudc_add_asString (EC_ALLOC, row, colName, colText);
+      }
+      
+      ecudc_add (data, &row);
+    }
     
+    adbl_dbcursor_release (&cursor);  
+  }
+  
   adbl_constraint_delete (&constraints);
+  adbl_query_delete (&query);
   
   return ENTC_ERR_NONE;
 }
@@ -282,7 +356,7 @@ int adbo2_trx_delete (Adbo2Transaction self, const EcString table, EcUdc params,
 
 //-----------------------------------------------------------------------------
 
-struct Adbo2Context_s
+struct Adbo2Session_s
 {
   AdblSession session; 
   
@@ -291,7 +365,7 @@ struct Adbo2Context_s
 
 //-----------------------------------------------------------------------------
 
-Adbo2Context adbo2_ctx_create (struct AdblManager_s* adblm, const EcString jsonConfig, const EcString entity)
+Adbo2Session adbo2_session_create (struct AdblManager_s* adblm, const EcString jsonConfig, const EcString entity)
 {
   EcUdc config;
   
@@ -303,9 +377,9 @@ Adbo2Context adbo2_ctx_create (struct AdblManager_s* adblm, const EcString jsonC
   }
   
   {
-    Adbo2Context self = ENTC_NEW (struct Adbo2Context_s);
+    Adbo2Session self = ENTC_NEW (struct Adbo2Session_s);
     
-    self->session = adbl_openSession (adblm, entity);  
+    self->session = adbl_openSession (adblm, entity);
     self->config = config;
     
     return self;
@@ -314,9 +388,9 @@ Adbo2Context adbo2_ctx_create (struct AdblManager_s* adblm, const EcString jsonC
 
 //-----------------------------------------------------------------------------
 
-void adbo2_ctx_destroy (Adbo2Context* pself)
+void adbo2_session_destroy (Adbo2Session* pself)
 {
-  Adbo2Context self = *pself;
+  Adbo2Session self = *pself;
   
   if (self->session)
   {
@@ -328,12 +402,12 @@ void adbo2_ctx_destroy (Adbo2Context* pself)
     ecudc_destroy(EC_ALLOC, &(self->config));
   }
   
-  ENTC_DEL (pself, struct Adbo2Context_s);
+  ENTC_DEL (pself, struct Adbo2Session_s);
 }
 
 //-----------------------------------------------------------------------------
 
-Adbo2Transaction adbo2_ctx_transaction (Adbo2Context self)
+Adbo2Transaction adbo2_session_transaction (Adbo2Session self)
 {
   return adbo2_trx_create (self->session, self->config);
 }
@@ -389,11 +463,11 @@ void adbo2_destroy (Adbo2* pself)
 
 //-----------------------------------------------------------------------------
 
-Adbo2Context adbo2_ctx (Adbo2 self, const EcString jsonConf, const EcString entity)
+Adbo2Session adbo2_session_get (Adbo2 self, const EcString jsonConf, const EcString entity)
 {
   EcString jsonConfigFile = ecfs_mergeToPath (self->confPath, jsonConf == NULL ? "adbo.json" : jsonConf);
    
-  Adbo2Context ret = adbo2_ctx_create (self->adblm, jsonConfigFile, entity == NULL ? "default" : entity);
+  Adbo2Session ret = adbo2_session_create (self->adblm, jsonConfigFile, entity == NULL ? "default" : entity);
   
   ecstr_delete (&jsonConfigFile);
   

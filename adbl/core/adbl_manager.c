@@ -82,6 +82,8 @@ typedef struct
   
 } ADBLModuleProperties;
 
+typedef struct AdblSessionPool_s* AdblSessionPool;
+
 typedef struct
 {
   
@@ -89,19 +91,27 @@ typedef struct
   
   AdblConnectionProperties properties;
 
-  void* connection;
-  
   ADBLModuleProperties* pp;
+  
+  AdblSessionPool pool;
   
 } AdblCredentials;
 
+
+//-----------------------------------------------------------------------------
 
 struct AdblSession_s
 {
   
   AdblCredentials* credentials; /* reference */
   
+  void* connection;
+  
+  int isFree;
+  
 };
+
+//-----------------------------------------------------------------------------
 
 struct AdblManager_s
 {
@@ -116,7 +126,140 @@ struct AdblManager_s
   
 };
 
+//-----------------------------------------------------------------------------
 
+struct AdblSessionPool_s
+{
+  
+  EcList pool;
+  
+  int minPoolSize;
+  
+  AdblCredentials* pc;
+  
+  EcMutex mutex;
+  
+};
+
+//-----------------------------------------------------------------------------
+
+static int __STDCALL adbl_sessionpool_onDestroy (void* ptr)
+{
+  AdblSession session = ptr;
+  ADBLModuleProperties* pp = session->credentials->pp;
+  
+  // disconnect from database 
+  if (isAssigned (session->connection) && isAssigned (pp))
+  {
+    if (isAssigned(pp->dbdisconnect))
+    {
+      pp->dbdisconnect (session->connection);
+    }
+    else
+    {
+      eclog_msg (LL_WARN, MODULE, "delete", "disconnect method in matrix is not defined");
+    }
+  }
+    
+  ENTC_DEL (&session, struct AdblSession_s);
+  
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+AdblSessionPool adbl_sessionpool_create (int minPoolSize, AdblCredentials* pc)
+{
+  AdblSessionPool self = ENTC_NEW (struct AdblSessionPool_s);
+  
+  self->minPoolSize = minPoolSize;
+  self->pool = eclist_create (adbl_sessionpool_onDestroy);
+  
+  self->pc = pc;
+  
+  self->mutex = ecmutex_new();
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------
+
+void adbl_sessionpool_destroy (AdblSessionPool* pself)
+{
+  AdblSessionPool self = *pself;
+  
+  eclist_destroy (&(self->pool));
+  
+  ecmutex_delete(&(self->mutex));
+  
+  ENTC_DEL (pself, struct AdblSessionPool_s);
+}
+
+//-----------------------------------------------------------------------------
+
+AdblSession adbl_sessionpool_get (AdblSessionPool self)
+{
+  ADBLModuleProperties* pp = self->pc->pp;
+  AdblSession session = NULL;
+  
+  ecmutex_lock (self->mutex);
+
+  // iterrate through the pool to find the next free session
+  {
+    EcListCursor cursor; eclist_cursor_init (self->pool, &cursor, LIST_DIR_NEXT);
+    
+    while (eclist_cursor_next (&cursor))
+    {
+      session = eclist_data (cursor.node);
+      
+      if (session->isFree)
+      {
+        // assign this one to our session
+        session->isFree = FALSE;
+        
+        break;
+      }
+      
+      session = NULL;
+    }
+      
+    if (session == NULL)
+    {
+      
+      eclog_fmt (LL_DEBUG, MODULE, "connect", "try to connect to database [%s]", self->pc->type);
+  
+      if (isNotAssigned (pp))
+      {
+        eclog_msg (LL_ERROR, MODULE, "connect", "credentials without database");
+      }
+      else
+      {
+        // create a new session
+        session = ENTC_NEW (struct AdblSession_s);
+        
+        session->isFree = FALSE;
+        session->credentials = self->pc;
+
+        if (isAssigned (pp->dbconnect))
+        {
+          session->connection = pp->dbconnect (&(self->pc->properties));
+        }
+        else
+        {
+          eclog_msg (LL_WARN, MODULE, "connect", "connect method in matrix is not defined");
+        }
+        
+        eclist_push_back(self->pool, session);
+      }
+    }
+  }
+  
+  ecmutex_unlock (self->mutex);
+  
+  return session;
+}
+
+//-----------------------------------------------------------------------------
 
 struct AdblCursor_p
 {
@@ -136,6 +279,8 @@ struct AdblSequence_p
 
 };
 
+
+
 /* method definition */
 
 /*------------------------------------------------------------------------*/
@@ -145,8 +290,7 @@ AdblCredentials* adbl_credentials_new (const EcString dbtype)
   AdblCredentials* self = ENTC_NEW(AdblCredentials);
   
   self->type = ecstr_copy(dbtype);
-  //initialise the credentials
-  self->connection = 0;
+
   //inisitalise the properties
   self->properties.port = 0;
   self->properties.host = 0;        
@@ -156,7 +300,9 @@ AdblCredentials* adbl_credentials_new (const EcString dbtype)
   self->properties.password = 0;
   
   self->pp = NULL;
-
+  
+  self->pool = adbl_sessionpool_create (5, self);
+  
   return self;
 }
 
@@ -186,18 +332,8 @@ static void __STDCALL adbl_credentials_onDestroy (void* key, void* val)
   {
     AdblCredentials* pc = val;
     
-    /* disconnect from database */
-    if (isAssigned (pc->connection) && isAssigned(pc->pp))
-    {
-      if (isAssigned(pc->pp->dbdisconnect))
-      {
-        pc->pp->dbdisconnect (pc->connection);
-      }
-      else
-      {
-        eclog_msg (LL_WARN, MODULE, "delete", "disconnect method in matrix is not defined");
-      }
-    }
+    adbl_sessionpool_destroy(&(pc->pool));
+
     /* clean */
     pc->properties.port = 0;
     ecstr_delete( &(pc->properties.host) );
@@ -206,7 +342,7 @@ static void __STDCALL adbl_credentials_onDestroy (void* key, void* val)
     ecstr_delete( &(pc->properties.username) );
     ecstr_delete( &(pc->properties.password) );
     
-    ecstr_delete( &(pc->type) );
+    ecstr_delete( &(pc->type) );    
     
     ENTC_DEL (&pc, AdblCredentials);
   }
@@ -288,22 +424,7 @@ void adbl_setCredentialsFile (AdblManager self, const EcString name, const EcStr
 
 void adbl_connect (AdblManager self, AdblCredentials* pc)
 {
-  eclog_fmt (LL_DEBUG, MODULE, "connect", "try to connect to database [%s]", pc->type);
-  
-  if (isNotAssigned (pc->pp))
-  {
-    eclog_msg (LL_ERROR, MODULE, "connect", "credentials without database");
-    return;
-  }
-  
-  if (isAssigned (pc->pp->dbconnect))
-  {
-    pc->connection = pc->pp->dbconnect (&(pc->properties));
-  }
-  else
-  {
-    eclog_msg (LL_WARN, MODULE, "connect", "connect method in matrix is not defined");
-  }
+
 }
 
 /*------------------------------------------------------------------------*/
@@ -603,6 +724,7 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
   EcMapNode node;
   AdblCredentials* pc;
   AdblSession session;
+  AdblSessionPool pool;
 
   if (isNotAssigned(dbsource))
   {
@@ -621,11 +743,12 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
   ecmutex_lock(self->mutex);
   
   pc = ecmap_node_value (node);
+  
+  pool = pc->pool;
       
-  if (isNotAssigned(pc->connection))
+  /*
+  if (isNotAssigned(session->connection))
   {
-    /* not connected yet */
-    /* try to connect */
     adbl_connect (self, pc);
     
     if (isNotAssigned(pc->connection))
@@ -634,14 +757,11 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
       return 0;
     }
   }
-  /* get a new session from the plugin */
+*/
+  
   ecmutex_unlock(self->mutex);
 
-  session = ENTC_NEW(struct AdblSession_s);
-  
-  session->credentials = pc;
-  
-  return session;
+  return adbl_sessionpool_get (pool);
 }
 
 /*------------------------------------------------------------------------*/
@@ -667,7 +787,7 @@ AdblCursor* adbl_dbquery (AdblSession session, AdblQuery* query, AdblSecurity* s
     return NULL;
   }
   
-  if (isNotAssigned(pc->connection))
+  if (isNotAssigned(session->connection))
   {
     eclog_msg (LL_WARN, MODULE, "dbquery", "no active database connection" );
     return 0;
@@ -687,7 +807,7 @@ AdblCursor* adbl_dbquery (AdblSession session, AdblQuery* query, AdblSecurity* s
     return 0;  
   }
 
-  cc = pc->pp->dbquery (pc->connection, query);
+  cc = pc->pp->dbquery (session->connection, query);
   if(!cc)
   {
     return 0;  
@@ -713,7 +833,7 @@ int adbl_dbprocedure (AdblSession session, AdblProcedure* procedure, AdblSecurit
     return 0;
   }
 
-  if (isNotAssigned(pc->connection))
+  if (isNotAssigned(session->connection))
   {
     eclog_msg (LL_WARN, MODULE, "dbquery", "no active database connection" );
     return 0;
@@ -734,7 +854,7 @@ int adbl_dbprocedure (AdblSession session, AdblProcedure* procedure, AdblSecurit
   }
    */
 
-  return pc->pp->dbprocedure (pc->connection, procedure);
+  return pc->pp->dbprocedure (session->connection, procedure);
 }
 
 /*------------------------------------------------------------------------*/
@@ -749,11 +869,11 @@ uint_t adbl_table_size (AdblSession session, const EcString table)
     return 0;
   }
   
-  if (isAssigned(pc->connection))
+  if (isAssigned(session->connection))
   {
     if (isAssigned(pc->pp->dbtable_size))
     {
-      return pc->pp->dbtable_size (pc->connection, table);
+      return pc->pp->dbtable_size (session->connection, table);
     }
   }
   return 0;
@@ -771,11 +891,11 @@ AdblSequence* adbl_dbsequence_get( AdblSession session, const EcString table )
     return NULL;
   }
   
-  if (isAssigned(pc->connection))
+  if (isAssigned(session->connection))
   {
     if (isAssigned(pc->pp->dbsequence_get))
     {
-      void* ptr = pc->pp->dbsequence_get (pc->connection, table);
+      void* ptr = pc->pp->dbsequence_get (session->connection, table);
       
       if( ptr )
       {
@@ -895,7 +1015,7 @@ int adbl_dbupdate (AdblSession session, AdblUpdate* update, int isInsert, AdblSe
     return 0;
   }
   
-  if (isNotAssigned(pc->connection))
+  if (isNotAssigned(session->connection))
   {
     eclog_msg (LL_WARN, MODULE, "update", "no active database connection" );
     return 0;
@@ -915,7 +1035,7 @@ int adbl_dbupdate (AdblSession session, AdblUpdate* update, int isInsert, AdblSe
     return 0;  
   }
   
-  return pc->pp->dbupdate (pc->connection, update, isInsert);
+  return pc->pp->dbupdate (session->connection, update, isInsert);
 }
 
 /*------------------------------------------------------------------------*/
@@ -930,7 +1050,7 @@ int adbl_dbinsert (AdblSession session, AdblInsert* insert, AdblSecurity* securi
     return 0;
   }
   
-  if (isNotAssigned(pc->connection))
+  if (isNotAssigned(session->connection))
   {
     eclog_msg (LL_WARN, MODULE, "insert", "no active database connection" );
     return 0;
@@ -953,7 +1073,7 @@ int adbl_dbinsert (AdblSession session, AdblInsert* insert, AdblSecurity* securi
     }    
   }
     
-  return pc->pp->dbinsert (pc->connection, insert);
+  return pc->pp->dbinsert (session->connection, insert);
 }
 
 /*------------------------------------------------------------------------*/
@@ -968,7 +1088,7 @@ int adbl_dbdelete( AdblSession session, AdblDelete* del, AdblSecurity* security 
     return 0;
   }
   
-  if (isNotAssigned(pc->connection))
+  if (isNotAssigned(session->connection))
   {
     eclog_msg (LL_WARN, MODULE, "delete", "no active database connection" );
     return 0;
@@ -991,7 +1111,7 @@ int adbl_dbdelete( AdblSession session, AdblDelete* del, AdblSecurity* security 
     }    
   }
   
-  return pc->pp->dbdelete (pc->connection, del);
+  return pc->pp->dbdelete (session->connection, del);
 }
 
 /*------------------------------------------------------------------------*/
@@ -1006,11 +1126,11 @@ void adbl_dbbegin (AdblSession session)
     return;
   }
   
-  if (isAssigned (pc->connection))
+  if (isAssigned (session->connection))
   {
     if (isAssigned (pc->pp->dbbegin))
     {
-      pc->pp->dbbegin(pc->connection);
+      pc->pp->dbbegin(session->connection);
     }
     else
     {
@@ -1035,11 +1155,11 @@ void adbl_dbcommit (AdblSession session)
     return;
   }
   
-  if (isAssigned (pc->connection))
+  if (isAssigned (session->connection))
   {
     if (isAssigned (pc->pp->dbcommit))
     {
-      pc->pp->dbcommit (pc->connection);
+      pc->pp->dbcommit (session->connection);
     }
     else
     {
@@ -1064,11 +1184,11 @@ void adbl_dbrollback (AdblSession session)
     return;
   }
   
-  if (isAssigned (pc->connection))
+  if (isAssigned (session->connection))
   {
     if (isAssigned (pc->pp->dbrollback))
     {
-      pc->pp->dbrollback (pc->connection);
+      pc->pp->dbrollback (session->connection);
     }
     else
     {
@@ -1093,11 +1213,11 @@ EcList adbl_dbschema (AdblSession session)
     return NULL;
   }
   
-  if (isAssigned (pc->connection))
+  if (isAssigned (session->connection))
   {
     if (isAssigned (pc->pp->dbrollback))
     {
-      return pc->pp->dbschema (pc->connection);
+      return pc->pp->dbschema (session->connection);
     }
     else
     {
@@ -1123,11 +1243,11 @@ AdblTable* adbl_dbtable (AdblSession session, const EcString tablename)
     return NULL;
   }
   
-  if (isAssigned (pc->connection))
+  if (isAssigned (session->connection))
   {
     if (isAssigned (pc->pp->dbrollback))
     {
-      return pc->pp->dbtable (pc->connection, tablename);
+      return pc->pp->dbtable (session->connection, tablename);
     }
     else
     {
