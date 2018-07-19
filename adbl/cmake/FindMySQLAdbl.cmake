@@ -10,7 +10,7 @@ if (NOT MYSQL_FOUND)
 
     find_path (MYSQL_INCLUDES
       NAMES mysql.h
-      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/include"
+      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/include" "/opt/local/include/mysql57"
       PATH_SUFFIXES mysql
     )
 
@@ -18,7 +18,7 @@ if (NOT MYSQL_FOUND)
     ## Check for the library
 
     find_library (MYSQL_LIBRARIES mysqlclient 
-      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib"
+      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib" "/opt/local/lib/mysql57/mysql"
     )
 
     ##____________________________________________________________________________

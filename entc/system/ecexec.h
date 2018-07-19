@@ -45,4 +45,8 @@ __LIBEX const EcString ecexec_stderr (EcExec);
 
 //-----------------------------------------------------------------------------
 
+__LIBEX void ecprog_activateCrashReport (const EcString directory);
+
+//-----------------------------------------------------------------------------
+
 #endif

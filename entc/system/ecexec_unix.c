@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/select.h>
+#include <sys/resource.h>
 
 #define PIPE_READ   0
 #define PIPE_WRITE  1
@@ -204,6 +205,16 @@ const EcString ecexec_stdout (EcExec self)
 const EcString ecexec_stderr (EcExec self)
 {
   return ecstream_get (self->errstream);
+}
+
+//-----------------------------------------------------------------------------------
+
+void ecprog_activateCrashReport (const EcString directory)
+{
+  struct rlimit core_limits;
+  
+  core_limits.rlim_cur = core_limits.rlim_max = RLIM_INFINITY;
+  setrlimit (RLIMIT_CORE, &core_limits);
 }
 
 //-----------------------------------------------------------------------------------
