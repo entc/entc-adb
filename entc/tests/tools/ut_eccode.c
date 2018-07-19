@@ -138,6 +138,8 @@ static int __STDCALL test_base64_test2 (void* ptr, TestEnvContext tctx, EcErr er
   {
     printf ("no node\n");
   }
+  
+  return ENTC_ERR_NONE;
 }
 
 //---------------------------------------------------------------------------

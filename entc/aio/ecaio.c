@@ -998,7 +998,9 @@ int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
   
 #ifdef EVFILT_USER
   
-  EV_SET(&kev, ctx, EVFILT_USER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, 0, ctx);
+  uintptr_t ident = (uintptr_t)ctx;  // use the ctx pointer address as ident
+  
+  EV_SET(&kev, ident, EVFILT_USER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, 0, ctx);
   res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
   if (res < 0)
   {
@@ -1006,7 +1008,7 @@ int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
   }
   
   memset (&kev, 0x0, sizeof(struct kevent));
-  EV_SET(&kev, ctx, EVFILT_USER, 0, NOTE_TRIGGER, 0, ctx);
+  EV_SET(&kev, ident, EVFILT_USER, 0, NOTE_TRIGGER, 0, ctx);
   res = kevent (self->kq, &kev, 1, NULL, 0, NULL);
   if (res < 0)
   {

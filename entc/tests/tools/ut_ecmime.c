@@ -34,7 +34,9 @@ static int __STDCALL test_mime_multipart (void* ptr, TestEnvContext tctx, EcErr 
   
   ecbuf_destroy(&buf);
   
-  ecfh_close (&fh);  
+  ecfh_close (&fh);
+  
+  return ENTC_ERR_NONE;
 }
 
 //-------------------------------------------------------------------------------------------
