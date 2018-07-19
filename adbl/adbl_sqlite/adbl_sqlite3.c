@@ -329,8 +329,8 @@ void adbl_constructConstraint( EcStream statement, AdblConstraint* constraint )
 
 static int __STDCALL adblmodule_dbquery_orders_onCmp (const void* a, const void* b)
 {
-  int ia = (int)a;
-  int ib = (int)b;
+  long ia = (long)a;
+  long ib = (long)b;
   
   if (ia > ib)
   {

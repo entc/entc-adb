@@ -34,7 +34,7 @@ static int __STDCALL main_test (void* ptr, TestEnvContext ectx, EcErr err)
 {
   Adbo2 adbo = ptr;
 
-  Adbo2Session session = adbo2_session_get (adbo, NULL, NULL);
+  Adbo2Session session = adbo2_session_get (adbo, NULL, "test02");
   if (session)
   {
     Adbo2Transaction trx = adbo2_session_transaction (session);
@@ -100,17 +100,23 @@ static int __STDCALL main_test (void* ptr, TestEnvContext ectx, EcErr err)
 
 //---------------------------------------------------------------------------
 
+static const char* dbmatrix[2] = {"test01", "test02"};
+
+//---------------------------------------------------------------------------
+
 static int __STDCALL main_test_worker (void* ptr)
 {
   Adbo2 adbo = ptr;
   int i;
   
-  Adbo2Session session = adbo2_session_get (adbo, NULL, NULL);
+  int dbi = rand() % 2;
+  
+  Adbo2Session session = adbo2_session_get (adbo, NULL, dbmatrix[dbi]);
   if (session)
   {
     Adbo2Transaction trx = adbo2_session_transaction (session);
     
-    for (i = 0; i < 20; i++)
+    for (i = 0; i < 2; i++)
     {
       EcUdc data = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, NULL);
       EcUdc para = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
@@ -141,7 +147,7 @@ static int __STDCALL main_test_worker (void* ptr)
 
 //---------------------------------------------------------------------------
 
-#define MAX_THREADS 2
+#define MAX_THREADS 50
 
 static int __STDCALL main_test_threading (void* ptr, TestEnvContext ectx, EcErr err)
 {
@@ -172,7 +178,7 @@ int main(int argc, char* argv[])
   TestEnv te = testenv_create ();
   
   testenv_reg (te, "Main", main_test_init, main_test_done, main_test);
-  testenv_reg (te, "Main", main_test_init, main_test_done, main_test_threading);
+  //testenv_reg (te, "Main", main_test_init, main_test_done, main_test_threading);
 
   testenv_run (te);
   

@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 2.4)
 
-FIND_LIBRARY( SQLITE_LIBRARIES NAMES "sqlite3"
-  HINTS 
-  "lib/adbl/adbl_sqlite"
-  "/opt/local/lib/"
-)
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+SET(CMAKE_MACOSX_RPATH 0)
+SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+SET(CMAKE_BUILD_TYPE Debug)
 
-IF( SQLITE_LIBRARIES )
+find_package(Entc_1_4 REQUIRED)
+find_package(SQLiteAdbl QUIET)
+
+IF(SQLITE_FOUND)
 
   MESSAGE(STATUS "sqlite found at ${SQLITE_LIBRARIES}" )
 
@@ -20,7 +22,7 @@ IF( SQLITE_LIBRARIES )
 
   TARGET_LINK_LIBRARIES( adbl_sqlite3 adbl ${LIBXML2_LIBRARIES} ${SQLITE_LIBRARIES} )
 
-ELSE( SQLITE_LIBRARIES )
+ELSE(SQLITE_FOUND)
 
   MESSAGE(STATUS "sqlite was not found at ${SQLITE_LIBRARIES}: use included version" )
 
@@ -35,7 +37,7 @@ ELSE( SQLITE_LIBRARIES )
 
   TARGET_LINK_LIBRARIES( adbl_sqlite3 ${ENTC_LIBRARIES} adbl )
 
-ENDIF( SQLITE_LIBRARIES )
+ENDIF(SQLITE_FOUND)
 
 install (TARGETS adbl_sqlite3 DESTINATION modules_adbl)
 

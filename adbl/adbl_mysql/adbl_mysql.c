@@ -82,6 +82,34 @@ typedef struct
 
 //------------------------------------------------------------------------------------------------------
 
+static int init_status = 0;
+
+//------------------------------------------------------------------------------------------------------
+
+void adblmodule_init ()
+{
+  if (init_status == 0)
+  {
+    mysql_library_init (0, NULL, NULL);  
+  }
+  
+  init_status++;
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void adblmodule_done ()
+{
+  init_status--;
+
+  if (init_status == 0)
+  {
+    mysql_library_end ();  
+  }
+}
+
+//------------------------------------------------------------------------------------------------------
+
 AdblMysqlBindVars* bindvars_create (int bindCnt)
 {
   ulong_t bindSize;
@@ -191,6 +219,24 @@ void bindvars_add (AdblMysqlBindVars* self, EcUdc value)
 
 //------------------------------------------------------------------------------------------------------
 
+void adblmodule_destroy (AdblMysqlConnection* pself)
+{
+  AdblMysqlConnection self = *pself;
+  
+  eclog_msg (LL_DEBUG, "MYSQ", "disconnect", "Disconnected from Mysql database" );
+
+  mysql_close (self->conn);
+  
+  ecmutex_delete (&(self->mutex));
+  
+  ENTC_DEL (pself, struct AdblMysqlConnection_s);
+
+  // call this after mysql_close
+  adblmodule_done ();
+}
+
+//------------------------------------------------------------------------------------------------------
+
 void* adblmodule_dbconnect (AdblConnectionProperties* cp)
 {
   MYSQL_RES* res;
@@ -199,6 +245,9 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
   
   self->mutex = ecmutex_new();
   self->ansi = FALSE;
+  
+  // call this before mysql_init
+  adblmodule_init ();
   
   // init mysql
   self->conn = mysql_init (NULL);
@@ -212,13 +261,11 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
   mysql_options (self->conn, MYSQL_INIT_COMMAND, "SET autocommit=0");
 
   // connect
-  if(!mysql_real_connect(self->conn, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, CLIENT_MULTI_RESULTS))
+  if(!mysql_real_connect (self->conn, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, CLIENT_MULTI_RESULTS))
   {
-    //eclogger_msg (LL_ERROR, "MYSQ", "connect", mysql_error(self->conn) );
+    eclog_msg (LL_ERROR, "MYSQ", "connect", mysql_error(self->conn) );
     
-    mysql_close (self->conn);
-    
-    ENTC_DEL (&self, struct AdblMysqlConnection_s);
+    adblmodule_destroy (&self);
     
     return NULL;
   }
@@ -247,11 +294,7 @@ void adblmodule_dbdisconnect (void* ptr)
 {
   AdblMysqlConnection self = ptr;
   
-  mysql_close (self->conn);
-
-  ENTC_DEL (&self, struct AdblMysqlConnection_s);
-  
-  eclog_msg (LL_DEBUG, "MYSQ", "disconnect", "Disconnected from Mysql database" );
+  adblmodule_destroy (&self);  
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -327,7 +370,7 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
   
   if( qc->orderno != 0 )
   {
-    uint_t abs_orderno = abs(qc->orderno);
+    long abs_orderno = abs(qc->orderno);
     
     EcBuffer buffer = ecbuf_create (11);
    
@@ -339,12 +382,13 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
     
     if( qc->orderno > 0 )
     {
-      ecmap_insert (orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " ASC"));
+      ecmap_insert (orders, (void*)abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " ASC"));
     }
     else
     {
-      ecmap_insert (orders, abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " DESC"));
+      ecmap_insert (orders, (void*)abs_orderno, ecstr_cat2 (ecbuf_const_str (buffer), " DESC"));
     }
+    
     ecbuf_destroy (&buffer);
   }
 }
@@ -353,8 +397,7 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
 
 void adbl_constructListWithTable (EcStream statement, EcList columns, const char* table, int ansi, EcMap orders, AdblMysqlCursor* cursor)
 {
-  EcListCursor c;
-  eclist_cursor_init (columns, &c, LIST_DIR_NEXT);
+  EcListCursor c; eclist_cursor_init (columns, &c, LIST_DIR_NEXT);
   
   if (eclist_cursor_next (&c))
   {
@@ -447,8 +490,8 @@ void adbl_constructConstraint (EcStream statement, AdblConstraint* constraint, i
 
 static int __STDCALL adblmodule_dbquery_orders_onCmp (const void* a, const void* b)
 {
-  int ia = (int)a;
-  int ib = (int)b;
+  long ia = (long)a;
+  long ib = (long)b;
   
   if (ia > ib)
   {
@@ -504,8 +547,7 @@ int adblmodule_createStatement (AdblMysqlConnection self, EcStream statement, Ad
   
   // apply orders
   {
-    EcMapCursor cursor;
-    ecmap_cursor_init (orders, &cursor, LIST_DIR_NEXT);
+    EcMapCursor cursor; ecmap_cursor_init (orders, &cursor, LIST_DIR_NEXT);
     
     while (ecmap_cursor_next (&cursor))
     {
@@ -629,7 +671,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
 
     // clean up
     adblmodule_dbcursor_release (cursor);
-    return FALSE;
+    return NULL;
   }
   
   if (mysql_stmt_store_result (stmt) != 0)
@@ -638,7 +680,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
 
     // clean up
     adblmodule_dbcursor_release (cursor);
-    return FALSE;
+    return NULL;
   }
 
   if (mysql_commit (self->conn) != 0)
@@ -647,7 +689,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
     
     // clean up
     adblmodule_dbcursor_release (cursor);
-    return FALSE;
+    return NULL;
   }
   
   //db cursor takes the mysql result and destroys it afterwards
@@ -685,7 +727,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   bv = bindvars_create (bindCnt);
   
   ret = adblmodule_dbquery_create (self, query, stmt, bv);
-  
+        
   // clean up
   bindvars_destroy (&bv);
   
@@ -1372,6 +1414,9 @@ void adblmodule_dbcursor_release (void* ptr)
       free(self->bindResult[i].buffer);
     }
   }
+
+  // clean up the array
+  ENTC_FREE (self->bindResult);
   
   ENTC_DEL (&ptr, AdblMysqlCursor)
   
