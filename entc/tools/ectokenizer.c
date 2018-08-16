@@ -68,3 +68,78 @@ EcList ectokenizer_parse (const EcString source, char delimeter)
 }
 
 //-----------------------------------------------------------------------------
+
+EcList ectokenizer_token (const EcString source, const EcString token)
+{
+  EcList tokens = eclist_create (ectokenizer_token_onDestroy);
+
+  // use a state machine to parse the string with a string
+  int state = 0;
+  
+  // the positions
+  const char* pos;
+  const char* tok = token;
+  
+  // starts with a potential token
+  const char* tbe;
+  
+  // last token ends
+  const char* tbl = source;
+  
+  // the loop
+  for (pos = source; *pos; pos++)
+  {
+    switch (state)
+    {
+      case 0:
+      {
+        // check the first character
+        if (*pos == *tok)
+        {
+          state = 1;
+          tok++;
+          
+          tbe = pos;  // remember beginning of the token 
+        }
+
+        break;
+      }
+      case 1:
+      {
+        if (*tok == '\0')  // token found, termination reached
+        {
+          // extract the part
+          EcString h = ecstr_part (tbl, tbe - tbl);
+
+          // add to tokens
+          eclist_push_back (tokens, h);
+          
+          tbl = pos;
+          state = 0;
+          tok = token;
+          
+          // correct position
+          pos--;
+        }
+        else if (*pos == *tok)  // match is still ok, continue
+        {
+          tok++;
+        }
+        else  // no match -> go back to the last match
+        {
+          state = 0;
+          tok = token;
+          
+          // correct position
+          pos = tbe;
+        }
+       
+        break;
+      }
+    }    
+  }
+  
+  return tokens;
+}
+
+//-----------------------------------------------------------------------------

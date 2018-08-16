@@ -28,7 +28,9 @@
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcList ectokenizer_parse (const EcString source, char delimeter);
+__LIBEX EcList ectokenizer_parse (const EcString source, char delimeter);           // tokenize using a character
+
+__LIBEX EcList ectokenizer_token (const EcString source, const EcString token);     // tokenize using a token
 
 //-----------------------------------------------------------------------------
 
