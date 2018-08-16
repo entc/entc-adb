@@ -100,31 +100,43 @@ EcList ectokenizer_token (const EcString source, const EcString token)
           tok++;
           
           tbe = pos;  // remember beginning of the token 
+
+          if (*tok == '\0')  // token found, termination reached
+          {
+            // extract the part
+            EcString h = ecstr_part (tbl, tbe - tbl);
+
+            // add to tokens
+            eclist_push_back (tokens, h);
+            
+            tbl = pos + 1;
+            state = 0;
+            tok = token;            
+          }          
+
         }
 
         break;
       }
       case 1:
       {
-        if (*tok == '\0')  // token found, termination reached
-        {
-          // extract the part
-          EcString h = ecstr_part (tbl, tbe - tbl);
-
-          // add to tokens
-          eclist_push_back (tokens, h);
-          
-          tbl = pos;
-          state = 0;
-          tok = token;
-          
-          // correct position
-          pos--;
-        }
-        else if (*pos == *tok)  // match is still ok, continue
+        if (*pos == *tok)  // match is still ok, continue
         {
           tok++;
-        }
+          
+          if (*tok == '\0')  // token found, termination reached
+          {
+            // extract the part
+            EcString h = ecstr_part (tbl, tbe - tbl);
+
+            // add to tokens
+            eclist_push_back (tokens, h);
+            
+            tbl = pos + 1;
+            state = 0;
+            tok = token;            
+          }          
+        }        
         else  // no match -> go back to the last match
         {
           state = 0;
@@ -138,6 +150,14 @@ EcList ectokenizer_token (const EcString source, const EcString token)
       }
     }    
   }
+  
+  // add last part as token
+
+  // extract the part
+  EcString h = ecstr_part (tbl, pos - tbl);
+  
+  // add to tokens
+  eclist_push_back (tokens, h);
   
   return tokens;
 }

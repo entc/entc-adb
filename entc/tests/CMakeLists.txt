@@ -80,21 +80,25 @@ ADD_EXECUTABLE( ut_ecjparser tools/ut_ecjparser.c )
 TARGET_LINK_LIBRARIES( ut_ecjparser entc )
 add_test(ut_ecjparser tests/Debug/ut_ecjparser)
 
-ADD_EXECUTABLE( ut_ecjson tools/ut_ecjson )
+ADD_EXECUTABLE( ut_ecjson tools/ut_ecjson.c )
 TARGET_LINK_LIBRARIES( ut_ecjson entc )
 add_test(ut_ecjson tests/Debug/ut_ecjson)
 
-ADD_EXECUTABLE( ut_eccrypt tools/ut_eccrypt )
+ADD_EXECUTABLE( ut_eccrypt tools/ut_eccrypt.c )
 TARGET_LINK_LIBRARIES( ut_eccrypt entc )
 add_test(ut_eccrypt tests/Debug/ut_eccrypt)
 
-ADD_EXECUTABLE( ut_eccode tools/ut_eccode )
+ADD_EXECUTABLE( ut_eccode tools/ut_eccode.c )
 TARGET_LINK_LIBRARIES( ut_eccode entc )
 add_test(ut_eccode tests/Debug/ut_eccode)
 
-ADD_EXECUTABLE( ut_ecmime tools/ut_ecmime )
+ADD_EXECUTABLE( ut_ecmime tools/ut_ecmime.c )
 TARGET_LINK_LIBRARIES( ut_ecmime entc )
 add_test(ut_ecmime tests/Debug/ut_ecmime)
+
+ADD_EXECUTABLE( ut_ectokenizer tools/ut_ectokenizer.c )
+TARGET_LINK_LIBRARIES( ut_ectokenizer entc )
+add_test(ut_ectokenizer tests/Debug/ut_ectokenizer)
 
 #-----------------------------------------------------------------
 
