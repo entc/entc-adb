@@ -657,8 +657,10 @@ EcString ecstr_trim( const EcString s )
   /* trim from begin */
   while(*pos01)
   {
-    if( (*pos01 > 32) && (*pos01 < 127) )
+    if((*pos01 > 32))
+    {
       break;
+    }
     
     pos01++;
   }
