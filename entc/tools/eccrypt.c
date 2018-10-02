@@ -850,7 +850,7 @@ EcBuffer ecdecrypt_aes_update (EcDecryptAES self, EcBuffer source, EcErr err)
     self->buf = ecbuf_create (source->size + self->blocksize);
   }
   
-  int lenLast;
+  int lenLast = 0;
   
   if (EVP_DecryptUpdate (&(self->ctx), self->buf->buffer, &lenLast, source->buffer + bufoffset, source->size - bufoffset) == 0)
   {
@@ -878,7 +878,7 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
     self->buf = ecbuf_create (self->blocksize);
   }
   
-  int lenLast;
+  int lenLast = 0;
   
   if (EVP_DecryptFinal_ex(&(self->ctx), self->buf->buffer, &lenLast) == 0)
   {

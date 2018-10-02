@@ -122,7 +122,9 @@ __LIBEX int ecstr_endingPart (const EcString source, const EcString ending, EcSt
 /* **** transform methods **** */
   
 __LIBEX EcString ecstr_trim( const EcString );
-  
+
+__LIBEX EcString ecstr_trimNoneNumbers (const EcString);
+
 __LIBEX EcString ecstr_trimNonePrintable( const EcString );
   
 __LIBEX EcString ecstr_trimKeepDefault( const EcString );

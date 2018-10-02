@@ -692,8 +692,26 @@ EcString ecstr_trim( const EcString s )
 
 /*------------------------------------------------------------------------*/
 
+EcString ecstr_trimNoneNumbers (const EcString s)
+{
+  EcStream stream = ecstream_create ();
+  
+  const char* pos_source = s;
 
-EcString ecstr_trimNonePrintable( const EcString s )
+  for(pos_source = s; *pos_source; pos_source++)
+  {
+    if (*pos_source > 47 && *pos_source < 58)
+    {
+      ecstream_append_c (stream, *pos_source);
+    }
+  }
+  
+  return ecstream_tostr (&stream);
+}
+
+//----------------------------------------------------------------------------------------
+
+EcString ecstr_trimNonePrintable (const EcString s)
 {
   EcString copy = ecstr_copy( s );
 
