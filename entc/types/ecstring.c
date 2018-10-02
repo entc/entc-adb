@@ -690,7 +690,44 @@ EcString ecstr_trim( const EcString s )
   return copy;
 }
 
-/*------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------------------
+
+EcString ecstr_trimFullAscii (const EcString s)
+{
+  const char* posb = s;
+  const char* pose = s;
+  
+  // trim from left
+  while (TRUE)
+  {
+    if (*pose > 32)
+    {
+      break;
+    }
+
+    posb++;
+    pose++;
+  }
+  
+  // continue to the end
+  for (; *pose; pose++);
+  
+  // trim from right
+  while (TRUE)
+  {
+    if (*pose > 32)
+    {
+      pose++;
+      break;
+    }
+
+    pose--;
+  }
+  
+  return ecstr_part (posb, pose - posb);
+}
+
+//----------------------------------------------------------------------------------------
 
 EcString ecstr_trimNoneNumbers (const EcString s)
 {
