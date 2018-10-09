@@ -49,7 +49,7 @@ if (NOT CRYPT_FOUND)
 	  ## Check for the library
 
 	  find_library (CRYPT_LIBRARIES
-		NAMES crypt crypto
+		NAMES crypto crypt
 		HINTS ${CMAKE_INSTALL_PREFIX}
 		PATH_SUFFIXES lib
 		)
