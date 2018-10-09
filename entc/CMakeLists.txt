@@ -1,84 +1,21 @@
 cmake_minimum_required(VERSION 2.4)
 
-PROJECT(entc-base)
-
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 SET(CMAKE_MACOSX_RPATH 0)
 SET(CMAKE_INSTALL_PREFIX /opt/entc_1_4/)
 SET(CMAKE_BUILD_TYPE Debug)
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-SET( SYSTEM_LIBRARIES )
+#------------------------------------------------------------------------------
 
-IF (WIN32)
-  # we can use windows onw crypto libs
-ELSE()
-  find_package(OpenSSL)
+PROJECT(entc-base)
 
-  #************* PTHREAD LIBRARY ***************************
+find_package(Crypt REQUIRED)
+find_package(PThread REQUIRED)
+find_package(DL REQUIRED)
 
-  IF( DISSABLE_EXTERN_PTHREAD )
-
-    MESSAGE(STATUS "external pthread library was disabled" )
-
-  ELSE( DISSABLE_EXTERN_PTHREAD )
-
-    FIND_LIBRARY( PTHREAD_LIBRARIES NAMES pthread
-      HINTS
-      "/usr/lib/"
-      "/usr/local/lib/"
-      "/opt/local/lib/"
-    )
-
-    IF( PTHREAD_LIBRARIES )
-
-      MESSAGE(STATUS "pthread library found at ${PTHREAD_LIBRARIES}" )
-    
-      SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${PTHREAD_LIBRARIES} )
-
-    ENDIF( PTHREAD_LIBRARIES )
-
-  ENDIF( DISSABLE_EXTERN_PTHREAD )  
-
-  #************* LD LIBRARY ***************************
-
-  FIND_LIBRARY( DL_LIBRARIES NAMES dl      
-    HINTS
-    "/usr/lib/"
-    "/usr/local/lib/"
-    "/opt/local/lib/"
-  )
-
-  IF( DL_LIBRARIES )
-
-    MESSAGE(STATUS "dl library found at ${DL_LIBRARIES}" )          
-
-    SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${DL_LIBRARIES} )
-
-  ENDIF( DL_LIBRARIES )  
-
-  MESSAGE(STATUS "configured with system libraries: ${SYSTEM_LIBRARIES}" )
-  
-  #************* LD LIBRARY ***************************
-
-  FIND_LIBRARY( DL_LIBRARIES NAMES dl      
-    HINTS
-    "/usr/lib/"
-    "/usr/local/lib/"
-    "/opt/local/lib/"
-  )
-
-  IF( DL_LIBRARIES )
-
-    MESSAGE(STATUS "dl library found at ${DL_LIBRARIES}" )          
-
-    SET( SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${DL_LIBRARIES} )
-
-  ENDIF( DL_LIBRARIES )  
-
-  MESSAGE(STATUS "configured with system libraries: ${SYSTEM_LIBRARIES}" )
-  
-ENDIF(WIN32)
+#------------------------------------------------------------------------------
 
 SET (ENTC_SYS_HEADERS
 
@@ -220,7 +157,7 @@ SET(ENTC_TESTS_SOURCES
   tests/ecenv.c
 )
 
-INCLUDE_DIRECTORIES("." ${OPENSSL_INCLUDE_DIR})
+#------------------------------------------------------------------------------
 
 source_group("System" FILES ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
 source_group("AIO" FILES ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS})
@@ -228,12 +165,18 @@ source_group("Types" FILES ${ENTC_TYPES_SOURCES} ${ENTC_TYPES_HEADERS})
 source_group("Tools" FILES ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS})
 source_group("Tests" FILES ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS})
 
+#------------------------------------------------------------------------------
+
+INCLUDE_DIRECTORIES("." ${CRYPT_INCLUDES} ${PTHREAD_INCLUDES} ${DL_INCLUDES})
+
 ADD_LIBRARY( entc SHARED ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS} ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS})
 
-TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${OPENSSL_LIBRARIES})
+TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${CRYPT_LIBRARIES} ${PTHREAD_LIBRARIES} ${DL_LIBRARIES})
 
 set_target_properties(entc PROPERTIES VERSION 1.4.0 SOVERSION 1.4.0)
 set_property(TARGET entc PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+#------------------------------------------------------------------------------
 
 install (TARGETS entc DESTINATION lib)
 install (FILES ${ENTC_SYS_HEADERS} DESTINATION include/entc/system)
