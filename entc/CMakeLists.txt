@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.4)
 
+PROJECT(entc-base)
+
+#------------------------------------------------------------------------------
+
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 SET(CMAKE_MACOSX_RPATH 0)
 SET(CMAKE_INSTALL_PREFIX /opt/entc_1_4/)
@@ -8,8 +12,6 @@ SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 #------------------------------------------------------------------------------
-
-PROJECT(entc-base)
 
 find_package(Crypt REQUIRED)
 find_package(PThread REQUIRED)
