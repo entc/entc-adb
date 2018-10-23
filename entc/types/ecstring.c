@@ -692,6 +692,81 @@ EcString ecstr_trim( const EcString s )
 
 //----------------------------------------------------------------------------------------
 
+int ecstr_utf8_len (const unsigned char* c)
+{
+  if (0x20 <= *c && *c <= 0x7E)
+  {
+    // ascii
+    return 1;
+  }
+  else if ((*c & 0xE0) == 0xC0)
+  {
+    // +1
+    return 2;
+  }
+  else if ((*c & 0xF0) == 0xE0)
+  {
+    // +2
+    return 3;
+  }
+  else if ((*c & 0xF8) == 0xF0)
+  {
+    // +3
+    return 4;
+  }
+  else if ((*c & 0xFC) == 0xF8)
+  {
+    // +4
+    return 5;
+  }
+  else if ((*c & 0xFE) == 0xFC)
+  {
+    // +5
+    return 6;
+  }
+  else
+  {
+    // not supported character
+    return 1;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+
+EcString ecstr_utf8_trim (const EcString source)
+{
+  const unsigned char* c = (const unsigned char*)source;
+  
+  const unsigned char* pos_s = c;
+  const unsigned char* pos_e = c;
+  
+  int trim = TRUE;
+  
+  while (*c)
+  {
+    int clen = ecstr_utf8_len (c);
+    
+    if ((clen == 1) && (*c < 32))
+    {
+      if (trim)
+      {
+        pos_s += clen;
+      }
+    }
+    else
+    {
+      pos_e = c + clen;
+      trim = FALSE;
+    }
+    
+    c += clen;
+  }
+
+  return ecstr_part ((const char*)pos_s, pos_e - pos_s);
+}
+
+//----------------------------------------------------------------------------------------
+
 EcString ecstr_trimFullAscii (const EcString s)
 {
   const char* posb = s;
