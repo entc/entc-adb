@@ -746,7 +746,7 @@ EcString ecstr_utf8_trim (const EcString source)
   {
     int clen = ecstr_utf8_len (c);
     
-    if ((clen == 1) && (*c < 32))
+    if ((clen == 1) && (*c <= 32))
     {
       if (trim)
       {
