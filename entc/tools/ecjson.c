@@ -898,7 +898,9 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
     break;
     case ENTC_UDC_BOOL:
     {
-      ecstream_append_str (stream, ecudc_asBool (node) ? "true" : "false");
+      int boolean = ecudc_asBool (node);
+      
+      ecstream_append_str (stream, boolean ? "true" : "false");
     }
     break;
     case ENTC_UDC_NONE:

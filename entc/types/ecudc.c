@@ -740,6 +740,11 @@ EcUdc ecudc_clone (EcAlloc alloc, const EcUdc orig)
       self->extension = orig->extension;
       break;
     }
+    case ENTC_UDC_BOOL:
+    {
+      self->extension = orig->extension;
+      break;
+    }
     case ENTC_UDC_NUMBER:
     {
       self->extension = ECMM_NEW (int64_t); memcpy(self->extension, orig->extension, sizeof(int64_t));

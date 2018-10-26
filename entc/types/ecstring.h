@@ -123,7 +123,7 @@ __LIBEX int ecstr_endingPart (const EcString source, const EcString ending, EcSt
   
 __LIBEX EcString ecstr_trim( const EcString );
 
-__LIBEX EcString ecstr_trimFullAscii (const EcString);
+__LIBEX EcString ecstr_utf8_trim (const EcString);
 
 __LIBEX EcString ecstr_trimNoneNumbers (const EcString);
 
