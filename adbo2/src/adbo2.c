@@ -320,6 +320,13 @@ int adbo2_trx_insert (Adbo2Transaction self, const EcString table, EcUdc params,
 
 //-----------------------------------------------------------------------------
 
+int adbo2_trx_insertOrUpdate  (Adbo2Transaction self, const EcString table, EcUdc params, EcUdc data, EcErr err)
+{
+  
+}
+
+//-----------------------------------------------------------------------------
+
 int adbo2_trx_delete (Adbo2Transaction self, const EcString table, EcUdc params, EcErr err)
 {
   int res;

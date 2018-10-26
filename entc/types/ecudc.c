@@ -590,6 +590,8 @@ void ecudc_destroy (EcAlloc alloc, EcUdc* pself)
       break;
     case ENTC_UDC_REF: self->extension = NULL;
       break;
+    case ENTC_UDC_BOOL: self->extension = NULL;
+      break;
     case ENTC_UDC_NUMBER: ENTC_DEL (&(self->extension), int64_t);
       break;
     case ENTC_UDC_DOUBLE: ENTC_DEL (&(self->extension), double);

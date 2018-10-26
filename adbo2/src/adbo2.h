@@ -33,17 +33,19 @@ struct Adbo2Transaction_s; typedef struct Adbo2Transaction_s* Adbo2Transaction;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void adbo2_trx_commit     (Adbo2Transaction*);
+__LIBEX void adbo2_trx_commit         (Adbo2Transaction*);
 
-__LIBEX void adbo2_trx_rollback   (Adbo2Transaction*);
+__LIBEX void adbo2_trx_rollback       (Adbo2Transaction*);
 
-__LIBEX int adbo2_trx_query       (Adbo2Transaction, const EcString table, EcUdc params, EcUdc data, EcErr);
+__LIBEX int adbo2_trx_query           (Adbo2Transaction, const EcString table, EcUdc params, EcUdc data, EcErr);
 
-__LIBEX int adbo2_trx_update      (Adbo2Transaction, const EcString table, EcUdc params, EcUdc data, EcErr);
+__LIBEX int adbo2_trx_update          (Adbo2Transaction, const EcString table, EcUdc params, EcUdc data, EcErr);
 
-__LIBEX int adbo2_trx_insert      (Adbo2Transaction, const EcString table, EcUdc params, EcUdc data, EcErr);
+__LIBEX int adbo2_trx_insert          (Adbo2Transaction, const EcString table, EcUdc params, EcUdc data, EcErr);
 
-__LIBEX int adbo2_trx_delete      (Adbo2Transaction, const EcString table, EcUdc params, EcErr);
+__LIBEX int adbo2_trx_insertOrUpdate  (Adbo2Transaction, const EcString table, EcUdc params, EcUdc data, EcErr);
+
+__LIBEX int adbo2_trx_delete          (Adbo2Transaction, const EcString table, EcUdc params, EcErr);
 
 //-----------------------------------------------------------------------------
 
