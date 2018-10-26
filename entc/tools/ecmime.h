@@ -71,7 +71,7 @@ __LIBEX void ecmultipart_addText (EcMultipart, const EcString text, const EcStri
 
 __LIBEX void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file, int fileId);
 
-__LIBEX void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId);
+__LIBEX void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId, const EcString vsec, unsigned int aes_type);
 
 __LIBEX void ecmultipart_addContentDisposition_B_o (EcMultipart, const EcString name, EcBuffer*);
 

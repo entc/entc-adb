@@ -7,6 +7,7 @@
 #include "tools/eclog.h"
 #include "tools/ectokenizer.h"
 #include "tools/eccode.h"
+#include "tools/eccrypt.h"
 
 //------------------------------------------------------------------------------------------------------
 
@@ -797,6 +798,8 @@ struct EcMultipart_s {
   
   EcBase64Encode base64Encode;
   
+  EcDecryptAES decryptAes;
+  
 };
 
 //------------------------------------------------------------------------------------------------------
@@ -828,6 +831,7 @@ EcMultipart ecmultipart_create (const EcString boundary, const EcString header)
   self->cursor = NULL;
   self->fh = NULL;
   self->base64Encode = NULL;
+  self->decryptAes = NULL;
   
   return self;
 }
@@ -846,6 +850,11 @@ void ecmultipart_destroy (EcMultipart* pself)
   if (self->base64Encode)
   {
     eccode_base64_encode_destroy (&(self->base64Encode));  
+  }
+  
+  if (self->decryptAes)
+  {
+    ecdecrypt_aes_destroy (&(self->decryptAes));
   }
   
   ENTC_DEL(pself, struct EcMultipart_s);
@@ -891,7 +900,7 @@ void ecmultipart_addFile (EcMultipart self, const EcString path, const EcString 
 
 //------------------------------------------------------------------------------------------------------
 
-void ecmultipart_addPath (EcMultipart self, const EcString path, const EcString name, int fileId)
+void ecmultipart_addPath (EcMultipart self, const EcString path, const EcString name, int fileId, const EcString vsec, unsigned int aes_type)
 {
   EcUdc h = ecudc_create (EC_ALLOC, ENTC_UDC_FILEINFO, NULL);
   
@@ -1189,6 +1198,11 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
         }
         
         self->base64Encode = eccode_base64_encode_create ();
+        
+        if (FALSE)
+        {
+          self->decryptAes = ecdecrypt_aes_create ("secret", 12 /* aes type */, 0);
+        }
       }
       else if (self->buffer == NULL)
       {
@@ -1214,15 +1228,24 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
           }
           else
           {
-            //eclog_fmt (LL_TRACE, "ENTC", "mime", "read from file %i", readBytes);
-
+            EcBuffer j;
+            
             // correct size
             h->size = readBytes;
-            
-            res = eccode_base64_encode_update (self->base64Encode, buf, h, NULL);
-            
-            //eclog_fmt (LL_TRACE, "ENTC", "mime", "to base64 %i into buf of %i", res, buf->size);
-          }          
+
+            if (self->decryptAes)
+            {
+              j = ecdecrypt_aes_update (self->decryptAes, EcBuffer, err);
+            }
+            else
+            {
+              //eclog_fmt (LL_TRACE, "ENTC", "mime", "read from file %i", readBytes);
+              
+              res = eccode_base64_encode_update (self->base64Encode, buf, h, NULL);
+              
+              //eclog_fmt (LL_TRACE, "ENTC", "mime", "to base64 %i into buf of %i", res, buf->size);
+            }            
+          }
 
           ecbuf_destroy(&h);
 
