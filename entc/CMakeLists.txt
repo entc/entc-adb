@@ -134,6 +134,7 @@ SET (ENTC_TOOLS_HEADERS
   tools/eccrypt.h
   tools/eccode.h
   tools/ecreadbuffer.h
+  tools/entc_multipart.h
 )
 
 SET (ENTC_TOOLS_SOURCES
@@ -149,6 +150,7 @@ SET (ENTC_TOOLS_SOURCES
   tools/eccrypt.c
   tools/eccode.c
   tools/ecreadbuffer.c
+  tools/entc_multipart.c
 )
 
 SET (ENTC_TESTS_HEADERS

@@ -900,6 +900,8 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
 
 int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut, EcErr err)
 {
+  int res;
+  
   EcBuffer ben;
   EcBuffer bin = ecbuf_create (1024);
   int bytesRead;
@@ -915,7 +917,8 @@ int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     ben = ecencrypt_aes_update (aes, &h, err);
     if (ben == NULL)
     {
-      return err->code;
+      res = err->code;
+      goto exit;
     }
     
     bytesWritten = ecfh_writeBuffer (fhOut, ben, ben->size);
@@ -923,19 +926,31 @@ int ecencrypt_file_copy (EcEncryptAES aes, EcFileHandle fhIn, EcFileHandle fhOut
     {
       eclog_fmt (LL_ERROR, "ENTC", "enc file", "can't write bytes");
       
-      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't write bytes");
+      res = ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_PROCESS_FAILED, "can't write bytes");
+      goto exit;
     }
   }
   
   ben = ecencrypt_aes_finalize (aes, err);
   if (ben == NULL)
   {
-    return err->code;
+    res = err->code;
+    goto exit;
   }
   
   ecfh_writeBuffer (fhOut, ben, ben->size);
+
+  res = ENTC_ERR_NONE;
+  goto exit;
   
-  return ENTC_ERR_NONE;
+exit:
+
+  if (bin)
+  {
+    ecbuf_destroy (&bin);
+  }
+
+  return res;
 }
 
 //-----------------------------------------------------------------------------

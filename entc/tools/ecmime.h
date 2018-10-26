@@ -84,6 +84,5 @@ __LIBEX EcString ecmultipart_startGetContentType (EcMultipart);
 // min buffer size == 200 -> for base64 encoding
 __LIBEX uint_t ecmultipart_next (EcMultipart, EcBuffer);
 
-//-----------------------------------------------------------------------------
 
 #endif

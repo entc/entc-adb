@@ -56,7 +56,11 @@ __LIBEX uint_t eccode_base64_encode_update (EcBase64Encode, EcBuffer dest, EcBuf
 
 __LIBEX uint_t eccode_base64_encode_finalize (EcBase64Encode, EcBuffer dest, EcErr);
 
-__LIBEX uint_t eccode_base64_encode_sourceSize (uint_t size);
+//-----------------------------------------------------------------------------
+
+__LIBEX uint_t eccode_base64_encode_sourceSize (uint_t size);       // calculates the size of the source buffer, taking the destination size
+
+__LIBEX uint_t eccode_base64_encode_size (uint_t size);             // calculates the size of the destination buffer, taking the source size
 
 //=============================================================================
 

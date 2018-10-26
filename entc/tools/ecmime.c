@@ -1233,12 +1233,13 @@ uint_t ecmultipart_next (EcMultipart self, EcBuffer buf)
             // correct size
             h->size = readBytes;
 
+            /*
             if (self->decryptAes)
             {
               j = ecdecrypt_aes_update (self->decryptAes, EcBuffer, err);
             }
             else
-            {
+*/            {
               //eclog_fmt (LL_TRACE, "ENTC", "mime", "read from file %i", readBytes);
               
               res = eccode_base64_encode_update (self->base64Encode, buf, h, NULL);
