@@ -168,8 +168,6 @@ __LIBEX void ecfs_getExecutable (EcString* path, EcString* name, int argc, char 
 
 __LIBEX EcString ecfs_getRealPath(const EcString path);   // finds the absolute path (path needs to exists)
 
-__LIBEX EcString ecfs_resolve_path (const EcString);      // finds the absolute path (even if not exists)
-
 __LIBEX EcString ecfs_mergeToPath(const EcString path, const EcString file);
 
 __LIBEX const EcString ecfs_extractFile(const EcString path);
@@ -183,6 +181,10 @@ __LIBEX void ecfs_basedir(const EcString basedir, const EcString file, EcString*
 __LIBEX const EcString ecfs_extractFileExtension(const EcString path);
 
 __LIBEX EcString ecfs_extractFileName(const EcString path);
+
+//-----------------------------------------------------------------------------
+
+__LIBEX EcString         entc_fs_path_absolute           (const EcString relative_or_absolute_path);      // cleans the path and converts the path to an absolute path
 
 //=============================================================================
 

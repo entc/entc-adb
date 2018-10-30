@@ -194,24 +194,6 @@ EcString ecfs_mergeToPath(const EcString path, const EcString file)
   }
 }
 
-//------------------------------------------------------------------------------------------------------------
-
-EcString ecfs_resolve_path (const EcString source)
-{
-  if (*source == ENTC_PATH_SEPARATOR)
-  {
-    return ecstr_copy (source);
-  }
-  else
-  {
-    EcString h1 = ecfs_getCurrentDirectory ();
-    EcString h2 = ecfs_mergeToPath (h1, source);
-    
-    ecstr_delete(&h1);
-    return h2;
-  }
-}
-
 /*------------------------------------------------------------------------*/
 
 const EcString ecfs_extractFile(const EcString path)

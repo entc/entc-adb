@@ -930,4 +930,22 @@ int ecfs_exists (const EcString path)
 
 //-------------------------------------------------------------------------
 
+EcString entc_fs_path_absolute (const EcString source)
+{
+  if (*source == ENTC_PATH_SEPARATOR)
+  {
+    return ecstr_copy (source);
+  }
+  else
+  {
+    EcString h1 = ecfs_getCurrentDirectory ();
+    EcString h2 = ecfs_mergeToPath (h1, source);
+    
+    ecstr_delete(&h1);
+    return h2;
+  }
+}
+
+//-------------------------------------------------------------------------
+
 #endif
