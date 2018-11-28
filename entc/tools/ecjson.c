@@ -550,6 +550,20 @@ EcUdc ecjson_read_buffer (const char* buffer, int64_t size, const EcString name)
   {
     eclog_msg (LL_ERROR, "JSON", "reader", err->text);
     eclog_msg (LL_WARN, "JSON", "reader", buffer);
+    
+    // more output
+    {
+      EcBuffer_s h;
+      
+      h.buffer = (unsigned char*)buffer;
+      h.size = size;
+      
+      EcBuffer g = ecbuf_bin2hex (&h);
+      
+      eclog_msg (LL_TRACE, "JSON", "reader", (char*)g->buffer);
+      
+      ecbuf_destroy(&g);
+    }
   }
   else
   {
@@ -1018,6 +1032,16 @@ int ecjson_readFromFile (const EcString filename, EcUdc* retUdc, const EcString 
     {
       eclog_fmt (LL_ERROR, "JSON", "reader", "can't parse: %s", err->text);
       eclog_msg (LL_WARN, "JSON", "reader", (char*)h.buffer);
+      
+      // more output
+      {
+        EcBuffer g = ecbuf_bin2hex (&h);
+        
+        eclog_msg (LL_TRACE, "JSON", "reader", (char*)g->buffer);
+        
+        ecbuf_destroy(&g);
+      }
+      
       break;
     }
   }

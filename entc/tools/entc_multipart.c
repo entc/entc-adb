@@ -460,7 +460,7 @@ static EcBuffer __STDCALL entc_section_begin_next (void* ptr, EcErr err)
   }
   
   ecstream_append_str (stream, "MIME-Version: 1.0\r\n");
-  ecstream_append_str (stream, "Content-Type: multipart/related; ");
+  ecstream_append_str (stream, "Content-Type: multipart/mixed; ");
   ecstream_append_str (stream, "boundary=\"");
   ecstream_append_str (stream, self->boundary);
   ecstream_append_str (stream, "\"");
