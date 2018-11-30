@@ -1,6 +1,8 @@
 #include "tools/ectokenizer.h"
 #include "tests/ecenv.h"
 
+#include <stdio.h>
+
 //=============================================================================
 
 static int __STDCALL test_tokenizer_test1 (void* ptr, TestEnvContext tctx, EcErr err)

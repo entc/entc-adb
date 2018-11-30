@@ -25,8 +25,6 @@
 #include "system/ecdefs.h"
 #include "system/types.h"
 
-#include <time.h>
-
 #ifdef __GNUC__
 #include <stdarg.h>
 #endif

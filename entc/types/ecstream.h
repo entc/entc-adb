@@ -26,6 +26,8 @@
 #include "types/ecstring.h"
 #include "types/ecbuffer.h"
 
+#include <sys/time.h>
+
 //=============================================================================
 
 struct EcStream_s; typedef struct EcStream_s* EcStream;

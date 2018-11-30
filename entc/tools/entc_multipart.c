@@ -783,6 +783,7 @@ void entc_multipart_add_str_ot (EntcMultipart self, const EcString name, EcStrin
 
 EcString entc_multipart_content_type (EntcMultipart self)
 {
+  return NULL;
 }
 
 //-----------------------------------------------------------------------------
