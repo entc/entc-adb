@@ -43,7 +43,7 @@ typedef struct {
   uint_t size;
   
   // the followings are arrays with the same length
-  
+    
   MYSQL_BIND* bindResult;
   
   char* data;

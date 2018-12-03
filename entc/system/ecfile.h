@@ -88,6 +88,7 @@ typedef struct EcDirHandle_s* EcDirHandle;
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/time.h>
 
 #define ENTC_PATH_SEPARATOR '/'
 

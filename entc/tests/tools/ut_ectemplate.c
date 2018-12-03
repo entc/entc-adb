@@ -23,7 +23,7 @@ static void __STDCALL test_ectemplate_done (void* ptr)
 
 static int __STDCALL test_ectemplate_test1_onText (void* ptr, const char* text)
 {
-  printf ("'%s'", text);
+  printf ("%s", text);
   
   return ENTC_ERR_NONE;
 }
@@ -44,7 +44,31 @@ static int __STDCALL test_ectemplate_test1 (void* ptr, TestEnvContext ctx, EcErr
   
   EcUdc data = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
   
-  ecudc_add_asString(EC_ALLOC, data, "topic", "Hello");
+  ecudc_add_asString (EC_ALLOC, data, "topic", "Hello");
+  
+  {
+    EcUdc rowes = ecudc_create (EC_ALLOC, ENTC_UDC_LIST, "rows");
+    
+    // row 1
+    {
+      EcUdc row = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+      
+      ecudc_add_asString (EC_ALLOC, row, "col1", "row1");
+      
+      ecudc_add (rowes, &row);
+    }
+    
+    // row 1
+    {
+      EcUdc row = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
+      
+      ecudc_add_asString (EC_ALLOC, row, "col1", "row2");
+
+      ecudc_add (rowes, &row);
+    }
+    
+    ecudc_add (data, &rowes);
+  }
   
 
   int res = ectemplate_compile_file (h, "templates", "test1", "en", err);

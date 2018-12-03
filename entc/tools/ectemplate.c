@@ -19,88 +19,316 @@
 //-----------------------------------------------------------------------------
 
 struct EcTemplatePart_s; typedef struct EcTemplatePart_s* EcTemplatePart;
+
 struct EcTemplatePart_s
 {
 
    int type;
 
-   EcBuffer text;
-
+   EcString text;
+   
    EcList parts;
+   
+   EcTemplatePart parent;
 
-};
+}; 
+
+//-----------------------------------------------------------------------------
+
+EcTemplatePart ectemplate_part_new (int type, const EcString text, EcTemplatePart parent)
+{
+  EcTemplatePart self = ENTC_NEW (struct EcTemplatePart_s);
+  
+  self->type = type;
+  self->text = ecstr_copy (text);
+  
+  self->parts = NULL;
+  
+  self->parent = parent;
+
+  return self;
+}
+
+//-----------------------------------------------------------------------------
+
+void ectemplate_part_del (EcTemplatePart* p_self)
+{
+  EcTemplatePart self = *p_self;
+  
+  ecstr_delete(&(self->text));
+  
+  if (self->parts)
+  {
+    eclist_destroy (&(self->parts));
+  }
+  
+  ENTC_DEL (p_self, struct EcTemplatePart_s);
+}
+
+//-----------------------------------------------------------------------------
+
+static int __STDCALL ectemplate_create_parts_onDestroy (void* ptr)
+{
+  EcTemplatePart h = ptr; ectemplate_part_del (&h);  
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+int ectemplate_part_hasText (EcTemplatePart self, const EcString text)
+{
+  return ecstr_equal (self->text, text);
+}
+
+//-----------------------------------------------------------------------------
+
+EcTemplatePart ectemplate_part_parent (EcTemplatePart self)
+{
+  return self->parent;
+}
+
+//-----------------------------------------------------------------------------
+
+void ectemplate_part_add (EcTemplatePart self, EcTemplatePart part)
+{
+  if (self->parts == NULL)
+  {
+    self->parts = eclist_create (ectemplate_create_parts_onDestroy);
+  }
+
+  eclist_push_back (self->parts, part);
+}  
+  
+//-----------------------------------------------------------------------------
+
+int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+{
+  EcListCursor cursor; eclist_cursor_init (self->parts, &cursor, LIST_DIR_NEXT);
+  
+  while (eclist_cursor_next (&cursor))
+  {
+    EcTemplatePart part = eclist_data (cursor.node);
+    
+    switch (part->type)
+    {
+      case PART_TYPE_TEXT:
+      case PART_TYPE_CR:
+      {
+        if (onText)
+        {
+          onText (ptr, part->text);
+        }
+      }
+      break;
+      case PART_TYPE_FILE:
+      {
+        if (onFile)
+        {
+          onFile (ptr, part->text);
+        }
+      }
+      break;
+      case PART_TYPE_TAG:
+      {
+        const EcString name = part->text;
+        
+        EcUdc item = ecudc_node(data, name);
+        if (item)
+        {
+          switch (ecudc_type(item))
+          {
+            case ENTC_UDC_LIST:
+            {
+              void* cursor = NULL;
+              EcUdc item_list;
+              
+              for (item_list = ecudc_next(item, &cursor); item_list; item_list = ecudc_next(item, &cursor))
+              {
+                int res = ectemplate_part_apply (part, item_list, ptr, onText, onFile, err);
+                if (res)
+                {
+                  return res;
+                }
+                
+              }
+              
+              break;
+            }
+            case ENTC_UDC_NODE:
+            {
+              
+             
+              break;
+            }
+            case ENTC_UDC_STRING:
+            {
+              if (onText)
+              {
+                onText (ptr, ecudc_asString(item));
+              }
+              
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+  }
+  
+  return ENTC_ERR_NONE;
+}
+  
+  
+//-----------------------------------------------------------------------------
 
 struct EcTemplate_s
 {
 
    EcString fileName;
 
-   EcList parts;
+   EcTemplatePart root_part;
 
 };
 
-struct EcTemplateStateData_s
+//-----------------------------------------------------------------------------
+
+struct EcTemplateCompiler_s
 {
 
-  int state01;
+  int state;
 
   EcStream sb;
+  
+  EcTemplatePart part;   // reference
 
-}; typedef struct EcTemplateStateData_s* EcTemplateStateData;
+}; typedef struct EcTemplateCompiler_s* EcTemplateCompiler;
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ectemplate_create_parts_onDestroy (void* ptr)
+EcTemplateCompiler entc_template_compiler_new (EcTemplatePart part)
 {
-  EcTemplatePart part = ptr;
+  EcTemplateCompiler self = ENTC_NEW (struct EcTemplateCompiler_s);
   
-  eclist_destroy (&(part->parts));
-  ecbuf_destroy(&(part->text));
+  self->state = 0;
+  self->sb = ecstream_create ();
   
-  ENTC_DEL(&part, struct EcTemplatePart_s);
+  self->part = part;
   
-  return 0;
+  return self;
 }
 
 //-----------------------------------------------------------------------------
 
-void ectemplate_newPart (EcTemplate self, EcTemplateStateData sd, int type)
+void entc_template_compiler_del (EcTemplateCompiler* p_self)
 {
-  EcTemplatePart part = ENTC_NEW(struct EcTemplatePart_s);
+  EcTemplateCompiler self = *p_self;
   
-  part->type = type;
-  part->text = ecstream_tobuf (&(sd->sb));
-  part->parts = eclist_create (ectemplate_create_parts_onDestroy);
-
-  sd->sb = ecstream_create ();
+  ecstream_destroy (&(self->sb));
   
-  eclist_push_back (self->parts, part);
+  ENTC_DEL (p_self, struct EcTemplateCompiler_s);
 }
 
 //-----------------------------------------------------------------------------
 
-int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffer, int size, EcErr err)
+int entc_template_compiler_part (EcTemplateCompiler self, int type, EcErr err)
 {
+  switch (type)
+  {
+    case PART_TYPE_TEXT:
+    case PART_TYPE_FILE:
+    {
+      ectemplate_part_add (self->part, ectemplate_part_new (type, ecstream_get (self->sb), NULL));
+      
+      ecstream_clear (self->sb);
+      
+      break;
+    }
+    case PART_TYPE_TAG:
+    {
+      const EcString name = ecstream_get (self->sb);
+      
+      switch (name[0])
+      {
+        case '#':
+        {
+          EcTemplatePart new_part = ectemplate_part_new (type, name + 1, self->part);
+                    
+          // add the new part to the current part
+          ectemplate_part_add (self->part, new_part);
+
+          // now change the current part to the new part, that we go one level up
+          self->part = new_part;
+          
+          break;
+        }
+        case '/':
+        {
+          // is the current part the ending tag 
+          if (ectemplate_part_hasText (self->part, name + 1))
+          {
+            // has the current part a parent
+            EcTemplatePart parent_part = ectemplate_part_parent (self->part);
+            if (parent_part)
+            {
+              // change back the current part to the parent, that we go one level down
+              self->part = parent_part;
+            }
+          }
+                    
+          break;
+        }
+        default:
+        {
+          ectemplate_part_add (self->part, ectemplate_part_new (type, name, self->part));
+          
+          break;
+        }
+      }
+      
+      // always clear
+      ecstream_clear (self->sb);
+      
+      break;
+    }
+    case PART_TYPE_CR:
+    {
+      // always clear
+      ecstream_clear (self->sb);
+      
+      break;
+    }
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int entc_template_compiler_parse (EcTemplateCompiler self, const char* buffer, int size, EcErr err)
+{
+  int res;
+  
   const char* c = buffer;
   int i;
   
   for (i = 0; i < size; i++, c++)
   {
-    switch (sd->state01)
+    switch (self->state)
     {
       case 0:
       {
         if (*c == '{')
         {
-          sd->state01 = 1;
+          self->state = 1;
         }
         else if (*c == '[')
         {
-          sd->state01 = 4;
+          self->state = 4;
         }
         else
         {
-          ecstream_append_c (sd->sb, *c);
+          ecstream_append_c (self->sb, *c);
         }
       }
       break;
@@ -108,14 +336,19 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if (*c == '{')
         {
-          ectemplate_newPart (self, sd, PART_TYPE_TEXT);
-          sd->state01 = 2;
+          res = entc_template_compiler_part (self, PART_TYPE_TEXT, err);
+          if (res)
+          {
+            return res;
+          }
+          
+          self->state = 2;
         }
         else
         {
-          sd->state01 = 0;
-          ecstream_append_c (sd->sb, '{');
-          ecstream_append_c (sd->sb, *c);
+          self->state = 0;
+          ecstream_append_c (self->sb, '{');
+          ecstream_append_c (self->sb, *c);
         }
       }
       break;
@@ -123,11 +356,11 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if (*c == '}')
         {
-          sd->state01 = 3;
+          self->state = 3;
         }
         else
         {
-          ecstream_append_c (sd->sb, *c);
+          ecstream_append_c (self->sb, *c);
         }
       }
       break;
@@ -135,13 +368,18 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if (*c == '}')
         {
-          ectemplate_newPart (self, sd, PART_TYPE_TAG);
-          sd->state01 = 7;
+          res = entc_template_compiler_part (self, PART_TYPE_TAG, err);
+          if (res)
+          {
+            return res;
+          }
+          
+          self->state = 7;
         }
         else
         {
-          sd->state01 = 2;
-          ecstream_append_c (sd->sb, '}');
+          self->state = 2;
+          ecstream_append_c (self->sb, '}');
         }
       }
       break;
@@ -149,14 +387,19 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if (*c == '[')
         {
-          ectemplate_newPart (self, sd, PART_TYPE_TEXT);
-          sd->state01 = 5;
+          res = entc_template_compiler_part (self, PART_TYPE_TEXT, err);
+          if (res)
+          {
+            return res;
+          }
+          
+          self->state = 5;
         }
         else
         {
-          sd->state01 = 0;
-          ecstream_append_c (sd->sb, '[');
-          ecstream_append_c (sd->sb, *c);
+          self->state = 0;
+          ecstream_append_c (self->sb, '[');
+          ecstream_append_c (self->sb, *c);
         }
       }
       break;
@@ -164,11 +407,11 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if (*c == ']')
         {
-          sd->state01 = 6;
+          self->state = 6;
         }
         else
         {
-          ecstream_append_c (sd->sb, *c);
+          ecstream_append_c (self->sb, *c);
         }
       }
       break;
@@ -176,12 +419,17 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if (*c == ']')
         {
-          ectemplate_newPart (self, sd, PART_TYPE_FILE);
-          sd->state01 = 7;
+          res = entc_template_compiler_part (self, PART_TYPE_FILE, err);
+          if (res)
+          {
+            return res;
+          }
+          
+          self->state = 7;
         }
         else
         {
-          sd->state01 = 5;
+          self->state = 5;
         }
       }
       break;
@@ -189,24 +437,29 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
       {
         if ((*c == '\n')||(*c == '\r'))
         {
-          ecstream_append_c (sd->sb, *c);
-          ectemplate_newPart (self, sd, PART_TYPE_CR);
+          ecstream_append_c (self->sb, *c);
 
-          sd->state01 = 0;
+          res = entc_template_compiler_part (self, PART_TYPE_CR, err);
+          if (res)
+          {
+            return res;
+          }
+          
+          self->state = 0;
         }
         else if (*c == '{')
         {
-          sd->state01 = 1;
+          self->state = 1;
         }
         else if (*c == '[')
         {
-          sd->state01 = 4;
+          self->state = 4;
         }        
         else
         {
-          ecstream_append_c (sd->sb, *c);
+          ecstream_append_c (self->sb, *c);
 
-          sd->state01 = 0;
+          self->state = 0;
         }
       }
       break;
@@ -214,119 +467,18 @@ int ectemplate_parse (EcTemplate self, EcTemplateStateData sd, const char* buffe
   }
   
   // add last part as text
-  ectemplate_newPart (self, sd, PART_TYPE_TEXT);
-  
-  return ENTC_ERR_NONE;
+  return entc_template_compiler_part (self, PART_TYPE_TEXT, err);
 }
 
 //-----------------------------------------------------------------------------
 
-void ectemplate_sections_tag (EcTemplate self, EcTemplatePart part, EcMap sections, EcListCursor* cursor)
-{
-  EcListNode node = cursor->node;
-  
-  char c = part->text->buffer[0];
-  
-  EcString name = ecstr_copy ((const char*)part->text->buffer + 1);
-  
-  switch (c)
-  {
-    case '#':
-    {
-      ecmap_insert (sections, name, (void*)node);
-      name = NULL;
-      
-      break;
-    }
-    case '/':
-    {
-      EcMapNode snode = ecmap_find (sections, name);
-      if (snode)
-      {
-        EcListNode iFrom = ecmap_node_value (snode);
-        
-        // remove extra chars after node tags
-        {
-          EcTemplatePart partFrom = eclist_data(iFrom);
-          if (partFrom->type == PART_TYPE_CR)
-          {
-            partFrom->type = PART_TYPE_NONE;
-          }
-        }
-        {
-          // extract a part
-          EcList slice = eclist_slice (self->parts, iFrom, node);
-        
-          eclist_insert_slice (part->parts, cursor, &slice);
-        }        
-
-        //node = eclist_splice (self->parts, iFrom, node, part->parts);
-        
-        // override part content
-        {
-          EcBuffer h = ecbuf_create_str_mv (&name);
-        
-          ecbuf_destroy(&(part->text));
-        
-          part->text = h;
-        }        
-
-        part->type = PART_TYPE_NODE;
-      }
-      break;
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------
-
-void __STDCALL q6template_sections_cleanitem (void* key, void* val)
-{
-  EcString keyobj = key;
-  EcString valobj = val;
-  
-  ecstr_delete(&keyobj);
-  ecstr_delete(&valobj);
-}
-
-//-----------------------------------------------------------------------------
-
-int ectemplate_sections (EcTemplate self)
-{
-  EcMap sections = ecmap_create (NULL, q6template_sections_cleanitem);
-  
-  EcListCursor cursor;
-  
-  eclist_cursor_init (self->parts, &cursor, LIST_DIR_NEXT);
-  
-  while (eclist_cursor_next (&cursor))
-  {
-    EcTemplatePart part = eclist_data(cursor.node);
-    
-    switch (part->type)
-    {
-      case PART_TYPE_TAG:
-      {
-        ectemplate_sections_tag (self, part, sections, &cursor);
-        break;
-      }
-    }
-  }
-  
-  ecmap_destroy (&sections);
-  
-  return ENTC_ERR_NONE;
-}
-
-//-----------------------------------------------------------------------------
-
-int q6template_read (EcTemplate self, EcFileHandle fh, EcBuffer buffer, EcTemplateStateData sd, EcErr err)
+int entc_template_read (EcTemplateCompiler tcl, EcFileHandle fh, EcBuffer buffer, EcErr err)
 {
   int bytesRead;
   
   for (bytesRead = ecfh_readBuffer(fh, buffer); bytesRead > 0; bytesRead = ecfh_readBuffer(fh, buffer))
   {
-    int res = ectemplate_parse (self, sd, (const char*)buffer->buffer, bytesRead, err);
+    int res = entc_template_compiler_parse (tcl, (const char*)buffer->buffer, bytesRead, err);
     if (res)
     {
       return res;
@@ -342,35 +494,41 @@ int ectemplate_compile (EcTemplate self, EcErr err)
 {
   int res;
   
+  EcTemplateCompiler tcl = NULL;
+  EcBuffer buffer = NULL;
+  
   EcFileHandle fh = ecfh_open(self->fileName, O_RDONLY);
   if (fh == NULL)
   {
     eclog_fmt (LL_ERROR, "Q6_MSGS", "template", "can't open file '%s'", self->fileName);
 
-    return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    res = ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+    goto exit_and_cleanup;
   }
-  
-  {
-    EcBuffer buffer;
-    struct EcTemplateStateData_s sd;
-    sd.state01 = 0;
-    sd.sb = ecstream_create ();
 
-    buffer = ecbuf_create (1024);
-    
-    res = q6template_read (self, fh, buffer, &sd, err);
-    
-    ecbuf_destroy (&buffer);
-    ecstream_destroy (&(sd.sb));
-  }
+  tcl = entc_template_compiler_new (self->root_part);
   
-  ecfh_close(&fh);
+  buffer = ecbuf_create (1024);
+    
+  res = entc_template_read (tcl, fh, buffer, err);
   
-  if (res == ENTC_ERR_NONE)
+exit_and_cleanup:
+
+  if (buffer)
   {
-    res = ectemplate_sections (self);
+    ecbuf_destroy (&buffer);
+  }
+
+  if (fh)
+  {
+    ecfh_close(&fh);
   }
   
+  if (tcl)
+  {
+    entc_template_compiler_del (&tcl);
+  }
+
   return res;
 }
 
@@ -408,7 +566,7 @@ EcTemplate ectemplate_create (void)
   
   EcTemplate self = ENTC_NEW(struct EcTemplate_s);
   
-  self->parts = eclist_create (ectemplate_create_parts_onDestroy);
+  self->root_part = ectemplate_part_new (PART_TYPE_TAG, NULL, NULL);
   self->fileName = NULL;
 
   return self;
@@ -416,14 +574,14 @@ EcTemplate ectemplate_create (void)
 
 //-----------------------------------------------------------------------------
 
-void ectemplate_destroy (EcTemplate* pself)
+void ectemplate_destroy (EcTemplate* p_self)
 {
-  EcTemplate self = *pself;
+  EcTemplate self = *p_self;
   
   ecstr_delete(&(self->fileName));
-  eclist_destroy (&(self->parts));
+  ectemplate_part_del (&(self->root_part));
   
-  ENTC_DEL(pself, struct EcTemplate_s);
+  ENTC_DEL(p_self, struct EcTemplate_s);
 }
 
 //-----------------------------------------------------------------------------
@@ -447,20 +605,25 @@ int ectemplate_compile_str (EcTemplate self, const char* content, EcErr err)
 {
   int res;
   
-  struct EcTemplateStateData_s sd;
-  sd.state01 = 0;
-  sd.sb = ecstream_create ();
-
-  // do the parsing
-  res = ectemplate_parse (self, &sd, content, ecstr_len (content), err);
-    
-  ecstream_destroy (&(sd.sb));
-
+  EcTemplateCompiler tcl = NULL;
+  
+  tcl = entc_template_compiler_new (self->root_part);
+  
+  res = entc_template_compiler_parse (tcl, content, ecstr_len (content), err);
+  
+exit_and_cleanup:
+  
+  if (tcl)
+  {
+    entc_template_compiler_del (&tcl);
+  }
+  
   return res;
 }
 
 //-----------------------------------------------------------------------------
 
+/*
 int ectemplate_complete (EcList parts, EcUdc node, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err);
 
 //-----------------------------------------------------------------------------
@@ -498,74 +661,12 @@ int ectemplate_node (EcList parts, EcUdc node, void* ptr, fct_ectemplate_onText 
   
   return ENTC_ERR_NONE;
 }
-
-//-----------------------------------------------------------------------------
-
-int ectemplate_complete (EcList parts, EcUdc data, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
-{
-  EcListCursor cursor;
-  
-  eclist_cursor_init (parts, &cursor, LIST_DIR_NEXT);
-  
-  while (eclist_cursor_next (&cursor))
-  {
-    EcTemplatePart part = eclist_data (cursor.node);
-    
-    switch (part->type)
-    {
-      case PART_TYPE_TEXT:
-      case PART_TYPE_CR:
-      {
-        if (onText)
-        {
-          onText (ptr, (const char*)part->text->buffer);
-        }
-      }
-      break;
-      case PART_TYPE_FILE:
-      {
-        if (onFile)
-        {
-          onFile (ptr, (const char*)part->text->buffer);
-        }
-      }
-      break;
-      case PART_TYPE_TAG:
-      {
-        EcUdc item = ecudc_node(data, (const char*)part->text->buffer);
-        if (item)
-        {
-          if (onText)
-          {
-            onText (ptr, ecudc_asString(item));
-          }
-        }
-      }
-      break;
-      case PART_TYPE_NODE:
-      {
-        EcUdc item = ecudc_node(data, (const char*)part->text->buffer);
-        if (item)
-        {
-          int res = ectemplate_node (part->parts, item, ptr, onText, onFile, err);
-          if (res)
-          {
-            return res;
-          }
-        }
-      }
-      break;
-    }
-  }
-  
-  return ENTC_ERR_NONE;
-}
-
+*/
 //-----------------------------------------------------------------------------
 
 int ectemplate_apply (EcTemplate self, EcUdc node, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
 {
-   return ectemplate_complete (self->parts, node, ptr, onText, onFile, err);
+  return ectemplate_part_apply (self->root_part, node, ptr, onText, onFile, err);
 }
 
 //-----------------------------------------------------------------------------
