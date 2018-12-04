@@ -54,6 +54,18 @@ static int __STDCALL test_ectemplate_test1 (void* ptr, TestEnvContext ctx, EcErr
       EcUdc row = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
       
       ecudc_add_asString (EC_ALLOC, row, "col1", "row1");
+      ecudc_add_asNumber (EC_ALLOC, row, "type", 1 );
+      
+      ecudc_add_asNumber (EC_ALLOC, row, "value1", 42);      
+      ecudc_add_asDouble (EC_ALLOC, row, "value2", -0.23);   
+      
+      {
+        EcUdc content = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, "content");
+
+        ecudc_add_asString (EC_ALLOC, content, "text", "rainbow in the sky");
+        
+        ecudc_add (row, &content);
+      }
       
       ecudc_add (rowes, &row);
     }
@@ -63,6 +75,10 @@ static int __STDCALL test_ectemplate_test1 (void* ptr, TestEnvContext ctx, EcErr
       EcUdc row = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
       
       ecudc_add_asString (EC_ALLOC, row, "col1", "row2");
+      ecudc_add_asNumber (EC_ALLOC, row, "type", 2);
+      
+      ecudc_add_asNumber (EC_ALLOC, row, "value1", -12);      
+      ecudc_add_asDouble (EC_ALLOC, row, "value2", 23.45);      
 
       ecudc_add (rowes, &row);
     }

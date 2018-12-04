@@ -741,6 +741,12 @@ EcString ecstr_utf8_trim (const EcString source)
   const unsigned char* pos_e = c;
   
   int trim = TRUE;
+
+  // special case
+  if (source == NULL)
+  {
+    return NULL;
+  }
   
   while (*c)
   {
@@ -762,7 +768,15 @@ EcString ecstr_utf8_trim (const EcString source)
     c += clen;
   }
 
-  return ecstr_part ((const char*)pos_s, pos_e - pos_s);
+  int diff = pos_e - pos_s;
+  if (diff > 0)
+  {
+    return ecstr_part ((const char*)pos_s, pos_e - pos_s);
+  }
+  else
+  {
+    return ecstr_copy ("");
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -1245,18 +1259,24 @@ EcString ecstr_shrink (const EcString source, char from, char to)
 
 int ecstr_split (const EcString source, EcString* s1, EcString* s2, char c)
 {
-  const char * pos = strchr ( source, c );
-  if (pos != NULL)
+  if (source == NULL)
   {
-    EcString h = ecstr_part(source, pos - source);
-  
-    ecstr_replaceTO (s1, h);
-    ecstr_replace (s2, pos + 1);
-    
-    return TRUE;
+    return FALSE;
   }
-  
-  return FALSE;
+  {
+    const char * pos = strchr ( source, c );
+    if (pos != NULL)
+    {
+      EcString h = ecstr_part(source, pos - source);
+      
+      ecstr_replaceTO (s1, h);
+      ecstr_replace (s2, pos + 1);
+      
+      return TRUE;
+    }
+    
+    return FALSE;
+  }
 }
 
 /*------------------------------------------------------------------------*/

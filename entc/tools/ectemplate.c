@@ -27,6 +27,8 @@ struct EcTemplatePart_s
 
    EcString text;
    
+   EcString eval;
+   
    EcList parts;
    
    EcTemplatePart parent;
@@ -35,17 +37,51 @@ struct EcTemplatePart_s
 
 //-----------------------------------------------------------------------------
 
-EcTemplatePart ectemplate_part_new (int type, const EcString text, EcTemplatePart parent)
+void ectemplate_part_checkForEval (EcTemplatePart self, const EcString text)
+{
+  // try to split with '='
+  
+  if (self->type == PART_TYPE_TAG)
+  {
+    EcString s1 = NULL;
+    EcString s2 = NULL;
+    
+    if (ecstr_split (text, &s1, &s2, '='))
+    {
+      self->text = ecstr_utf8_trim (s1);
+      self->eval = ecstr_utf8_trim (s2);
+    }
+    else
+    {
+      self->text = ecstr_utf8_trim (text);
+    }
+    
+    ecstr_delete (&s1);
+    ecstr_delete (&s2);
+  }
+  else
+  {
+    self->text = ecstr_copy (text);
+  }  
+}
+
+//-----------------------------------------------------------------------------
+
+EcTemplatePart ectemplate_part_new (int type, const EcString raw_text, EcTemplatePart parent)
 {
   EcTemplatePart self = ENTC_NEW (struct EcTemplatePart_s);
   
   self->type = type;
-  self->text = ecstr_copy (text);
+  
+  self->text = NULL;
+  self->eval = NULL;
   
   self->parts = NULL;
-  
   self->parent = parent;
 
+  // analyse the text value for later evaluation
+  ectemplate_part_checkForEval (self, raw_text);
+  
   return self;
 }
 
@@ -56,6 +92,7 @@ void ectemplate_part_del (EcTemplatePart* p_self)
   EcTemplatePart self = *p_self;
   
   ecstr_delete(&(self->text));
+  ecstr_delete(&(self->eval));
   
   if (self->parts)
   {
@@ -98,81 +135,212 @@ void ectemplate_part_add (EcTemplatePart self, EcTemplatePart part)
 
   eclist_push_back (self->parts, part);
 }  
+
+//-----------------------------------------------------------------------------
+
+int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err);
+
+//-----------------------------------------------------------------------------
+
+int ectemplate_part_eval_str (EcTemplatePart self, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+{
+  const EcString text = ecudc_asString (item);
+  
+  if (text)
+  {
+    if (self->eval)
+    {
+      if (ecstr_equal (self->eval, text))
+      {
+        return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+      }
+    }
+    else
+    {
+      if (onText)
+      {
+        onText (ptr, text);
+      }
+
+      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+    }
+  }
+
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ectemplate_part_eval_number (EcTemplatePart self, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+{
+  if (self->eval)
+  {
+    int64_t h = strtol (self->eval, NULL, 10);
+    
+    if (h == ecudc_asNumber(item))
+    {
+      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+    }
+  }
+  else
+  {
+    if (onText)
+    {
+      EcString h = ecstr_format ("%li", ecudc_asNumber(item));
+      
+      onText (ptr, h);
+      
+      ecstr_delete (&h);
+
+      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+    }
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ectemplate_part_eval_double (EcTemplatePart self, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+{
+  if (self->eval)
+  {
+    double h = strtod (self->eval, NULL);
+    
+    if (h == ecudc_asDouble(item))
+    {
+      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+    }
+  }
+  else
+  {
+    if (onText)
+    {
+      EcString h = ecstr_format ("%f", ecudc_asDouble(item));
+      
+      onText (ptr, h);
+      
+      ecstr_delete (&h);
+      
+      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+    }
+  }
+  
+  return ENTC_ERR_NONE;
+}
   
 //-----------------------------------------------------------------------------
 
 int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
 {
-  EcListCursor cursor; eclist_cursor_init (self->parts, &cursor, LIST_DIR_NEXT);
-  
-  while (eclist_cursor_next (&cursor))
+  if (self->parts)
   {
-    EcTemplatePart part = eclist_data (cursor.node);
+    EcListCursor cursor; eclist_cursor_init (self->parts, &cursor, LIST_DIR_NEXT);
     
-    switch (part->type)
+    while (eclist_cursor_next (&cursor))
     {
-      case PART_TYPE_TEXT:
-      case PART_TYPE_CR:
+      EcTemplatePart part = eclist_data (cursor.node);
+      
+      switch (part->type)
       {
-        if (onText)
+        case PART_TYPE_TEXT:
+        case PART_TYPE_CR:
         {
-          onText (ptr, part->text);
-        }
-      }
-      break;
-      case PART_TYPE_FILE:
-      {
-        if (onFile)
-        {
-          onFile (ptr, part->text);
-        }
-      }
-      break;
-      case PART_TYPE_TAG:
-      {
-        const EcString name = part->text;
-        
-        EcUdc item = ecudc_node(data, name);
-        if (item)
-        {
-          switch (ecudc_type(item))
+          if (onText)
           {
-            case ENTC_UDC_LIST:
+            onText (ptr, part->text);
+          }
+        }
+        break;
+        case PART_TYPE_FILE:
+        {
+          if (onFile)
+          {
+            onFile (ptr, part->text);
+          }
+        }
+        break;
+        case PART_TYPE_TAG:
+        {
+          const EcString name = part->text;
+          
+          EcUdc item = ecudc_node(data, name);
+          if (item)
+          {
+            switch (ecudc_type(item))
             {
-              void* cursor = NULL;
-              EcUdc item_list;
-              
-              for (item_list = ecudc_next(item, &cursor); item_list; item_list = ecudc_next(item, &cursor))
+              case ENTC_UDC_LIST:
               {
-                int res = ectemplate_part_apply (part, item_list, ptr, onText, onFile, err);
+                void* cursor = NULL;
+                EcUdc item_list;
+                
+                for (item_list = ecudc_next(item, &cursor); item_list; item_list = ecudc_next(item, &cursor))
+                {
+                  int res = ectemplate_part_apply (part, item_list, ptr, onText, onFile, err);
+                  if (res)
+                  {
+                    return res;
+                  }
+                  
+                }
+                
+                break;
+              }
+              case ENTC_UDC_NODE:
+              {
+                int res = ectemplate_part_apply (part, item, ptr, onText, onFile, err);
                 if (res)
                 {
                   return res;
                 }
                 
+                break;
               }
-              
-              break;
-            }
-            case ENTC_UDC_NODE:
-            {
-              
-             
-              break;
-            }
-            case ENTC_UDC_STRING:
-            {
-              if (onText)
+              case ENTC_UDC_STRING:
               {
-                onText (ptr, ecudc_asString(item));
+                int res = ectemplate_part_eval_str (part, item, ptr, onText, onFile, err);
+                if (res)
+                {
+                  return res;
+                }
+                
+                break;
               }
-              
-              break;
+              case ENTC_UDC_NUMBER:
+              {
+                int res = ectemplate_part_eval_number (part, item, ptr, onText, onFile, err);
+                if (res)
+                {
+                  return res;
+                }
+                
+                break;
+              }
+              case ENTC_UDC_DOUBLE:
+              {
+                int res = ectemplate_part_eval_double (part, item, ptr, onText, onFile, err);
+                if (res)
+                {
+                  return res;
+                }
+                
+                break;
+              }
+              default:
+              {
+                int res = ectemplate_part_eval_str (part, item, ptr, onText, onFile, err);
+                if (res)
+                {
+                  return res;
+                }
+                
+                break;
+              }
             }
           }
         }
+        break;
       }
-      break;
     }
   }
   
