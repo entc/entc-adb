@@ -59,6 +59,9 @@ static int __STDCALL test_ectemplate_test1 (void* ptr, TestEnvContext ctx, EcErr
       ecudc_add_asNumber (EC_ALLOC, row, "value1", 42);      
       ecudc_add_asDouble (EC_ALLOC, row, "value2", -0.23);   
       
+      ecudc_add_asNumber (EC_ALLOC, row, "lvl1", 1);      
+      ecudc_add_asNumber (EC_ALLOC, row, "lvl2", 1);      
+
       {
         EcUdc content = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, "content");
 

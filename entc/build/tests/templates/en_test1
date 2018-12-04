@@ -14,6 +14,10 @@
   
   {{/content}}
   
+  {{#lvl1 = 1}}{{#lvl2 = 1}}
+      good levels
+  {{/lvl2}}{{/lvl1}}
+  
 </li>
 {{/rows}}
 

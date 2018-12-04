@@ -142,7 +142,7 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
 
 //-----------------------------------------------------------------------------
 
-int ectemplate_part_eval_str (EcTemplatePart self, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+int ectemplate_part_eval_str (EcTemplatePart self, EcUdc data, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
 {
   const EcString text = ecudc_asString (item);
   
@@ -152,7 +152,7 @@ int ectemplate_part_eval_str (EcTemplatePart self, EcUdc item, void* ptr, fct_ec
     {
       if (ecstr_equal (self->eval, text))
       {
-        return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+        return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
       }
     }
     else
@@ -162,7 +162,7 @@ int ectemplate_part_eval_str (EcTemplatePart self, EcUdc item, void* ptr, fct_ec
         onText (ptr, text);
       }
 
-      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+      return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
     }
   }
 
@@ -171,7 +171,7 @@ int ectemplate_part_eval_str (EcTemplatePart self, EcUdc item, void* ptr, fct_ec
 
 //-----------------------------------------------------------------------------
 
-int ectemplate_part_eval_number (EcTemplatePart self, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+int ectemplate_part_eval_number (EcTemplatePart self, EcUdc data, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
 {
   if (self->eval)
   {
@@ -179,7 +179,7 @@ int ectemplate_part_eval_number (EcTemplatePart self, EcUdc item, void* ptr, fct
     
     if (h == ecudc_asNumber(item))
     {
-      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+      return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
     }
   }
   else
@@ -192,7 +192,7 @@ int ectemplate_part_eval_number (EcTemplatePart self, EcUdc item, void* ptr, fct
       
       ecstr_delete (&h);
 
-      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+      return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
     }
   }
   
@@ -201,7 +201,7 @@ int ectemplate_part_eval_number (EcTemplatePart self, EcUdc item, void* ptr, fct
 
 //-----------------------------------------------------------------------------
 
-int ectemplate_part_eval_double (EcTemplatePart self, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+int ectemplate_part_eval_double (EcTemplatePart self, EcUdc data, EcUdc item, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
 {
   if (self->eval)
   {
@@ -209,7 +209,7 @@ int ectemplate_part_eval_double (EcTemplatePart self, EcUdc item, void* ptr, fct
     
     if (h == ecudc_asDouble(item))
     {
-      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+      return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
     }
   }
   else
@@ -222,7 +222,7 @@ int ectemplate_part_eval_double (EcTemplatePart self, EcUdc item, void* ptr, fct
       
       ecstr_delete (&h);
       
-      return ectemplate_part_apply (self, item, ptr, onText, onFile, err);
+      return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
     }
   }
   
@@ -281,7 +281,6 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
                   {
                     return res;
                   }
-                  
                 }
                 
                 break;
@@ -298,7 +297,7 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
               }
               case ENTC_UDC_STRING:
               {
-                int res = ectemplate_part_eval_str (part, item, ptr, onText, onFile, err);
+                int res = ectemplate_part_eval_str (part, data, item, ptr, onText, onFile, err);
                 if (res)
                 {
                   return res;
@@ -308,7 +307,7 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
               }
               case ENTC_UDC_NUMBER:
               {
-                int res = ectemplate_part_eval_number (part, item, ptr, onText, onFile, err);
+                int res = ectemplate_part_eval_number (part, data, item, ptr, onText, onFile, err);
                 if (res)
                 {
                   return res;
@@ -318,7 +317,7 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
               }
               case ENTC_UDC_DOUBLE:
               {
-                int res = ectemplate_part_eval_double (part, item, ptr, onText, onFile, err);
+                int res = ectemplate_part_eval_double (part, data, item, ptr, onText, onFile, err);
                 if (res)
                 {
                   return res;
@@ -328,7 +327,7 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
               }
               default:
               {
-                int res = ectemplate_part_eval_str (part, item, ptr, onText, onFile, err);
+                int res = ectemplate_part_eval_str (part, data, item, ptr, onText, onFile, err);
                 if (res)
                 {
                   return res;
