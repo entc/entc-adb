@@ -232,6 +232,20 @@ void ecbuf_random (EcBuffer self, uint_t size)
 
 //----------------------------------------------------------------------------------------
 
+void ecbuf_rncode (EcBuffer self, uint_t size)
+{
+  uint_t fillup = size < self->size ? size : self->size;
+  uint_t i;
+  
+  for(i = 0; i < fillup; i++)
+  {
+    (self->buffer)[i] = (rand() % 10) + 48;
+  }
+  (self->buffer)[i] = 0;
+}
+
+//----------------------------------------------------------------------------------------
+
 void ecbuf_format (EcBuffer self, uint_t size, const char* format, ...)
 {
   va_list ptr;  

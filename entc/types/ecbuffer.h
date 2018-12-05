@@ -62,6 +62,8 @@ __LIBEX void ecbuf_fill (EcBuffer, uint_t size, char fillupwith);
 
 __LIBEX void ecbuf_random (EcBuffer, uint_t size);
   
+__LIBEX void ecbuf_rncode (EcBuffer, uint_t size);
+
 __LIBEX void ecbuf_format (EcBuffer, uint_t size, const char* format, ...);
 
 __LIBEX void ecbuf_resize (EcBuffer, uint_t size);
