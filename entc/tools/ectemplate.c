@@ -4,10 +4,11 @@
 
 // entc includes
 #include "types/ecstream.h"
-#include "tools/eclog.h"
-
-// q6 includes
 #include "types/ecmap.h"
+#include "tools/eclog.h"
+#include "system/ectime.h"
+
+//-----------------------------------------------------------------------------
 
 #define PART_TYPE_NONE   0
 #define PART_TYPE_TEXT   1
@@ -15,6 +16,11 @@
 #define PART_TYPE_TAG    3
 #define PART_TYPE_NODE   4
 #define PART_TYPE_CR     5
+
+//-----------------------------------------------------------------------------
+
+#define FORMAT_TYPE_NONE   0
+#define FORMAT_TYPE_DATE   1
 
 //-----------------------------------------------------------------------------
 
@@ -33,7 +39,34 @@ struct EcTemplatePart_s
    
    EcTemplatePart parent;
 
+   int format_type;
+   
 }; 
+
+//-----------------------------------------------------------------------------
+
+void ectemplate_part_checkForFormat (EcTemplatePart self, const EcString format)
+{
+  EcString f1 = NULL;
+  EcString f2 = NULL;
+  
+  if (ecstr_split (format, &f1, &f2, ':'))
+  {
+    EcString h = ecstr_utf8_trim (f1);
+    
+    if (ecstr_equal (h, "date"))
+    {
+      
+      self->format_type = FORMAT_TYPE_DATE;
+      self->eval = ecstr_utf8_trim (f2);
+    }
+    
+    ecstr_delete (&h);
+  }
+  
+  ecstr_delete (&f1);
+  ecstr_delete (&f2);
+}
 
 //-----------------------------------------------------------------------------
 
@@ -53,7 +86,15 @@ void ectemplate_part_checkForEval (EcTemplatePart self, const EcString text)
     }
     else
     {
-      self->text = ecstr_utf8_trim (text);
+      if (ecstr_split (text, &s1, &s2, '|'))
+      {
+        ectemplate_part_checkForFormat (self, s2);
+        self->text = ecstr_utf8_trim (s1);
+      }
+      else
+      {
+        self->text = ecstr_utf8_trim (text);
+      }
     }
     
     ecstr_delete (&s1);
@@ -75,6 +116,9 @@ EcTemplatePart ectemplate_part_new (int type, const EcString raw_text, EcTemplat
   
   self->text = NULL;
   self->eval = NULL;
+
+  // set no format
+  self->format_type = FORMAT_TYPE_NONE;
   
   self->parts = NULL;
   self->parent = parent;
@@ -148,22 +192,52 @@ int ectemplate_part_eval_str (EcTemplatePart self, EcUdc data, EcUdc item, void*
   
   if (text)
   {
-    if (self->eval)
+    switch (self->format_type)
     {
-      if (ecstr_equal (self->eval, text))
+      case FORMAT_TYPE_NONE:
       {
+        if (self->eval)
+        {
+          if (ecstr_equal (self->eval, text))
+          {
+            return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
+          }
+        }
+        else
+        {
+          if (onText)
+          {
+            onText (ptr, text);
+          }
+          
+          return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
+        }
+        
+        break;
+      }
+      case FORMAT_TYPE_DATE:
+      {
+        // convert text into dateformat
+        EcDate date;
+        
+        ectime_fromString (&date, text);
+        
+        EcBuffer b = ecbuf_create (100);
+        
+        ectime_fmt (b, &date, self->eval);
+
+        EcString h = ecbuf_str (&b);
+        
+        if (onText)
+        {
+          onText (ptr, h);
+        }
+
+        ecstr_delete(&h);
+        
         return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
       }
-    }
-    else
-    {
-      if (onText)
-      {
-        onText (ptr, text);
-      }
-
-      return ectemplate_part_apply (self, data, ptr, onText, onFile, err);
-    }
+    }    
   }
 
   return ENTC_ERR_NONE;

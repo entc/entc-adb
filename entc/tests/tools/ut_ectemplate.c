@@ -70,6 +70,8 @@ static int __STDCALL test_ectemplate_test1 (void* ptr, TestEnvContext ctx, EcErr
         ecudc_add (row, &content);
       }
       
+      ecudc_add_asString (EC_ALLOC, row, "date", "2018-04-23 12:54:23");
+
       ecudc_add (rowes, &row);
     }
     

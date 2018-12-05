@@ -18,6 +18,8 @@
       good levels
   {{/lvl2}}{{/lvl1}}
   
+  {{date | date:%d.%m.%Y %H:%M:%S}}
+  
 </li>
 {{/rows}}
 

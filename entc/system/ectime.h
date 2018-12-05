@@ -74,6 +74,8 @@ __LIBEX void ectime_date_from_time (EcDate*, const EcTime*);
 
 //=============================================================================
 
+__LIBEX void ectime_fmt (EcBuffer buf, const EcDate*, const EcString format);
+
 // Sun, 11 May 2018 17:05:40 GMT
 __LIBEX void ectime_toGmtString (EcBuffer buf, const EcDate*);
 
@@ -91,6 +93,8 @@ __LIBEX void ectime_toPrefix (EcBuffer buf, const EcDate*);
 __LIBEX void ectime_toPaddedTimestamp (EcBuffer buf, const EcDate*);
 
 __LIBEX void ectime_parseISO8601 (time_t* t, const char* stime);
+
+__LIBEX void ectime_fromString (EcDate*, const char* stime);
 
 //=============================================================================
 
