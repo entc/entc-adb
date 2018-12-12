@@ -139,6 +139,13 @@ void ecmap_destroy (EcMap* pself)
 
 //----------------------------------------------------------------------------------------
 
+void ecmap_setcmp (EcMap self, fct_ecmap_cmp onCompare)
+{
+  self->onCompare = onCompare ? onCompare : ecmap_node_cmp;
+}
+
+//----------------------------------------------------------------------------------------
+
 EcMapNode ecmap_insert (EcMap self, void* key, void* val)
 {
   EcMapNode node = ENTC_NEW(struct EcMapNode_s);
