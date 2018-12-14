@@ -99,6 +99,8 @@ __LIBEX int ecstr_ending ( const EcString, const EcString ending);
 
 __LIBEX int ecstr_has (const EcString, char c);
 
+__LIBEX int ecstr_contains (const EcString source, const EcString search_part);
+
 __LIBEX const EcString ecstr_pos (const EcString, char c);
 
 __LIBEX const EcString ecstr_spos (const EcString, char c, EcString* part);
