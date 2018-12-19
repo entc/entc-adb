@@ -99,7 +99,10 @@ int ecaio_sendfile_setSecret (EcAioSendFile self, const EcString secret, unsigne
 
 void ecaio_sendfile_setBase64 (EcAioSendFile self, int base64)
 {
-  self->base64 = eccode_base64_encode_create ();
+  if (base64)
+  {
+    self->base64 = eccode_base64_encode_create ();
+  }
 }
 
 //-----------------------------------------------------------------------------
