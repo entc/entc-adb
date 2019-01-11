@@ -371,6 +371,8 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
               }
               case ENTC_UDC_STRING:
               {
+                printf ("APPLY S: %s\n", name);
+
                 int res = ectemplate_part_eval_str (part, data, item, ptr, onText, onFile, err);
                 if (res)
                 {
@@ -803,8 +805,6 @@ int ectemplate_filename (EcTemplate self, const char* path, const char* name, co
 
 EcTemplate ectemplate_create (void)
 {
-  int res;
-  
   EcTemplate self = ENTC_NEW(struct EcTemplate_s);
   
   self->root_part = ectemplate_part_new (PART_TYPE_TAG, NULL, NULL);
@@ -851,8 +851,6 @@ int ectemplate_compile_str (EcTemplate self, const char* content, EcErr err)
   tcl = entc_template_compiler_new (self->root_part);
   
   res = entc_template_compiler_parse (tcl, content, ecstr_len (content), err);
-  
-exit_and_cleanup:
   
   if (tcl)
   {
