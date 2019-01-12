@@ -19,7 +19,7 @@ find_package(DL REQUIRED)
 
 #------------------------------------------------------------------------------
 
-SET (ENTC_SYS_HEADERS
+SET (ENTC_SYSTEM_HEADERS
 
   system/types.h
   system/ecdefs.h
@@ -38,7 +38,7 @@ SET (ENTC_SYS_HEADERS
 
 )
 
-SET (ENTC_SYS_SOURCES
+SET (ENTC_SYSTEM_SOURCES
 
   system/ecfile.c
   system/ecfile_win.c
@@ -156,13 +156,17 @@ SET (ENTC_TOOLS_SOURCES
 #-------------------------------
 
 SET (ENTC_SYS_SOURCES
+  sys/entc_err.c
+  sys/entc_mutex.c
 
 )
 
 SET (ENTC_SYS_HEADERS
 
-sys/entc_type.h
-sys/entc_export.h
+  sys/entc_types.h
+  sys/entc_export.h
+  sys/entc_err.h
+  sys/entc_mutex.h
 )
 
 SET (ENTC_STC_SOURCES
@@ -193,7 +197,7 @@ SET(ENTC_TESTS_SOURCES
 
 #------------------------------------------------------------------------------
 
-source_group("System" FILES ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
+source_group("System" FILES ${ENTC_SYSTEM_SOURCES} ${ENTC_SYSTEM_HEADERS})
 source_group("AIO" FILES ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS})
 source_group("Types" FILES ${ENTC_TYPES_SOURCES} ${ENTC_TYPES_HEADERS})
 source_group("Tools" FILES ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS})
@@ -206,7 +210,7 @@ source_group("stc" FILES ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS})
 
 INCLUDE_DIRECTORIES("." ${CRYPT_INCLUDES} ${PTHREAD_INCLUDES} ${DL_INCLUDES})
 
-ADD_LIBRARY( entc SHARED ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS} ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS} ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS})
+ADD_LIBRARY( entc SHARED ${ENTC_SYSTEM_SOURCES} ${ENTC_SYSTEM_HEADERS} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS} ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS} ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS} ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS})
 
 TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${CRYPT_LIBRARIES} ${PTHREAD_LIBRARIES} ${DL_LIBRARIES})
 

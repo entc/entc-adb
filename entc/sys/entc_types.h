@@ -1,5 +1,5 @@
-#ifndef __ENTC_TYPES__H
-#define __ENTC_TYPES__H 1
+#ifndef __ENTC_SYS__TYPES__H
+#define __ENTC_SYS__TYPES__H 1
 
 #include <stdlib.h>
 #include <memory.h>

@@ -1,17 +1,40 @@
-#include "cape_err.h"
+/*
+ Copyright (c) 2019 Alexander Kalkhof
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
 
-// cape includes
-#include "stc/cape_str.h"
+#include "entc_err.h"
+
+// entc includes
+#include "stc/entc_str.h"
 
 // c includes
-#include <malloc.h>
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 //-----------------------------------------------------------------------------
 
-struct CapeErr_s
+struct EntcErr_s
 {
     char* text;
     
@@ -21,55 +44,55 @@ struct CapeErr_s
 
 //-----------------------------------------------------------------------------
 
-CapeErr cape_err_new (void)
+EntcErr entc_err_new (void)
 {
-  CapeErr self = malloc (sizeof(struct CapeErr_s));
+  EntcErr self = malloc (sizeof(struct EntcErr_s));
 
   self->text = NULL;
-  self->code = CAPE_ERR_NONE;
+  self->code = ENTC_ERR_NONE;
   
   return self;    
 }
 
 //-----------------------------------------------------------------------------
 
-void cape_err_del (CapeErr* p_self)
+void entc_err_del (EntcErr* p_self)
 {
-  CapeErr self = *p_self;
+  EntcErr self = *p_self;
   *p_self = NULL;
   
-  cape_str_del (&(self->text));
+  entc_str_del (&(self->text));
   
   free (self);
 }
 
 //-----------------------------------------------------------------------------
 
-const char* cape_err_text (CapeErr self)
+const char* entc_err_text (EntcErr self)
 {
   return self->text;    
 }
 
 //-----------------------------------------------------------------------------
 
-unsigned long cape_err_code (CapeErr self)
+unsigned long entc_err_code (EntcErr self)
 {
   return self->code;
 }
 
 //-----------------------------------------------------------------------------
 
-int cape_err_set (CapeErr self, unsigned long code, const char* error_message)
+int entc_err_set (EntcErr self, unsigned long code, const char* error_message)
 {
   self->code = code;
-  self->text = cape_str_cp (error_message);
+  self->text = entc_str_cp (error_message);
   
   return code;
 }
 
 //-----------------------------------------------------------------------------
 
-int cape_err_set_fmt (CapeErr self, unsigned long code, const char* error_message, ...)
+int entc_err_set_fmt (EntcErr self, unsigned long code, const char* error_message, ...)
 {
   char buffer [1002];
   
@@ -89,7 +112,7 @@ int cape_err_set_fmt (CapeErr self, unsigned long code, const char* error_messag
   vsnprintf (buffer, 1000, error_message, ptr);
 #endif
   
-  cape_err_set (self, code, buffer);
+  entc_err_set (self, code, buffer);
   
   va_end(ptr);
   
@@ -98,16 +121,16 @@ int cape_err_set_fmt (CapeErr self, unsigned long code, const char* error_messag
 
 //-----------------------------------------------------------------------------
 
-int cape_err_formatErrorOS (CapeErr self, unsigned long errCode)
+int entc_err_formatErrorOS (EntcErr self, unsigned long errCode)
 {
-  return cape_err_set (self, CAPE_ERR_OS, strerror(errCode));
+  return entc_err_set (self, ENTC_ERR_OS, strerror(errCode));
 }
 
 //-----------------------------------------------------------------------------
 
-int cape_err_lastOSError (CapeErr self)
+int entc_err_lastOSError (EntcErr self)
 {
-  return cape_err_formatErrorOS (self, errno);
+  return entc_err_formatErrorOS (self, errno);
 }
 
 //-----------------------------------------------------------------------------
