@@ -153,6 +153,18 @@ SET (ENTC_TOOLS_SOURCES
   tools/entc_multipart.c
 )
 
+#-------------------------------
+
+SET (ENTC_SYS_SOURCES
+
+)
+
+SET (ENTC_SYS_HEADERS
+
+sys/entc_type.h
+sys/entc_export.h
+)
+
 SET (ENTC_STC_SOURCES
 
   stc/entc_str.c
@@ -168,6 +180,8 @@ SET (ENTC_STC_HEADERS
   stc/entc_map.h
   stc/entc_udc.h
 )
+
+#-------------------------------
 
 SET (ENTC_TESTS_HEADERS
   tests/ecenv.h
@@ -185,6 +199,7 @@ source_group("Types" FILES ${ENTC_TYPES_SOURCES} ${ENTC_TYPES_HEADERS})
 source_group("Tools" FILES ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS})
 source_group("Tests" FILES ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS})
 
+source_group("sys" FILES ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
 source_group("stc" FILES ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS})
 
 #------------------------------------------------------------------------------

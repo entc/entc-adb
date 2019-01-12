@@ -1,7 +1,7 @@
 #ifndef __ENTC_TYPES__H
 #define __ENTC_TYPES__H 1
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <memory.h>
 
 //-----------------------------------------------------------------------------
