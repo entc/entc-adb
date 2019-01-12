@@ -23,6 +23,8 @@
 #include "entc_mutex.h"
 #include "sys/entc_types.h"
 
+#ifdef __GNUC__
+
 #include <pthread.h>
 
 //-----------------------------------------------------------------------------
@@ -62,3 +64,48 @@ void entc_mutex_unlock (EntcMutex self)
 }
 
 //-----------------------------------------------------------------------------
+
+#elif defined _WIN64 || defined _WIN32
+
+#include <windows.h>
+
+//-----------------------------------------------------------------------------
+
+EntcMutex entc_mutex_new (void)
+{
+  CRITICAL_SECTION* self = ENTC_NEW(CRITICAL_SECTION);
+  
+  InitializeCriticalSection (self, NULL);
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------
+
+void entc_mutex_del (EntcMutex* p_self)
+{
+  CRITICAL_SECTION* self = *p_self;
+  
+  DeleteCriticalSection (self);
+  
+  ENTC_DEL(p_self, CRITICAL_SECTION);
+}
+
+//-----------------------------------------------------------------------------
+
+void entc_mutex_lock (EntcMutex self)
+{
+  EnterCriticalSection (self);
+}
+
+//-----------------------------------------------------------------------------
+
+void entc_mutex_unlock (EntcMutex self)
+{
+  LeaveCriticalSection (self);
+}
+
+//-----------------------------------------------------------------------------
+
+#endif
+
