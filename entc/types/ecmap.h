@@ -54,6 +54,8 @@ __LIBEX void ecmap_clear (EcMap);
 
 __LIBEX void ecmap_destroy (EcMap*);
 
+__LIBEX void ecmap_setcmp (EcMap, fct_ecmap_cmp);
+
 __LIBEX EcMapNode ecmap_insert (EcMap, void* key, void* data);
 
 __LIBEX EcMapNode ecmap_find (EcMap, void* key);

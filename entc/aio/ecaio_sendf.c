@@ -4,6 +4,7 @@
 #include "aio/ecaio_file.h"
 #include "tools/eclog.h"
 #include "tools/eccrypt.h"
+#include "tools/eccode.h"
 
 #if defined __WIN_OS
 #include <windows.h>
@@ -18,7 +19,9 @@ struct EcAioSendFile_s
   
   EcString name;
   
-  EcDecryptAES aes;
+  EcDecryptAES aes;         // input decryption
+  
+  EcBase64Encode base64;    // output format encoding
  
   fct_ecaio_sfile_onInit onInit;
   void* ptr;
@@ -44,6 +47,7 @@ EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, E
   self->refSocket = ecrefsocket_clone (refSocket);
   
   self->aes = NULL;
+  self->base64 = NULL;
   
   return self;
 }
@@ -57,6 +61,11 @@ void ecaio_sendfile_destroy (EcAioSendFile* pself)
   if (self->aes)
   {
     ecdecrypt_aes_destroy (&(self->aes));
+  }
+  
+  if (self->base64)
+  {
+    eccode_base64_encode_destroy (&(self->base64));
   }
   
   ecstr_delete (&(self->file));
@@ -88,6 +97,75 @@ int ecaio_sendfile_setSecret (EcAioSendFile self, const EcString secret, unsigne
 
 //-----------------------------------------------------------------------------
 
+void ecaio_sendfile_setBase64 (EcAioSendFile self, int base64)
+{
+  if (base64)
+  {
+    self->base64 = eccode_base64_encode_create ();
+  }
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_sendfile_setBuffer_update (EcAioSendFile self, EcAioSocketWriter writer, EcBuffer buf, EcErr err)
+{
+  if (self->base64)
+  {
+    // create a buffer for encode the base64
+    EcBuffer h = ecbuf_create (eccode_base64_encode_size (buf->size));
+    
+    // correct buffer length
+    h->size = eccode_base64_encode_update (self->base64, h, buf, err);
+    
+    // transfer ownership
+    ecaio_socketwriter_setBufferBT (writer, &h);
+  }
+  else
+  {
+    // we need a copy here :-(
+    ecaio_socketwriter_setBufferCP (writer, (char*)buf->buffer, buf->size);
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
+int ecaio_sendfile_setBuffer_finalize (EcAioSendFile self, EcAioSocketWriter writer, EcBuffer buf, EcErr err)
+{
+  if (self->base64)
+  {
+    // create a buffer for encode the base64 + extra length for finalization
+    EcBuffer h = ecbuf_create (eccode_base64_encode_size (buf->size) + 20);
+    
+    // correct buffer length
+    uint64_t offset = eccode_base64_encode_update (self->base64, h, buf, err);
+
+    // fake buffer
+    {
+      EcBuffer_s h2;
+      
+      h2.buffer = h->buffer + offset;
+      h2.size = h->size - offset;
+      
+      // correct buffer length
+      h->size = eccode_base64_encode_finalize (self->base64, &h2, err) + offset;
+    }
+    
+    // transfer ownership
+    ecaio_socketwriter_setBufferBT (writer, &h);
+  }
+  else
+  {
+    // we need a copy here :-(
+    ecaio_socketwriter_setBufferCP (writer, (char*)buf->buffer, buf->size);
+  }
+  
+  return ENTC_ERR_NONE;
+}
+
+//-----------------------------------------------------------------------------
+
 static void __STDCALL ecaio_sendfile_onDestroy (void* ptr)
 {
   EcAioSendFile self = ptr;
@@ -108,7 +186,7 @@ static void __STDCALL ecaio_sendfile_onDestroy (void* ptr)
       //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "wrote decrypted bytes %i", g->size);
 
       // we need a copy here :-(
-      ecaio_socketwriter_setBufferCP (writer, (char*)g->buffer, g->size);
+      ecaio_sendfile_setBuffer_finalize (self, writer, g, err);
     }
     
     res = ecaio_socketwriter_assign (&writer, err);
@@ -152,14 +230,17 @@ static int __STDCALL ecaio_sendfile_onRead (void* ptr, void* handle, const char*
     {
       //eclogger_fmt (LL_TRACE, "Q6_SOCK", "sfile", "wrote decrypted bytes %i", g->size);
       
-      // we need a copy here :-(
-      ecaio_socketwriter_setBufferCP (writer, (char*)g->buffer, g->size);
+      ecaio_sendfile_setBuffer_update (self, writer, g, err);
     }
   }
   else
   {
-    // we need a copy here :-(
-    ecaio_socketwriter_setBufferCP (writer, buffer, len);
+    EcBuffer_s h;
+
+    h.buffer = (unsigned char*)buffer;
+    h.size = len;
+
+    ecaio_sendfile_setBuffer_update (self, writer, &h, err);
   }
   
   res = ecaio_socketwriter_assign (&writer, err);

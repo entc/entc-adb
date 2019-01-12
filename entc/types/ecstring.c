@@ -635,6 +635,23 @@ int ecstr_has (const EcString self, char c)
   return isAssigned (strchr (self, c));  
 }
 
+//----------------------------------------------------------------------------------------
+
+int ecstr_contains (const EcString source, const EcString search_part)
+{
+  if (source == NULL)
+  {
+    return FALSE;
+  }
+  
+  if (search_part == NULL)
+  {
+    return FALSE;
+  }
+  
+  return (strstr (source, search_part) != NULL);
+}
+
 /*------------------------------------------------------------------------*/
 
 EcString ecstr_trim( const EcString s )
