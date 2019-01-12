@@ -26,11 +26,16 @@
 #include "stc/entc_str.h"
 
 // c includes
-#include <errno.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#if defined _WIN64 || defined _WIN32
+#include <windows.h>
+#else
+#include <errno.h>
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -106,7 +111,7 @@ int entc_err_set_fmt (EntcErr self, unsigned long code, const char* error_messag
   
   va_start(ptr, error_message);
   
-#ifdef _WIN32
+#if defined _WIN64 || defined _WIN32
   vsnprintf_s (buffer, 1001, 1000, text, ptr);
 #else
   vsnprintf (buffer, 1000, error_message, ptr);
@@ -123,14 +128,33 @@ int entc_err_set_fmt (EntcErr self, unsigned long code, const char* error_messag
 
 int entc_err_formatErrorOS (EntcErr self, unsigned long errCode)
 {
+#if defined _WIN64 || defined _WIN32
+  LPTSTR buffer = NULL;
+  DWORD res = FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&buffer, 0, NULL);
+  
+  if (buffer)
+  {
+    if (res > 0)
+    {
+      entc_err_set (self, ENTC_ERR_OS, buffer);
+    }
+    // release buffer
+    LocalFree (buffer);
+  }
+#else
   return entc_err_set (self, ENTC_ERR_OS, strerror(errCode));
+#endif
 }
 
 //-----------------------------------------------------------------------------
 
 int entc_err_lastOSError (EntcErr self)
 {
+#if defined _WIN64 || defined _WIN32
+  return entc_err_formatErrorOS (self, GetLastError ());
+#else
   return entc_err_formatErrorOS (self, errno);
+#endif
 }
 
 //-----------------------------------------------------------------------------
