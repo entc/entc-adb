@@ -306,7 +306,7 @@ int ecaio_abort (EcAio self, EcErr err)
 //*****************************************************************************
 
 // entc includes
-#include <types/eclist.h>
+#include <stc/entc_list.h>
 
 #include <signal.h>
 #include <errno.h>
@@ -337,9 +337,9 @@ struct EcAio_s
 
   //int pfd[2];
 
-  EcList ctxs;
+  EntcList ctxs;
   
-  EcList events;
+  EntcList events;
 
   EcMutex eventsm;
   
@@ -347,24 +347,20 @@ struct EcAio_s
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_ctxs_onDestroy (void* ptr)
+static void __STDCALL ecaio_ctxs_onDestroy (void* ptr)
 {
   EcAioContext ctx = ptr;
   
   ecaio_context_destroy (&ctx);
-  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecaio_events_onDestroy (void* ptr)
+static void __STDCALL ecaio_events_onDestroy (void* ptr)
 {
   EcAioContext ctx = ptr;
   
   ecaio_context_destroy (&ctx);
-  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -377,7 +373,7 @@ EcAio ecaio_create ()
   self->ufd = 0;
   self->ctx = NULL;
 
-  self->ctxs = eclist_create (ecaio_ctxs_onDestroy);
+  self->ctxs = entc_list_new (ecaio_ctxs_onDestroy);
 
   /*
    self->pfd[0] = NULL;
@@ -388,7 +384,7 @@ EcAio ecaio_create ()
   self->iom = ecmutex_new ();
 
   self->eventsm = ecmutex_new ();
-  self->events = eclist_create (ecaio_events_onDestroy);
+  self->events = entc_list_new (ecaio_events_onDestroy);
   
   return self;
 }
@@ -406,13 +402,13 @@ void ecaio_destroy (EcAio* pself)
     ecaio_context_destroy (&(self->ctx));
   }
   
-  eclist_destroy (&(self->ctxs));
+  entc_list_del (&(self->ctxs));
   
   ecmutex_delete(&(self->mutex));
   ecmutex_delete(&(self->iom));
   
   ecmutex_delete(&(self->eventsm));
-  eclist_destroy (&(self->events));
+  entc_list_del (&(self->events));
   
   ENTC_DEL(pself, struct EcAio_s);
 }
@@ -514,7 +510,7 @@ int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 {
   ecmutex_lock (self->eventsm);
   
-  *eh = eclist_push_back (self->events, ctx);
+  *eh = entc_list_push_back (self->events, ctx);
   
   ecmutex_unlock (self->eventsm);
 
@@ -526,11 +522,11 @@ int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 {
   EcAioContext ctx;
-  EcListNode node = eh;
+  EntcListNode node = eh;
   
   ecmutex_lock (self->eventsm);
   
-  ctx = eclist_extract (self->events, node);
+  ctx = entc_list_node_extract (self->events, node);
   
   ecmutex_unlock (self->eventsm);
 
@@ -543,7 +539,7 @@ int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
 {
   ecmutex_lock (self->mutex);
   
-  eclist_push_back (self->ctxs, ctx);
+  entc_list_push_back (self->ctxs, ctx);
   
   ecmutex_unlock (self->mutex);
   
@@ -563,9 +559,9 @@ void ecaio_abortall (EcAio self)
 {
   ecmutex_lock (self->eventsm);
   
-  eclog_fmt (LL_TRACE, "ENTC AIO", "abortall", "{%p} clear all events [%i]", self, eclist_size(self->events));
+  eclog_fmt (LL_TRACE, "ENTC AIO", "abortall", "{%p} clear all events [%i]", self, entc_list_size(self->events));
   
-  eclist_clear (self->events);
+  entc_list_clr (self->events);
   
   ecmutex_unlock (self->eventsm);
 }
@@ -578,12 +574,12 @@ int ecaio_handle_event (EcAio self)
 
   ecmutex_lock (self->mutex);
 
-  EcListCursor c;
-  eclist_cursor_init (self->ctxs, &c, LIST_DIR_NEXT);
+  EntcListCursor c;
+  entc_list_cursor_init (self->ctxs, &c, ENTC_DIRECTION_FORW);
 
-  if (eclist_cursor_next (&c))
+  if (entc_list_cursor_next (&c))
   {
-    ctx = eclist_cursor_extract (self->ctxs, &c);
+    ctx = entc_list_cursor_extract (self->ctxs, &c);
   }
 
   ecmutex_unlock (self->mutex);

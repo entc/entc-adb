@@ -43,7 +43,7 @@ struct EcMapNode_s
 
 struct EcMap_s
 {
-  EcList list;
+  EntcList list;
 
   fct_ecmap_cmp onCompare;
 
@@ -85,13 +85,11 @@ void ecmap_node_destroy (EcMapNode* pnode)
 
 //----------------------------------------------------------------------------------------
 
-static int __STDCALL ecmap_onDestroy (void* ptr)
+static void __STDCALL ecmap_onDestroy (void* ptr)
 {
   EcMapNode node = ptr;
 
   ecmap_destroy_node (node->map, &node);
-
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -107,7 +105,7 @@ EcMap ecmap_create (fct_ecmap_cmp onCompare, fct_ecmap_destroy onDestroy)
 {
   EcMap self = ENTC_NEW(struct EcMap_s);
 
-  self->list = eclist_create (ecmap_onDestroy);
+  self->list = entc_list_new (ecmap_onDestroy);
 
   self->onCompare = onCompare ? onCompare : ecmap_node_cmp;
   self->onDestroy = onDestroy;
@@ -119,7 +117,7 @@ EcMap ecmap_create (fct_ecmap_cmp onCompare, fct_ecmap_destroy onDestroy)
 
 void ecmap_clear (EcMap self)
 {
-  eclist_clear (self->list);
+  entc_list_clr (self->list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -132,7 +130,7 @@ void ecmap_destroy (EcMap* pself)
   ecmap_clear (self);
 
   // delete the list
-  eclist_destroy (&(self->list));
+  entc_list_del (&(self->list));
 
   ENTC_DEL(pself, struct EcMap_s);
 }
@@ -154,7 +152,7 @@ EcMapNode ecmap_insert (EcMap self, void* key, void* val)
   node->val = val;
   node->map = self;
 
-  eclist_push_back (self->list, node);
+  entc_list_push_back (self->list, node);
 
   return node;
 }
@@ -163,13 +161,13 @@ EcMapNode ecmap_insert (EcMap self, void* key, void* val)
 
 EcMapNode ecmap_find (EcMap self, void* key)
 {
-  EcListCursor cursor;
+  EntcListCursor cursor;
 
-  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  entc_list_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
 
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
-    EcMapNode node = eclist_data (cursor.node);
+    EcMapNode node = entc_list_node_data (cursor.node);
 
     //compare the stored name with the name we got
     if (self->onCompare (node->key, key) == 0)
@@ -199,17 +197,17 @@ void ecmap_destroy_node (EcMap self, EcMapNode* pnode)
 
 void ecmap_erase (EcMap self, EcMapNode node)
 {
-  EcListCursor cursor;
+  EntcListCursor cursor;
 
-  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  entc_list_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
 
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
-    EcMapNode h = eclist_data (cursor.node);
+    EcMapNode h = entc_list_node_data (cursor.node);
 
     if (h == node)
     {
-      eclist_cursor_erase (self->list, &cursor);
+      entc_list_cursor_erase (self->list, &cursor);
       return;
     }
   }
@@ -219,17 +217,17 @@ void ecmap_erase (EcMap self, EcMapNode node)
 
 EcMapNode ecmap_extract (EcMap self, EcMapNode node)
 {
-  EcListCursor cursor;
+  EntcListCursor cursor;
 
-  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  entc_list_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
 
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
-    EcMapNode h = eclist_data (cursor.node);
+    EcMapNode h = entc_list_node_data (cursor.node);
 
     if (h == node)
     {
-      return eclist_cursor_extract (self->list, &cursor);
+      return entc_list_cursor_extract (self->list, &cursor);
     }
   }
 
@@ -240,7 +238,7 @@ EcMapNode ecmap_extract (EcMap self, EcMapNode node)
 
 unsigned long ecmap_size (EcMap self)
 {
-  return eclist_size (self->list);
+  return entc_list_size (self->list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -249,12 +247,12 @@ EcMap ecmap_clone (EcMap orig, fct_ecmap_onClone onCloneKey, fct_ecmap_onClone o
 {
   EcMap self = ecmap_create (orig->onCompare, orig->onDestroy);
 
-  EcListCursor cursor;
-  eclist_cursor_init (orig->list, &cursor, LIST_DIR_NEXT);
+  EntcListCursor cursor;
+  entc_list_cursor_init (orig->list, &cursor, LIST_DIR_NEXT);
 
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
-    EcMapNode h = eclist_data (cursor.node);
+    EcMapNode h = entc_list_node_data (cursor.node);
 
     void* key = NULL;
     void* val = NULL;
@@ -299,7 +297,7 @@ void ecmap_cursor_set (EcMapCursor* cursor)
 {
   if (cursor->cursor.node)
   {
-    cursor->node = eclist_data (cursor->cursor.node);
+    cursor->node = entc_list_node_data (cursor->cursor.node);
   }
   else
   {
@@ -313,7 +311,7 @@ void ecmap_cursor_set (EcMapCursor* cursor)
 
 void ecmap_cursor_init (EcMap self, EcMapCursor* cursor, int direction)
 {
-  eclist_cursor_init (self->list, &(cursor->cursor), direction);
+  entc_list_cursor_init (self->list, &(cursor->cursor), direction);
 
   ecmap_cursor_set (cursor);
 }
@@ -322,7 +320,7 @@ void ecmap_cursor_init (EcMap self, EcMapCursor* cursor, int direction)
 
 int ecmap_cursor_next (EcMapCursor* cursor)
 {
-  int res = eclist_cursor_next (&(cursor->cursor));
+  int res = entc_list_cursor_next (&(cursor->cursor));
 
   ecmap_cursor_set (cursor);
 
@@ -333,7 +331,7 @@ int ecmap_cursor_next (EcMapCursor* cursor)
 
 int ecmap_cursor_prev (EcMapCursor* cursor)
 {
-  int res = eclist_cursor_prev (&(cursor->cursor));
+  int res = entc_list_cursor_prev (&(cursor->cursor));
 
   ecmap_cursor_set (cursor);
 
@@ -344,7 +342,7 @@ int ecmap_cursor_prev (EcMapCursor* cursor)
 
 void ecmap_cursor_erase (EcMap self, EcMapCursor* cursor)
 {
-  eclist_cursor_erase(self->list, &(cursor->cursor));
+  entc_list_cursor_erase(self->list, &(cursor->cursor));
 
   ecmap_cursor_set (cursor);
 }
@@ -353,7 +351,7 @@ void ecmap_cursor_erase (EcMap self, EcMapCursor* cursor)
 
 EcMapNode ecmap_cursor_extract (EcMap self, EcMapCursor* cursor)
 {
-  EcMapNode node = eclist_cursor_extract(self->list, &(cursor->cursor));
+  EcMapNode node = entc_list_cursor_extract(self->list, &(cursor->cursor));
 
   ecmap_cursor_set (cursor);
 

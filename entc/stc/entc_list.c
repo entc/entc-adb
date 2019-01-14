@@ -576,7 +576,7 @@ void entc_list_node_replace (EntcList self, EntcListNode node, void* data)
 
 //-----------------------------------------------------------------------------
 
-EntcListCursor* entc_list_cursor_create (EntcList self, int direction)
+EntcListCursor* entc_list_cursor_new (EntcList self, int direction)
 {
   EntcListCursor* cursor = ENTC_NEW(EntcListCursor);
   
@@ -587,7 +587,7 @@ EntcListCursor* entc_list_cursor_create (EntcList self, int direction)
 
 //-----------------------------------------------------------------------------
 
-void entc_list_cursor_destroy (EntcListCursor** pcursor)
+void entc_list_cursor_del (EntcListCursor** pcursor)
 {
   ENTC_DEL (pcursor, EntcListCursor);
 }

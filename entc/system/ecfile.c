@@ -6,7 +6,7 @@
 
 /*------------------------------------------------------------------------*/
 
-int ecdh_scan (const EcString path, EcList entries, int filetype)
+int ecdh_scan (const EcString path, EntcList entries, int filetype)
 {
   /* variables */
   EcDirHandle dh = 0;
@@ -30,7 +30,7 @@ int ecdh_scan (const EcString path, EcList entries, int filetype)
     
     if (info->type == filetype)
     {
-      eclist_push_back (entries, ecfs_mergeToPath(path, info->name));
+      entc_list_push_back (entries, ecfs_mergeToPath(path, info->name));
     }
   }
 

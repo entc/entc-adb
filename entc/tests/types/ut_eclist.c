@@ -1,58 +1,55 @@
 
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 #include "tests/ecenv.h"
-#include "system/macros.h"
 
 #include <stdio.h>
 #include <string.h>
 
 //=============================================================================
 
-static int __STDCALL test_stdlist_onDestroy (void* ptr)
+static void __STDCALL test_stdlist_onDestroy (void* ptr)
 {
   free (ptr);
-  
-  return 0;
 }
 
 //---------------------------------------------------------------------------
 
 static void* __STDCALL test_stdlist_init (EcErr err)
 {
-  return eclist_create (test_stdlist_onDestroy);
+  return entc_list_new (test_stdlist_onDestroy);
 }
 
 //---------------------------------------------------------------------------
 
 static void __STDCALL test_stdlist_done (void* ptr)
 {
-  EcList h = ptr;
+  EntcList h = ptr;
   
-  eclist_destroy (&h);
+  entc_list_del (&h);
 }
 
 //---------------------------------------------------------------------------
 
 static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 {
-  EcList h = ptr;
+  EntcList h = ptr;
   int i;
   
   for (i = 0; i < 10; i++)
   {
     void* data = ecstr_create_fmt (42, "hello world [%i]", i);   
 
-    eclist_push_back (h, data);
+    entc_list_push_back (h, data);
   }
   
-  eclist_clear (h);
+  entc_list_clr (h);
   
   // prepare compare values
   for (i = 0; i < 5; i++)
   {
     void* data = ecstr_create_fmt (42, "hello world [%i]", i);    
     
-    eclist_push_back (h, data);
+    entc_list_push_back (h, data);
     
     // add for test to compare
     testctx_push_string (ctx, (const char*)data);
@@ -60,49 +57,49 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
   
   // forward
   {
-    EcListCursor* cursor = eclist_cursor_create (h, 1);
+    EntcListCursor* cursor = entc_list_cursor_new (h, 1);
     
-    while (eclist_cursor_next (cursor))
+    while (entc_list_cursor_next (cursor))
     {
-      void* data = eclist_data (cursor->node);
+      void* data = entc_list_node_data (cursor->node);
       
       // check ************
       testctx_assert (ctx, testctx_pop_tocomp (ctx, (const char*)data), "comp #1");
     }
     
-    eclist_cursor_destroy (&cursor);
+    entc_list_cursor_del (&cursor);
   }
   
   // backwards
   {
-    EcListCursor* cursor = eclist_cursor_create (h, 0);
+    EntcListCursor* cursor = entc_list_cursor_new (h, 0);
     
-    while (eclist_cursor_prev (cursor))
+    while (entc_list_cursor_prev (cursor))
     {
-      char* data = eclist_data (cursor->node);
+      char* data = entc_list_node_data (cursor->node);
       
       printf ("data: %s\n", data);
     }
     
-    eclist_cursor_destroy (&cursor);
+    entc_list_cursor_del (&cursor);
   }
   
   // combine
   {
-    EcListCursor* cursor = eclist_cursor_create (h, 1);
+    EntcListCursor* cursor = entc_list_cursor_new (h, 1);
     char* data;    
 
-    eclist_cursor_next (cursor);    // 0
-    eclist_cursor_next (cursor);    // 1
-    eclist_cursor_next (cursor);    // 2
+    entc_list_cursor_next (cursor);    // 0
+    entc_list_cursor_next (cursor);    // 1
+    entc_list_cursor_next (cursor);    // 2
     
-    eclist_cursor_prev (cursor);    // 1
+    entc_list_cursor_prev (cursor);    // 1
     
-    data = eclist_data (cursor->node);
+    data = entc_list_node_data (cursor->node);
     
     printf ("comb: %s\n", data);
     
-    eclist_cursor_destroy (&cursor);
+    entc_list_cursor_del (&cursor);
   }
   
   return 0;
@@ -112,41 +109,41 @@ static int __STDCALL test_stdlist_test1 (void* ptr, TestEnvContext ctx, EcErr er
 
 static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx, EcErr err)
 {
-  EcList h = ptr;
+  EntcList h = ptr;
   int i;
   
-  eclist_clear (h);
+  entc_list_clr (h);
   
   // check ************
-  testctx_assert (tctx, eclist_size (h) == 0, "check size #1");
+  testctx_assert (tctx, entc_list_size (h) == 0, "check size #1");
   
   for (i = 0; i < 5; i++)
   {
     void* data = malloc(42);
-    eclist_push_back (h, data);
+    entc_list_push_back (h, data);
   }
   
   // check ************
-  testctx_assert (tctx, eclist_size (h) == 5, "check size #2");
+  testctx_assert (tctx, entc_list_size (h) == 5, "check size #2");
   
   {
-    EcListCursor cursor;
+    EntcListCursor cursor;
     
-    eclist_cursor_init (h, &cursor, LIST_DIR_NEXT);
+    entc_list_cursor_init (h, &cursor, ENTC_DIRECTION_FORW);
     
-    eclist_cursor_erase (h, &cursor);
+    entc_list_cursor_erase (h, &cursor);
     
     // check ************
-    testctx_assert (tctx, eclist_size (h) == 4, "check size #3");
+    testctx_assert (tctx, entc_list_size (h) == 4, "check size #3");
     
-    while (eclist_cursor_next (&cursor))
+    while (entc_list_cursor_next (&cursor))
     {
-      eclist_cursor_erase (h, &cursor);
+      entc_list_cursor_erase (h, &cursor);
     }
   }
   
   // check ************
-  testctx_assert (tctx, eclist_size (h) == 0, "check size #4");
+  testctx_assert (tctx, entc_list_size (h) == 0, "check size #4");
   
   return 0;
 }
@@ -155,69 +152,69 @@ static int __STDCALL test_stdlist_test2 (void* ptr, TestEnvContext tctx, EcErr e
 
 static int __STDCALL test_stdlist_test3 (void* ptr, TestEnvContext tctx, EcErr err)
 {
-  EcList h = ptr;
+  EntcList h = ptr;
   int i;
-  EcListNode fpos;
-  EcListNode lpos;
+  EntcListNode fpos;
+  EntcListNode lpos;
   
-  eclist_clear (h);
+  entc_list_clr (h);
   
   // check ************
-  testctx_assert (tctx, eclist_size (h) == 0, "check size #1");
+  testctx_assert (tctx, entc_list_size (h) == 0, "check size #1");
   
   for (i = 0; i < 10; i++)
   {
     void* data = ecstr_create_fmt (42, "cloud [%i]", i);    
     
-    eclist_push_back (h, data);
+    entc_list_push_back (h, data);
   }
     
   {
-    EcList slice;
-    EcListCursor cursor;
+    EntcList slice;
+    EntcListCursor cursor;
     
-    eclist_cursor_init (h, &cursor, LIST_DIR_NEXT);
+    entc_list_cursor_init (h, &cursor, ENTC_DIRECTION_FORW);
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #0");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #0");
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #1");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #1");
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #2");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #2");
     
     fpos = cursor.node;
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #3");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #3");
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #4");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #4");
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #5");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #5");
     
     lpos = cursor.node;
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #6");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #6");
     
-    testctx_assert (tctx, eclist_cursor_next (&cursor), "cursor pos #7");
+    testctx_assert (tctx, entc_list_cursor_next (&cursor), "cursor pos #7");
     
-    slice = eclist_slice (h, fpos, lpos);
+    slice = entc_list_slice_extract (h, fpos, lpos);
     
-    testctx_assert (tctx, eclist_size (slice) == 4, "check size slice");
-    testctx_assert (tctx, eclist_size (h) == 6, "check rest slice");
+    testctx_assert (tctx, entc_list_size (slice) == 4, "check size slice");
+    testctx_assert (tctx, entc_list_size (h) == 6, "check rest slice");
     
-    eclist_insert_slice (h, &cursor, &slice);
+    entc_list_slice_insert (h, &cursor, &slice);
     
     testctx_assert (tctx, slice == NULL, "del slice");
     
-    testctx_assert (tctx, eclist_size (h) == 10, "check size slice #2");
+    testctx_assert (tctx, entc_list_size (h) == 10, "check size slice #2");
   }
   
   {
-    EcListCursor cursor;
+    EntcListCursor cursor;
     
-    eclist_cursor_init (h, &cursor, LIST_DIR_NEXT);
+    entc_list_cursor_init (h, &cursor, ENTC_DIRECTION_FORW);
     
-    while (eclist_cursor_next (&cursor))
+    while (entc_list_cursor_next (&cursor))
     {
-      char* data = eclist_data(cursor.node);
+      char* data = entc_list_node_data (cursor.node);
       printf ("data: %s\n", data);
     }
   }
@@ -236,47 +233,47 @@ static int __STDCALL test_stdlist_test4_onCompare (void* ptr1, void* ptr2)
 
 static int __STDCALL test_stdlist_test4 (void* ptr, TestEnvContext tctx, EcErr err)
 {
-  EcList h = (EcList)ptr;
+  EntcList h = (EntcList)ptr;
   
-  eclist_clear (h);
+  entc_list_clr (h);
   
-  eclist_push_back (h, ecstr_copy ("Sort 7"));
-  eclist_push_back (h, ecstr_copy ("Sort 4"));
-  eclist_push_back (h, ecstr_copy ("Sort 9"));
-  eclist_push_back (h, ecstr_copy ("Sort 3"));
-  eclist_push_back (h, ecstr_copy ("Sort 1"));
-  eclist_push_back (h, ecstr_copy ("Sort 6"));
-  eclist_push_back (h, ecstr_copy ("Sort 8"));
-  eclist_push_back (h, ecstr_copy ("Sort 2"));
-  eclist_push_back (h, ecstr_copy ("Sort 5"));
+  entc_list_push_back (h, ecstr_copy ("Sort 7"));
+  entc_list_push_back (h, ecstr_copy ("Sort 4"));
+  entc_list_push_back (h, ecstr_copy ("Sort 9"));
+  entc_list_push_back (h, ecstr_copy ("Sort 3"));
+  entc_list_push_back (h, ecstr_copy ("Sort 1"));
+  entc_list_push_back (h, ecstr_copy ("Sort 6"));
+  entc_list_push_back (h, ecstr_copy ("Sort 8"));
+  entc_list_push_back (h, ecstr_copy ("Sort 2"));
+  entc_list_push_back (h, ecstr_copy ("Sort 5"));
   
-  eclist_sort (h, test_stdlist_test4_onCompare);
+  entc_list_sort (h, test_stdlist_test4_onCompare);
   
   {
-    EcListCursor* cursor = eclist_cursor_create (h, 1);
+    EntcListCursor* cursor = entc_list_cursor_new (h, 1);
     
-    while (eclist_cursor_next (cursor))
+    while (entc_list_cursor_next (cursor))
     {
-      char* data = eclist_data (cursor->node);
+      char* data = entc_list_node_data (cursor->node);
       
       printf ("data: %s\n", data);
     }
     
-    eclist_cursor_destroy (&cursor);
+    entc_list_cursor_del (&cursor);
   }
   
   // backwards
   {
-    EcListCursor* cursor = eclist_cursor_create (h, 0);
+    EntcListCursor* cursor = entc_list_cursor_new (h, 0);
     
-    while (eclist_cursor_prev (cursor))
+    while (entc_list_cursor_prev (cursor))
     {
-      char* data = eclist_data (cursor->node);
+      char* data = entc_list_node_data (cursor->node);
       
       printf ("data: %s\n", data);
     }
     
-    eclist_cursor_destroy (&cursor);
+    entc_list_cursor_del (&cursor);
   }
   
   return 0;

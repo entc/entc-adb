@@ -24,6 +24,7 @@
 #define __ENTC_STC__LIST__H 1
 
 #include "sys/entc_export.h"
+#include "sys/entc_types.h"
 
 //=============================================================================
 
@@ -99,9 +100,9 @@ typedef struct
 
 //-----------------------------------------------------------------------------
 
-__ENTC_LIBEX   EntcListCursor*   entc_list_cursor_create    (EntcList, int direction);
+__ENTC_LIBEX   EntcListCursor*   entc_list_cursor_new       (EntcList, int direction);
 
-__ENTC_LIBEX   void              entc_list_cursor_destroy   (EntcListCursor**);
+__ENTC_LIBEX   void              entc_list_cursor_del       (EntcListCursor**);
 
 __ENTC_LIBEX   void              entc_list_cursor_init      (EntcList, EntcListCursor*, int direction);
 

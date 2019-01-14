@@ -24,13 +24,13 @@
 
 #include "system/ecdefs.h"
 #include "types/ecstring.h"
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcList ectokenizer_parse (const EcString source, char delimeter);           // tokenize using a character
+__LIBEX EntcList ectokenizer_parse (const EcString source, char delimeter);           // tokenize using a character
 
-__LIBEX EcList ectokenizer_token (const EcString source, const EcString token);     // tokenize using a token
+__LIBEX EntcList ectokenizer_token (const EcString source, const EcString token);     // tokenize using a token
 
 //-----------------------------------------------------------------------------
 

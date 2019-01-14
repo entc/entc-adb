@@ -714,14 +714,14 @@ EntcUdcCursor* entc_udc_cursor_new (EntcUdc self, int direction)
   {
     case ENTC_UDC_NODE:
     {
-      cursor->data = entc_map_cursor_create (self->data, direction);
+      cursor->data = entc_map_cursor_new (self->data, direction);
       cursor->type = ENTC_UDC_NODE;
       
       break;
     }
     case ENTC_UDC_LIST:
     {
-      cursor->data = entc_list_cursor_create (self->data, direction);
+      cursor->data = entc_list_cursor_new (self->data, direction);
       cursor->type = ENTC_UDC_LIST;
       
       break;
@@ -748,12 +748,12 @@ void entc_udc_cursor_del (EntcUdcCursor** p_cursor)
   {
     case ENTC_UDC_NODE:
     {
-      entc_map_cursor_destroy ((EntcMapCursor**)&(cursor->data));
+      entc_map_cursor_del ((EntcMapCursor**)&(cursor->data));
       break;
     }
     case ENTC_UDC_LIST:
     {
-      entc_list_cursor_destroy ((EntcListCursor**)&(cursor->data));
+      entc_list_cursor_del ((EntcListCursor**)&(cursor->data));
       break;
     }
   } 

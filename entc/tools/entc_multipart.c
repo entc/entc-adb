@@ -5,8 +5,10 @@
 #include "system/macros.h"
 #include "system/ecfile.h"
 
-#include "types/eclist.h"
 #include "types/ecstream.h"
+
+// entc includes
+#include "stc/entc_list.h"
 
 #include "tools/eclog.h"
 #include "tools/eccrypt.h"
@@ -614,7 +616,7 @@ uint_t entc_multipart_section_next (EntcMutilpartSection self, EcBuffer bufstrea
 
 struct EntcMultipart_s
 {
-  EcList parts;
+  EntcList parts;
   
   EcString boundary;
   
@@ -624,11 +626,9 @@ struct EntcMultipart_s
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL entc_multipart_section_onDel (void* ptr)
+static void __STDCALL entc_multipart_section_onDel (void* ptr)
 {
   EntcMutilpartSection h = ptr; entc_multipart_section_del (&h);
-    
-  return ENTC_ERR_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -637,7 +637,7 @@ EntcMultipart entc_multipart_new (const EcString boundary, const EcString header
 {
   EntcMultipart self = ENTC_NEW(struct EntcMultipart_s);
   
-  self->parts = eclist_create (entc_multipart_section_onDel);
+  self->parts = entc_list_new (entc_multipart_section_onDel);
   
   if (boundary)
   {
@@ -656,14 +656,14 @@ EntcMultipart entc_multipart_new (const EcString boundary, const EcString header
   {
     EntcMutilpartSection section = entc_multipart_section_new (entc_section_begin_new (self->boundary, header), entc_section_begin_next, entc_section_begin_del);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
   
   // add end of multipart
   {
     EntcMutilpartSection section = entc_multipart_section_new (entc_section_end_new (self->boundary), entc_section_end_next, entc_section_end_del);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
   
   return self;
@@ -675,7 +675,7 @@ void entc_multipart_del (EntcMultipart* p_self)
 {
   EntcMultipart self = *p_self;
 
-  eclist_destroy (&(self->parts));
+  entc_list_del (&(self->parts));
   ecstr_delete (&(self->boundary));
     
   ENTC_DEL(p_self, struct EntcMultipart_s);
@@ -685,22 +685,22 @@ void entc_multipart_del (EntcMultipart* p_self)
 
 void entc_multipart_add_text (EntcMultipart self, const EcString text, const EcString mimeType)
 {
-  EntcMutilpartSection h = eclist_pop_back (self->parts);
+  EntcMutilpartSection h = entc_list_pop_back (self->parts);
   
   {
     EntcMutilpartSection section = entc_multipart_section_new (entc_section_text_new (self->boundary, text, mimeType), entc_section_text_next, entc_section_text_del);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
   
-  eclist_push_back (self->parts, h);
+  entc_list_push_back (self->parts, h);
 }
 
 //-----------------------------------------------------------------------------
 
 void entc_multipart_add_file (EntcMultipart self, const EcString path, const EcString file, int fileId, const EcString vsec, unsigned int aes_type)
 {
-  EntcMutilpartSection h = eclist_pop_back (self->parts);
+  EntcMutilpartSection h = entc_list_pop_back (self->parts);
   
   {
     EcString h = ecfs_mergeToPath (path, file);
@@ -709,74 +709,74 @@ void entc_multipart_add_file (EntcMultipart self, const EcString path, const EcS
     
     ecstr_delete (&h);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
 
-  eclist_push_back (self->parts, h);
+  entc_list_push_back (self->parts, h);
 }
 
 //-----------------------------------------------------------------------------
 
 void entc_multipart_add_path (EntcMultipart self, const EcString path, const EcString name, int fileId, const EcString vsec, unsigned int aes_type)
 {
-  EntcMutilpartSection h = eclist_pop_back (self->parts);
+  EntcMutilpartSection h = entc_list_pop_back (self->parts);
 
   {
     EntcMutilpartSection section = entc_multipart_section_new (entc_section_file_new (self->boundary, path, name, fileId, vsec, aes_type), entc_section_file_next, entc_section_file_del);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
 
-  eclist_push_back (self->parts, h);
+  entc_list_push_back (self->parts, h);
 }
 
 //-----------------------------------------------------------------------------
 
 void entc_multipart_add_buf_ot (EntcMultipart self, const EcString name, EcBuffer* p_buf)
 {
-  EntcMutilpartSection h = eclist_pop_back (self->parts);
+  EntcMutilpartSection h = entc_list_pop_back (self->parts);
 
   {
     EcString h = ecbuf_str (p_buf);
     
     EntcMutilpartSection section = entc_multipart_section_new (entc_section_cdp_new (self->boundary, name, &h), entc_section_cdp_next, entc_section_cdp_del);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
 
-  eclist_push_back (self->parts, h);
+  entc_list_push_back (self->parts, h);
 }
 
 //-----------------------------------------------------------------------------
 
 void entc_multipart_add_str (EntcMultipart self, const EcString name, const EcString content)
 {
-  EntcMutilpartSection h = eclist_pop_back (self->parts);
+  EntcMutilpartSection h = entc_list_pop_back (self->parts);
   
   {
     EcString h = ecstr_copy (content);
     
     EntcMutilpartSection section = entc_multipart_section_new (entc_section_cdp_new (self->boundary, name, &h), entc_section_cdp_next, entc_section_cdp_del);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
 
-  eclist_push_back (self->parts, h);
+  entc_list_push_back (self->parts, h);
 }
 
 //-----------------------------------------------------------------------------
 
 void entc_multipart_add_str_ot (EntcMultipart self, const EcString name, EcString* p_content)
 { 
-  EntcMutilpartSection h = eclist_pop_back (self->parts);
+  EntcMutilpartSection h = entc_list_pop_back (self->parts);
 
   {
     EntcMutilpartSection section = entc_multipart_section_new (entc_section_cdp_new (self->boundary, name, p_content), entc_section_cdp_next, entc_section_cdp_del);
     
-    eclist_push_back (self->parts, section);
+    entc_list_push_back (self->parts, section);
   }
 
-  eclist_push_back (self->parts, h);
+  entc_list_push_back (self->parts, h);
 }
 
 //-----------------------------------------------------------------------------
@@ -801,7 +801,7 @@ uint_t entc_multipart_next (EntcMultipart self, EcBuffer buf)
     
     if (self->section == NULL)
     {
-      self->section = eclist_pop_front (self->parts);
+      self->section = entc_list_pop_front (self->parts);
     }
     
     if (self->section == NULL)

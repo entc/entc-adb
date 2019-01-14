@@ -1012,7 +1012,7 @@ void entc_map_cursor_init (EntcMap self, EntcMapCursor* cursor, int direction)
 
 //-----------------------------------------------------------------------------
 
-EntcMapCursor* entc_map_cursor_create (EntcMap self, int direction)
+EntcMapCursor* entc_map_cursor_new (EntcMap self, int direction)
 {
   EntcMapCursor* cursor = (EntcMapCursor*)malloc (sizeof(EntcMapCursor));
   
@@ -1023,7 +1023,7 @@ EntcMapCursor* entc_map_cursor_create (EntcMap self, int direction)
 
 //-----------------------------------------------------------------------------
 
-void entc_map_cursor_destroy (EntcMapCursor** pcursor)
+void entc_map_cursor_del (EntcMapCursor** pcursor)
 {
   EntcMapCursor* cursor = *pcursor;
   

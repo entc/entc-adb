@@ -737,18 +737,18 @@ int ecmultipartparser_process (EcMultipartParser self, ulong_t size)
 
 EcString echttpheader_parseLine (const EcString line, const EcString key)
 {
-  EcListCursor cursor;
-  EcList tokens;
+  EntcListCursor cursor;
+  EntcList tokens;
   EcString ret = NULL;
   int run = TRUE;
   
   tokens = ectokenizer_parse (line, ';');
   
-  eclist_cursor_init (tokens, &cursor, LIST_DIR_NEXT);
+  entc_list_cursor_init (tokens, &cursor, LIST_DIR_NEXT);
   
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
-    EcString token = ecstr_trim(eclist_data(cursor.node));
+    EcString token = ecstr_trim(entc_list_node_data(cursor.node));
     EcString left = NULL;
     EcString right = NULL;
     
@@ -767,7 +767,7 @@ EcString echttpheader_parseLine (const EcString line, const EcString key)
     ecstr_delete(&right);
   }
   
-  eclist_destroy (&tokens);
+  entc_list_del (&tokens);
   
   return ret;
 }

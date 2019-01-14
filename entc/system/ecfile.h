@@ -27,9 +27,10 @@
 
 #include "types/ecstring.h"
 #include "types/ecbuffer.h"
-#include "types/eclist.h"
-
 #include "types/ecerr.h"
+
+//entc includes
+#include "stc/entc_list.h"
 
 //-----------------------------------------------------------------------------
 
@@ -242,7 +243,7 @@ __LIBEX uint64_t ecdh_size (EcDirHandle, int recursive);
 //-----------------------------------------------------------------------------
 
 // fills a list with all files found -> filename as list entry
-__LIBEX int ecdh_scan (const EcString path, EcList entries, int filetype);
+__LIBEX int ecdh_scan (const EcString path, EntcList entries, int filetype);
 
 //-----------------------------------------------------------------------------
  

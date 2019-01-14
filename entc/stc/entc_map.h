@@ -97,9 +97,9 @@ typedef struct
 
 //-----------------------------------------------------------------------------
 
-__ENTC_LIBEX   EntcMapCursor*    entc_map_cursor_create     (EntcMap, int direction);
+__ENTC_LIBEX   EntcMapCursor*    entc_map_cursor_new        (EntcMap, int direction);
 
-__ENTC_LIBEX   void              entc_map_cursor_destroy    (EntcMapCursor**);
+__ENTC_LIBEX   void              entc_map_cursor_del        (EntcMapCursor**);
 
 __ENTC_LIBEX   void              entc_map_cursor_init       (EntcMap, EntcMapCursor*, int direction);
 
