@@ -1145,10 +1145,11 @@ int adblmodule_dbinsert (void* ptr, AdblInsert* insert)
   // execute
   if (mysql_stmt_execute (stmt) != 0)
   {
+    eclog_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
+
     mysql_stmt_close (stmt);
     bindvars_destroy (&bv);
 
-    eclog_msg  (LL_ERROR, C_MODDESC, "insert failed", mysql_stmt_error(stmt));
     return 0;
   }
 
