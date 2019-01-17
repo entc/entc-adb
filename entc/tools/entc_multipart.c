@@ -2,7 +2,6 @@
 
 //-----------------------------------------------------------------------------
 
-#include "system/macros.h"
 #include "system/ecfile.h"
 
 #include "types/eclist.h"

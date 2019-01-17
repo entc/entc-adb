@@ -1,7 +1,6 @@
 #include "ecdaemon.h"
 
 // entc includes
-#include "system/macros.h"
 #include "tools/eclog.h"
 #include "system/ecfile.h"
 

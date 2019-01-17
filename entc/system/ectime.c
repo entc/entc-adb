@@ -2,7 +2,6 @@
 
 #include "types/ecstring.h"
 #include "tools/eclog.h"
-#include "system/macros.h"
 
 #include <errno.h>
 #include <stdio.h>

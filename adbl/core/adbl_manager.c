@@ -19,7 +19,9 @@
 
 #include "adbl_manager.h"
 
-#include <system/ecmutex.h>
+// entc includes
+#include <sys/entc_mutex.h>
+
 #include <system/ecfile.h>
 #include <system/ecdl.h>
 #include <types/ecalloc.h>
@@ -118,7 +120,7 @@ struct AdblSession_s
 struct AdblManager_s
 {
   
-  EcMutex mutex;
+  EntcMutex mutex;
   
   EcMap credentials;
   
@@ -139,7 +141,7 @@ struct AdblSessionPool_s
   
   AdblCredentials* pc;
   
-  EcMutex mutex;
+  EntcMutex mutex;
   
 };
 
@@ -178,7 +180,7 @@ AdblSessionPool adbl_sessionpool_create (int minPoolSize, AdblCredentials* pc)
   
   self->pc = pc;
   
-  self->mutex = ecmutex_new();
+  self->mutex = entc_mutex_new();
   
   return self;
 }
@@ -191,7 +193,7 @@ void adbl_sessionpool_destroy (AdblSessionPool* pself)
   
   eclist_destroy (&(self->pool));
   
-  ecmutex_delete(&(self->mutex));
+  entc_mutex_del(&(self->mutex));
   
   ENTC_DEL (pself, struct AdblSessionPool_s);
 }
@@ -203,7 +205,7 @@ AdblSession adbl_sessionpool_get (AdblSessionPool self)
   ADBLModuleProperties* pp = self->pc->pp;
   AdblSession session = NULL;
   
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
 
   // iterrate through the pool to find the next free session
   {
@@ -269,7 +271,7 @@ AdblSession adbl_sessionpool_get (AdblSessionPool self)
     }
   }
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
   
   return session;
 }
@@ -281,13 +283,13 @@ void adbl_sessionpool_release (AdblSession* psession)
   AdblSession session = *psession;
   AdblSessionPool self = session->pool;
   
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
 
   session->isFree = TRUE;
   
   // TODO: cleanup if sessions > min size
 
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
 }
 
 //=============================================================================
@@ -385,7 +387,7 @@ AdblManager adbl_new ()
 {
   AdblManager self = ENTC_NEW(struct AdblManager_s);
     
-  self->mutex = ecmutex_new ();
+  self->mutex = entc_mutex_new ();
   self->modules = ecmap_create (NULL, adbl_modules_onDestroy);
   self->credentials = ecmap_create (NULL, adbl_credentials_onDestroy);
   self->path = ecstr_init();
@@ -399,7 +401,7 @@ void adbl_delete (AdblManager* ptr)
 {
   AdblManager self = *ptr;
   
-  ecmutex_delete(&(self->mutex));
+  entc_mutex_del (&(self->mutex));
 
   ecmap_destroy (&(self->credentials));
   ecmap_destroy (&(self->modules));
@@ -418,14 +420,14 @@ void adbl_setCredentialsFile (AdblManager self, const EcString name, const EcStr
   ADBLModuleProperties* pp;
   AdblCredentials* pc;  
 
-  ecmutex_lock(self->mutex);
+  entc_mutex_lock(self->mutex);
   
   node = ecmap_find (self->modules, (void*)dbtype);
   if (node == NULL)
   {
     eclog_fmt (LL_WARN, MODULE, "credentials", "database '%s' not in the list", dbtype);
 
-    ecmutex_unlock(self->mutex);
+    entc_mutex_unlock(self->mutex);
     return;
   }
   
@@ -448,7 +450,7 @@ void adbl_setCredentialsFile (AdblManager self, const EcString name, const EcStr
   
   ecstr_replace(&(pc->properties.file), file);
 
-  ecmutex_unlock(self->mutex);
+  entc_mutex_unlock(self->mutex);
 }
 
 /*------------------------------------------------------------------------*/
@@ -526,11 +528,11 @@ void adbl_scanPlugin (AdblManager self, const EcString filename)
     // fetch the module info
     const AdblModuleInfo* moduleinfo = info();
     
-    ecmutex_lock (self->mutex);
+    entc_mutex_lock (self->mutex);
     
     adbl_addPlugin (self, handle, moduleinfo->name);
     
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
   }
 }
 
@@ -762,11 +764,11 @@ AdblSession adbl_openSession (AdblManager self, const char* dbsource)
     return 0;
   }
 
-  ecmutex_lock(self->mutex);
+  entc_mutex_lock(self->mutex);
   
   pc = ecmap_node_value (node);  
 
-  ecmutex_unlock(self->mutex);
+  entc_mutex_unlock(self->mutex);
 
   return adbl_sessionpool_get (pc->pool);
 }

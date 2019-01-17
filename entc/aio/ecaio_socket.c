@@ -3,7 +3,6 @@
 #define READ_MAX_BUFFER 1024
 
 // entc includes
-#include "system/macros.h"
 #include "tools/eclog.h"
 
 //*****************************************************************************

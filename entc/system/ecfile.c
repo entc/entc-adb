@@ -1,7 +1,5 @@
 #include "ecfile.h"
 
-#include "system/macros.h"
-
 #include <string.h>
 
 /*------------------------------------------------------------------------*/

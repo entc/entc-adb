@@ -1,6 +1,5 @@
 #include "ecdlib.h"
 
-#include "macros.h"
 #include "system/ecfile.h"
 #include "types/ecstream.h"
 

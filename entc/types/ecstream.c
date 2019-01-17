@@ -1,7 +1,6 @@
 #include "ecstream.h"
 
 // entc includes
-#include "system/macros.h"
 #include "system/ecfile.h"
 
 // c includes

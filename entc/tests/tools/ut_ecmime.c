@@ -1,5 +1,4 @@
 #include "tests/ecenv.h"
-#include "system/macros.h"
 #include "system/ecfile.h"
 
 #include "tools/ecmime.h"

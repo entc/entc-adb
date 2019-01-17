@@ -2,7 +2,6 @@
 #include "ecjparser.h"
 
 // entc include
-#include "system/macros.h"
 #include "types/ecstream.h"
 #include "types/eclist.h"
 #include "tools/eclog.h"

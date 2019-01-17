@@ -1,6 +1,5 @@
 #include "ecstring.h"
 
-#include "system/macros.h"
 #include "types/ecbuffer.h"
 #include "types/ecstream.h"
 

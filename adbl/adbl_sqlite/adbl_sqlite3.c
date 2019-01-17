@@ -1,11 +1,13 @@
 #include "adbl_sqlite3.h"
 
 #include <system/ecfile.h>
-#include <system/ecmutex.h>
 #include <types/ecstream.h>
 #include <types/eclist.h>
 #include <tools/eclog.h>
 #include <tools/ectokenizer.h>
+
+// entc includes
+#include <sys/entc_mutex.h>
 
 #include "sqlite3.h"
 
@@ -27,7 +29,7 @@ struct AdblSqlite3Connection
   
   sqlite3* handle;
   
-  EcMutex mutex;
+  EntcMutex mutex;
   
 };
 
@@ -58,7 +60,7 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
   
   conn->schema = cp->schema;
   conn->handle = 0;
-  conn->mutex = ecmutex_new();
+  conn->mutex = entc_mutex_new();
 
   if( cp->file )
   {
@@ -101,7 +103,7 @@ void adblmodule_dbdisconnect (void* ptr)
     sqlite3_close(conn->handle);
   }
   
-  ecmutex_delete(&(conn->mutex));
+  entc_mutex_del (&(conn->mutex));
   
   ENTC_DEL(&conn, struct AdblSqlite3Connection);
 }
@@ -372,7 +374,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   
   orders = ecmap_create (adblmodule_dbquery_orders_onCmp, adblmodule_dbquery_orders_onDel);
   
-  ecmutex_lock(conn->mutex);
+  entc_mutex_lock(conn->mutex);
   
   /* create the stream */
   statement = ecstream_create ();
@@ -444,7 +446,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     cursor->row = FALSE;
     cursor->pos = 0;
     
-    ecmutex_unlock(conn->mutex);
+    entc_mutex_unlock(conn->mutex);
     
     return cursor;
   }
@@ -457,7 +459,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     eclog_fmt (LL_ERROR, MODULE, "query", "error in preparing the statement code [%i]", res);    
   }
   
-  ecmutex_unlock(conn->mutex);
+  entc_mutex_unlock(conn->mutex);
   return 0;
 }
 
@@ -504,11 +506,11 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table)
     return 0;  
   }
   
-  ecmutex_lock(conn->mutex);
+  entc_mutex_lock(conn->mutex);
 
   res = sqlite3_step (stmt);
 
-  ecmutex_unlock(conn->mutex);
+  entc_mutex_unlock(conn->mutex);
 
   if( res != SQLITE_ROW )
   {
@@ -1021,9 +1023,9 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
     return 0;  
   }
   
-  ecmutex_lock(conn->mutex);
+  entc_mutex_lock(conn->mutex);
   res = sqlite3_step(stmt);
-  ecmutex_unlock(conn->mutex);
+  entc_mutex_unlock(conn->mutex);
   
   while( res == SQLITE_ROW )
   {
@@ -1036,9 +1038,9 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
       break;
     }
     /* get next row */
-    ecmutex_lock(conn->mutex);
+    entc_mutex_lock(conn->mutex);
     res = sqlite3_step(stmt);
-    ecmutex_unlock(conn->mutex);
+    entc_mutex_unlock(conn->mutex);
   }
   
   res = sqlite3_finalize(stmt);
@@ -1093,9 +1095,9 @@ void* adblmodule_dbsequence_get (void* ptr, const char* table)
   /* init */
   self->value = 0;
   
-  ecmutex_lock(conn->mutex);
+  entc_mutex_lock(conn->mutex);
   res = sqlite3_step(stmt);
-  ecmutex_unlock(conn->mutex);
+  entc_mutex_unlock(conn->mutex);
 
   if( res == SQLITE_ROW )
   {
@@ -1188,9 +1190,9 @@ EcList adblmodule_dbschema (void* ptr)
     return 0;  
   } 
   
-  ecmutex_lock(conn->mutex);
+  entc_mutex_lock(conn->mutex);
   res = sqlite3_step(stmt);
-  ecmutex_unlock(conn->mutex);
+  entc_mutex_unlock(conn->mutex);
   
   // so far so good
   ret = eclist_create (adblmodule_dbschema_onDestroy);
@@ -1199,9 +1201,9 @@ EcList adblmodule_dbschema (void* ptr)
   {
     eclist_push_back (ret, ecstr_copy((const char*)sqlite3_column_text(stmt, 0)));
     // get next row
-    ecmutex_lock(conn->mutex);
+    entc_mutex_lock(conn->mutex);
     res = sqlite3_step(stmt);
-    ecmutex_unlock(conn->mutex);
+    entc_mutex_unlock(conn->mutex);
   }
   
   res = sqlite3_finalize(stmt);
@@ -1399,9 +1401,9 @@ AdblTable* adblmodule_dbtable (void* ptr, const EcString tablename)
     return 0;  
   } 
   
-  ecmutex_lock(conn->mutex);
+  entc_mutex_lock(conn->mutex);
   res = sqlite3_step(stmt);
-  ecmutex_unlock(conn->mutex);
+  entc_mutex_unlock(conn->mutex);
   
   if (res == SQLITE_ROW)
   {

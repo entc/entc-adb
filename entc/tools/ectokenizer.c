@@ -1,8 +1,4 @@
-
 #include "ectokenizer.h"
-
-// entc include
-#include "system/macros.h"
 
 //-----------------------------------------------------------------------------
 

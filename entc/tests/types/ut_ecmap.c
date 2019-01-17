@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <memory.h>
 
-#include "system/macros.h"
-
 //=============================================================================
 
 static void __STDCALL test_stdlist_onItemDestroy (void* key, void* val)

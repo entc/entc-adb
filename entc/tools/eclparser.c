@@ -2,7 +2,6 @@
 #include "eclparser.h"
 
 // entc include
-#include "system/macros.h"
 #include "types/ecstream.h"
 
 //-----------------------------------------------------------------------------

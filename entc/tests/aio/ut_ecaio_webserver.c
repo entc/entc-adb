@@ -4,7 +4,6 @@
 
 #include "tests/ecenv.h"
 
-#include "system/macros.h"
 #include "sys/entc_thread.h"
 #include "tools/eclparser.h"
 #include "types/ecstream.h"

@@ -1,6 +1,5 @@
 #include "ecbuffer.h"
 
-#include "system/macros.h"
 #include "types/ecstream.h"
 #include "types/ecerr.h"
 #include "tools/eclog.h"

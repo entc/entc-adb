@@ -19,8 +19,6 @@
 
 #include "ecfile.h"
 
-#include "system/macros.h"
-
 #if defined __BSD_OS || defined __LINUX_OS
 
 #include "types/eclist.h"

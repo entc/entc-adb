@@ -1,8 +1,10 @@
 #include <system/ecfile.h>
-#include <system/ecmutex.h>
 #include <types/ecstream.h>
 #include <types/eclist.h>
 #include <tools/eclog.h>
+
+// entc includes
+#include <sys/entc_mutex.h>
 
 #include <mysql.h>
 #include "adbl.h"
@@ -28,7 +30,7 @@ struct AdblMysqlConnection_s
   
   int ansi;
   
-  EcMutex mutex;
+  EntcMutex mutex;
   
 };
 
@@ -227,7 +229,7 @@ void adblmodule_destroy (AdblMysqlConnection* pself)
 
   mysql_close (self->conn);
   
-  ecmutex_delete (&(self->mutex));
+  entc_mutex_del (&(self->mutex));
   
   ENTC_DEL (pself, struct AdblMysqlConnection_s);
 
@@ -243,7 +245,7 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
 
   AdblMysqlConnection self = ENTC_NEW(struct AdblMysqlConnection_s);
   
-  self->mutex = ecmutex_new();
+  self->mutex = entc_mutex_new();
   self->ansi = FALSE;
   
   // call this before mysql_init
@@ -707,13 +709,13 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
 
   AdblMysqlConnection self = ptr;
     
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
   
   // try to get a prepared statement handle
   stmt = mysql_stmt_init (self->conn);
   if (isNotAssigned (stmt))
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
 
     eclog_msg  (LL_ERROR, C_MODDESC, "query#1", mysql_stmt_error(stmt));
     return NULL;
@@ -731,7 +733,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
   // clean up
   bindvars_destroy (&bv);
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
 
   return ret;
 }
@@ -804,12 +806,12 @@ int adblmodule_dbprocedure (void* ptr, AdblProcedure* proc)
   
   AdblMysqlConnection self = ptr;
   
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
 
   stmt = mysql_stmt_init (self->conn);
   if (isNotAssigned (stmt))
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_msg  (LL_ERROR, C_MODDESC, "proc#1", mysql_stmt_error(stmt));
     return FALSE;
@@ -832,7 +834,7 @@ int adblmodule_dbprocedure (void* ptr, AdblProcedure* proc)
   
   mysql_commit (self->conn);
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
   
   return res;
 }

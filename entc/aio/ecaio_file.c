@@ -1,7 +1,6 @@
 #include "ecaio_file.h"
 
 // entc includes
-#include "system/macros.h"
 #include "tools/eclog.h"
 
 #define READ_MAX_BUFFER 1024

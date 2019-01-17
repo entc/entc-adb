@@ -2,7 +2,6 @@
 #include "aio/ecaio.h"
 #include "aio/ecaio_proc.h"
 #include "system/ecproc.h"
-#include "system/macros.h"
 
 #include "sys/entc_thread.h"
 

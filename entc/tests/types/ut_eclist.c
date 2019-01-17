@@ -1,7 +1,5 @@
-
 #include "types/eclist.h"
 #include "tests/ecenv.h"
-#include "system/macros.h"
 
 #include <stdio.h>
 #include <string.h>

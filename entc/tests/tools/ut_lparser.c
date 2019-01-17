@@ -1,7 +1,6 @@
 
 #include "tools/eclparser.h"
 #include "tests/ecenv.h"
-#include "system/macros.h"
 
 //=============================================================================
 

@@ -24,7 +24,7 @@
 #include "adbo_context.h"
 
 // entc includes
-#include <system/ecmutex.h>
+#include <sys/entc_mutex.h>
 #include <tools/ecjson.h>
 
 //----------------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ struct Adbo_s
   
   EcUdc root;
   
-  EcMutex mutex;
+  EntcMutex mutex;
   
 };
 
@@ -222,7 +222,7 @@ Adbo adbo_create (const EcString confPath, const EcString binPath, const EcStrin
   
   self->adboctx = adbo_context_createJson (confPath, binPath);
   self->root = NULL;
-  self->mutex = ecmutex_new ();
+  self->mutex = entc_mutex_new ();
   
   xmlstream = ecxmlstream_openfile (objFile, confPath);
   if (xmlstream)
@@ -253,8 +253,8 @@ void adbo_destroy (Adbo* pself)
     ecudc_destroy(EC_ALLOC, &(self->root));
   }
   
-  adbo_context_destroy(&(self->adboctx));
-  ecmutex_delete(&(self->mutex));
+  adbo_context_destroy (&(self->adboctx));
+  entc_mutex_del (&(self->mutex));
   
   ENTC_DEL (pself, struct Adbo_s);
 }
@@ -269,11 +269,11 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   EcUdc dataTable;
   EcUdc params;
   
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
   
   if (self->root == NULL)
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
 
@@ -285,7 +285,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
   tableNode = adbo_get_table (self->root, table);
   if (isNotAssigned (tableNode))
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
 
@@ -337,7 +337,7 @@ int adbo_db_update (Adbo self, const EcString table, EcUdc* data, EcUdc caseNode
     ecudc_destroy (EC_ALLOC, &params);
   }
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
   
   //eclog_fmt (LL_TRACE, "ADBO", "insert", "[%s] #3", table);
 
@@ -351,11 +351,11 @@ EcUdc adbo_db_cursor (Adbo self, const EcString table, EcUdc params)
   EcUdc tableNode;
   EcUdc cursorNode;
 
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
   
   if (self->root == NULL)
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
     
@@ -365,7 +365,7 @@ EcUdc adbo_db_cursor (Adbo self, const EcString table, EcUdc params)
   tableNode = adbo_get_table (self->root, table);
   if (isNotAssigned (tableNode))
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
     
@@ -380,7 +380,7 @@ EcUdc adbo_db_cursor (Adbo self, const EcString table, EcUdc params)
     adbo_item_cursor (self->adboctx, cursor, tableNode, params);
   }
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
 
   return cursorNode;
 }
@@ -392,11 +392,11 @@ EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
   EcUdc tableNode;
   EcUdc values;
 
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
   
   if (self->root == NULL)
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] root is NULL", table);
     
@@ -406,7 +406,7 @@ EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
   tableNode = adbo_get_table (self->root, table);
   if (isNotAssigned (tableNode))
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "insert", "[%s] table node is NULL", table);
     
@@ -417,7 +417,7 @@ EcUdc adbo_db_fetch (Adbo self, const EcString table, EcUdc params)
   
   values = adbo_item_values (tableNode);
 
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
 
   return values;
 }
@@ -428,11 +428,11 @@ int adbo_db_delete (Adbo self, const EcString table, EcUdc params)
 {
   EcUdc tableNode;
 
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
 
   if (self->root == NULL)
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "delete", "[%s] root is NULL", table);
     
@@ -442,7 +442,7 @@ int adbo_db_delete (Adbo self, const EcString table, EcUdc params)
   tableNode = adbo_get_table (self->root, table);
   if (isNotAssigned (tableNode))
   {
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
     
     eclog_fmt (LL_ERROR, "ADBO", "delete", "[%s] table node is NULL", table);
     
@@ -451,7 +451,7 @@ int adbo_db_delete (Adbo self, const EcString table, EcUdc params)
 
   adbo_delete (tableNode, params, self->adboctx);
 
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
   
   return ENTC_ERR_NONE;
 }

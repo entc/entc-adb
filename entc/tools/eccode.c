@@ -1,7 +1,5 @@
 #include "eccode.h"
 
-#include "system/macros.h"
-
 //=============================================================================
 
 #if defined _WIN32 || defined _WIN64

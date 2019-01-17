@@ -1,6 +1,5 @@
 #include "ecenv.h"
 
-#include "system/macros.h"
 #include "types/eclist.h"
 #include "tools/eclog.h"
 

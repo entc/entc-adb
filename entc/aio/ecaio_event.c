@@ -1,7 +1,5 @@
 #include "ecaio_event.h"
 
-#include "system/macros.h"
-
 //-----------------------------------------------------------------------------
 
 struct EcAioEvent_s
