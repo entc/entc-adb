@@ -22,8 +22,8 @@
 
 //-----------------------------------------------------------------------------
 
-#include "system/ecdefs.h"
-#include "system/types.h"
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 
 #include "types/ecstring.h"
 #include "types/ecbuffer.h"
@@ -141,51 +141,51 @@ typedef struct
 
 //=============================================================================
 
-__LIBEX int ecfs_move (const EcString source, const EcString dest);
+__ENTC_LIBEX int ecfs_move (const EcString source, const EcString dest);
 
-__LIBEX int ecfs_cpfile (const EcString source, const EcString dest, EcErr err);
+__ENTC_LIBEX int ecfs_cpfile (const EcString source, const EcString dest, EcErr err);
 
-__LIBEX int ecfs_cpdir (const EcString source, const EcString dest, EcErr err);
+__ENTC_LIBEX int ecfs_cpdir (const EcString source, const EcString dest, EcErr err);
 
-__LIBEX int ecfs_mkdir (const EcString source);
+__ENTC_LIBEX int ecfs_mkdir (const EcString source);
 
-__LIBEX int ecfs_rmdir (const EcString source, int forceOnNoneEmpty);
+__ENTC_LIBEX int ecfs_rmdir (const EcString source, int forceOnNoneEmpty);
 
-__LIBEX int ecfs_rmfile (const EcString source);
+__ENTC_LIBEX int ecfs_rmfile (const EcString source);
 
-__LIBEX int ecfs_fileInfo (EcFileInfo, const EcString path);
+__ENTC_LIBEX int ecfs_fileInfo (EcFileInfo, const EcString path);
 
-__LIBEX int ecfs_createDirIfNotExists (const EcString path);
+__ENTC_LIBEX int ecfs_createDirIfNotExists (const EcString path);
 
-__LIBEX int ecfs_exists (const EcString path);
+__ENTC_LIBEX int ecfs_exists (const EcString path);
 
-__LIBEX int ecfs_chdir (const EcString path, EcErr err);
+__ENTC_LIBEX int ecfs_chdir (const EcString path, EcErr err);
 
 /* **** path string operations **** */
 
-__LIBEX EcString ecfs_getExecutablePath (int argc, char *argv[]);
+__ENTC_LIBEX EcString ecfs_getExecutablePath (int argc, char *argv[]);
 
-__LIBEX void ecfs_getExecutable (EcString* path, EcString* name, int argc, char *argv[]);
+__ENTC_LIBEX void ecfs_getExecutable (EcString* path, EcString* name, int argc, char *argv[]);
 
-__LIBEX EcString ecfs_getRealPath(const EcString path);   // finds the absolute path (path needs to exists)
+__ENTC_LIBEX EcString ecfs_getRealPath(const EcString path);   // finds the absolute path (path needs to exists)
 
-__LIBEX EcString ecfs_mergeToPath(const EcString path, const EcString file);
+__ENTC_LIBEX EcString ecfs_mergeToPath(const EcString path, const EcString file);
 
-__LIBEX const EcString ecfs_extractFile(const EcString path);
+__ENTC_LIBEX const EcString ecfs_extractFile(const EcString path);
 
-__LIBEX EcString ecfs_getCurrentDirectory();
+__ENTC_LIBEX EcString ecfs_getCurrentDirectory();
 
-__LIBEX EcString ecfs_getDirectory(const EcString filename);
+__ENTC_LIBEX EcString ecfs_getDirectory(const EcString filename);
 
-__LIBEX void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_resdir, EcString* ptr_resfile);
+__ENTC_LIBEX void ecfs_basedir(const EcString basedir, const EcString file, EcString* ptr_resdir, EcString* ptr_resfile);
 
-__LIBEX const EcString ecfs_extractFileExtension(const EcString path);
+__ENTC_LIBEX const EcString ecfs_extractFileExtension(const EcString path);
 
-__LIBEX EcString ecfs_extractFileName(const EcString path);
+__ENTC_LIBEX EcString ecfs_extractFileName(const EcString path);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcString         entc_fs_path_absolute           (const EcString relative_or_absolute_path);      // cleans the path and converts the path to an absolute path
+__ENTC_LIBEX EcString         entc_fs_path_absolute           (const EcString relative_or_absolute_path);      // cleans the path and converts the path to an absolute path
 
 //=============================================================================
 
@@ -193,31 +193,31 @@ struct EcFileHandle_s; typedef struct EcFileHandle_s* EcFileHandle;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcFileHandle ecfh_open (const EcString filename, int flags);
+__ENTC_LIBEX EcFileHandle ecfh_open (const EcString filename, int flags);
   
-__LIBEX void ecfh_close (EcFileHandle*);
+__ENTC_LIBEX void ecfh_close (EcFileHandle*);
 
-__LIBEX uint64_t ecfh_size (EcFileHandle);
+__ENTC_LIBEX uint64_t ecfh_size (EcFileHandle);
   
-__LIBEX int ecfh_writeString (EcFileHandle, const EcString);
+__ENTC_LIBEX int ecfh_writeString (EcFileHandle, const EcString);
   
-__LIBEX int ecfh_writeString_encrypted (EcFileHandle, const EcString, const EcString key);
+__ENTC_LIBEX int ecfh_writeString_encrypted (EcFileHandle, const EcString, const EcString key);
 
-__LIBEX int ecfh_writeBuffer (EcFileHandle, const EcBuffer buffer, uint_t size);
+__ENTC_LIBEX int ecfh_writeBuffer (EcFileHandle, const EcBuffer buffer, uint_t size);
 
-__LIBEX int ecfh_writeConst (EcFileHandle, const char* buffer, uint_t size);
+__ENTC_LIBEX int ecfh_writeConst (EcFileHandle, const char* buffer, uint_t size);
 
-__LIBEX uint_t ecfh_readBuffer (EcFileHandle, EcBuffer buffer);
+__ENTC_LIBEX uint_t ecfh_readBuffer (EcFileHandle, EcBuffer buffer);
 
-__LIBEX uint_t ecfh_readBufferOf (EcFileHandle, EcBuffer buffer, uint_t offset);
+__ENTC_LIBEX uint_t ecfh_readBufferOf (EcFileHandle, EcBuffer buffer, uint_t offset);
 
-__LIBEX void ecfh_reset(EcFileHandle);
+__ENTC_LIBEX void ecfh_reset(EcFileHandle);
 
-__LIBEX int ecfh_fileno(EcFileHandle);
+__ENTC_LIBEX int ecfh_fileno(EcFileHandle);
 
-__LIBEX EcString ecfh_md5(EcFileHandle);
+__ENTC_LIBEX EcString ecfh_md5(EcFileHandle);
   
-__LIBEX FILE* ecfh_file (EcFileHandle, EcString type);
+__ENTC_LIBEX FILE* ecfh_file (EcFileHandle, EcString type);
 
 //=============================================================================
 
@@ -225,24 +225,24 @@ typedef struct EcDirHandle_s* EcDirHandle;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDirHandle ecdh_create (const EcString path);
+__ENTC_LIBEX EcDirHandle ecdh_create (const EcString path);
   
-__LIBEX void ecdh_destroy (EcDirHandle*);
+__ENTC_LIBEX void ecdh_destroy (EcDirHandle*);
   
-__LIBEX int ecdh_next (EcDirHandle, EcFileInfo*, int fullInfo);
+__ENTC_LIBEX int ecdh_next (EcDirHandle, EcFileInfo*, int fullInfo);
 
-__LIBEX void ecdh_seekType (const EcString path, EcFileInfo entry);
+__ENTC_LIBEX void ecdh_seekType (const EcString path, EcFileInfo entry);
 
-__LIBEX void ecfi_clone (const EcFileInfo, EcFileInfo);
+__ENTC_LIBEX void ecfi_clone (const EcFileInfo, EcFileInfo);
 
-__LIBEX const EcString ecdh_path (EcDirHandle);
+__ENTC_LIBEX const EcString ecdh_path (EcDirHandle);
 
-__LIBEX uint64_t ecdh_size (EcDirHandle, int recursive);
+__ENTC_LIBEX uint64_t ecdh_size (EcDirHandle, int recursive);
 
 //-----------------------------------------------------------------------------
 
 // fills a list with all files found -> filename as list entry
-__LIBEX int ecdh_scan (const EcString path, EcList entries, int filetype);
+__ENTC_LIBEX int ecdh_scan (const EcString path, EcList entries, int filetype);
 
 //-----------------------------------------------------------------------------
  

@@ -22,15 +22,15 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 #include "types/eclist.h"
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcList ectokenizer_parse (const EcString source, char delimeter);           // tokenize using a character
+__ENTC_LIBEX EcList ectokenizer_parse (const EcString source, char delimeter);           // tokenize using a character
 
-__LIBEX EcList ectokenizer_token (const EcString source, const EcString token);     // tokenize using a token
+__ENTC_LIBEX EcList ectokenizer_token (const EcString source, const EcString token);     // tokenize using a token
 
 //-----------------------------------------------------------------------------
 

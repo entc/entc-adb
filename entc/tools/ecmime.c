@@ -730,7 +730,7 @@ int ecmultipartparser_process (EcMultipartParser self, ulong_t size)
   
   //eclogger_fmt (LL_DEBUG, "ENTC", "mime", "done parsing"); 
   
-  return ENTC_RESCODE_OK;
+  return ENTC_ERR_NONE;
 }
 
 //---------------------------------------------------------------------------------------

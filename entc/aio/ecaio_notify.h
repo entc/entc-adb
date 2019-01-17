@@ -42,15 +42,15 @@ struct EcAioNotify_s; typedef struct EcAioNotify_s* EcAioNotify;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioNotify ecaio_notify_create ();
+__ENTC_LIBEX EcAioNotify ecaio_notify_create ();
 
-__LIBEX void ecaio_notify_destroy (EcAioNotify*);
+__ENTC_LIBEX void ecaio_notify_destroy (EcAioNotify*);
 
-__LIBEX int ecaio_notify_init (EcAioNotify, const char* path, EcErr);
+__ENTC_LIBEX int ecaio_notify_init (EcAioNotify, const char* path, EcErr);
 
-__LIBEX int ecaio_notify_assign (EcAioNotify*, EcAio aio, EcErr err);
+__ENTC_LIBEX int ecaio_notify_assign (EcAioNotify*, EcAio aio, EcErr err);
 
-__LIBEX void ecaio_notify_setCallback (EcAioNotify, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
+__ENTC_LIBEX void ecaio_notify_setCallback (EcAioNotify, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
 
 //=============================================================================
 

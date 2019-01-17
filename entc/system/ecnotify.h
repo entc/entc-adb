@@ -25,15 +25,15 @@
 
 struct EcNotify_s; typedef struct EcNotify_s* EcNotify;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
   
-__LIB_EXPORT EcNotify ecnotify_create ();
+__ENTC_LIBEX EcNotify ecnotify_create ();
   
-__LIB_EXPORT void ecnotify_destroy (EcNotify*);
+__ENTC_LIBEX void ecnotify_destroy (EcNotify*);
 
-__LIB_EXPORT void enotify_addPath (EcNotify, const EcString path);
+__ENTC_LIBEX void enotify_addPath (EcNotify, const EcString path);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 
 #endif

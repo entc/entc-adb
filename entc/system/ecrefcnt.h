@@ -20,22 +20,18 @@
 #ifndef ENTC_SYSTEM_REFCNT_H
 #define ENTC_SYSTEM_REFCNT_H 1
 
-#include "../system/macros.h"
+#include "sys/entc_export.h"
 
 struct EcRefCnt_s; typedef struct EcRefCnt_s* EcRefCnt;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX EcRefCnt ecrefcnt_new (void*);
 
-__LIB_EXPORT EcRefCnt ecrefcnt_new (void*);
+__ENTC_LIBEX void ecrefcnt_delete (EcRefCnt*);
 
-__LIB_EXPORT void ecrefcnt_delete (EcRefCnt*);
+__ENTC_LIBEX void ecrefcnt_inc (EcRefCnt);
 
-__LIB_EXPORT void ecrefcnt_inc (EcRefCnt);
+__ENTC_LIBEX int ecrefcnt_dec (EcRefCnt);
 
-__LIB_EXPORT int ecrefcnt_dec (EcRefCnt);
-
-__LIB_EXPORT void* ecrefcnt_get (EcRefCnt);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void* ecrefcnt_get (EcRefCnt);
 
 #endif

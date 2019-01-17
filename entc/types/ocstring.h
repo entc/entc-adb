@@ -29,7 +29,7 @@
 namespace entc {
 
   
-  class __LIB_EXPORT OcString
+  class __ENTC_LIBEX OcString
   {
     
   public:

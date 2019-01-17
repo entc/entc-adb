@@ -121,7 +121,7 @@ int ecaio_context_continue (void* ptr, int repeat, unsigned long bytes)
   EcAioContext ctx = NULL;
   int cont = ENTC_AIO_CODE_CONTINUE;
   
-  //ecmutex_lock (self->mutex);
+  //entc_mutex_lock (self->mutex);
   
   if (ovl)
   {
@@ -142,7 +142,7 @@ int ecaio_context_continue (void* ptr, int repeat, unsigned long bytes)
     
   }
   
-  //ecmutex_unlock (self->mutex);
+  //entc_mutex_unlock (self->mutex);
   
   return (cont == ENTC_AIO_CODE_ABORTALL);
 }

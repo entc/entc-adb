@@ -19,8 +19,8 @@
 
 #include "ecasyncvc.h"
 
-#include "system/ecmutex.h"
-#include "system/ecthread.h"
+#include "sys/entc_mutex.h"
+#include "sys/entc_thread.h"
 #include "system/ectime.h"
 
 #include "types/ecmap.h"
@@ -395,7 +395,7 @@ struct EcAsyncUdpContext_s
   
   EcStopWatch stopwatch;
   
-  EcMutex mutex;
+  EntcMutex mutex;
   
 };
 
@@ -414,7 +414,7 @@ EcAsyncUdpContext ecasync_udpcontext_create (ulong_t timeout, ecasync_worker_udp
   self->stopwatch = ecstopwatch_create (timeout);  
   ecstopwatch_start (self->stopwatch);
   
-  self->mutex = ecmutex_new ();
+  self->mutex = entc_mutex_new ();
 
   return self;
 }
@@ -437,7 +437,7 @@ void ecasync_udpcontext_destroy (EcAsyncUdpContext* pself)
   
   ecstopwatch_destroy (&(self->stopwatch));
   
-  ecmutex_delete(&(self->mutex));
+  entc_mutex_del(&(self->mutex));
   
   ENTC_DEL (pself, struct EcAsyncUdpContext_s);
 }
@@ -448,7 +448,7 @@ int ecasync_udpcontext_recv (EcAsyncUdpContext self, EcDatagram* dg, int count)
 {
   int res = FALSE;
   
-  ecmutex_lock(self->mutex);
+  entc_mutex_lock(self->mutex);
   
   if (self->dg)
   {
@@ -465,7 +465,7 @@ int ecasync_udpcontext_recv (EcAsyncUdpContext self, EcDatagram* dg, int count)
     res = self->recvCb (self->ptr, self, self->dg, count);
   }
   
-  ecmutex_unlock(self->mutex);
+  entc_mutex_unlock(self->mutex);
 
   return res;
 }
@@ -474,7 +474,7 @@ int ecasync_udpcontext_recv (EcAsyncUdpContext self, EcDatagram* dg, int count)
 
 void ecasync_udpcontext_send (EcAsyncUdpContext self, EcBuffer buf, size_t len)
 {
-  ecmutex_lock(self->mutex);
+  entc_mutex_lock(self->mutex);
 
   if (self->dg && buf)
   {
@@ -482,7 +482,7 @@ void ecasync_udpcontext_send (EcAsyncUdpContext self, EcBuffer buf, size_t len)
     ecdatagram_writeBuf (self->dg, buf, len);
   }
   
-  ecmutex_unlock(self->mutex);
+  entc_mutex_unlock(self->mutex);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -506,7 +506,7 @@ struct EcAsynUdpDispatcher_s {
   
   EcMap contexts;
   
-  EcMutex mutex;
+  EntcMutex mutex;
   
   EcStopWatch stopwatch;
   
@@ -537,7 +537,7 @@ EcAsynUdpDispatcher ecasync_udpdisp_create (const EcString host, ulong_t port, E
   self->ptr = ptr;
   
   self->contexts = ecmap_create (EC_ALLOC);
-  self->mutex = ecmutex_new ();
+  self->mutex = entc_mutex_new ();
   
   self->stopwatch = ecstopwatch_create (60000);  // check each 60 seconds
   ecstopwatch_start (self->stopwatch);
@@ -551,7 +551,7 @@ static void _STDCALL ecasync_udpdisp_destroy (void** ptr)
 {
   EcAsynUdpDispatcher self = *ptr;
   
-  ecmutex_delete (&(self->mutex));
+  entc_mutex_del (&(self->mutex));
   
   ENTC_DEL (ptr, struct EcAsynUdpDispatcher_s);
 }
@@ -590,7 +590,7 @@ static int _STDCALL ecasync_udpdisp_run (void* ptr)
   // get ident
   ident = ecdatagram_ident (dg);
   
-  ecmutex_lock (self->mutex);  
+  entc_mutex_lock (self->mutex);  
   
   context = NULL;
   
@@ -611,7 +611,7 @@ static int _STDCALL ecasync_udpdisp_run (void* ptr)
     context = ecmap_data (node);
   }
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
   
   
   
@@ -629,11 +629,11 @@ static int _STDCALL ecasync_udpdisp_run (void* ptr)
     ecasync_udpcontext_destroy (&context);
 
     // we can close this context
-    ecmutex_lock (self->mutex);
+    entc_mutex_lock (self->mutex);
         
     ecmap_erase (self->contexts, node);
     
-    ecmutex_unlock (self->mutex);
+    entc_mutex_unlock (self->mutex);
   }
   
   return TRUE;  // always true
@@ -646,7 +646,7 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
   EcAsynUdpDispatcher self = obj;
   EcStopWatch refWatch = ptr;
   
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
   
   if (ecstopwatch_timedOutRef(self->stopwatch, refWatch))
   {
@@ -671,7 +671,7 @@ static int _STDCALL ecasync_udpdisp_hasTimedOut (void* obj, void* ptr)
     }
   }
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
   
   return FALSE;  // always false
 }
@@ -682,7 +682,7 @@ void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher self, EcBuffer buf, size_t l
 {
   EcMapNode node;
 
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
 
   for (node = ecmap_first(self->contexts); node != ecmap_end(self->contexts); node = ecmap_next(node))
   {
@@ -694,7 +694,7 @@ void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher self, EcBuffer buf, size_t l
     }
   }
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
 }
 
 //-----------------------------------------------------------------------------------------------------------

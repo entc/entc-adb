@@ -19,7 +19,6 @@
 
 #include "ecdl.h"
 
-#include "system/ecdefs.h"
 #include "system/ecfile.h"
 #include "tools/eclog.h"
 

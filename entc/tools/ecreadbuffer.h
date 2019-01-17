@@ -20,28 +20,26 @@
 #ifndef ENTC_UTILS_READBUFFER_H
 #define ENTC_UTILS_READBUFFER_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
-#include "../system/ecfile.h"
-
-#include "../types/ecstring.h"
+#include "system/ecfile.h"
+#include "types/ecstring.h"
+#include "sys/entc_export.h"
 
 struct EcReadBuffer_s; typedef struct EcReadBuffer_s* EcReadBuffer;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
     
-__LIB_EXPORT EcReadBuffer ecreadbuffer_create (EcFileHandle, int close);
+__ENTC_LIBEX EcReadBuffer ecreadbuffer_create (EcFileHandle, int close);
 
-__LIB_EXPORT void ecreadbuffer_destroy (EcReadBuffer*);
+__ENTC_LIBEX void ecreadbuffer_destroy (EcReadBuffer*);
 
-__LIB_EXPORT int ecreadbuffer_getnext (EcReadBuffer, char* character);
+__ENTC_LIBEX int ecreadbuffer_getnext (EcReadBuffer, char* character);
 
   /* ensure to read size amount of characters into the buffer */
   /* return the real amount, could be < size if end of file reached */
-__LIB_EXPORT uint_t ecreadbuffer_get ( EcReadBuffer, uint_t size );
+__ENTC_LIBEX uint_t ecreadbuffer_get ( EcReadBuffer, uint_t size );
 
-__LIB_EXPORT const EcString ecreadbuffer_buffer ( EcReadBuffer );
+__ENTC_LIBEX const EcString ecreadbuffer_buffer ( EcReadBuffer );
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

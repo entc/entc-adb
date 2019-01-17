@@ -23,7 +23,6 @@
 
 #if defined __BSD_OS || defined __LINUX_OS
 
-#include "system/ecdefs.h"
 #include "types/eclist.h"
 #include "tools/eclog.h"
 

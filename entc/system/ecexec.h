@@ -22,7 +22,7 @@
 
 //-----------------------------------------------------------------------------
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 
 //=============================================================================
@@ -31,21 +31,21 @@ struct EcExec_s; typedef struct EcExec_s* EcExec;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcExec ecexec_new (const EcString script);
+__ENTC_LIBEX EcExec ecexec_new (const EcString script);
 
-__LIBEX void ecexec_delete (EcExec*);
+__ENTC_LIBEX void ecexec_delete (EcExec*);
 
-__LIBEX void ecexec_addParameter (EcExec, const EcString);
+__ENTC_LIBEX void ecexec_addParameter (EcExec, const EcString);
 
-__LIBEX int ecexec_run (EcExec);
+__ENTC_LIBEX int ecexec_run (EcExec);
 
-__LIBEX const EcString ecexec_stdout (EcExec);
+__ENTC_LIBEX const EcString ecexec_stdout (EcExec);
 
-__LIBEX const EcString ecexec_stderr (EcExec);
+__ENTC_LIBEX const EcString ecexec_stderr (EcExec);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void ecprog_activateCrashReport (const EcString directory);
+__ENTC_LIBEX void ecprog_activateCrashReport (const EcString directory);
 
 //-----------------------------------------------------------------------------
 

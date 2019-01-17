@@ -5,7 +5,7 @@
 #include "tests/ecenv.h"
 
 #include "system/macros.h"
-#include "system/ecthread.h"
+#include "sys/entc_thread.h"
 #include "tools/eclparser.h"
 #include "types/ecstream.h"
 #include "tools/eclog.h"
@@ -241,20 +241,20 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
   
   {
     int i;
-    EcThread threads [16];
+    EntcThread threads [16];
     
     for (i = 0; i < 16; i++)
     {
-      threads [i] = ecthread_new (NULL);
+      threads [i] = entc_thread_new ();
      
-      ecthread_start (threads [i], test_ecaio_worker, aio);
+      entc_thread_start (threads [i], test_ecaio_worker, aio);
     }
     
     for (i = 0; i < 16; i++)
     {
-      ecthread_join (threads [i]);
+      entc_thread_join (threads [i]);
       
-      ecthread_delete (&(threads[i]));
+      entc_thread_del (&(threads[i]));
     }
   }    
     

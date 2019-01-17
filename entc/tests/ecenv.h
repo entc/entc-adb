@@ -22,7 +22,7 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 #include "types/ecerr.h"
 
@@ -40,23 +40,23 @@ typedef int (__STDCALL *fct_testenv_test) (void* ptr, TestEnvContext ctx, EcErr 
 
 //-----------------------------------------------------------------------------
 
-__LIBEX TestEnv testenv_create ();
+__ENTC_LIBEX TestEnv testenv_create ();
 
-__LIBEX int testenv_destroy (TestEnv*);
+__ENTC_LIBEX int testenv_destroy (TestEnv*);
 
-__LIBEX void testenv_run (TestEnv);
+__ENTC_LIBEX void testenv_run (TestEnv);
 
-__LIBEX void testenv_reg (TestEnv, const char* name, fct_testenv_init, fct_testenv_done, fct_testenv_test);
+__ENTC_LIBEX void testenv_reg (TestEnv, const char* name, fct_testenv_init, fct_testenv_done, fct_testenv_test);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void testctx_push_string (TestEnvContext, const char* text);
+__ENTC_LIBEX void testctx_push_string (TestEnvContext, const char* text);
 
-__LIBEX int testctx_pop_tocomp (TestEnvContext, const char* text);
+__ENTC_LIBEX int testctx_pop_tocomp (TestEnvContext, const char* text);
 
-__LIBEX void testctx_assert (TestEnvContext, int, const char* comment);
+__ENTC_LIBEX void testctx_assert (TestEnvContext, int, const char* comment);
 
-__LIBEX int testctx_err (TestEnvContext, EcErr);
+__ENTC_LIBEX int testctx_err (TestEnvContext, EcErr);
 
 //-----------------------------------------------------------------------------
 

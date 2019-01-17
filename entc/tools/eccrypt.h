@@ -22,7 +22,7 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecudc.h"
 #include "types/ecstring.h"
 
@@ -51,13 +51,13 @@ struct EcEncryptAES_s; typedef struct EcEncryptAES_s* EcEncryptAES;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcEncryptAES ecencrypt_aes_create (uint_t cypher_type, uint_t padding_type, const EcString secret, uint_t key_type);
+__ENTC_LIBEX EcEncryptAES ecencrypt_aes_create (uint_t cypher_type, uint_t padding_type, const EcString secret, uint_t key_type);
 
-__LIBEX void ecencrypt_aes_destroy (EcEncryptAES* pself);
+__ENTC_LIBEX void ecencrypt_aes_destroy (EcEncryptAES* pself);
 
-__LIBEX EcBuffer ecencrypt_aes_update (EcEncryptAES, EcBuffer, EcErr);
+__ENTC_LIBEX EcBuffer ecencrypt_aes_update (EcEncryptAES, EcBuffer, EcErr);
 
-__LIBEX EcBuffer ecencrypt_aes_finalize (EcEncryptAES, EcErr);
+__ENTC_LIBEX EcBuffer ecencrypt_aes_finalize (EcEncryptAES, EcErr);
 
 //=============================================================================
 
@@ -65,18 +65,18 @@ struct EcDecryptAES_s; typedef struct EcDecryptAES_s* EcDecryptAES;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDecryptAES ecdecrypt_aes_create (const EcString secret, uint_t cypher_type, uint_t key_type);
+__ENTC_LIBEX EcDecryptAES ecdecrypt_aes_create (const EcString secret, uint_t cypher_type, uint_t key_type);
 
-__LIBEX void ecdecrypt_aes_destroy (EcDecryptAES* pself);
+__ENTC_LIBEX void ecdecrypt_aes_destroy (EcDecryptAES* pself);
 
-__LIBEX EcBuffer ecdecrypt_aes_update (EcDecryptAES, EcBuffer, EcErr);
+__ENTC_LIBEX EcBuffer ecdecrypt_aes_update (EcDecryptAES, EcBuffer, EcErr);
 
-__LIBEX EcBuffer ecdecrypt_aes_finalize (EcDecryptAES, EcErr);
+__ENTC_LIBEX EcBuffer ecdecrypt_aes_finalize (EcDecryptAES, EcErr);
 
 //=============================================================================
 
-__LIBEX int ecencrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr);
+__ENTC_LIBEX int ecencrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr);
 
-__LIBEX int ecdecrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr);
+__ENTC_LIBEX int ecdecrypt_file (const EcString source, const EcString dest, const EcString secret, unsigned int type, EcErr);
 
 #endif

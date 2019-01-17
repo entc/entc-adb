@@ -25,7 +25,7 @@
 #include "../system/ecsocket.h"
 #include "../system/ecevents.h"
 
-typedef int  (_STDCALL *ecserver_callback_fct)(void* ptr, void** object);
+typedef int  __ENTC_LIBEX *ecserver_callback_fct)(void* ptr, void** object);
 
 struct EcServer_s; typedef struct EcServer_s* EcServer;
 
@@ -48,14 +48,14 @@ typedef struct {
 
 } EcServerCallbacks;
 
-__CPP_EXTERN______________________________________________________________________________START  
+__ENTC_LIBEX  
   
-__LIB_EXPORT EcServer ecserver_create (uint_t poolSize, EcServerCallbacks*, EcEventContext);
+__ENTC_LIBEX EcServer ecserver_create (uint_t poolSize, EcServerCallbacks*, EcEventContext);
   
-__LIB_EXPORT void ecserver_destroy (EcServer*);
+__ENTC_LIBEX void ecserver_destroy (EcServer*);
   
-__LIB_EXPORT int ecserver_start (EcServer);
+__ENTC_LIBEX int ecserver_start (EcServer);
   
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

@@ -26,42 +26,42 @@
 struct EcVector_s; typedef struct EcVector_s* EcVector;
 typedef struct EcListNode_s* EcVectorNode;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
   
-__LIB_EXPORT EcVector ecvector_create (EcAlloc alloc);
+__ENTC_LIBEX EcVector ecvector_create (EcAlloc alloc);
   
-__LIB_EXPORT void ecvector_destroy (EcAlloc, EcVector*);
+__ENTC_LIBEX void ecvector_destroy (EcAlloc, EcVector*);
   
-__LIB_EXPORT EcVectorNode ecvector_append(EcVector, void* data);
+__ENTC_LIBEX EcVectorNode ecvector_append(EcVector, void* data);
   
-__LIB_EXPORT uint_t ecvector_add(EcVector, void* data);
+__ENTC_LIBEX uint_t ecvector_add(EcVector, void* data);
 
-__LIB_EXPORT EcVectorNode ecvector_find(EcVector, uint_t index);
+__ENTC_LIBEX EcVectorNode ecvector_find(EcVector, uint_t index);
 
-__LIB_EXPORT void* ecvector_get(EcVector, uint_t index);
+__ENTC_LIBEX void* ecvector_get(EcVector, uint_t index);
   
-__LIB_EXPORT EcVectorNode ecvector_erase (EcVector, EcVectorNode);
+__ENTC_LIBEX EcVectorNode ecvector_erase (EcVector, EcVectorNode);
   
-__LIB_EXPORT EcVectorNode ecvector_first(const EcVector);
+__ENTC_LIBEX EcVectorNode ecvector_first(const EcVector);
   
-__LIB_EXPORT EcVectorNode ecvector_last(const EcVector);
+__ENTC_LIBEX EcVectorNode ecvector_last(const EcVector);
   
-__LIB_EXPORT EcVectorNode ecvector_end(const EcVector);
+__ENTC_LIBEX EcVectorNode ecvector_end(const EcVector);
   
-__LIB_EXPORT EcVectorNode ecvector_next(const EcVectorNode);
+__ENTC_LIBEX EcVectorNode ecvector_next(const EcVectorNode);
   
-__LIB_EXPORT EcVectorNode ecvector_back(const EcVectorNode);
+__ENTC_LIBEX EcVectorNode ecvector_back(const EcVectorNode);
   
-__LIB_EXPORT EcVectorNode ecvector_at(const EcVector, uint_t index);
+__ENTC_LIBEX EcVectorNode ecvector_at(const EcVector, uint_t index);
   
-__LIB_EXPORT void* ecvector_data(const EcVectorNode);
+__ENTC_LIBEX void* ecvector_data(const EcVectorNode);
   
-__LIB_EXPORT uint_t ecvector_index(const EcVectorNode);
+__ENTC_LIBEX uint_t ecvector_index(const EcVectorNode);
   
-__LIB_EXPORT void ecvector_clear(EcVector);
+__ENTC_LIBEX void ecvector_clear(EcVector);
   
-__LIB_EXPORT uint_t ecvector_size(EcVector);
+__ENTC_LIBEX uint_t ecvector_size(EcVector);
   
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

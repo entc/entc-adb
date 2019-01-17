@@ -20,22 +20,19 @@
 #ifndef ENTC_SYSTEM_DL_H
 #define ENTC_SYSTEM_DL_H 1
 
-#include "../system/macros.h"
-
-#include "../types/ecstring.h"
+#include "sys/entc_export.h"
+#include "types/ecstring.h"
 
 struct EcLibraryHandle_s; typedef struct EcLibraryHandle_s* EcLibraryHandle;
 
-__CPP_EXTERN______________________________________________________________________________START
   
-__LIB_EXPORT EcLibraryHandle ecdl_new(const EcString filename);
+__ENTC_LIBEX EcLibraryHandle ecdl_new(const EcString filename);
 
-__LIB_EXPORT EcLibraryHandle ecdl_fromName(const EcString path, const EcString name);
+__ENTC_LIBEX EcLibraryHandle ecdl_fromName(const EcString path, const EcString name);
 
-__LIB_EXPORT void ecdl_delete(EcLibraryHandle*);
+__ENTC_LIBEX void ecdl_delete(EcLibraryHandle*);
   
-__LIB_EXPORT void* ecdl_method(EcLibraryHandle, const EcString name);
+__ENTC_LIBEX void* ecdl_method(EcLibraryHandle, const EcString name);
 
-__CPP_EXTERN______________________________________________________________________________END
 
 #endif

@@ -26,7 +26,7 @@
 #define __LIB_EXPORT  __declspec( dllexport )
 #define _STDCALL __stdcall
 #else
-#define __LIB_EXPORT
+#define __ENTC_LIBEX
 #define _STDCALL
 #endif
 

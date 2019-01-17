@@ -22,25 +22,25 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecbuffer.h"
 #include "types/ecerr.h"
 
 //-----------------------------------------------------------------------------
 // hash codes
 
-__LIBEX EcBuffer echash_sha_1 (EcBuffer, EcErr);
+__ENTC_LIBEX EcBuffer echash_sha_1 (EcBuffer, EcErr);
 
-__LIBEX EcBuffer echash_sha256 (EcBuffer, EcErr);
+__ENTC_LIBEX EcBuffer echash_sha256 (EcBuffer, EcErr);
 
-__LIBEX EcBuffer echash_md5 (EcBuffer, EcErr);
+__ENTC_LIBEX EcBuffer echash_md5 (EcBuffer, EcErr);
 
 //-----------------------------------------------------------------------------
 // transform codes
 
-__LIBEX EcBuffer eccode_base64_encode (EcBuffer);
+__ENTC_LIBEX EcBuffer eccode_base64_encode (EcBuffer);
 
-__LIBEX EcBuffer eccode_base64_decode (EcBuffer);
+__ENTC_LIBEX EcBuffer eccode_base64_decode (EcBuffer);
 
 //=============================================================================
 
@@ -48,19 +48,19 @@ struct EcBase64Encode_s; typedef struct EcBase64Encode_s* EcBase64Encode;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcBase64Encode eccode_base64_encode_create (void);
+__ENTC_LIBEX EcBase64Encode eccode_base64_encode_create (void);
 
-__LIBEX void eccode_base64_encode_destroy (EcBase64Encode* pself);
+__ENTC_LIBEX void eccode_base64_encode_destroy (EcBase64Encode* pself);
 
-__LIBEX uint_t eccode_base64_encode_update (EcBase64Encode, EcBuffer dest, EcBuffer source, EcErr);
+__ENTC_LIBEX uint_t eccode_base64_encode_update (EcBase64Encode, EcBuffer dest, EcBuffer source, EcErr);
 
-__LIBEX uint_t eccode_base64_encode_finalize (EcBase64Encode, EcBuffer dest, EcErr);
+__ENTC_LIBEX uint_t eccode_base64_encode_finalize (EcBase64Encode, EcBuffer dest, EcErr);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX uint_t eccode_base64_encode_sourceSize (uint_t size);       // calculates the size of the source buffer, taking the destination size
+__ENTC_LIBEX uint_t eccode_base64_encode_sourceSize (uint_t size);       // calculates the size of the source buffer, taking the destination size
 
-__LIBEX uint_t eccode_base64_encode_size (uint_t size);             // calculates the size of the destination buffer, taking the source size
+__ENTC_LIBEX uint_t eccode_base64_encode_size (uint_t size);             // calculates the size of the destination buffer, taking the source size
 
 //=============================================================================
 

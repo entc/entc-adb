@@ -20,46 +20,41 @@
 #ifndef ENTC_TYPES_TABLE_H
 #define ENTC_TYPES_TABLE_H 1
 
-/* include external macro for win32 */
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 
 struct EcTable_s; typedef struct EcTable_s* EcTable;
 
 typedef uint_t EcTableNode;
 
-__CPP_EXTERN______________________________________________________________________________START
-
-__LIB_EXPORT EcTable ectable_new(uint_t cols, uint_t rows);
+__ENTC_LIBEX EcTable ectable_new(uint_t cols, uint_t rows);
     
-__LIB_EXPORT void ectable_delete( EcTable* );
+__ENTC_LIBEX void ectable_delete( EcTable* );
   
-__LIB_EXPORT void ectable_clear( EcTable );
+__ENTC_LIBEX void ectable_clear( EcTable );
   
-__LIB_EXPORT void ectable_copy( EcTable, EcTable );
+__ENTC_LIBEX void ectable_copy( EcTable, EcTable );
   
-__LIB_EXPORT void ectable_set( EcTable, uint_t row, uint_t col, void* value);
+__ENTC_LIBEX void ectable_set( EcTable, uint_t row, uint_t col, void* value);
   
-__LIB_EXPORT void* ectable_get( EcTable, uint_t row, uint_t col );
+__ENTC_LIBEX void* ectable_get( EcTable, uint_t row, uint_t col );
   
   /* iterators */  
   
-__LIB_EXPORT EcTableNode ectable_first( EcTable );
+__ENTC_LIBEX EcTableNode ectable_first( EcTable );
   
-__LIB_EXPORT EcTableNode ectable_end( EcTable );
+__ENTC_LIBEX EcTableNode ectable_end( EcTable );
   
-__LIB_EXPORT EcTableNode ectable_next( EcTable, EcTableNode );
+__ENTC_LIBEX EcTableNode ectable_next( EcTable, EcTableNode );
   
-__LIB_EXPORT void* ectable_data( EcTable, EcTableNode, uint_t col );
+__ENTC_LIBEX void* ectable_data( EcTable, EcTableNode, uint_t col );
   
   /* getters */
   
-__LIB_EXPORT uint_t ectable_getColumns( EcTable );
+__ENTC_LIBEX uint_t ectable_getColumns( EcTable );
 
-__LIB_EXPORT uint_t ectable_getRows( EcTable );
+__ENTC_LIBEX uint_t ectable_getRows( EcTable );
 
-__LIB_EXPORT void ectable_echo( EcTable );
+__ENTC_LIBEX void ectable_echo( EcTable );
   
-__CPP_EXTERN______________________________________________________________________________END
-
 #endif

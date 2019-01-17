@@ -20,8 +20,7 @@
 #ifndef ENTC_SYSTEM_TIME_H
 #define ENTC_SYSTEM_TIME_H 1
 
-#include <system/types.h>
-#include <system/ecdefs.h>
+#include "sys/entc_types.h"
 #include <types/ecbuffer.h>
 
 //=============================================================================
@@ -39,9 +38,9 @@ typedef struct {
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void ectime_utc_current_time (EcTime*);
+__ENTC_LIBEX void ectime_utc_current_time (EcTime*);
 
-__LIBEX void ectime_from_ttime (EcTime*, const time_t* time);
+__ENTC_LIBEX void ectime_from_ttime (EcTime*, const time_t* time);
 
 //=============================================================================
 
@@ -66,35 +65,35 @@ typedef struct {
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void ectime_utc_date (EcDate*);
+__ENTC_LIBEX void ectime_utc_date (EcDate*);
 
-__LIBEX void ectime_local_date (EcDate*);
+__ENTC_LIBEX void ectime_local_date (EcDate*);
 
-__LIBEX void ectime_date_from_time (EcDate*, const EcTime*);
+__ENTC_LIBEX void ectime_date_from_time (EcDate*, const EcTime*);
 
 //=============================================================================
 
-__LIBEX void ectime_fmt (EcBuffer buf, const EcDate*, const EcString format);
+__ENTC_LIBEX void ectime_fmt (EcBuffer buf, const EcDate*, const EcString format);
 
 // Sun, 11 May 2018 17:05:40 GMT
-__LIBEX void ectime_toGmtString (EcBuffer buf, const EcDate*);
+__ENTC_LIBEX void ectime_toGmtString (EcBuffer buf, const EcDate*);
 
 // %Y%m%dT%H%M%SZ
-__LIBEX void ectime_toISO8601 (EcBuffer buf, const EcDate*);
+__ENTC_LIBEX void ectime_toISO8601 (EcBuffer buf, const EcDate*);
 
-__LIBEX void ectime_toAlphaNum (EcBuffer buf, const EcDate*);
+__ENTC_LIBEX void ectime_toAlphaNum (EcBuffer buf, const EcDate*);
 
 // YYYY-MM-DD HH:NN:SS
-__LIBEX void ectime_toString (EcBuffer buf, const EcDate*);
+__ENTC_LIBEX void ectime_toString (EcBuffer buf, const EcDate*);
 
 // YYYY_MM_DD__HH_NN_SS__
-__LIBEX void ectime_toPrefix (EcBuffer buf, const EcDate*);
+__ENTC_LIBEX void ectime_toPrefix (EcBuffer buf, const EcDate*);
 
-__LIBEX void ectime_toPaddedTimestamp (EcBuffer buf, const EcDate*);
+__ENTC_LIBEX void ectime_toPaddedTimestamp (EcBuffer buf, const EcDate*);
 
-__LIBEX void ectime_parseISO8601 (time_t* t, const char* stime);
+__ENTC_LIBEX void ectime_parseISO8601 (time_t* t, const char* stime);
 
-__LIBEX void ectime_fromString (EcDate*, const char* stime);
+__ENTC_LIBEX void ectime_fromString (EcDate*, const char* stime);
 
 //=============================================================================
 
@@ -102,21 +101,21 @@ struct EcStopWatch_s; typedef struct EcStopWatch_s* EcStopWatch;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcStopWatch ecstopwatch_create (ulong_t timeout);
+__ENTC_LIBEX EcStopWatch ecstopwatch_create (ulong_t timeout);
 
-__LIBEX void ecstopwatch_destroy (EcStopWatch*);
+__ENTC_LIBEX void ecstopwatch_destroy (EcStopWatch*);
 
-__LIBEX void ecstopwatch_start (EcStopWatch);
+__ENTC_LIBEX void ecstopwatch_start (EcStopWatch);
 
-__LIBEX ulong_t ecstopwatch_stop (EcStopWatch);
+__ENTC_LIBEX ulong_t ecstopwatch_stop (EcStopWatch);
 
-__LIBEX int ecstopwatch_timedOut (EcStopWatch);
+__ENTC_LIBEX int ecstopwatch_timedOut (EcStopWatch);
 
-__LIBEX int ecstopwatch_timedOutRef (EcStopWatch, EcStopWatch ref);
+__ENTC_LIBEX int ecstopwatch_timedOutRef (EcStopWatch, EcStopWatch ref);
 
-__LIBEX void ecstopwatch_destroy (EcStopWatch*);
+__ENTC_LIBEX void ecstopwatch_destroy (EcStopWatch*);
 
-__LIBEX ulong_t ecstopwatch_timeout (EcStopWatch);
+__ENTC_LIBEX ulong_t ecstopwatch_timeout (EcStopWatch);
 
 //-----------------------------------------------------------------------------
 

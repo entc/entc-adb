@@ -20,27 +20,25 @@
 #ifndef ENTC_TYPES_ARRAY_H
 #define ENTC_TYPES_ARRAY_H 1
 
-#include "../system/macros.h"
-#include "../system/types.h"
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 
 struct EcArray_s; typedef struct EcArray_s* EcArray;
 
 struct EcArrayNode_s; typedef struct EcArrayNode_s* EcArrayNode;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX EcArray ecarray_new();
   
-__LIB_EXPORT EcArray ecarray_new();
+__ENTC_LIBEX void ecarray_delete(EcArray*);
   
-__LIB_EXPORT void ecarray_delete(EcArray*);
-  
-__LIB_EXPORT void ecarray_clear(EcArray);
+__ENTC_LIBEX void ecarray_clear(EcArray);
 
-__LIB_EXPORT void ecarray_resize(EcArray, uint_t size);
+__ENTC_LIBEX void ecarray_resize(EcArray, uint_t size);
 
-__LIB_EXPORT void ecarray_set(EcArray, uint_t index, void* data);
+__ENTC_LIBEX void ecarray_set(EcArray, uint_t index, void* data);
 
-__LIB_EXPORT void* ecarray_get(EcArray, uint_t index);
+__ENTC_LIBEX void* ecarray_get(EcArray, uint_t index);
   
-__CPP_EXTERN______________________________________________________________________________END
+
 
 #endif

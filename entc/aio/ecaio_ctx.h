@@ -22,7 +22,7 @@
 
 //-----------------------------------------------------------------------------
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecerr.h"
 
 //-----------------------------------------------------------------------------
@@ -47,25 +47,25 @@ typedef int  (__STDCALL *fct_ecaio_context_onNotify) (void* ptr, int action);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioContext ecaio_context_create (void);
+__ENTC_LIBEX EcAioContext ecaio_context_create (void);
 
-__LIBEX void ecaio_context_destroy (EcAioContext*);
+__ENTC_LIBEX void ecaio_context_destroy (EcAioContext*);
 
-__LIBEX void ecaio_context_setCallbacks (EcAioContext, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy);
+__ENTC_LIBEX void ecaio_context_setCallbacks (EcAioContext, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy);
 
-__LIBEX int ecaio_context_process (EcAioContext, unsigned long val1, unsigned long val2);
+__ENTC_LIBEX int ecaio_context_process (EcAioContext, unsigned long val1, unsigned long val2);
 
 // only for windows
-__LIBEX void* ecaio_context_getOverlapped (EcAioContext);
+__ENTC_LIBEX void* ecaio_context_getOverlapped (EcAioContext);
 
-__LIBEX void ecaio_context_appendOverlappedOffset (EcAioContext, int offset);
+__ENTC_LIBEX void ecaio_context_appendOverlappedOffset (EcAioContext, int offset);
 
-__LIBEX int ecaio_context_continue (void* ovl, int repeat, unsigned long bytes);
+__ENTC_LIBEX int ecaio_context_continue (void* ovl, int repeat, unsigned long bytes);
 
 // only for linux
-__LIBEX void ecaio_context_setHandle (EcAioContext, void* handle);
+__ENTC_LIBEX void ecaio_context_setHandle (EcAioContext, void* handle);
 
-__LIBEX void* ecaio_context_getHandle (EcAioContext);
+__ENTC_LIBEX void* ecaio_context_getHandle (EcAioContext);
 
 //=============================================================================
 
@@ -73,15 +73,15 @@ struct EcAioRefCtx_s; typedef struct EcAioRefCtx_s* EcAioRefCtx;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioRefCtx ecaio_refctx_create ();
+__ENTC_LIBEX EcAioRefCtx ecaio_refctx_create ();
 
-__LIBEX EcAioRefCtx ecaio_refctx_clone (EcAioRefCtx);
+__ENTC_LIBEX EcAioRefCtx ecaio_refctx_clone (EcAioRefCtx);
 
-__LIBEX void ecaio_refctx_decrease (EcAioRefCtx*);
+__ENTC_LIBEX void ecaio_refctx_decrease (EcAioRefCtx*);
 
-__LIBEX void ecaio_refctx_setCallbacks (EcAioRefCtx, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy);
+__ENTC_LIBEX void ecaio_refctx_setCallbacks (EcAioRefCtx, void* ptr, fct_ecaio_context_process process, fct_ecaio_context_destroy destroy);
 
-__LIBEX int ecaio_refctx_process (EcAioRefCtx, EcAioContext, unsigned long val1, unsigned long val2);
+__ENTC_LIBEX int ecaio_refctx_process (EcAioRefCtx, EcAioContext, unsigned long val1, unsigned long val2);
 
 //-----------------------------------------------------------------------------
 

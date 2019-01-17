@@ -38,17 +38,17 @@ typedef int (__STDCALL *fct_ectemplate_onFile) (void* ptr, const char* file);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX   EcTemplate    ectemplate_create         (void);
+__ENTC_LIBEX   EcTemplate    ectemplate_create         (void);
 
-__LIBEX   void          ectemplate_destroy        (EcTemplate*);
+__ENTC_LIBEX   void          ectemplate_destroy        (EcTemplate*);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX   int           ectemplate_compile_file   (EcTemplate, const char* path, const char* name, const char* lang, EcErr);
+__ENTC_LIBEX   int           ectemplate_compile_file   (EcTemplate, const char* path, const char* name, const char* lang, EcErr);
 
-__LIBEX   int           ectemplate_compile_str    (EcTemplate, const char* content, EcErr);
+__ENTC_LIBEX   int           ectemplate_compile_str    (EcTemplate, const char* content, EcErr);
 
-__LIBEX   int           ectemplate_apply          (EcTemplate, EcUdc node, void* ptr, fct_ectemplate_onText, fct_ectemplate_onFile, EcErr);
+__ENTC_LIBEX   int           ectemplate_apply          (EcTemplate, EcUdc node, void* ptr, fct_ectemplate_onText, fct_ectemplate_onFile, EcErr);
 
 //-----------------------------------------------------------------------------
 

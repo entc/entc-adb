@@ -30,11 +30,11 @@
 
 //=============================================================================
 
-__LIBEX const EcString ecmime_getFromFile (const EcString filename);
+__ENTC_LIBEX const EcString ecmime_getFromFile (const EcString filename);
 
-__LIBEX const EcString ecmime_getFromExtension (const EcString ext);
+__ENTC_LIBEX const EcString ecmime_getFromExtension (const EcString ext);
 
-__LIBEX void ecmime_unescape (EcString url);
+__ENTC_LIBEX void ecmime_unescape (EcString url);
 
 //=============================================================================
 
@@ -47,15 +47,15 @@ typedef char*  (__STDCALL *http_content_callback)       (void* ptr, char* buffer
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString, http_content_callback cb, void* ptr, ecmultipartparser_callback dc, void* obj);
+__ENTC_LIBEX EcMultipartParser ecmultipartparser_create (const EcString boundary, const EcString, http_content_callback cb, void* ptr, ecmultipartparser_callback dc, void* obj);
 
-__LIBEX void ecmultipartparser_destroy (EcMultipartParser*);
+__ENTC_LIBEX void ecmultipartparser_destroy (EcMultipartParser*);
 
-__LIBEX int ecmultipartparser_process (EcMultipartParser, ulong_t size);
+__ENTC_LIBEX int ecmultipartparser_process (EcMultipartParser, ulong_t size);
 
-__LIBEX EcString echttpheader_parseLine (const EcString line, const EcString key);
+__ENTC_LIBEX EcString echttpheader_parseLine (const EcString line, const EcString key);
 
-__LIBEX void echttpheader_parseParam (EcMap map, const EcString line);
+__ENTC_LIBEX void echttpheader_parseParam (EcMap map, const EcString line);
 
 //=============================================================================
 
@@ -63,26 +63,26 @@ struct EcMultipart_s; typedef struct EcMultipart_s* EcMultipart;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcMultipart ecmultipart_create (const EcString boundary, const EcString header);
+__ENTC_LIBEX EcMultipart ecmultipart_create (const EcString boundary, const EcString header);
 
-__LIBEX void ecmultipart_destroy (EcMultipart*);
+__ENTC_LIBEX void ecmultipart_destroy (EcMultipart*);
 
-__LIBEX void ecmultipart_addText (EcMultipart, const EcString text, const EcString mimeType);
+__ENTC_LIBEX void ecmultipart_addText (EcMultipart, const EcString text, const EcString mimeType);
 
-__LIBEX void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file, int fileId);
+__ENTC_LIBEX void ecmultipart_addFile (EcMultipart, const EcString path, const EcString file, int fileId);
 
-__LIBEX void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId, const EcString vsec, unsigned int aes_type);
+__ENTC_LIBEX void ecmultipart_addPath (EcMultipart, const EcString path, const EcString name, int fileId, const EcString vsec, unsigned int aes_type);
 
-__LIBEX void ecmultipart_addContentDisposition_B_o (EcMultipart, const EcString name, EcBuffer*);
+__ENTC_LIBEX void ecmultipart_addContentDisposition_B_o (EcMultipart, const EcString name, EcBuffer*);
 
-__LIBEX void ecmultipart_addContentDisposition_S (EcMultipart, const EcString name, const EcString content);
+__ENTC_LIBEX void ecmultipart_addContentDisposition_S (EcMultipart, const EcString name, const EcString content);
 
-__LIBEX void ecmultipart_addContentDisposition_S_o (EcMultipart, const EcString name, EcString* content);
+__ENTC_LIBEX void ecmultipart_addContentDisposition_S_o (EcMultipart, const EcString name, EcString* content);
 
-__LIBEX EcString ecmultipart_startGetContentType (EcMultipart);
+__ENTC_LIBEX EcString ecmultipart_startGetContentType (EcMultipart);
 
 // min buffer size == 200 -> for base64 encoding
-__LIBEX uint_t ecmultipart_next (EcMultipart, EcBuffer);
+__ENTC_LIBEX uint_t ecmultipart_next (EcMultipart, EcBuffer);
 
 
 #endif

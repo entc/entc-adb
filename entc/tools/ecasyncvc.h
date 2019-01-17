@@ -30,62 +30,62 @@
 
 // **** worker context ****
 
-typedef void (_STDCALL *ecasync_worker_rawdata_cb)(void* ptr, const unsigned char* buffer, ulong_t len);
+typedef void __ENTC_LIBEX *ecasync_worker_rawdata_cb)(void* ptr, const unsigned char* buffer, ulong_t len);
 
-typedef void (_STDCALL *ecasync_worker_destroy_cb)(void** ptr);
+typedef void __ENTC_LIBEX *ecasync_worker_destroy_cb)(void** ptr);
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcAsyncContext ecasync_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_rawdata_cb, void*);
+__ENTC_LIBEX EcAsyncContext ecasync_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_rawdata_cb, void*);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
-typedef int (_STDCALL *ecasync_worker_recv_cb)(void* ptr, const unsigned char* buffer, ulong_t len);
+typedef int __ENTC_LIBEX *ecasync_worker_recv_cb)(void* ptr, const unsigned char* buffer, ulong_t len);
 
-typedef ulong_t (_STDCALL *ecasync_worker_idle_cb)(void* ptr);
+typedef ulong_t __ENTC_LIBEX *ecasync_worker_idle_cb)(void* ptr);
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcAsyncContext _STDCALL ecasync_strict_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_idle_cb, ecasync_worker_recv_cb, void*);
+__ENTC_LIBEX EcAsyncContext _STDCALL ecasync_strict_worker_create (EcSocket sock, ulong_t timeout, ecasync_worker_idle_cb, ecasync_worker_recv_cb, void*);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 // **** accept context ****
 
-typedef EcAsyncContext (_STDCALL *ecasync_accept_worker_cb)(void*, EcSocket sock);
+typedef EcAsyncContext __ENTC_LIBEX *ecasync_accept_worker_cb)(void*, EcSocket sock);
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb, void*);
+__ENTC_LIBEX EcAsyncContext ecasync_accept_create (const EcString host, ulong_t port, EcEventContext ec, EcAsync async, ecasync_accept_worker_cb cb, void*);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 // **** udp worker and context ****
 
 struct EcAsyncUdpContext_s; typedef struct EcAsyncUdpContext_s* EcAsyncUdpContext;
 
-typedef EcAsyncUdpContext (_STDCALL *ecasync_dispatcher_cb)(void*);
+typedef EcAsyncUdpContext __ENTC_LIBEX *ecasync_dispatcher_cb)(void*);
 
-typedef int (_STDCALL *ecasync_worker_udp_cb)(void* ptr, EcAsyncUdpContext, EcDatagram, ulong_t len);
+typedef int __ENTC_LIBEX *ecasync_worker_udp_cb)(void* ptr, EcAsyncUdpContext, EcDatagram, ulong_t len);
 
 struct EcAsynUdpDispatcher_s; typedef struct EcAsynUdpDispatcher_s* EcAsynUdpDispatcher;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
 // special context only for UDP protocol and UDP dispatcher
-__LIB_EXPORT EcAsyncUdpContext ecasync_udpcontext_create (ulong_t timeout, ecasync_worker_udp_cb, ecasync_worker_destroy_cb, void*);
+__ENTC_LIBEX EcAsyncUdpContext ecasync_udpcontext_create (ulong_t timeout, ecasync_worker_udp_cb, ecasync_worker_destroy_cb, void*);
 
 // create a UDP dispatcher, whcih must be converted to a context later
 // but can be kept as reference to call special methods of this object
-__LIB_EXPORT EcAsynUdpDispatcher ecasync_udpdisp_create (const EcString host, ulong_t port, EcEventContext ec, ecasync_dispatcher_cb cb, void*);
+__ENTC_LIBEX EcAsynUdpDispatcher ecasync_udpdisp_create (const EcString host, ulong_t port, EcEventContext ec, ecasync_dispatcher_cb cb, void*);
 
 // convert dispatcher to default async context
-__LIB_EXPORT EcAsyncContext ecasync_udpdisp_context (EcAsynUdpDispatcher*);
+__ENTC_LIBEX EcAsyncContext ecasync_udpdisp_context (EcAsynUdpDispatcher*);
 
 // **** dispatcher methods ****
 
-__LIB_EXPORT void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher, EcBuffer, size_t len, EcAsyncUdpContext ctx);
+__ENTC_LIBEX void ecasync_udpdisp_broadcast (EcAsynUdpDispatcher, EcBuffer, size_t len, EcAsyncUdpContext ctx);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

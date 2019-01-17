@@ -22,7 +22,7 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 #include "types/ecbuffer.h"
 
@@ -34,47 +34,47 @@ struct EcStream_s; typedef struct EcStream_s* EcStream;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcStream        ecstream_create (void);
+__ENTC_LIBEX EcStream        ecstream_create (void);
 
-__LIBEX void            ecstream_destroy (EcStream*);
+__ENTC_LIBEX void            ecstream_destroy (EcStream*);
 
-__LIBEX void            ecstream_clear (EcStream);
+__ENTC_LIBEX void            ecstream_clear (EcStream);
 
-__LIBEX const char*     ecstream_get (EcStream);
+__ENTC_LIBEX const char*     ecstream_get (EcStream);
 
-__LIBEX unsigned long   ecstream_size (EcStream);
+__ENTC_LIBEX unsigned long   ecstream_size (EcStream);
 
 //-----------------------------------------------------------------------------
 // convert to other types
 
-__LIBEX EcBuffer        ecstream_tobuf (EcStream*);
+__ENTC_LIBEX EcBuffer        ecstream_tobuf (EcStream*);
 
-__LIBEX EcString        ecstream_tostr (EcStream*);
+__ENTC_LIBEX EcString        ecstream_tostr (EcStream*);
 
 //-----------------------------------------------------------------------------
 // append functions
 
-__LIBEX void            ecstream_append_str (EcStream, const char*);
+__ENTC_LIBEX void            ecstream_append_str (EcStream, const char*);
 
-__LIBEX void            ecstream_append_buf (EcStream, const char*, unsigned long size);
+__ENTC_LIBEX void            ecstream_append_buf (EcStream, const char*, unsigned long size);
 
-__LIBEX void            ecstream_append_ecbuf (EcStream, const EcBuffer);
+__ENTC_LIBEX void            ecstream_append_ecbuf (EcStream, const EcBuffer);
 
-__LIBEX void            ecstream_append_fmt (EcStream, const char*, ...);
+__ENTC_LIBEX void            ecstream_append_fmt (EcStream, const char*, ...);
 
-__LIBEX void            ecstream_append_c (EcStream, char);
+__ENTC_LIBEX void            ecstream_append_c (EcStream, char);
 
-__LIBEX void            ecstream_append_u (EcStream, unsigned long);
+__ENTC_LIBEX void            ecstream_append_u (EcStream, unsigned long);
 
-__LIBEX void            ecstream_append_u64 (EcStream, uint64_t);
+__ENTC_LIBEX void            ecstream_append_u64 (EcStream, uint64_t);
 
-__LIBEX void            ecstream_append_i (EcStream, long);
+__ENTC_LIBEX void            ecstream_append_i (EcStream, long);
 
-__LIBEX void            ecstream_append_i64 (EcStream, int64_t);
+__ENTC_LIBEX void            ecstream_append_i64 (EcStream, int64_t);
 
-__LIBEX void            ecstream_append_time (EcStream, const time_t*);
+__ENTC_LIBEX void            ecstream_append_time (EcStream, const time_t*);
 
-__LIBEX void            ecstream_append_stream (EcStream, EcStream);
+__ENTC_LIBEX void            ecstream_append_stream (EcStream, EcStream);
 
 //=============================================================================
 
@@ -84,21 +84,21 @@ typedef void (*stream_callback_fct)(void* ptr, const void* buffer, uint_t nbyte)
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDevStream ecdevstream_new (uint_t size, stream_callback_fct, void*);
+__ENTC_LIBEX EcDevStream ecdevstream_new (uint_t size, stream_callback_fct, void*);
 
-__LIBEX void ecdevstream_delete (EcDevStream*);
+__ENTC_LIBEX void ecdevstream_delete (EcDevStream*);
 
-__LIBEX void ecdevstream_flush (EcDevStream);
+__ENTC_LIBEX void ecdevstream_flush (EcDevStream);
 
-__LIBEX void ecdevstream_append (EcDevStream, void*, uint_t size);
+__ENTC_LIBEX void ecdevstream_append (EcDevStream, void*, uint_t size);
 
-__LIBEX void ecdevstream_appends (EcDevStream, const EcString);
+__ENTC_LIBEX void ecdevstream_appends (EcDevStream, const EcString);
 
-__LIBEX void ecdevstream_appendc (EcDevStream, char);
+__ENTC_LIBEX void ecdevstream_appendc (EcDevStream, char);
 
-__LIBEX void ecdevstream_appendu (EcDevStream, uint_t);
+__ENTC_LIBEX void ecdevstream_appendu (EcDevStream, uint_t);
 
-__LIBEX void ecdevstream_appendfile (EcDevStream, const EcString filename);
+__ENTC_LIBEX void ecdevstream_appendfile (EcDevStream, const EcString filename);
 
 //-----------------------------------------------------------------------------
 

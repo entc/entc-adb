@@ -34,15 +34,15 @@ typedef int (__STDCALL *fct_ecaio_sfile_onInit) (void* ptr, EcRefCountedSocket, 
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket, void*, fct_ecaio_sfile_onInit);
+__ENTC_LIBEX EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket, void*, fct_ecaio_sfile_onInit);
 
-__LIBEX void ecaio_sendfile_destroy (EcAioSendFile*);
+__ENTC_LIBEX void ecaio_sendfile_destroy (EcAioSendFile*);
 
-__LIBEX void ecaio_sendfile_setBase64 (EcAioSendFile, int base64);
+__ENTC_LIBEX void ecaio_sendfile_setBase64 (EcAioSendFile, int base64);
 
-__LIBEX int ecaio_sendfile_setSecret (EcAioSendFile, const EcString, unsigned int sectype, EcErr err);
+__ENTC_LIBEX int ecaio_sendfile_setSecret (EcAioSendFile, const EcString, unsigned int sectype, EcErr err);
 
-__LIBEX int ecaio_sendfile_assign (EcAioSendFile*, EcAio aio, EcErr err);
+__ENTC_LIBEX int ecaio_sendfile_assign (EcAioSendFile*, EcAio aio, EcErr err);
 
 //=============================================================================
 

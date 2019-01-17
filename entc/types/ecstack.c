@@ -19,6 +19,8 @@
 
 #include "ecstack.h"
 
+#include "sys/entc_types.h"
+
 /*------------------------------------------------------------------------*/
 
 struct EcStackNode

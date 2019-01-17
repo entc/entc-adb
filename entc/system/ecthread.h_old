@@ -22,7 +22,7 @@
 
 //-----------------------------------------------------------------------------
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 
 //-----------------------------------------------------------------------------
 
@@ -33,18 +33,18 @@ struct EcThread_s; typedef struct EcThread_s* EcThread;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcThread ecthread_new (ecthread_fct_onDestroy onDestroy);
+__ENTC_LIBEX EcThread ecthread_new (ecthread_fct_onDestroy onDestroy);
 
-__LIBEX void ecthread_delete (EcThread*);
+__ENTC_LIBEX void ecthread_delete (EcThread*);
 
-__LIBEX void ecthread_start (EcThread, ecthread_callback_fct, void* ptr);
+__ENTC_LIBEX void ecthread_start (EcThread, ecthread_callback_fct, void* ptr);
 
-__LIBEX void ecthread_join (EcThread);
+__ENTC_LIBEX void ecthread_join (EcThread);
 
-__LIBEX void ecthread_cancel (EcThread);
+__ENTC_LIBEX void ecthread_cancel (EcThread);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void ecthread_sleep (unsigned long milliseconds);
+__ENTC_LIBEX void ecthread_sleep (unsigned long milliseconds);
 
 #endif

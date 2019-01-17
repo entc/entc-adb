@@ -31,13 +31,13 @@ struct EcMapNode_s; typedef struct EcMapNode_s* EcMapNode;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void* ecmap_node_value (EcMapNode);
+__ENTC_LIBEX void* ecmap_node_value (EcMapNode);
 
-__LIBEX void* ecmap_node_key (EcMapNode);
+__ENTC_LIBEX void* ecmap_node_key (EcMapNode);
 
-__LIBEX void* ecmap_node_extract (EcMapNode);
+__ENTC_LIBEX void* ecmap_node_extract (EcMapNode);
 
-__LIBEX void ecmap_node_destroy (EcMapNode*);
+__ENTC_LIBEX void ecmap_node_destroy (EcMapNode*);
 
 //-----------------------------------------------------------------------------
 
@@ -48,31 +48,31 @@ typedef void  (__STDCALL *fct_ecmap_destroy)  (void* key, void* val);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcMap ecmap_create (fct_ecmap_cmp, fct_ecmap_destroy);
+__ENTC_LIBEX EcMap ecmap_create (fct_ecmap_cmp, fct_ecmap_destroy);
 
-__LIBEX void ecmap_clear (EcMap);
+__ENTC_LIBEX void ecmap_clear (EcMap);
 
-__LIBEX void ecmap_destroy (EcMap*);
+__ENTC_LIBEX void ecmap_destroy (EcMap*);
 
-__LIBEX void ecmap_setcmp (EcMap, fct_ecmap_cmp);
+__ENTC_LIBEX void ecmap_setcmp (EcMap, fct_ecmap_cmp);
 
-__LIBEX EcMapNode ecmap_insert (EcMap, void* key, void* data);
+__ENTC_LIBEX EcMapNode ecmap_insert (EcMap, void* key, void* data);
 
-__LIBEX EcMapNode ecmap_find (EcMap, void* key);
+__ENTC_LIBEX EcMapNode ecmap_find (EcMap, void* key);
 
-__LIBEX void ecmap_erase (EcMap, EcMapNode);          // removes the node, calls the onDestroy callback and releases the node
+__ENTC_LIBEX void ecmap_erase (EcMap, EcMapNode);          // removes the node, calls the onDestroy callback and releases the node
 
-__LIBEX EcMapNode ecmap_extract (EcMap, EcMapNode);   // extracts the node from the container and returns it
+__ENTC_LIBEX EcMapNode ecmap_extract (EcMap, EcMapNode);   // extracts the node from the container and returns it
 
-__LIBEX void ecmap_destroy_node (EcMap, EcMapNode*);  // calls the onDestroy callback and releases the node
+__ENTC_LIBEX void ecmap_destroy_node (EcMap, EcMapNode*);  // calls the onDestroy callback and releases the node
 
-__LIBEX unsigned long ecmap_size (EcMap);
+__ENTC_LIBEX unsigned long ecmap_size (EcMap);
 
 //-----------------------------------------------------------------------------
 
 typedef void* (__STDCALL *fct_ecmap_onClone) (void* ptr);
 
-__LIBEX EcMap ecmap_clone (EcMap, fct_ecmap_onClone onCloneKey, fct_ecmap_onClone onCloneVal);
+__ENTC_LIBEX EcMap ecmap_clone (EcMap, fct_ecmap_onClone onCloneKey, fct_ecmap_onClone onCloneVal);
 
 //-----------------------------------------------------------------------------
 
@@ -100,19 +100,19 @@ typedef struct
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcMapCursor* ecmap_cursor_create (EcMap, int direction);
+__ENTC_LIBEX EcMapCursor* ecmap_cursor_create (EcMap, int direction);
 
-__LIBEX void ecmap_cursor_destroy (EcMapCursor**);
+__ENTC_LIBEX void ecmap_cursor_destroy (EcMapCursor**);
 
-__LIBEX void ecmap_cursor_init (EcMap, EcMapCursor*, int direction);
+__ENTC_LIBEX void ecmap_cursor_init (EcMap, EcMapCursor*, int direction);
 
-__LIBEX int ecmap_cursor_next (EcMapCursor*);
+__ENTC_LIBEX int ecmap_cursor_next (EcMapCursor*);
 
-__LIBEX int ecmap_cursor_prev (EcMapCursor*);
+__ENTC_LIBEX int ecmap_cursor_prev (EcMapCursor*);
 
-__LIBEX void ecmap_cursor_erase (EcMap, EcMapCursor*);
+__ENTC_LIBEX void ecmap_cursor_erase (EcMap, EcMapCursor*);
 
-__LIBEX EcMapNode ecmap_cursor_extract (EcMap, EcMapCursor*);
+__ENTC_LIBEX EcMapNode ecmap_cursor_extract (EcMap, EcMapCursor*);
 
 //-----------------------------------------------------------------------------
 

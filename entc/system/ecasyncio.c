@@ -19,8 +19,8 @@
 
 #include "ecasyncio.h"
 
-#include "system/ecmutex.h"
-#include "system/ecthread.h"
+#include "sys/entc_mutex.h"
+#include "sys/entc_thread.h"
 
 #include "types/eclist.h"
 #include "system/ecrefcnt.h"
@@ -94,7 +94,7 @@ struct EcAsync_s
 typedef struct 
 {
   
-  EcThread thread;
+  EntcThread thread;
   
   EcEventContext ec;
   
@@ -117,7 +117,7 @@ EcAsyncThread* ecasync_thread_create ()
 {
   EcAsyncThread* self = ENTC_NEW (EcAsyncThread);
   
-  self->thread = ecthread_new ();
+  self->thread = entc_thread_new ();
   self->ec = ece_context_new ();
   
   // create a new queue
@@ -134,9 +134,9 @@ void ecasync_thread_destroy (EcAsyncThread** pself)
 {
   EcAsyncThread* self = *pself;
   
-  ecthread_join (self->thread);
+  entc_thread_join (self->thread);
 
-  ecthread_delete (&(self->thread));
+  entc_thread_del (&(self->thread));
   ece_context_delete (&(self->ec));
   
   ecstopwatch_destroy (&(self->stopwatch));
@@ -192,7 +192,7 @@ static int _STDCALL ecasync_thread_run (void* ptr)
 
 void ecasync_thread_start (EcAsyncThread* self)
 {
-  ecthread_start (self->thread, ecasync_thread_run, self);
+  entc_thread_start (self->thread, ecasync_thread_run, self);
 }
 
 //-----------------------------------------------------------------------------------------------------------

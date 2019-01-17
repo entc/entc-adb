@@ -20,46 +20,46 @@
 #ifndef ENTC_SYSTEM_SHM_H
 #define ENTC_SYSTEM_SHM_H 1
 
-#include "system/macros.h"
-#include "system/types.h"
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 #include "types/ecalloc.h"
 
 struct EcShm_s; typedef struct EcShm_s* EcShm;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcShm ecshm_create (EcAlloc alloc, uint32_t key, uint32_t size);
+__ENTC_LIBEX EcShm ecshm_create (EcAlloc alloc, uint32_t key, uint32_t size);
 
-__LIB_EXPORT void ecshm_destroy (EcShm*);
+__ENTC_LIBEX void ecshm_destroy (EcShm*);
 
-__LIB_EXPORT void* ecshm_get (EcShm);
+__ENTC_LIBEX void* ecshm_get (EcShm);
 
-__LIB_EXPORT int ecshm_wasCreated (EcShm);
+__ENTC_LIBEX int ecshm_wasCreated (EcShm);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 struct EcSem_s; typedef struct EcSem_s* EcSem;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcSem ecsem_create (EcAlloc alloc, uint32_t key);
+__ENTC_LIBEX EcSem ecsem_create (EcAlloc alloc, uint32_t key);
 
-__LIB_EXPORT void ecsem_destroy (EcSem*);
+__ENTC_LIBEX void ecsem_destroy (EcSem*);
 
-__LIB_EXPORT void ecsem_clear (EcSem);
+__ENTC_LIBEX void ecsem_clear (EcSem);
 
-__LIB_EXPORT void ecsem_waitAndSet (EcSem, int waitFor, int setVal);
+__ENTC_LIBEX void ecsem_waitAndSet (EcSem, int waitFor, int setVal);
 
-__LIB_EXPORT void ecsem_wait (EcSem, int waitFor);
+__ENTC_LIBEX void ecsem_wait (EcSem, int waitFor);
 
-__LIB_EXPORT void ecsem_set (EcSem, int setVal);
+__ENTC_LIBEX void ecsem_set (EcSem, int setVal);
 
-__LIB_EXPORT int ecsem_tryDec (EcSem);
+__ENTC_LIBEX int ecsem_tryDec (EcSem);
 
-__LIB_EXPORT void ecsem_queue_wait (EcSem);
+__ENTC_LIBEX void ecsem_queue_wait (EcSem);
 
-__LIB_EXPORT void ecsem_queue_send (EcSem);
+__ENTC_LIBEX void ecsem_queue_send (EcSem);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

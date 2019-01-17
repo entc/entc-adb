@@ -20,25 +20,21 @@
 #ifndef ENTC_TYPES_STACK_H
 #define ENTC_TYPES_STACK_H 1
 
-#include "../system/macros.h"
+#include "sys/entc_export.h"
 
 struct EcStack_s; typedef struct EcStack_s* EcStack;
 
-__CPP_EXTERN______________________________________________________________________________START
-
-__LIB_EXPORT EcStack ecstack_new();
+__ENTC_LIBEX EcStack ecstack_new();
   
-__LIB_EXPORT void ecstack_delete(EcStack*);
+__ENTC_LIBEX void ecstack_delete(EcStack*);
     
-__LIB_EXPORT void ecstack_clear(EcStack);
+__ENTC_LIBEX void ecstack_clear(EcStack);
   
-__LIB_EXPORT void ecstack_push(EcStack, void* data);
+__ENTC_LIBEX void ecstack_push(EcStack, void* data);
   
   /* delete the top element, returns false no element anymore */
-__LIB_EXPORT int ecstack_pop(EcStack);
+  __ENTC_LIBEX int ecstack_pop(EcStack);
   /* get the data from the top element */
-__LIB_EXPORT void* ecstack_top(EcStack);
+  __ENTC_LIBEX void* ecstack_top(EcStack);
   
-__CPP_EXTERN______________________________________________________________________________END
-
 #endif

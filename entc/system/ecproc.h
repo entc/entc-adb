@@ -32,33 +32,33 @@ struct EcProc_s; typedef struct EcProc_s* EcProc;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcProc ecproc_create (void);
+__ENTC_LIBEX EcProc ecproc_create (void);
 
-__LIBEX void ecproc_destroy (EcProc*);
+__ENTC_LIBEX void ecproc_destroy (EcProc*);
 
-__LIBEX EcProc ecproc_get (int argc, char* argv[], EcErr err);
+__ENTC_LIBEX EcProc ecproc_get (int argc, char* argv[], EcErr err);
 
-__LIBEX int ecproc_start (EcProc, const char* command, const char* args, EcErr err);
-
-//-----------------------------------------------------------------------------
-
-__LIBEX void* ecproc_handle (EcProc);
-
-__LIBEX void ecproc_terminate (EcProc);
-
-__LIBEX int ecproc_waitForProcessToTerminate (EcProc, EcErr);
-
-__LIBEX void* ecproc_getHandleIn (EcProc);
-
-__LIBEX void* ecproc_getHandleOut (EcProc);
+__ENTC_LIBEX int ecproc_start (EcProc, const char* command, const char* args, EcErr err);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcString ecproc_getExecutableName (int argc, char* argv[]);
+__ENTC_LIBEX void* ecproc_handle (EcProc);
 
-__LIBEX int ecproc_waitForProcess (void* handle, EcErr);
+__ENTC_LIBEX void ecproc_terminate (EcProc);
 
-__LIBEX void ecproc_terminateProcess (void* handle);
+__ENTC_LIBEX int ecproc_waitForProcessToTerminate (EcProc, EcErr);
+
+__ENTC_LIBEX void* ecproc_getHandleIn (EcProc);
+
+__ENTC_LIBEX void* ecproc_getHandleOut (EcProc);
+
+//-----------------------------------------------------------------------------
+
+__ENTC_LIBEX EcString ecproc_getExecutableName (int argc, char* argv[]);
+
+__ENTC_LIBEX int ecproc_waitForProcess (void* handle, EcErr);
+
+__ENTC_LIBEX void ecproc_terminateProcess (void* handle);
 
 //-----------------------------------------------------------------------------
 

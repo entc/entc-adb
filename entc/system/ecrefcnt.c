@@ -19,6 +19,9 @@
 
 #include "ecrefcnt.h"
 
+// entc includes
+#include "sys/entc_types.h"
+
 struct EcRefCnt_s
 {
   

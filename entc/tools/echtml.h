@@ -31,20 +31,20 @@
 
 struct EcHtmlRequest_s; typedef struct EcHtmlRequest_s* EcHtmlRequest;
 
-__CPP_EXTERN______________________________________________________________________________START 
+__ENTC_LIBEX 
 
-__LIB_EXPORT EcHtmlRequest echtmlreq_new (void);
+__ENTC_LIBEX EcHtmlRequest echtmlreq_new (void);
   
-__LIB_EXPORT void echtmlreq_delete(EcHtmlRequest*);
+__ENTC_LIBEX void echtmlreq_delete(EcHtmlRequest*);
   
-__LIB_EXPORT int echtmlreq_get (EcHtmlRequest, const EcString host, uint_t port, const EcString url, EcEventContext);
+__ENTC_LIBEX int echtmlreq_get (EcHtmlRequest, const EcString host, uint_t port, const EcString url, EcEventContext);
   
-__LIB_EXPORT int echtmlreq_post (EcHtmlRequest, const EcString host, uint_t port, const EcString url, const EcString message, EcEventContext);
+__ENTC_LIBEX int echtmlreq_post (EcHtmlRequest, const EcString host, uint_t port, const EcString url, const EcString message, EcEventContext);
 
-__LIB_EXPORT void echtmlreq_escapeUrl(EcStream stream, const EcString source);
+__ENTC_LIBEX void echtmlreq_escapeUrl(EcStream stream, const EcString source);
 
-__LIB_EXPORT const EcString echtmlreq_data(EcHtmlRequest);
+__ENTC_LIBEX const EcString echtmlreq_data(EcHtmlRequest);
   
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

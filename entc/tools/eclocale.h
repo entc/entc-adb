@@ -37,22 +37,22 @@ typedef struct EcLocale_s* EcLocale;
 
 struct EcLocaleSet_s; typedef struct EcLocaleSet_s* EcLocaleSet;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcLocale eclocale_new (const EcString confdir, const EcString path, EcEventFiles events);
+__ENTC_LIBEX EcLocale eclocale_new (const EcString confdir, const EcString path, EcEventFiles events);
   
-__LIB_EXPORT void eclocale_delete(EcLocale* ptr);
+__ENTC_LIBEX void eclocale_delete(EcLocale* ptr);
 
-__LIB_EXPORT EcLocaleSet eclocale_getSet(EcLocale, const EcString);
+__ENTC_LIBEX EcLocaleSet eclocale_getSet(EcLocale, const EcString);
   
-__LIB_EXPORT const EcString eclocaleset_get(EcLocaleSet, const EcString);
+__ENTC_LIBEX const EcString eclocaleset_get(EcLocaleSet, const EcString);
   
-__LIB_EXPORT EcLocaleSet eclocale_getDefaultSet(EcLocale);
+__ENTC_LIBEX EcLocaleSet eclocale_getDefaultSet(EcLocale);
   
-__LIB_EXPORT const EcString eclocale_lang(EcLocaleSet);
+__ENTC_LIBEX const EcString eclocale_lang(EcLocaleSet);
 
-__LIB_EXPORT const EcString eclocale_desc(EcLocaleSet);
+__ENTC_LIBEX const EcString eclocale_desc(EcLocaleSet);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

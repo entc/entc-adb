@@ -32,11 +32,11 @@ struct EcAioProc_s; typedef struct EcAioProc_s* EcAioProc;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioProc ecaio_proc_create (void* handle);
+__ENTC_LIBEX EcAioProc ecaio_proc_create (void* handle);
 
-__LIBEX int ecaio_proc_assign (EcAioProc*, EcAio aio, EcErr err);
+__ENTC_LIBEX int ecaio_proc_assign (EcAioProc*, EcAio aio, EcErr err);
 
-__LIBEX void ecaio_proc_setCallback (EcAioProc, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
+__ENTC_LIBEX void ecaio_proc_setCallback (EcAioProc, void*, fct_ecaio_context_onNotify, fct_ecaio_context_destroy);
 
 //=============================================================================
 

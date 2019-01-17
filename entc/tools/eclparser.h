@@ -22,7 +22,7 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 
 //-----------------------------------------------------------------------------
@@ -33,11 +33,11 @@ typedef void (__STDCALL *fct_eclineparser_onLine) (void* ptr, const EcString lin
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcLineParser eclineparser_create (fct_eclineparser_onLine onLine, void* ptr);
+__ENTC_LIBEX EcLineParser eclineparser_create (fct_eclineparser_onLine onLine, void* ptr);
 
-__LIBEX void eclineparser_destroy (EcLineParser* pself);
+__ENTC_LIBEX void eclineparser_destroy (EcLineParser* pself);
 
-__LIBEX void eclineparser_parse (EcLineParser, const char* buffer, int size, int last);
+__ENTC_LIBEX void eclineparser_parse (EcLineParser, const char* buffer, int size, int last);
 
 //-----------------------------------------------------------------------------
 

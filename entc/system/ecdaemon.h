@@ -22,7 +22,7 @@
 
 //-----------------------------------------------------------------------------
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecerr.h"
 #include "types/ecstring.h"
 
@@ -35,13 +35,13 @@ typedef int (__STDCALL *ecdaemon_onShutdown) (void* ptr, EcErr err);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDaemon ecdaemon_create (int argc, char *argv[], const EcString name);
+__ENTC_LIBEX EcDaemon ecdaemon_create (int argc, char *argv[], const EcString name);
 
-__LIBEX void ecdaemon_delete (EcDaemon*);
+__ENTC_LIBEX void ecdaemon_delete (EcDaemon*);
 
-__LIBEX int ecdaemon_install (EcDaemon, EcErr err);
+__ENTC_LIBEX int ecdaemon_install (EcDaemon, EcErr err);
 
-__LIBEX int ecdaemon_run (EcDaemon, void* ptr, ecdaemon_onRun, ecdaemon_onShutdown, EcErr err);
+__ENTC_LIBEX int ecdaemon_run (EcDaemon, void* ptr, ecdaemon_onRun, ecdaemon_onShutdown, EcErr err);
 
 //-----------------------------------------------------------------------------
 

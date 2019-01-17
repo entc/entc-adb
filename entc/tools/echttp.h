@@ -35,35 +35,35 @@
 
 struct EcHttpContent_s; typedef struct EcHttpContent_s* EcHttpContent;
 
-typedef char* (_STDCALL *http_content_callback) (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes);
+typedef char* __ENTC_LIBEX *http_content_callback) (void* ptr, char* buffer, ulong_t inSize, ulong_t* outRes);
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void*, const EcString path);
+__ENTC_LIBEX EcHttpContent echttp_content_create (ulong_t size, const EcString type, http_content_callback bf, http_content_callback mm, void*, const EcString path);
 
-__LIB_EXPORT EcHttpContent echttp_content_create2 (EcBuffer* pbuf, EcMapChar* pparams);
+__ENTC_LIBEX EcHttpContent echttp_content_create2 (EcBuffer* pbuf, EcMapChar* pparams);
 
-__LIB_EXPORT void echttp_content_destroy (EcHttpContent*);
+__ENTC_LIBEX void echttp_content_destroy (EcHttpContent*);
 
-__LIB_EXPORT int echttp_content_hasBuffer (EcHttpContent);
+__ENTC_LIBEX int echttp_content_hasBuffer (EcHttpContent);
 
-__LIB_EXPORT int echttp_content_hasFile (EcHttpContent);
+__ENTC_LIBEX int echttp_content_hasFile (EcHttpContent);
 
-__LIB_EXPORT EcString echttp_content_getFile (EcHttpContent);
+__ENTC_LIBEX EcString echttp_content_getFile (EcHttpContent);
 
-__LIB_EXPORT EcBuffer echttp_content_getBuffer (EcHttpContent);
+__ENTC_LIBEX EcBuffer echttp_content_getBuffer (EcHttpContent);
 
-__LIB_EXPORT EcHttpContent echttp_content_add (EcHttpContent, EcHttpContent*);
+__ENTC_LIBEX EcHttpContent echttp_content_add (EcHttpContent, EcHttpContent*);
 
-__LIB_EXPORT EcHttpContent echttp_content_next (EcHttpContent);
+__ENTC_LIBEX EcHttpContent echttp_content_next (EcHttpContent);
 
-__LIB_EXPORT const EcString echttp_content_parameter (EcHttpContent, const EcString name);
+__ENTC_LIBEX const EcString echttp_content_parameter (EcHttpContent, const EcString name);
 
-__LIB_EXPORT EcString echttp_content_extractString (EcHttpContent);
+__ENTC_LIBEX EcString echttp_content_extractString (EcHttpContent);
 
-__LIB_EXPORT EcBuffer echttp_content_extractBuffer (EcHttpContent);
+__ENTC_LIBEX EcBuffer echttp_content_extractBuffer (EcHttpContent);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 typedef struct {
 
@@ -117,12 +117,12 @@ typedef struct {
 
 struct EcHttpRequest_s; typedef struct EcHttpRequest_s* EcHttpRequest;
 
-typedef int (_STDCALL *http_route_fct)(void* ptr, EcHttpHeader*, void** object);
-typedef int (_STDCALL *http_validate_header_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
-typedef int (_STDCALL *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
-typedef int (_STDCALL *http_header_fct)(void* ptr, EcHttpHeader*);
-typedef int (_STDCALL *http_content_fct)(void* ptr, EcHttpHeader*, const EcString tmproot);
-typedef int (_STDCALL *http_clear_fct)(void* ptr, void** object);
+typedef int __ENTC_LIBEX *http_route_fct)(void* ptr, EcHttpHeader*, void** object);
+typedef int __ENTC_LIBEX *http_validate_header_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
+typedef int __ENTC_LIBEX *http_render_fct)(void* ptr, EcHttpHeader*, EcDevStream, void** object);
+typedef int __ENTC_LIBEX *http_header_fct)(void* ptr, EcHttpHeader*);
+typedef int __ENTC_LIBEX *http_content_fct)(void* ptr, EcHttpHeader*, const EcString tmproot);
+typedef int __ENTC_LIBEX *http_clear_fct)(void* ptr, void** object);
 
 typedef struct {
   
@@ -149,50 +149,50 @@ typedef int (*http_callback_render)(void* ptr, void* obj, EcHttpRequest*, EcDevS
 */
  
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT void echttp_init (void);
+__ENTC_LIBEX void echttp_init (void);
 
-__LIB_EXPORT void echttp_done (void);
+__ENTC_LIBEX void echttp_done (void);
 
-__LIB_EXPORT EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header);
+__ENTC_LIBEX EcHttpRequest echttp_request_create (const EcString docroot, const EcString tmproot, int header);
 
-__LIB_EXPORT void echttp_request_destroy (EcHttpRequest*);
+__ENTC_LIBEX void echttp_request_destroy (EcHttpRequest*);
 
-__LIB_EXPORT void echttp_request_process (EcHttpRequest, EcSocket);
+__ENTC_LIBEX void echttp_request_process (EcHttpRequest, EcSocket);
 
-__LIB_EXPORT void echttp_request_process_dev (EcHttpRequest, EcDevStream, void* callback_ptr);
+__ENTC_LIBEX void echttp_request_process_dev (EcHttpRequest, EcDevStream, void* callback_ptr);
 
-__LIB_EXPORT void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
+__ENTC_LIBEX void echttp_request_callbacks (EcHttpRequest, EcHttpCallbacks*);
 
-__LIB_EXPORT void echttp_parse_cookies (EcHttpHeader*, const EcString s);
+__ENTC_LIBEX void echttp_parse_cookies (EcHttpHeader*, const EcString s);
 
-__LIB_EXPORT EcUdc echttp_parse_auth (const EcString source);
+__ENTC_LIBEX EcUdc echttp_parse_auth (const EcString source);
 
 // misc
 
-__LIB_EXPORT void echttp_unescape (EcString url);
+__ENTC_LIBEX void echttp_unescape (EcString url);
 
-__LIB_EXPORT void echttp_escape (EcDevStream stream, const EcString url);
+__ENTC_LIBEX void echttp_escape (EcDevStream stream, const EcString url);
 
-__LIB_EXPORT void echttp_escape_stream (EcStream stream, const EcString url);
+__ENTC_LIBEX void echttp_escape_stream (EcStream stream, const EcString url);
 
-__LIB_EXPORT const EcString echttp_url_lastPart (const EcString url);
+__ENTC_LIBEX const EcString echttp_url_lastPart (const EcString url);
 
-__LIB_EXPORT void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url);
+__ENTC_LIBEX void echttp_url (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
-__LIB_EXPORT void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
+__ENTC_LIBEX void echttp_realurl (EcHttpHeader* header, EcDevStream stream, const EcString url);
 
-__LIB_EXPORT void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code, EcUdc extra_params);
+__ENTC_LIBEX void echttp_send_header (EcHttpHeader* header, EcDevStream stream, const EcString code, EcUdc extra_params);
 
-__LIB_EXPORT void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode, EcUdc extra_params);
+__ENTC_LIBEX void echttp_send_ErrHeader (EcHttpHeader* header, EcDevStream stream, ulong_t errcode, EcUdc extra_params);
 
-__LIB_EXPORT void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream, EcUdc extra_params);
+__ENTC_LIBEX void echttp_send_DefaultHeader (EcHttpHeader* header, EcDevStream stream, EcUdc extra_params);
 
-__LIB_EXPORT const EcString echttp_getMimeType (const EcString filename);
+__ENTC_LIBEX const EcString echttp_getMimeType (const EcString filename);
 
-__LIB_EXPORT EcUdc echttp_getParams (EcHttpHeader* header);
+__ENTC_LIBEX EcUdc echttp_getParams (EcHttpHeader* header);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

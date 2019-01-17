@@ -24,40 +24,40 @@
 
 struct EcChain_s; typedef struct EcChain_s* EcChain;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
 // constructor / destructor
 
-__LIB_EXPORT EcChain ecchain_create (EcAlloc);
+__ENTC_LIBEX EcChain ecchain_create (EcAlloc);
 
-__LIB_EXPORT void ecchain_destroy (EcAlloc, EcChain*);
+__ENTC_LIBEX void ecchain_destroy (EcAlloc, EcChain*);
 
-__LIB_EXPORT void ecchain_clear(EcChain);
+__ENTC_LIBEX void ecchain_clear(EcChain);
 
 // in out
 
-__LIB_EXPORT uint_t ecchain_add(EcChain, void*);
+__ENTC_LIBEX uint_t ecchain_add(EcChain, void*);
 
-__LIB_EXPORT void ecchain_del(EcChain, uint_t);
+__ENTC_LIBEX void ecchain_del(EcChain, uint_t);
 
-__LIB_EXPORT void* ecchain_get(EcChain, uint_t);
+__ENTC_LIBEX void* ecchain_get(EcChain, uint_t);
 
 // iterator
 
-__LIB_EXPORT uint_t ecchain_begin(const EcChain);
+__ENTC_LIBEX uint_t ecchain_begin(const EcChain);
 
-__LIB_EXPORT uint_t ecchain_end(const EcChain);
+__ENTC_LIBEX uint_t ecchain_end(const EcChain);
 
-__LIB_EXPORT uint_t ecchain_next(const EcChain, uint_t);
+__ENTC_LIBEX uint_t ecchain_next(const EcChain, uint_t);
 
 // misc
 
-__LIB_EXPORT void printInfo(const EcChain);
+__ENTC_LIBEX void printInfo(const EcChain);
 
-__LIB_EXPORT void ecchain_dumpArray(const EcChain);
+__ENTC_LIBEX void ecchain_dumpArray(const EcChain);
 
-__LIB_EXPORT void ecchain_dumpStack(const EcChain);
+__ENTC_LIBEX void ecchain_dumpStack(const EcChain);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

@@ -20,16 +20,16 @@
 #ifndef ENTC_TOOLS_ASYNCIO_H
 #define ENTC_TOOLS_ASYNCIO_H 1
 
-#include "system/macros.h"
-#include "system/types.h"
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 #include "system/ecevents.h"
 
 // context
 
-typedef EcHandle (_STDCALL *ecasync_context_handle_cb)(void* ptr);
-typedef int (_STDCALL *ecasync_context_run_cb)(void* ptr);
-typedef void (_STDCALL *ecasync_context_destroy_cb)(void** ptr);
-typedef void* (_STDCALL *ecasync_context_create_cb)(void);
+typedef EcHandle __ENTC_LIBEX *ecasync_context_handle_cb)(void* ptr);
+typedef int __ENTC_LIBEX *ecasync_context_run_cb)(void* ptr);
+typedef void __ENTC_LIBEX *ecasync_context_destroy_cb)(void** ptr);
+typedef void* __ENTC_LIBEX *ecasync_context_create_cb)(void);
 
 typedef struct
 {
@@ -46,28 +46,24 @@ typedef struct
 
 struct EcAsyncContext_s; typedef struct EcAsyncContext_s* EcAsyncContext;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX EcAsyncContext ecasync_context_create (const EcAsyncContextCallbacks*, void* ptr);
 
-__LIB_EXPORT EcAsyncContext ecasync_context_create (const EcAsyncContextCallbacks*, void* ptr);
+__ENTC_LIBEX void ecasync_context_destroy (EcAsyncContext*);
 
-__LIB_EXPORT void ecasync_context_destroy (EcAsyncContext*);
 
-__CPP_EXTERN______________________________________________________________________________END
 
 // manager
 
 struct EcAsync_s; typedef struct EcAsync_s* EcAsync;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX EcAsync ecasync_create (int threads);
 
-__LIB_EXPORT EcAsync ecasync_create (int threads);
+__ENTC_LIBEX void ecasync_destroy (EcAsync*);
 
-__LIB_EXPORT void ecasync_destroy (EcAsync*);
+__ENTC_LIBEX void ecasync_addSingle (EcAsync, EcAsyncContext*);
 
-__LIB_EXPORT void ecasync_addSingle (EcAsync, EcAsyncContext*);
+__ENTC_LIBEX void ecasync_addToAll (EcAsync, EcAsyncContext*);
 
-__LIB_EXPORT void ecasync_addToAll (EcAsync, EcAsyncContext*);
 
-__CPP_EXTERN______________________________________________________________________________END
 
 #endif

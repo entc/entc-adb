@@ -29,15 +29,15 @@ struct EcDl_s; typedef struct EcDl_s* EcDl;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcDl ecdl_create (const EcString name, const EcString path);
+__ENTC_LIBEX EcDl ecdl_create (const EcString name, const EcString path);
 
-__LIBEX void ecdl_destroy (EcDl*);
+__ENTC_LIBEX void ecdl_destroy (EcDl*);
 
-__LIBEX int ecdl_load (EcDl, EcErr);
+__ENTC_LIBEX int ecdl_load (EcDl, EcErr);
 
-__LIBEX int ecdl_unload (EcDl, EcErr);
+__ENTC_LIBEX int ecdl_unload (EcDl, EcErr);
 
-__LIBEX int ecdl_assign (EcDl, EcErr, void* buffer, int n, ...);
+__ENTC_LIBEX int ecdl_assign (EcDl, EcErr, void* buffer, int n, ...);
 
 //=============================================================================
 

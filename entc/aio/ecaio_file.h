@@ -31,11 +31,11 @@ struct EcAioFileReader_s; typedef struct EcAioFileReader_s* EcAioFileReader;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioFileReader ecaio_filereader_create (void* handle);
+__ENTC_LIBEX EcAioFileReader ecaio_filereader_create (void* handle);
 
-__LIBEX int ecaio_filereader_assign (EcAioFileReader*, EcAio aio, EcErr err);
+__ENTC_LIBEX int ecaio_filereader_assign (EcAioFileReader*, EcAio aio, EcErr err);
 
-__LIBEX void ecaio_filereader_setCallback (EcAioFileReader, void*, fct_ecaio_context_onInit, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
+__ENTC_LIBEX void ecaio_filereader_setCallback (EcAioFileReader, void*, fct_ecaio_context_onInit, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
 
 //=============================================================================
 
@@ -43,13 +43,13 @@ struct EcAioFileWriter_s; typedef struct EcAioFileWriter_s* EcAioFileWriter;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioFileWriter ecaio_filewriter_create (void* handle);
+__ENTC_LIBEX EcAioFileWriter ecaio_filewriter_create (void* handle);
 
-__LIBEX int ecaio_filewriter_assign (EcAioFileWriter*);
+__ENTC_LIBEX int ecaio_filewriter_assign (EcAioFileWriter*);
 
-__LIBEX void ecaio_filewriter_setBufferCP (EcAioFileWriter, const char* buffer, unsigned long size);
+__ENTC_LIBEX void ecaio_filewriter_setBufferCP (EcAioFileWriter, const char* buffer, unsigned long size);
 
-__LIBEX void ecaio_filewriter_setBufferBT (EcAioFileWriter, EcBuffer*);
+__ENTC_LIBEX void ecaio_filewriter_setBufferBT (EcAioFileWriter, EcBuffer*);
 
 //=============================================================================
 

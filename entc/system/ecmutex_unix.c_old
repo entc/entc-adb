@@ -19,6 +19,7 @@
 
 #ifdef __GNUC__
 
+#include "sys/entc_types.h"
 #include "ecmutex.h"
 
 #include <pthread.h>

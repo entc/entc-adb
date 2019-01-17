@@ -20,8 +20,7 @@
 #ifndef ENTC_TOOLS_XMLSTREAM_H
 #define ENTC_TOOLS_XMLSTREAM_H 1
 
-#include "system/macros.h"
-#include "system/types.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 #include "types/ecmap.h"
 #include "tools/eclog.h"
@@ -35,48 +34,44 @@
 
 struct EcXMLStream_s; typedef struct EcXMLStream_s* EcXMLStream;
 
-__CPP_EXTERN______________________________________________________________________________START
-    
-__LIB_EXPORT EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir);
+__ENTC_LIBEX EcXMLStream ecxmlstream_openfile (const char* filename, const char* confdir);
 
-__LIB_EXPORT EcXMLStream ecxmlstream_openpath (const char* path, const char* filename, const char* confdir);
+__ENTC_LIBEX EcXMLStream ecxmlstream_openpath (const char* path, const char* filename, const char* confdir);
 
-__LIB_EXPORT EcXMLStream ecxmlstream_openbuffer (const char* buffer);
+__ENTC_LIBEX EcXMLStream ecxmlstream_openbuffer (const char* buffer);
 
-__LIB_EXPORT void ecxmlstream_destroy (EcXMLStream*);
+__ENTC_LIBEX void ecxmlstream_destroy (EcXMLStream*);
   
-__LIB_EXPORT int ecxmlstream_nextNode (EcXMLStream);
+__ENTC_LIBEX int ecxmlstream_nextNode (EcXMLStream);
   
-__LIB_EXPORT const EcString ecxmlstream_nodeName (EcXMLStream);
+__ENTC_LIBEX const EcString ecxmlstream_nodeName (EcXMLStream);
 
-__LIB_EXPORT const EcString ecxmlstream_nodeNamespace (EcXMLStream);
+__ENTC_LIBEX const EcString ecxmlstream_nodeNamespace (EcXMLStream);
 
-__LIB_EXPORT ubyte_t ecxmlstream_nodeType (EcXMLStream);
+__ENTC_LIBEX ubyte_t ecxmlstream_nodeType (EcXMLStream);
   
-__LIB_EXPORT const char* ecxmlstream_nodeAttribute (EcXMLStream, const char* name);
+__ENTC_LIBEX const char* ecxmlstream_nodeAttribute (EcXMLStream, const char* name);
 
-__LIB_EXPORT const char* ecxmlstream_nodeValue (EcXMLStream);
+__ENTC_LIBEX const char* ecxmlstream_nodeValue (EcXMLStream);
   
-__LIB_EXPORT const EcString ecxmlstream_isNode (EcXMLStream);
+__ENTC_LIBEX const EcString ecxmlstream_isNode (EcXMLStream);
 
-__LIB_EXPORT int ecxmlstream_isBegin (EcXMLStream, const char* name);
+__ENTC_LIBEX int ecxmlstream_isBegin (EcXMLStream, const char* name);
 
-__LIB_EXPORT int ecxmlstream_isEnd (EcXMLStream, const char* name);
+__ENTC_LIBEX int ecxmlstream_isEnd (EcXMLStream, const char* name);
 
-__LIB_EXPORT int ecxmlstream_isOpen (EcXMLStream);
+__ENTC_LIBEX int ecxmlstream_isOpen (EcXMLStream);
   
-__LIB_EXPORT int ecxmlstream_isValue (EcXMLStream);
+__ENTC_LIBEX int ecxmlstream_isValue (EcXMLStream);
   
   /* helper functions */
   
-__LIB_EXPORT void ecxmlstream_parseNodeValue (EcXMLStream, EcString* value, const EcString node);
+__ENTC_LIBEX void ecxmlstream_parseNodeValue (EcXMLStream, EcString* value, const EcString node);
 
-__LIB_EXPORT const EcString ecxmlstream_getNamespace (EcXMLStream, const EcString);
+__ENTC_LIBEX const EcString ecxmlstream_getNamespace (EcXMLStream, const EcString);
 
-__LIB_EXPORT void ecxmlstream_mapNamespaces (EcXMLStream, EcMap);
+__ENTC_LIBEX void ecxmlstream_mapNamespaces (EcXMLStream, EcMap);
   
-__CPP_EXTERN______________________________________________________________________________END
-
 #define ENTC_XMLSTREAM_BEGIN if( ecxmlstream_isOpen( xmlstream ) ) while( ecxmlstream_nextNode( xmlstream ) ) {
 #define ENTC_XMLSTREAM_END( endtag ) else if( ecxmlstream_isEnd( xmlstream, endtag ) ) break; }
 #define ENTC_XMLSTREAM_EMPTY( endtag ) if( ecxmlstream_isOpen( xmlstream ) ) while( ecxmlstream_nextNode( xmlstream ) ) { if( ecxmlstream_isEnd( xmlstream, endtag ) ) break; }

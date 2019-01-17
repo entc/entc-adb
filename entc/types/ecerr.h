@@ -20,7 +20,7 @@
 #ifndef ENTC_TYPES_ERR_H
 #define ENTC_TYPES_ERR_H 1
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 
 //=============================================================================
 
@@ -62,19 +62,19 @@ struct EcErr_s
 
 typedef struct EcErr_s* EcErr;
 
-__LIBEX EcErr ecerr_create ();
+__ENTC_LIBEX EcErr ecerr_create ();
 
-__LIBEX void ecerr_destroy (EcErr*);
+__ENTC_LIBEX void ecerr_destroy (EcErr*);
 
-__LIBEX int ecerr_set (EcErr, int lvl, int code, const char* text);
+__ENTC_LIBEX int ecerr_set (EcErr, int lvl, int code, const char* text);
 
-__LIBEX int ecerr_set_fmt (EcErr, int lvl, int code, const char* text, ...);
+__ENTC_LIBEX int ecerr_set_fmt (EcErr, int lvl, int code, const char* text, ...);
 
-__LIBEX int ecerr_setTO (EcErr, int lvl, int code, char** text);
+__ENTC_LIBEX int ecerr_setTO (EcErr, int lvl, int code, char** text);
 
-__LIBEX int ecerr_lastErrorOS (EcErr, int lvl);
+__ENTC_LIBEX int ecerr_lastErrorOS (EcErr, int lvl);
 
-__LIBEX int ecerr_formatErrorOS (EcErr, int lvl, unsigned long errCode);
+__ENTC_LIBEX int ecerr_formatErrorOS (EcErr, int lvl, unsigned long errCode);
 
 //-----------------------------------------------------------------------------
 

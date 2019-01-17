@@ -18,13 +18,14 @@
  */
 
 #include "ecthread.h"
-#include "ecmutex.h"
 
 #ifdef __GNUC__
 
 #include <pthread.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "sys/entc_types.h"
 
 //-----------------------------------------------------------------------------------
 

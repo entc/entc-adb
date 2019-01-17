@@ -32,13 +32,13 @@ struct EcMsgChannel_s; typedef struct EcMsgChannel_s* EcMsgChannel;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcMsgChannel ecmsg_channel_create ();
+__ENTC_LIBEX EcMsgChannel ecmsg_channel_create ();
 
-__LIBEX void ecmsg_channel_destroy (EcMsgChannel*);
+__ENTC_LIBEX void ecmsg_channel_destroy (EcMsgChannel*);
 
-__LIBEX int ecmsg_channel_init (EcMsgChannel, const EcString name, EcErr err);
+__ENTC_LIBEX int ecmsg_channel_init (EcMsgChannel, const EcString name, EcErr err);
 
-__LIBEX void* ecmsg_channel_handle (EcMsgChannel);
+__ENTC_LIBEX void* ecmsg_channel_handle (EcMsgChannel);
 
 //=============================================================================
 
@@ -46,11 +46,11 @@ struct EcAioMsgReader_s; typedef struct EcAioMsgReader_s* EcAioMsgReader;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioMsgReader ecaio_msgreader_create (void* channelHandle);
+__ENTC_LIBEX EcAioMsgReader ecaio_msgreader_create (void* channelHandle);
 
-__LIBEX int ecaio_msgreader_assign (EcAioMsgReader*, EcAio aio, EcErr err);
+__ENTC_LIBEX int ecaio_msgreader_assign (EcAioMsgReader*, EcAio aio, EcErr err);
 
-__LIBEX void ecaio_msgreader_setCallback (EcAioMsgReader, void*, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
+__ENTC_LIBEX void ecaio_msgreader_setCallback (EcAioMsgReader, void*, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
 
 //=============================================================================
 

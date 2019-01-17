@@ -22,7 +22,7 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 #include "types/ecerr.h"
 
@@ -47,13 +47,13 @@ typedef void   (__STDCALL *fct_ecjparser_onObjDestroy) (void* ptr, void* obj);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcJsonParser ecjsonparser_create (fct_ecjparser_onItem, fct_ecjparser_onObjCreate, fct_ecjparser_onObjDestroy, void* ptr);
+__ENTC_LIBEX EcJsonParser ecjsonparser_create (fct_ecjparser_onItem, fct_ecjparser_onObjCreate, fct_ecjparser_onObjDestroy, void* ptr);
 
-__LIBEX void ecjsonparser_destroy (EcJsonParser* pself);
+__ENTC_LIBEX void ecjsonparser_destroy (EcJsonParser* pself);
 
-__LIBEX int ecjsonparser_parse (EcJsonParser, const char* buffer, int64_t size, EcErr err);
+__ENTC_LIBEX int ecjsonparser_parse (EcJsonParser, const char* buffer, int64_t size, EcErr err);
 
-__LIBEX void* ecjsonparser_lastObject (EcJsonParser);
+__ENTC_LIBEX void* ecjsonparser_lastObject (EcJsonParser);
 
 //-----------------------------------------------------------------------------
 

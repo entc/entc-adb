@@ -41,63 +41,63 @@ struct EcSocket_s; typedef struct EcSocket_s* EcSocket;
 
 struct EcDatagram_s; typedef struct EcDatagram_s* EcDatagram;
 
-__CPP_EXTERN______________________________________________________________________________START 
+__ENTC_LIBEX 
 
-__LIB_EXPORT EcSocket ecsocket_new (EcEventContext, int protocol);
+__ENTC_LIBEX EcSocket ecsocket_new (EcEventContext, int protocol);
   
-__LIB_EXPORT void ecsocket_delete (EcSocket*);
+__ENTC_LIBEX void ecsocket_delete (EcSocket*);
 
-__LIB_EXPORT int ecsocket_connect (EcSocket, const EcString host, uint_t port);
+__ENTC_LIBEX int ecsocket_connect (EcSocket, const EcString host, uint_t port);
 
-__LIB_EXPORT int ecsocket_listen (EcSocket, const EcString host, uint_t port);
+__ENTC_LIBEX int ecsocket_listen (EcSocket, const EcString host, uint_t port);
 
 // simple data methods
 
-__LIB_EXPORT EcSocket ecsocket_accept (EcSocket);
+__ENTC_LIBEX EcSocket ecsocket_accept (EcSocket);
 
-__LIB_EXPORT int ecsocket_readBunch (EcSocket, void* buffer, int nbyte);
+__ENTC_LIBEX int ecsocket_readBunch (EcSocket, void* buffer, int nbyte);
   
-__LIB_EXPORT int ecsocket_write (EcSocket, const void* buffer, int nbyte);
+__ENTC_LIBEX int ecsocket_write (EcSocket, const void* buffer, int nbyte);
 
-__LIB_EXPORT int ecsocket_writeStream (EcSocket, EcStream);
+__ENTC_LIBEX int ecsocket_writeStream (EcSocket, EcStream);
 
-__LIB_EXPORT int ecsocket_writeFile (EcSocket, EcFileHandle);
+__ENTC_LIBEX int ecsocket_writeFile (EcSocket, EcFileHandle);
 
 // udp datagrams
 
-__LIB_EXPORT EcDatagram ecdatagram_create (EcSocket);
+__ENTC_LIBEX EcDatagram ecdatagram_create (EcSocket);
 
-__LIB_EXPORT void ecdatagram_destroy (EcDatagram*);
+__ENTC_LIBEX void ecdatagram_destroy (EcDatagram*);
 
-__LIB_EXPORT size_t ecdatagram_read (EcDatagram);
+__ENTC_LIBEX size_t ecdatagram_read (EcDatagram);
 
-__LIB_EXPORT size_t ecdatagram_write (EcDatagram, size_t len);
+__ENTC_LIBEX size_t ecdatagram_write (EcDatagram, size_t len);
 
-__LIB_EXPORT size_t ecdatagram_writeBuf (EcDatagram, EcBuffer buf, size_t len);
+__ENTC_LIBEX size_t ecdatagram_writeBuf (EcDatagram, EcBuffer buf, size_t len);
 
-__LIB_EXPORT EcBuffer ecdatagram_buffer (EcDatagram);
+__ENTC_LIBEX EcBuffer ecdatagram_buffer (EcDatagram);
 
-__LIB_EXPORT const EcString ecdatagram_ident (EcDatagram);
+__ENTC_LIBEX const EcString ecdatagram_ident (EcDatagram);
 
 // interuptable data methods
 
-__LIB_EXPORT EcSocket ecsocket_acceptIntr (EcSocket);
+__ENTC_LIBEX EcSocket ecsocket_acceptIntr (EcSocket);
 
-__LIB_EXPORT int ecsocket_readIntr (EcSocket, void* buffer, int nbyte, int sec);
+__ENTC_LIBEX int ecsocket_readIntr (EcSocket, void* buffer, int nbyte, int sec);
 
-__LIB_EXPORT int ecsocket_readIntrBunch (EcSocket, void* buffer, int nbyte, int sec);
+__ENTC_LIBEX int ecsocket_readIntrBunch (EcSocket, void* buffer, int nbyte, int sec);
 
 // misc methods
 
-__LIB_EXPORT EcHandle ecsocket_getAcceptHandle (EcSocket);
+__ENTC_LIBEX EcHandle ecsocket_getAcceptHandle (EcSocket);
 
-__LIB_EXPORT EcHandle ecsocket_getReadHandle (EcSocket);
+__ENTC_LIBEX EcHandle ecsocket_getReadHandle (EcSocket);
 
-__LIB_EXPORT void ecsocket_resetHandle (EcHandle);
+__ENTC_LIBEX void ecsocket_resetHandle (EcHandle);
 
-__LIB_EXPORT const EcString ecsocket_address (EcSocket);
+__ENTC_LIBEX const EcString ecsocket_address (EcSocket);
   
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif
 

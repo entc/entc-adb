@@ -115,129 +115,129 @@ typedef struct
 #define ENTC_UDC_FILE        0x2000
 #define ENTC_UDC_FOLDER      0x2001
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name);
+__ENTC_LIBEX EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name);
 
-__LIB_EXPORT void ecudc_destroy (EcAlloc alloc, EcUdc*);
+__ENTC_LIBEX void ecudc_destroy (EcAlloc alloc, EcUdc*);
 
-__LIB_EXPORT void ecudc_add (EcUdc, EcUdc*);
+__ENTC_LIBEX void ecudc_add (EcUdc, EcUdc*);
 
-__LIB_EXPORT int ecudc_del (EcAlloc alloc, EcUdc, const EcString name);
+__ENTC_LIBEX int ecudc_del (EcAlloc alloc, EcUdc, const EcString name);
 
-__LIB_EXPORT EcUdc ecudc_node (EcUdc, const EcString name);
+__ENTC_LIBEX EcUdc ecudc_node (EcUdc, const EcString name);
 
-__LIB_EXPORT EcUdc ecudc_node_e (EcUdc, const EcString name);
+__ENTC_LIBEX EcUdc ecudc_node_e (EcUdc, const EcString name);
 
-__LIB_EXPORT const EcString ecudc_name (EcUdc);
+__ENTC_LIBEX const EcString ecudc_name (EcUdc);
 
-__LIB_EXPORT void ecudc_setName (EcUdc, const EcString);
+__ENTC_LIBEX void ecudc_setName (EcUdc, const EcString);
 
-__LIB_EXPORT uint_t ecudc_type (EcUdc);
+__ENTC_LIBEX uint_t ecudc_type (EcUdc);
 
-__LIB_EXPORT EcUdc ecudc_clone (EcAlloc, const EcUdc orig);
+__ENTC_LIBEX EcUdc ecudc_clone (EcAlloc, const EcUdc orig);
 
-__LIB_EXPORT EcUdc ecudc_next (EcUdc, void** cursor);
+__ENTC_LIBEX EcUdc ecudc_next (EcUdc, void** cursor);
 
-__LIB_EXPORT EcUdc ecudc_cursor_e (EcUdc, void** cursor);
+__ENTC_LIBEX EcUdc ecudc_cursor_e (EcUdc, void** cursor);
 
-__LIB_EXPORT void ecudc_merge (EcUdc* dest, EcUdc* part);
+__ENTC_LIBEX void ecudc_merge (EcUdc* dest, EcUdc* part);
 
-__LIB_EXPORT uint32_t ecudc_size (EcUdc);
+__ENTC_LIBEX uint32_t ecudc_size (EcUdc);
 
 // setter
 
-__LIB_EXPORT void ecudc_refNumber (EcUdc, int64_t** ref);
+__ENTC_LIBEX void ecudc_refNumber (EcUdc, int64_t** ref);
 
-__LIB_EXPORT void ecudc_setS (EcUdc, const EcString value);
+__ENTC_LIBEX void ecudc_setS (EcUdc, const EcString value);
 
-__LIB_EXPORT void ecudc_setS_o (EcUdc, EcString*);
+__ENTC_LIBEX void ecudc_setS_o (EcUdc, EcString*);
 
-__LIB_EXPORT void ecudc_setP (EcUdc, void*);
+__ENTC_LIBEX void ecudc_setP (EcUdc, void*);
 
-__LIB_EXPORT void ecudc_setNumber (EcUdc, int64_t);
+__ENTC_LIBEX void ecudc_setNumber (EcUdc, int64_t);
 
-__LIB_EXPORT void ecudc_setDouble (EcUdc, double);
+__ENTC_LIBEX void ecudc_setDouble (EcUdc, double);
 
-__LIB_EXPORT void ecudc_setTime (EcUdc, const time_t*);
+__ENTC_LIBEX void ecudc_setTime (EcUdc, const time_t*);
 
-__LIB_EXPORT void ecudc_setB_o (EcUdc, EcBuffer*);
+__ENTC_LIBEX void ecudc_setB_o (EcUdc, EcBuffer*);
 
-__LIB_EXPORT void ecudc_setBool (EcUdc, int);
+__ENTC_LIBEX void ecudc_setBool (EcUdc, int);
 
 // getter
 
-__LIB_EXPORT const EcString ecudc_asString (EcUdc);
+__ENTC_LIBEX const EcString ecudc_asString (EcUdc);
 
-__LIB_EXPORT EcString ecudc_getString (EcUdc);
+__ENTC_LIBEX EcString ecudc_getString (EcUdc);
 
-__LIB_EXPORT void* ecudc_asP (EcUdc);
+__ENTC_LIBEX void* ecudc_asP (EcUdc);
 
-__LIB_EXPORT int64_t ecudc_asNumber (EcUdc);
+__ENTC_LIBEX int64_t ecudc_asNumber (EcUdc);
 
-__LIB_EXPORT double ecudc_asDouble (EcUdc);
+__ENTC_LIBEX double ecudc_asDouble (EcUdc);
 
-__LIB_EXPORT const time_t* ecudc_asTime (EcUdc);
+__ENTC_LIBEX const time_t* ecudc_asTime (EcUdc);
 
-__LIB_EXPORT EcCursor ecudc_asCursor (EcUdc);
+__ENTC_LIBEX EcCursor ecudc_asCursor (EcUdc);
 
-__LIB_EXPORT EcFileInfo ecudc_asFileInfo (EcUdc);
+__ENTC_LIBEX EcFileInfo ecudc_asFileInfo (EcUdc);
 
-__LIB_EXPORT EcTableInfo ecudc_asTableInfo (EcUdc);
+__ENTC_LIBEX EcTableInfo ecudc_asTableInfo (EcUdc);
 
-__LIB_EXPORT EcSet ecudc_asSet (EcUdc);
+__ENTC_LIBEX EcSet ecudc_asSet (EcUdc);
 
-__LIB_EXPORT EcUserInfo ecudc_asUserInfo (EcUdc);
+__ENTC_LIBEX EcUserInfo ecudc_asUserInfo (EcUdc);
 
-__LIB_EXPORT EcError ecudc_asError (EcUdc);
+__ENTC_LIBEX EcError ecudc_asError (EcUdc);
 
-__LIB_EXPORT EcMethod ecudc_asMethod (EcUdc);
+__ENTC_LIBEX EcMethod ecudc_asMethod (EcUdc);
 
-__LIB_EXPORT EcBuffer ecudc_asB (EcUdc);
+__ENTC_LIBEX EcBuffer ecudc_asB (EcUdc);
 
-__LIB_EXPORT int ecudc_asBool (EcUdc);
+__ENTC_LIBEX int ecudc_asBool (EcUdc);
 
 // helper
 
-__LIB_EXPORT void* ecudc_get_asP (const EcUdc, const EcString name, void* alt);
+__ENTC_LIBEX void* ecudc_get_asP (const EcUdc, const EcString name, void* alt);
 
-__LIB_EXPORT const EcString ecudc_get_asString (const EcUdc, const EcString name, const EcString alt);
+__ENTC_LIBEX const EcString ecudc_get_asString (const EcUdc, const EcString name, const EcString alt);
 
-__LIB_EXPORT int64_t ecudc_get_asNumber (const EcUdc, const EcString name, int64_t alt);
+__ENTC_LIBEX int64_t ecudc_get_asNumber (const EcUdc, const EcString name, int64_t alt);
 
-__LIB_EXPORT double ecudc_get_asDouble (const EcUdc, const EcString name, double alt);
+__ENTC_LIBEX double ecudc_get_asDouble (const EcUdc, const EcString name, double alt);
 
-__LIB_EXPORT const time_t* ecudc_get_asTime (const EcUdc, const EcString name, const time_t* alt);
+__ENTC_LIBEX const time_t* ecudc_get_asTime (const EcUdc, const EcString name, const time_t* alt);
 
-__LIB_EXPORT EcBuffer ecudc_get_asB (const EcUdc, const EcString name, const EcBuffer alt);
+__ENTC_LIBEX EcBuffer ecudc_get_asB (const EcUdc, const EcString name, const EcBuffer alt);
 
-__LIB_EXPORT int ecudc_get_asBool (const EcUdc, const EcString name, int alt);
+__ENTC_LIBEX int ecudc_get_asBool (const EcUdc, const EcString name, int alt);
 
 // helper setter
 
-__LIB_EXPORT void ecudc_add_asP (EcAlloc, EcUdc, const EcString name, void* value);
+__ENTC_LIBEX void ecudc_add_asP (EcAlloc, EcUdc, const EcString name, void* value);
 
-__LIB_EXPORT void ecudc_add_asString (EcAlloc, EcUdc, const EcString name, const EcString value);
+__ENTC_LIBEX void ecudc_add_asString (EcAlloc, EcUdc, const EcString name, const EcString value);
 
-__LIB_EXPORT void ecudc_add_asS_o (EcAlloc, EcUdc, const EcString name, EcString*);
+__ENTC_LIBEX void ecudc_add_asS_o (EcAlloc, EcUdc, const EcString name, EcString*);
 
-__LIB_EXPORT void ecudc_add_asNumber (EcAlloc, EcUdc, const EcString name, int64_t value);
+__ENTC_LIBEX void ecudc_add_asNumber (EcAlloc, EcUdc, const EcString name, int64_t value);
 
-__LIB_EXPORT void ecudc_add_asDouble (EcAlloc, EcUdc, const EcString name, double value);
+__ENTC_LIBEX void ecudc_add_asDouble (EcAlloc, EcUdc, const EcString name, double value);
 
-__LIB_EXPORT void ecudc_add_asTime (EcAlloc, EcUdc, const EcString name, const time_t* value);
+__ENTC_LIBEX void ecudc_add_asTime (EcAlloc, EcUdc, const EcString name, const time_t* value);
 
-__LIB_EXPORT void ecudc_add_asB_o (EcAlloc, EcUdc, const EcString name, EcBuffer*);
+__ENTC_LIBEX void ecudc_add_asB_o (EcAlloc, EcUdc, const EcString name, EcBuffer*);
 
 // tools
 
-__LIB_EXPORT EcUdc ecudc_errcode (EcAlloc, uint_t errcode);
+__ENTC_LIBEX EcUdc ecudc_errcode (EcAlloc, uint_t errcode);
 
-__LIB_EXPORT EcUdc ecudc_readFromFile (const EcString);
+__ENTC_LIBEX EcUdc ecudc_readFromFile (const EcString);
 
-__LIB_EXPORT int ecudc_writeToFile (const EcString, const EcUdc);
+__ENTC_LIBEX int ecudc_writeToFile (const EcString, const EcUdc);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif
 

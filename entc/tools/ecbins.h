@@ -20,26 +20,26 @@
 #ifndef ENTC_TOOLS_BINS_H
 #define ENTC_TOOLS_BINS_H 1
 
-#include "system/macros.h"
-#include "system/types.h"
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 
 #include "types/ecudc.h"
 #include "types/ecbuffer.h"
 
 #include "types/ecstream.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcUdc ecbins_read (const EcBuffer, const EcString name);
+__ENTC_LIBEX EcUdc ecbins_read (const EcBuffer, const EcString name);
 
-__LIB_EXPORT EcBuffer ecbins_write (const EcUdc, const EcBuffer);
+__ENTC_LIBEX EcBuffer ecbins_write (const EcUdc, const EcBuffer);
 
 // misc
 
-__LIB_EXPORT void ecbins_writeElement (EcStream stream, const EcUdc udc);
+__ENTC_LIBEX void ecbins_writeElement (EcStream stream, const EcUdc udc);
 
-__LIB_EXPORT EcUdc ecbins_readBuffer (EcBuffer posbuf, const EcString name);
+__ENTC_LIBEX EcUdc ecbins_readBuffer (EcBuffer posbuf, const EcString name);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

@@ -33,9 +33,9 @@ struct EcMutex_s {
 
 //-----------------------------------------------------------------------------------
 
-EcMutex ecmutex_new()
+EntcMutex entc_mutex_new()
 {
-  EcMutex self = ENTC_NEW(struct EcMutex_s);
+  EntcMutex self = ENTC_NEW(struct EcMutex_s);
   
   InitializeCriticalSection(&(self->cs));
   
@@ -44,9 +44,9 @@ EcMutex ecmutex_new()
 
 //-----------------------------------------------------------------------------------
 
-void ecmutex_delete(EcMutex* pself)
+void entc_mutex_del(EcMutex* pself)
 {
-  EcMutex self = *pself;
+  EntcMutex self = *pself;
   
   DeleteCriticalSection(&(self->cs));
   
@@ -55,14 +55,14 @@ void ecmutex_delete(EcMutex* pself)
 
 //-----------------------------------------------------------------------------------
 
-void ecmutex_lock(EcMutex self)
+void entc_mutex_lock(EntcMutex self)
 {
   EnterCriticalSection(&(self->cs));
 }
 
 //-----------------------------------------------------------------------------------
 
-void ecmutex_unlock(EcMutex self)
+void entc_mutex_unlock(EntcMutex self)
 {
   LeaveCriticalSection(&(self->cs));
 }

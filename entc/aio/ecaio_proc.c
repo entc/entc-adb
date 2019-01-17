@@ -10,7 +10,7 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include "system/ecthread.h"
+#include "sys/entc_thread.h"
 #include "ecaio_event.h"
 
 //-----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ struct EcAioProc_s
   
   HANDLE handle;
   
-  EcThread thread;
+  EntcThread thread;
   
   EcAio aio;
   
@@ -80,16 +80,16 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
   
   eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "onDestroy");
 
-  ecthread_cancel (self->thread);
+  entc_thread_cancel (self->thread);
   
   if (self->onDestroy)
   {
     self->onDestroy (self->ptr);
   }
   
-  ecthread_join (self->thread);
+  entc_thread_join (self->thread);
   
-  ecthread_delete (&(self->thread));
+  entc_thread_del (&(self->thread));
   
   eclog_fmt (LL_TRACE, "ENTC AIO", "proc thread", "stopped and destroyed");
 
@@ -130,8 +130,8 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   res = ecaio_event_assign (&event, aio, &(self->eventh), err);
   
   // thread part
-  self->thread = ecthread_new (NULL);
-  ecthread_start(self->thread, ecaio_proc_thread, self);
+  self->thread = entc_thread_new (NULL);
+  entc_thread_start(self->thread, ecaio_proc_thread, self);
   
   *pself = NULL;
   return res;
@@ -245,7 +245,7 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
 
 //*****************************************************************************
 
-#include "system/ecthread.h"
+#include "sys/entc_thread.h"
 #include "aio/ecaio_event.h"
 
 //-----------------------------------------------------------------------------
@@ -261,7 +261,7 @@ struct EcAioProc_s
   
   long pid;
   
-  EcThread thread;
+  EntcThread thread;
   
   EcAio aio;
   
@@ -327,9 +327,9 @@ static void __STDCALL ecaio_proc_onDestroy (void* ptr)
     self->onDestroy (self->ptr);
   }
 
-  ecthread_join (self->thread);
+  entc_thread_join (self->thread);
   
-  ecthread_delete (&(self->thread));
+  entc_thread_del (&(self->thread));
   
   eclog_fmt (LL_TRACE, "ENTC AIO", "proc event", "stopped [%lu]", (unsigned long)self->pid);
   
@@ -371,8 +371,8 @@ int ecaio_proc_assign (EcAioProc* pself, EcAio aio, EcErr err)
   res = ecaio_event_assign (&event, aio, &(self->eventh), err);
   
   // thread part
-  self->thread = ecthread_new (NULL);
-  ecthread_start(self->thread, ecaio_proc_thread, self);
+  self->thread = entc_thread_new (NULL);
+  entc_thread_start(self->thread, ecaio_proc_thread, self);
   */
    
   *pself = NULL;

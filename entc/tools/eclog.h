@@ -20,8 +20,8 @@
 #ifndef ENTC_TOOLS_LOG_H
 #define ENTC_TOOLS_LOG_H 1
 
-#include "system/ecdefs.h"
-#include "system/types.h"
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 
 //-----------------------------------------------------------------------------
 
@@ -38,13 +38,13 @@ typedef enum
 
 //-----------------------------------------------------------------------------
 
-__LIBEX void eclog_msg (EcLogLevel, const char* unit, const char* method, const char* msg);
+__ENTC_LIBEX void eclog_msg (EcLogLevel, const char* unit, const char* method, const char* msg);
 
-__LIBEX void eclog_fmt (EcLogLevel, const char* unit, const char* method, const char* format, ...);
+__ENTC_LIBEX void eclog_fmt (EcLogLevel, const char* unit, const char* method, const char* format, ...);
 
-__LIBEX void eclog_bin (EcLogLevel, const char* unit, const char* method, const char* data, uint64_t size);
+__ENTC_LIBEX void eclog_bin (EcLogLevel, const char* unit, const char* method, const char* data, uint64_t size);
 
-__LIBEX void eclog_err_os (EcLogLevel, const char* unit, const char* method, const char* format, ...);
+__ENTC_LIBEX void eclog_err_os (EcLogLevel, const char* unit, const char* method, const char* format, ...);
 
 //-----------------------------------------------------------------------------
 

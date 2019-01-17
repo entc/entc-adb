@@ -19,15 +19,10 @@ find_package(DL REQUIRED)
 
 #------------------------------------------------------------------------------
 
-SET (ENTC_SYS_HEADERS
+SET (ENTC_SYSTEM_HEADERS
 
-  system/types.h
-  system/ecdefs.h
-  system/macros.h
   system/platform.h
   system/ecfile.h
-  system/ecmutex.h
-  system/ecthread.h
   system/ecdl.h
   system/ecdlib.h
   system/ectime.h
@@ -38,18 +33,12 @@ SET (ENTC_SYS_HEADERS
 
 )
 
-SET (ENTC_SYS_SOURCES
+SET (ENTC_SYSTEM_SOURCES
 
   system/ecfile.c
   system/ecfile_win.c
   system/ecfile_unix.c
   system/ecfile_dos.c
-  system/ecmutex_win.c
-  system/ecmutex_unix.c
-  system/ecmutex_dos.c
-  system/ecthread_win.c
-  system/ecthread_unix.c
-  system/ecthread_dos.c
   system/ecdl.c
   system/ecdlib.c
   system/ectime.c
@@ -163,17 +152,56 @@ SET(ENTC_TESTS_SOURCES
 
 #------------------------------------------------------------------------------
 
-source_group("System" FILES ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
+SET (ENTC_STC_HEADERS
+
+  stc/entc_str.h
+  stc/entc_list.h
+  stc/entc_map.h
+  stc/entc_udc.h
+)
+
+SET (ENTC_STC_SOURCES
+
+  stc/entc_str.c
+  stc/entc_list.c
+  stc/entc_map.c
+  stc/entc_udc.c
+)
+
+
+SET (ENTC_SYS_HEADERS
+
+  sys/entc_types.h
+  sys/entc_export.h
+
+  sys/entc_err.h
+  sys/entc_mutex.h
+  sys/entc_thread.h
+)
+
+SET (ENTC_SYS_SOURCES
+
+  sys/entc_err.c
+  sys/entc_mutex.c
+  sys/entc_thread.c
+)
+
+#------------------------------------------------------------------------------
+
+source_group("System" FILES ${ENTC_SYSTEM_SOURCES} ${ENTC_SYSTEM_HEADERS})
 source_group("AIO" FILES ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS})
 source_group("Types" FILES ${ENTC_TYPES_SOURCES} ${ENTC_TYPES_HEADERS})
 source_group("Tools" FILES ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS})
 source_group("Tests" FILES ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS})
 
+source_group("STC" FILES ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS})
+source_group("SYS" FILES ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
+
 #------------------------------------------------------------------------------
 
 INCLUDE_DIRECTORIES("." ${CRYPT_INCLUDES} ${PTHREAD_INCLUDES} ${DL_INCLUDES})
 
-ADD_LIBRARY( entc SHARED ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS} ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS})
+ADD_LIBRARY( entc SHARED ${ENTC_SYSTEM_SOURCES} ${ENTC_SYSTEM_HEADERS} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS} ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS} ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS} ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
 
 TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${CRYPT_LIBRARIES} ${PTHREAD_LIBRARIES} ${DL_LIBRARIES})
 
@@ -183,11 +211,13 @@ set_property(TARGET entc PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 #------------------------------------------------------------------------------
 
 install (TARGETS entc DESTINATION lib)
-install (FILES ${ENTC_SYS_HEADERS} DESTINATION include/entc/system)
+install (FILES ${ENTC_SYSTEM_HEADERS} DESTINATION include/entc/system)
 install (FILES ${ENTC_AIO_HEADERS} DESTINATION include/entc/aio)
 install (FILES ${ENTC_TYPES_HEADERS} DESTINATION include/entc/types)
 install (FILES ${ENTC_TOOLS_HEADERS} DESTINATION include/entc/tools)
 install (FILES ${ENTC_TESTS_HEADERS} DESTINATION include/entc/tests)
+install (FILES ${ENTC_STC_HEADERS} DESTINATION include/entc/stc)
+install (FILES ${ENTC_SYS_HEADERS} DESTINATION include/entc/sys)
 
 INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindEntc_1_4.cmake)
 

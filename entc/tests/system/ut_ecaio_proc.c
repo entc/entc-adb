@@ -4,7 +4,7 @@
 #include "system/ecproc.h"
 #include "system/macros.h"
 
-#include "system/ecthread.h"
+#include "sys/entc_thread.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -98,13 +98,13 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
   printf ("$2\n");
   
   {
-    EcThread thread = ecthread_new(NULL);
+    EntcThread thread = entc_thread_new();
     
-    ecthread_start (thread, test_ecaio_parent_thread, aio);
+    entc_thread_start (thread, test_ecaio_parent_thread, aio);
 
     printf ("#1\n");
     
-    ecthread_sleep (10000);
+    entc_thread_sleep (10000);
 
     printf ("#2\n");
 
@@ -112,7 +112,7 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     printf ("#3\n");
 
-    ecthread_sleep (100);
+    entc_thread_sleep (100);
     
     printf ("#4\n");
 
@@ -138,11 +138,11 @@ static int __STDCALL test_ecaio_parent (void* ptr, TestEnvContext tctx, EcErr er
     
     printf ("#6\n");
 
-    ecthread_join(thread);
+    entc_thread_join(thread);
     
     printf ("#7\n");
  
-    ecthread_delete(&thread);
+    entc_thread_del(&thread);
   }
   
   ecproc_destroy(&proc);

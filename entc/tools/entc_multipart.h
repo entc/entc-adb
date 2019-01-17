@@ -32,29 +32,29 @@ struct EntcMultipart_s; typedef struct EntcMultipart_s* EntcMultipart;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX   EntcMultipart   entc_multipart_new          (const EcString boundary, const EcString header);
+__ENTC_LIBEX   EntcMultipart   entc_multipart_new          (const EcString boundary, const EcString header);
 
-__LIBEX   void            entc_multipart_del          (EntcMultipart*);
-
-//-----------------------------------------------------------------------------
-
-__LIBEX   void            entc_multipart_add_text     (EntcMultipart, const EcString text, const EcString mimeType);
-
-__LIBEX   void            entc_multipart_add_file     (EntcMultipart, const EcString path, const EcString file, int fileId, const EcString vsec, unsigned int aes_type);
-
-__LIBEX   void            entc_multipart_add_path     (EntcMultipart, const EcString path, const EcString name, int fileId, const EcString vsec, unsigned int aes_type);
-
-__LIBEX   void            entc_multipart_add_buf_ot   (EntcMultipart, const EcString name, EcBuffer*);                  // add ContentDisposition
-
-__LIBEX   void            entc_multipart_add_str      (EntcMultipart, const EcString name, const EcString content);     // add ContentDisposition
-
-__LIBEX   void            entc_multipart_add_str_ot   (EntcMultipart, const EcString name, EcString* content);          // add ContentDisposition
+__ENTC_LIBEX   void            entc_multipart_del          (EntcMultipart*);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX   EcString        entc_multipart_content_type (EntcMultipart);
+__ENTC_LIBEX   void            entc_multipart_add_text     (EntcMultipart, const EcString text, const EcString mimeType);
 
-__LIBEX   uint_t          entc_multipart_next         (EntcMultipart, EcBuffer);   // min buffer size == 200 -> for base64 encoding
+__ENTC_LIBEX   void            entc_multipart_add_file     (EntcMultipart, const EcString path, const EcString file, int fileId, const EcString vsec, unsigned int aes_type);
+
+__ENTC_LIBEX   void            entc_multipart_add_path     (EntcMultipart, const EcString path, const EcString name, int fileId, const EcString vsec, unsigned int aes_type);
+
+__ENTC_LIBEX   void            entc_multipart_add_buf_ot   (EntcMultipart, const EcString name, EcBuffer*);                  // add ContentDisposition
+
+__ENTC_LIBEX   void            entc_multipart_add_str      (EntcMultipart, const EcString name, const EcString content);     // add ContentDisposition
+
+__ENTC_LIBEX   void            entc_multipart_add_str_ot   (EntcMultipart, const EcString name, EcString* content);          // add ContentDisposition
+
+//-----------------------------------------------------------------------------
+
+__ENTC_LIBEX   EcString        entc_multipart_content_type (EntcMultipart);
+
+__ENTC_LIBEX   uint_t          entc_multipart_next         (EntcMultipart, EcBuffer);   // min buffer size == 200 -> for base64 encoding
 
 //-----------------------------------------------------------------------------
 

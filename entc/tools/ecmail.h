@@ -20,16 +20,16 @@
 #ifndef ENTC_TOOLS_MAIL_H
 #define ENTC_TOOLS_MAIL_H 1
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcMail ecmail_create (const EcString mailhost, uint_t port);
+__ENTC_LIBEX EcMail ecmail_create (const EcString mailhost, uint_t port);
   
-__LIB_EXPORT void ecmail_destroy (EcMail*);
+__ENTC_LIBEX void ecmail_destroy (EcMail*);
   
-__LIB_EXPORT int ecmail_send (EcMail, const EcString txtto, const EcString textre, const EcString subject, const EcString text, EcEventContext);
+__ENTC_LIBEX int ecmail_send (EcMail, const EcString txtto, const EcString textre, const EcString subject, const EcString text, EcEventContext);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

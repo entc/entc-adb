@@ -27,24 +27,24 @@
 #include "../types/ecbuffer.h"
 #include "../types/ecudc.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
 
-__LIB_EXPORT EcUdc ecxmldom_create_tag (EcUdc parent, const EcString name);
+__ENTC_LIBEX EcUdc ecxmldom_create_tag (EcUdc parent, const EcString name);
 
-__LIB_EXPORT const EcString ecxmldom_get_name (EcUdc tag);
+__ENTC_LIBEX const EcString ecxmldom_get_name (EcUdc tag);
 
-__LIB_EXPORT void ecxmldom_set_name (EcUdc, const EcString name);
+__ENTC_LIBEX void ecxmldom_set_name (EcUdc, const EcString name);
 
-__LIB_EXPORT void ecxmldom_set_value (EcUdc, const EcString value);
+__ENTC_LIBEX void ecxmldom_set_value (EcUdc, const EcString value);
 
-__LIB_EXPORT void ecxmldom_add_attribute (EcUdc tag, const EcString name, const EcString value);
+__ENTC_LIBEX void ecxmldom_add_attribute (EcUdc tag, const EcString name, const EcString value);
 
-__LIB_EXPORT EcBuffer ecxmldom_buffer (EcUdc*);
+__ENTC_LIBEX EcBuffer ecxmldom_buffer (EcUdc*);
 
-__LIB_EXPORT void ecxmldom_setNamespace (EcUdc, const EcString, const EcString definition);
+__ENTC_LIBEX void ecxmldom_setNamespace (EcUdc, const EcString, const EcString definition);
 
-__LIB_EXPORT void ecxmldom_addNamespace (EcUdc, const EcString, const EcString definition);
+__ENTC_LIBEX void ecxmldom_addNamespace (EcUdc, const EcString, const EcString definition);
 
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX
 
 #endif

@@ -1,6 +1,6 @@
 #include "ecaio.h"
 
-#include "system/ecmutex.h"
+#include "sys/entc_mutex.h"
 #include "tools/eclog.h"
 
 //*****************************************************************************
@@ -20,7 +20,7 @@ struct EcAio_s
 
   HANDLE sema;
 
-  EcMutex mutex;
+  EntcMutex mutex;
 
 };
 
@@ -33,7 +33,7 @@ EcAio ecaio_create ()
   self->port = INVALID_HANDLE_VALUE;
   self->sema = INVALID_HANDLE_VALUE;
   
-  self->mutex = ecmutex_new ();
+  self->mutex = entc_mutex_new ();
   
   return self;
 }
@@ -47,7 +47,7 @@ void ecaio_destroy (EcAio* pself)
   CloseHandle (self->sema);
   CloseHandle (self->port);
   
-  ecmutex_delete (&(self->mutex));
+  entc_mutex_del (&(self->mutex));
   
   ENTC_DEL(pself, struct EcAio_s);
 }
@@ -331,9 +331,9 @@ struct EcAio_s
 
   EcAioContext ctx;
 
-  EcMutex mutex;
+  EntcMutex mutex;
 
-  EcMutex iom;
+  EntcMutex iom;
 
   //int pfd[2];
 
@@ -341,7 +341,7 @@ struct EcAio_s
   
   EcList events;
 
-  EcMutex eventsm;
+  EntcMutex eventsm;
   
 };
 
@@ -384,10 +384,10 @@ EcAio ecaio_create ()
    self->pfd[1] = NULL;
    */
 
-  self->mutex = ecmutex_new();
-  self->iom = ecmutex_new ();
+  self->mutex = entc_mutex_new();
+  self->iom = entc_mutex_new ();
 
-  self->eventsm = ecmutex_new ();
+  self->eventsm = entc_mutex_new ();
   self->events = eclist_create (ecaio_events_onDestroy);
   
   return self;
@@ -408,10 +408,10 @@ void ecaio_destroy (EcAio* pself)
   
   eclist_destroy (&(self->ctxs));
   
-  ecmutex_delete(&(self->mutex));
-  ecmutex_delete(&(self->iom));
+  entc_mutex_del(&(self->mutex));
+  entc_mutex_del(&(self->iom));
   
-  ecmutex_delete(&(self->eventsm));
+  entc_mutex_del(&(self->eventsm));
   eclist_destroy (&(self->events));
   
   ENTC_DEL(pself, struct EcAio_s);
@@ -512,11 +512,11 @@ int ecaio_appendVNode (EcAio self, int fd, void* data, EcErr err)
 
 int ecaio_appendENode (EcAio self, EcAioContext ctx, void** eh, EcErr err)
 {
-  ecmutex_lock (self->eventsm);
+  entc_mutex_lock (self->eventsm);
   
   *eh = eclist_push_back (self->events, ctx);
   
-  ecmutex_unlock (self->eventsm);
+  entc_mutex_unlock (self->eventsm);
 
   return ENTC_ERR_NONE;
 }
@@ -528,11 +528,11 @@ int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
   EcAioContext ctx;
   EcListNode node = eh;
   
-  ecmutex_lock (self->eventsm);
+  entc_mutex_lock (self->eventsm);
   
   ctx = eclist_extract (self->events, node);
   
-  ecmutex_unlock (self->eventsm);
+  entc_mutex_unlock (self->eventsm);
 
   return ecaio_queue_append (self, ctx, err);
 }
@@ -541,11 +541,11 @@ int ecaio_triggerENode (EcAio self, void* eh, EcErr err)
 
 int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
 {
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
   
   eclist_push_back (self->ctxs, ctx);
   
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
   
   // trigger event
   uint64_t u = 1;
@@ -561,13 +561,13 @@ int ecaio_queue_append (EcAio self, EcAioContext ctx, EcErr err)
 
 void ecaio_abortall (EcAio self)
 {
-  ecmutex_lock (self->eventsm);
+  entc_mutex_lock (self->eventsm);
   
   eclog_fmt (LL_TRACE, "ENTC AIO", "abortall", "{%p} clear all events [%i]", self, eclist_size(self->events));
   
   eclist_clear (self->events);
   
-  ecmutex_unlock (self->eventsm);
+  entc_mutex_unlock (self->eventsm);
 }
 
 //-----------------------------------------------------------------------------
@@ -576,7 +576,7 @@ int ecaio_handle_event (EcAio self)
 {
   EcAioContext ctx = NULL;
 
-  ecmutex_lock (self->mutex);
+  entc_mutex_lock (self->mutex);
 
   EcListCursor c;
   eclist_cursor_init (self->ctxs, &c, LIST_DIR_NEXT);
@@ -586,7 +586,7 @@ int ecaio_handle_event (EcAio self)
     ctx = eclist_cursor_extract (self->ctxs, &c);
   }
 
-  ecmutex_unlock (self->mutex);
+  entc_mutex_unlock (self->mutex);
 
   if (ctx)
   {
@@ -623,7 +623,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
   //eclogger_fmt (LL_TRACE, "ENTC", "context", "waiting for lock");
 
-  ecmutex_lock (self->iom);
+  entc_mutex_lock (self->iom);
 
   //eclogger_fmt (LL_TRACE, "ENTC", "context", "waiting for event");
 
@@ -633,7 +633,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
 
   if (n < 0)
   {
-    ecmutex_unlock (self->iom);
+    entc_mutex_unlock (self->iom);
 
     free (events);
 
@@ -670,7 +670,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
       }
       else if (cont == ENTC_AIO_CODE_ABORTALL)
       {
-        ecmutex_unlock (self->iom);
+        entc_mutex_unlock (self->iom);
 
 	      free (events);
         
@@ -693,11 +693,11 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
         }
       }
 
-      ecmutex_unlock (self->iom);
+      entc_mutex_unlock (self->iom);
     }
     else
     {
-      ecmutex_unlock (self->iom);
+      entc_mutex_unlock (self->iom);
 
       int res = ecaio_handle_event (self);
 
@@ -708,7 +708,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
   }
   else
   {
-    ecmutex_unlock (self->iom);
+    entc_mutex_unlock (self->iom);
   }
   
   free (events);

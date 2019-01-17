@@ -22,7 +22,7 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 #include "types/ecerr.h"
 #include "types/ecstream.h"
@@ -33,13 +33,13 @@ struct EcLua_s; typedef struct EcLua_s* EcLua;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcLua eclua_create ();
+__ENTC_LIBEX EcLua eclua_create ();
 
-__LIBEX void eclua_destroy (EcLua*);
+__ENTC_LIBEX void eclua_destroy (EcLua*);
 
-__LIBEX int eclua_init (EcLua, EcErr err);
+__ENTC_LIBEX int eclua_init (EcLua, EcErr err);
 
-__LIBEX int eclua_run (EcLua, const EcString script, EcErr err);
+__ENTC_LIBEX int eclua_run (EcLua, const EcString script, EcErr err);
 
 
 //-----------------------------------------------------------------------------

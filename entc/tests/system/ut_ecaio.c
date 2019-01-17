@@ -2,7 +2,7 @@
 #include "tests/ecenv.h"
 
 #include "system/macros.h"
-#include "system/ecthread.h"
+#include "sys/entc_thread.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -61,11 +61,11 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
   }
   
   {
-    EcThread thread = ecthread_new(NULL);
+    EntcThread thread = entc_thread_new();
     
-    ecthread_start (thread, test_ecaio_test1_thread, aio);
+    entc_thread_start (thread, test_ecaio_test1_thread, aio);
     
-    ecthread_sleep (1000);
+    entc_thread_sleep (1000);
     
     ecaio_abort(aio, err);
     if (testctx_err (ctx, err))
@@ -73,9 +73,9 @@ static int __STDCALL test_ecaio_test1 (void* ptr, TestEnvContext ctx, EcErr err)
       
     }
     
-    ecthread_join(thread);
+    entc_thread_join(thread);
     
-    ecthread_delete(&thread);
+    entc_thread_del(&thread);
   }
   
   ecaio_destroy (&aio);
@@ -99,16 +99,16 @@ static int __STDCALL test_ecaio_test2 (void* ptr, TestEnvContext ctx, EcErr err)
   {
     int i;
     
-    EcThread thread [10];
+    EntcThread thread [10];
     
     for (i = 0; i < 10; i++)
     {
-      thread [i] = ecthread_new(NULL);
+      thread [i] = entc_thread_new();
       
-      ecthread_start (thread [i], test_ecaio_test1_thread, aio);
+      entc_thread_start (thread [i], test_ecaio_test1_thread, aio);
     }
     
-    ecthread_sleep (1000);
+    entc_thread_sleep (1000);
     
     ecaio_abort(aio, err);
     if (testctx_err (ctx, err))
@@ -118,9 +118,9 @@ static int __STDCALL test_ecaio_test2 (void* ptr, TestEnvContext ctx, EcErr err)
     
     for (i = 0; i < 10; i++)
     {
-      ecthread_join(thread [i]);
+      entc_thread_join(thread [i]);
       
-      ecthread_delete(&(thread [i]));
+      entc_thread_del(&(thread [i]));
     }
   }
   
@@ -147,16 +147,16 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
   {
     int i;
     
-    EcThread thread [10];
+    EntcThread thread [10];
     
     for (i = 0; i < 10; i++)
     {
-      thread [i] = ecthread_new(NULL);
+      thread [i] = entc_thread_new();
       
-      ecthread_start (thread [i], test_ecaio_test1_thread, aio);
+      entc_thread_start (thread [i], test_ecaio_test1_thread, aio);
     }
     
-    ecthread_sleep (1000);
+    entc_thread_sleep (1000);
     
 #ifdef _WIN32
 
@@ -164,7 +164,7 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
 
 	GenerateConsoleCtrlEvent (CTRL_C_EVENT, 0);
 
-	ecthread_sleep (1000);
+	entc_thread_sleep (1000);
 
 	printf ("send SIGTERM\n");
 
@@ -177,7 +177,7 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
     // this should not trigger
     kill(getpid(), SIGINT);
  
-    ecthread_sleep (1000);
+    entc_thread_sleep (1000);
 
     printf ("send SIGTERM\n");
  
@@ -188,9 +188,9 @@ static int __STDCALL test_ecaio_test3 (void* ptr, TestEnvContext ctx, EcErr err)
 
     for (i = 0; i < 10; i++)
     {
-      ecthread_join(thread [i]);
+      entc_thread_join(thread [i]);
       
-      ecthread_delete(&(thread [i]));
+      entc_thread_del(&(thread [i]));
     }
   }
   
@@ -217,16 +217,16 @@ static int __STDCALL test_ecaio_test4 (void* ptr, TestEnvContext ctx, EcErr err)
   {
     int i;
     
-    EcThread thread [10];
+    EntcThread thread [10];
     
     for (i = 0; i < 10; i++)
     {
-      thread [i] = ecthread_new(NULL);
+      thread [i] = entc_thread_new();
       
-      ecthread_start (thread [i], test_ecaio_test1_thread, aio);
+      entc_thread_start (thread [i], test_ecaio_test1_thread, aio);
     }
     
-    ecthread_sleep (1000);
+    entc_thread_sleep (1000);
     
 #ifdef _WIN32
     
@@ -243,9 +243,9 @@ static int __STDCALL test_ecaio_test4 (void* ptr, TestEnvContext ctx, EcErr err)
     
     for (i = 0; i < 10; i++)
     {
-      ecthread_join(thread [i]);
+      entc_thread_join(thread [i]);
       
-      ecthread_delete(&(thread [i]));
+      entc_thread_del(&(thread [i]));
     }
   }
   

@@ -31,7 +31,7 @@
 #if defined _WIN64 || defined _WIN32
 
 #define __WIN_OS
-#define __LIBEX __EXTERN_C __declspec(dllexport)
+#define __ENTC_LIBEX __EXTERN_C __declspec(dllexport)
 
 #define __STDCALL __stdcall
 
@@ -40,7 +40,7 @@
 
 #define __BSD_OS 1
 
-#define __LIBEX __EXTERN_C
+#define __ENTC_LIBEX __EXTERN_C
 #define __STDCALL
 
 //----------------------------------------------------------------------------------
@@ -48,7 +48,7 @@
 
 #define __BSD_OS 1
 
-#define __LIBEX __EXTERN_C
+#define __ENTC_LIBEX __EXTERN_C
 #define __STDCALL
 
 //----------------------------------------------------------------------------------
@@ -56,7 +56,7 @@
 
 #define __LINUX_OS 1
 
-#define __LIBEX __EXTERN_C
+#define __ENTC_LIBEX __EXTERN_C
 #define __STDCALL
 
 //----------------------------------------------------------------------------------

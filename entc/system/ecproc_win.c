@@ -2,7 +2,7 @@
 
 // entc includes
 #include "system/ecfile.h"
-#include "system/ecmutex.h"
+#include "sys/entc_mutex.h"
 #include "types/ecbuffer.h"
 #include "types/ecmap.h"
 #include "tools/eclog.h"

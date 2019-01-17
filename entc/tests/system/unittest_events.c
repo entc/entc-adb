@@ -1,7 +1,7 @@
 #include "system/ecevents.h"
 
 #include "utils/ecmessages.h"
-#include "system/ecthread.h"
+#include "sys/entc_thread.h"
 #include <stdio.h>
 
 //--------------------------------------------------------------------------
@@ -119,8 +119,8 @@ int main (int argc, char *argv[])
   
   // simple tests with one thread
   {
-    EcThread th1 = ecthread_new ();  
-    ecthread_start (th1, callback1, econtext);
+    EntcThread th1 = entc_thread_new ();  
+    entc_thread_start (th1, callback1, econtext);
     
     t1 = time(0);
     
@@ -128,8 +128,8 @@ int main (int argc, char *argv[])
 
     printf("waited for %ld ms with type %i\n", (long)(time(0) - t1), res == ENTC_EVENT_ABORT);
       
-    ecthread_join(th1);
-    ecthread_delete(&th1);
+    entc_thread_join(th1);
+    entc_thread_del(&th1);
   }
   
   ece_context_resetAbort (econtext);
@@ -141,9 +141,9 @@ int main (int argc, char *argv[])
     HandleProps p2;  
     HandleProps p3;  
 
-    EcThread th2 = ecthread_new ();  
-    EcThread th3 = ecthread_new ();  
-    EcThread th4 = ecthread_new ();  
+    EntcThread th2 = entc_thread_new ();  
+    EntcThread th3 = entc_thread_new ();  
+    EntcThread th4 = entc_thread_new ();  
 
     EcEventQueue equeue = ece_list_create (econtext, onDelete);
     
@@ -156,7 +156,7 @@ int main (int argc, char *argv[])
     p1.queue = equeue;
     p1.handle = ece_list_handle (equeue, &p1);
     
-    ecthread_start (th2, callback2, &p1);
+    entc_thread_start (th2, callback2, &p1);
 
     res = ece_list_wait (equeue, ENTC_INFINITE, &ptr);
 
@@ -172,7 +172,7 @@ int main (int argc, char *argv[])
     p3.queue = equeue;
     p3.handle = ece_list_handle (equeue, &p3);
 
-    ecthread_start (th3, callback3, &p2);
+    entc_thread_start (th3, callback3, &p2);
     
     t1 = time(0);
 
@@ -186,20 +186,20 @@ int main (int argc, char *argv[])
     
     printf("waited for %ld ms with type %i with pointer %p\n", (long)(time(0) - t1), res, ptr);
 
-    ecthread_start (th4, callback4, &p3);
+    entc_thread_start (th4, callback4, &p3);
 
     ece_sleep(200);
     
     ece_context_setAbort (econtext);
     
-    ecthread_join(th2);
-    ecthread_delete(&th2);
+    entc_thread_join(th2);
+    entc_thread_del(&th2);
     
-    ecthread_join(th3);
-    ecthread_delete(&th3);
+    entc_thread_join(th3);
+    entc_thread_del(&th3);
     
-    ecthread_join(th4);
-    ecthread_delete(&th4);
+    entc_thread_join(th4);
+    entc_thread_del(&th4);
 
     ece_list_destroy(&equeue); 
     ece_context_delete (&econtext);

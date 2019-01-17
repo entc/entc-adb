@@ -9,17 +9,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#ifdef _WIN32
-
+#ifdef __WIN_OS
 #include <windows.h>
-#include <stdio.h>
-
 #else
-
 #define _GNU_SOURCE
-#include <stdio.h>
-
 #endif
+
+#include <stdio.h>
 
 /*------------------------------------------------------------------------*/
 
@@ -98,7 +94,7 @@ EcString ecstr_create_fmt (uint_t size, const EcString format, ...)
 
   va_list ptr;  
   va_start(ptr, format);
-#ifdef _WIN32
+#ifdef __WIN_OS
   vsnprintf_s (self, size, size, format, ptr );
 #elif __DOS__
   vsprintf (self, format, ptr);
@@ -116,7 +112,7 @@ EcString ecstr_format_list (const EcString format, va_list ptr)
 {
   char* ret = NULL;
 
-#ifdef _WIN32
+#ifdef __WIN_OS
   {
     int len = 1024;
     ret = (char*)ENTC_MALLOC(len);

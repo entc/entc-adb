@@ -31,13 +31,13 @@ struct EcAcceptSocket_s; typedef struct EcAcceptSocket_s* EcAcceptSocket;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAcceptSocket ecacceptsocket_create ();
+__ENTC_LIBEX EcAcceptSocket ecacceptsocket_create ();
 
-__LIBEX void ecacceptsocket_destroy (EcAcceptSocket*);
+__ENTC_LIBEX void ecacceptsocket_destroy (EcAcceptSocket*);
 
-__LIBEX int ecacceptsocket_listen (EcAcceptSocket, const char* host, int port, EcErr);
+__ENTC_LIBEX int ecacceptsocket_listen (EcAcceptSocket, const char* host, int port, EcErr);
 
-__LIBEX void* ecacceptsocket_socket (EcAcceptSocket);
+__ENTC_LIBEX void* ecacceptsocket_socket (EcAcceptSocket);
 
 //=============================================================================
 
@@ -45,13 +45,13 @@ struct EcRefCountedSocket_s; typedef struct EcRefCountedSocket_s* EcRefCountedSo
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcRefCountedSocket ecrefsocket_create (void*);
+__ENTC_LIBEX EcRefCountedSocket ecrefsocket_create (void*);
 
-__LIBEX EcRefCountedSocket ecrefsocket_clone (EcRefCountedSocket);
+__ENTC_LIBEX EcRefCountedSocket ecrefsocket_clone (EcRefCountedSocket);
 
-__LIBEX void ecrefsocket_decrease (EcRefCountedSocket*);
+__ENTC_LIBEX void ecrefsocket_decrease (EcRefCountedSocket*);
 
-__LIBEX void* ecrefsocket_socket (EcRefCountedSocket);
+__ENTC_LIBEX void* ecrefsocket_socket (EcRefCountedSocket);
 
 //=============================================================================
 
@@ -59,11 +59,11 @@ struct EcAioSocketReader_s; typedef struct EcAioSocketReader_s* EcAioSocketReade
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioSocketReader ecaio_socketreader_create (void* handle);
+__ENTC_LIBEX EcAioSocketReader ecaio_socketreader_create (void* handle);
 
-__LIBEX void ecaio_socketreader_setCallback (EcAioSocketReader, void*, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
+__ENTC_LIBEX void ecaio_socketreader_setCallback (EcAioSocketReader, void*, fct_ecaio_context_onRead, fct_ecaio_context_destroy);
 
-__LIBEX int ecaio_socketreader_assign (EcAioSocketReader*, EcAio aio, EcErr err);
+__ENTC_LIBEX int ecaio_socketreader_assign (EcAioSocketReader*, EcAio aio, EcErr err);
 
 //=============================================================================
 
@@ -71,13 +71,13 @@ struct EcAioSocketWriter_s; typedef struct EcAioSocketWriter_s* EcAioSocketWrite
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioSocketWriter ecaio_socketwriter_create (EcRefCountedSocket);
+__ENTC_LIBEX EcAioSocketWriter ecaio_socketwriter_create (EcRefCountedSocket);
 
-__LIBEX int ecaio_socketwriter_assign (EcAioSocketWriter*, EcErr err);
+__ENTC_LIBEX int ecaio_socketwriter_assign (EcAioSocketWriter*, EcErr err);
 
-__LIBEX void ecaio_socketwriter_setBufferCP (EcAioSocketWriter, const char* buffer, unsigned long size);
+__ENTC_LIBEX void ecaio_socketwriter_setBufferCP (EcAioSocketWriter, const char* buffer, unsigned long size);
 
-__LIBEX void ecaio_socketwriter_setBufferBT (EcAioSocketWriter, EcBuffer*);
+__ENTC_LIBEX void ecaio_socketwriter_setBufferBT (EcAioSocketWriter, EcBuffer*);
 
 //=============================================================================
 
@@ -87,11 +87,11 @@ typedef int (__STDCALL *fct_ecaio_socket_accept) (void* ptr, void* socket, const
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAioSocketAccept ecaio_socketaccept_create (void* socket);
+__ENTC_LIBEX EcAioSocketAccept ecaio_socketaccept_create (void* socket);
 
-__LIBEX void ecaio_socketaccept_setCallback (EcAioSocketAccept, void*, fct_ecaio_socket_accept);
+__ENTC_LIBEX void ecaio_socketaccept_setCallback (EcAioSocketAccept, void*, fct_ecaio_socket_accept);
 
-__LIBEX int ecaio_socketaccept_assign (EcAioSocketAccept*, EcAio aio, EcErr err);
+__ENTC_LIBEX int ecaio_socketaccept_assign (EcAioSocketAccept*, EcAio aio, EcErr err);
 
 //-----------------------------------------------------------------------------
 

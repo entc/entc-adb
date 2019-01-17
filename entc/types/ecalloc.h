@@ -17,19 +17,19 @@
  * along with entc-base.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "system/macros.h"
-#include "system/types.h"
-
 #ifndef ENTC_TYPES_ALLOC_H
 #define ENTC_TYPES_ALLOC_H 1
 
-typedef void*  (_STDCALL *ecnew_fct)(void*, uint32_t);
+#include "sys/entc_export.h"
+#include "sys/entc_types.h"
 
-typedef void   (_STDCALL *ecdel_fct)(void*, void**, uint32_t);
+typedef void*  (__STDCALL *ecnew_fct)(void*, uint32_t);
 
-typedef void   (_STDCALL *ecset_fct)(void*, void* addr, void* val);
+typedef void   (__STDCALL *ecdel_fct)(void*, void**, uint32_t);
 
-typedef void*  (_STDCALL *ecget_fct)(void*, void* addr);
+typedef void   (__STDCALL *ecset_fct)(void*, void* addr, void* val);
+
+typedef void*  (__STDCALL *ecget_fct)(void*, void* addr);
 
 #pragma pack(push, 16)
 struct EcAlloc_s
@@ -50,12 +50,8 @@ struct EcAlloc_s
 
 //-------------------------------------------------------------------------------------------
 
-__CPP_EXTERN______________________________________________________________________________START
- 
-__LIB_EXPORT void* _STDCALL EC_NEW (void* ptr, uint32_t size);
-__LIB_EXPORT void  _STDCALL EC_DEL (void* ptr, void** pobj, uint32_t size);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void* __STDCALL EC_NEW (void* ptr, uint32_t size);
+__ENTC_LIBEX void  __STDCALL EC_DEL (void* ptr, void** pobj, uint32_t size);
 
 static struct EcAlloc_s EC_ALLOC_S = {NULL, EC_NEW, EC_DEL};
 

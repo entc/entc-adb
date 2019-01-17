@@ -1,6 +1,6 @@
 #include "utils/ecmessages.h"
 
-#include "system/ecthread.h"
+#include "sys/entc_thread.h"
 
 #include <stdio.h>
 
@@ -102,7 +102,7 @@ int main (int argc, char *argv[])
 {
   EcMessageData d01;
   EcMessagesOutput o1;
-  EcThread threads [21];
+  EntcThread threads [21];
   int i;
 
   ecmessages_initialize ();
@@ -133,18 +133,18 @@ int main (int argc, char *argv[])
   
   for (i = 0; i < 20; i++)
   {
-    threads [i] = ecthread_new ();
+    threads [i] = entc_thread_new ();
   }
   
   for (i = 0; i < 20; i++)
   {
-    ecthread_start(threads [i], th01, NULL);
+    entc_thread_start(threads [i], th01, NULL);
   }
 
   for (i = 0; i < 20; i++)
   {
-    ecthread_join(threads [i]);
-    ecthread_delete(&(threads [i]));
+    entc_thread_join(threads [i]);
+    entc_thread_del(&(threads [i]));
   }
   
   ecmessages_deinitialize ();

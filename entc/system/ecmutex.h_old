@@ -20,38 +20,33 @@
 #ifndef ENTC_SYSTEM_MUTEX_H
 #define ENTC_SYSTEM_MUTEX_H 1
 
-#include "../system/macros.h"
+#include "sys/entc_export.h"
 
 struct EcMutex_s; typedef struct EcMutex_s* EcMutex;
 struct EcReadWriteLock_s; typedef struct EcReadWriteLock_s* EcReadWriteLock;
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX EcMutex ecmutex_new();
 
-__LIB_EXPORT EcMutex ecmutex_new();
+__ENTC_LIBEX void ecmutex_delete(EcMutex*);
 
-__LIB_EXPORT void ecmutex_delete(EcMutex*);
+__ENTC_LIBEX void ecmutex_lock(EcMutex);
 
-__LIB_EXPORT void ecmutex_lock(EcMutex);
+__ENTC_LIBEX void ecmutex_unlock(EcMutex);
 
-__LIB_EXPORT void ecmutex_unlock(EcMutex);
+__ENTC_LIBEX EcReadWriteLock ecreadwritelock_new();
 
-__LIB_EXPORT EcReadWriteLock ecreadwritelock_new();
+__ENTC_LIBEX void ecreadwritelock_delete(EcReadWriteLock*);
 
-__LIB_EXPORT void ecreadwritelock_delete(EcReadWriteLock*);
+__ENTC_LIBEX void ecreadwritelock_lockRead(EcReadWriteLock);
 
-__LIB_EXPORT void ecreadwritelock_lockRead(EcReadWriteLock);
+__ENTC_LIBEX void ecreadwritelock_unlockRead(EcReadWriteLock);
 
-__LIB_EXPORT void ecreadwritelock_unlockRead(EcReadWriteLock);
+__ENTC_LIBEX void ecreadwritelock_lockWrite(EcReadWriteLock);
 
-__LIB_EXPORT void ecreadwritelock_lockWrite(EcReadWriteLock);
+__ENTC_LIBEX void ecreadwritelock_unlockWrite(EcReadWriteLock);
 
-__LIB_EXPORT void ecreadwritelock_unlockWrite(EcReadWriteLock);
+__ENTC_LIBEX int ecreadwritelock_unlockReadAndTransformIfLast(EcReadWriteLock);
 
-__LIB_EXPORT int ecreadwritelock_unlockReadAndTransformIfLast(EcReadWriteLock);
-
-__LIB_EXPORT int ecreadwritelock_lockReadAndTransformIfFirst(EcReadWriteLock);
-
-__CPP_EXTERN______________________________________________________________________________END
-
+__ENTC_LIBEX int ecreadwritelock_lockReadAndTransformIfFirst(EcReadWriteLock);
 
 #endif

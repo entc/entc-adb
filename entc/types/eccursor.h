@@ -20,39 +20,38 @@
 #ifndef ENTC_TYPES_CURSOR_H
 #define ENTC_TYPES_CURSOR_H 1
 
-#include "system/macros.h"
-#include "system/types.h"
+#include "sys/entc_export.h"
 #include "types/ectable.h"
 
 struct EcCursor_s; typedef struct EcCursor_s* EcCursor;
 
 // callback declarations
 
-typedef int  (_STDCALL *eccursor_fill_fct)(void* ptr, EcTable*);
+typedef int  (__STDCALL *eccursor_fill_fct)(void* ptr, EcTable*);
 
-typedef int  (_STDCALL *eccursor_destroy_fct)(void* ptr, EcTable);
+typedef int  (__STDCALL *eccursor_destroy_fct)(void* ptr, EcTable);
 
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX
   
-__LIB_EXPORT EcCursor eccursor_create (void);
+__ENTC_LIBEX EcCursor eccursor_create (void);
   
-__LIB_EXPORT void eccursor_destroy (EcCursor*);
+__ENTC_LIBEX void eccursor_destroy (EcCursor*);
   
-__LIB_EXPORT int eccursor_next (EcCursor);
+__ENTC_LIBEX int eccursor_next (EcCursor);
 
-__LIB_EXPORT void* eccursor_get (EcCursor, int column);
+__ENTC_LIBEX void* eccursor_get (EcCursor, int column);
 
 // header
 
-__LIB_EXPORT int eccursor_cols (EcCursor);
+__ENTC_LIBEX int eccursor_cols (EcCursor);
 
-__LIB_EXPORT void* eccursor_header (EcCursor, int column);
+__ENTC_LIBEX void* eccursor_header (EcCursor, int column);
 
 // callback 
 
-__LIB_EXPORT void eccursor_callbacks (EcCursor, void* ptr, eccursor_fill_fct, eccursor_destroy_fct);
+__ENTC_LIBEX void eccursor_callbacks (EcCursor, void* ptr, eccursor_fill_fct, eccursor_destroy_fct);
 
-__CPP_EXTERN______________________________________________________________________________END
+
 
 #endif

@@ -22,7 +22,7 @@
 
 //=============================================================================
 
-#include "system/ecdefs.h"
+#include "sys/entc_export.h"
 #include "types/ecstring.h"
 
 //-----------------------------------------------------------------------------
@@ -35,55 +35,55 @@ typedef int (__STDCALL *fct_eclist_onDestroy) (void* ptr);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcList eclist_create (fct_eclist_onDestroy);
+__ENTC_LIBEX EcList eclist_create (fct_eclist_onDestroy);
 
-__LIBEX void eclist_destroy (EcList*);
+__ENTC_LIBEX void eclist_destroy (EcList*);
 
-__LIBEX void eclist_clear (EcList);
+__ENTC_LIBEX void eclist_clear (EcList);
 
-__LIBEX EcListNode eclist_push_back (EcList, void* data);
+__ENTC_LIBEX EcListNode eclist_push_back (EcList, void* data);
 
-__LIBEX EcListNode eclist_push_front (EcList, void* data);
+__ENTC_LIBEX EcListNode eclist_push_front (EcList, void* data);
 
-__LIBEX void* eclist_pop_front (EcList);
+__ENTC_LIBEX void* eclist_pop_front (EcList);
 
-__LIBEX void* eclist_pop_back (EcList);
+__ENTC_LIBEX void* eclist_pop_back (EcList);
 
-__LIBEX unsigned long eclist_size (EcList);
+__ENTC_LIBEX unsigned long eclist_size (EcList);
 
-__LIBEX int eclist_empty (EcList);
+__ENTC_LIBEX int eclist_empty (EcList);
 
-__LIBEX int eclist_hasContent (EcList);
+__ENTC_LIBEX int eclist_hasContent (EcList);
 
-__LIBEX void eclist_replace (EcList, EcListNode, void* data);
+__ENTC_LIBEX void eclist_replace (EcList, EcListNode, void* data);
 
-__LIBEX void* eclist_data (EcListNode);
+__ENTC_LIBEX void* eclist_data (EcListNode);
 
-__LIBEX void* eclist_extract (EcList, EcListNode);
+__ENTC_LIBEX void* eclist_extract (EcList, EcListNode);
 
-__LIBEX void eclist_erase (EcList, EcListNode);
+__ENTC_LIBEX void eclist_erase (EcList, EcListNode);
 
-__LIBEX EcListNode eclist_next (EcListNode);
+__ENTC_LIBEX EcListNode eclist_next (EcListNode);
 
-__LIBEX EcListNode eclist_begin (EcList);
+__ENTC_LIBEX EcListNode eclist_begin (EcList);
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcList eclist_slice (EcList, EcListNode nodeFrom, EcListNode nodeTo);
+__ENTC_LIBEX EcList eclist_slice (EcList, EcListNode nodeFrom, EcListNode nodeTo);
 
-__LIBEX void eclist_swap (EcListNode, EcListNode);
+__ENTC_LIBEX void eclist_swap (EcListNode, EcListNode);
 
 //-----------------------------------------------------------------------------
 
 typedef int (__STDCALL *fct_eclist_onCompare) (void* ptr1, void* ptr2);
 
-__LIBEX void eclist_sort (EcList, fct_eclist_onCompare);
+__ENTC_LIBEX void eclist_sort (EcList, fct_eclist_onCompare);
 
 //-----------------------------------------------------------------------------
 
 typedef void* (__STDCALL *fct_eclist_onClone) (void* ptr);
 
-__LIBEX EcList eclist_clone (EcList, fct_eclist_onClone);
+__ENTC_LIBEX EcList eclist_clone (EcList, fct_eclist_onClone);
 
 //-----------------------------------------------------------------------------
 
@@ -105,21 +105,21 @@ typedef struct
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcListCursor* eclist_cursor_create (EcList, int direction);
+__ENTC_LIBEX EcListCursor* eclist_cursor_create (EcList, int direction);
 
-__LIBEX void eclist_cursor_destroy (EcListCursor**);
+__ENTC_LIBEX void eclist_cursor_destroy (EcListCursor**);
 
-__LIBEX void eclist_cursor_init (EcList, EcListCursor*, int direction);
+__ENTC_LIBEX void eclist_cursor_init (EcList, EcListCursor*, int direction);
 
-__LIBEX int eclist_cursor_next (EcListCursor*);
+__ENTC_LIBEX int eclist_cursor_next (EcListCursor*);
 
-__LIBEX int eclist_cursor_prev (EcListCursor*);
+__ENTC_LIBEX int eclist_cursor_prev (EcListCursor*);
 
-__LIBEX void eclist_cursor_erase (EcList, EcListCursor*);
+__ENTC_LIBEX void eclist_cursor_erase (EcList, EcListCursor*);
 
-__LIBEX void* eclist_cursor_extract (EcList, EcListCursor*);
+__ENTC_LIBEX void* eclist_cursor_extract (EcList, EcListCursor*);
 
-__LIBEX void eclist_insert_slice (EcList, EcListCursor*, EcList* pslice);
+__ENTC_LIBEX void eclist_insert_slice (EcList, EcListCursor*, EcList* pslice);
 
 //-----------------------------------------------------------------------------
 

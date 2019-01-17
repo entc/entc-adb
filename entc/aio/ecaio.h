@@ -32,47 +32,47 @@ struct EcAio_s; typedef struct EcAio_s* EcAio;
 
 //-----------------------------------------------------------------------------
 
-__LIBEX EcAio ecaio_create (void);
+__ENTC_LIBEX EcAio ecaio_create (void);
 
-__LIBEX void ecaio_destroy (EcAio*);
+__ENTC_LIBEX void ecaio_destroy (EcAio*);
 
-__LIBEX int ecaio_init (EcAio, EcErr);
+__ENTC_LIBEX int ecaio_init (EcAio, EcErr);
 
-__LIBEX int ecaio_abort (EcAio, EcErr);
+__ENTC_LIBEX int ecaio_abort (EcAio, EcErr);
 
-__LIBEX int ecaio_waitForNextEvent (EcAio, unsigned long timeout, EcErr);
+__ENTC_LIBEX int ecaio_waitForNextEvent (EcAio, unsigned long timeout, EcErr);
 
-__LIBEX int ecaio_wait (EcAio, EcErr);
+__ENTC_LIBEX int ecaio_wait (EcAio, EcErr);
 
 //-----------------------------------------------------------------------------
 
 // add context to the handle event
-__LIBEX int ecaio_append (EcAio, void* handle, EcAioContext ctx, EcErr);
+__ENTC_LIBEX int ecaio_append (EcAio, void* handle, EcAioContext ctx, EcErr);
 
 // add callbacks to the handle event
-__LIBEX int ecaio_append_cb (EcAio, void* handle, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
+__ENTC_LIBEX int ecaio_append_cb (EcAio, void* handle, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
 
 // add context to the internal queue
-__LIBEX int ecaio_queue_append (EcAio, EcAioContext ctx, EcErr);
+__ENTC_LIBEX int ecaio_queue_append (EcAio, EcAioContext ctx, EcErr);
 
 // helper to create a queued event
-__LIBEX int ecaio_queue_append_cb (EcAio, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
+__ENTC_LIBEX int ecaio_queue_append_cb (EcAio, void* ptr, fct_ecaio_context_process, fct_ecaio_context_destroy, EcErr);
 
 //-----------------------------------------------------------------------------
 
 // helper for controling userinput on a terminal
-__LIBEX int ecaio_registerTerminateControls (EcAio, int noKeyboardInterupt, EcErr);
+__ENTC_LIBEX int ecaio_registerTerminateControls (EcAio, int noKeyboardInterupt, EcErr);
 
 //-----------------------------------------------------------------------------
 // special events
 
-__LIBEX int ecaio_appendVNode (EcAio, int fd, void* data, EcErr err);
+__ENTC_LIBEX int ecaio_appendVNode (EcAio, int fd, void* data, EcErr err);
 
-__LIBEX int ecaio_appendPNode (EcAio, int pid, void* data, EcErr err);
+__ENTC_LIBEX int ecaio_appendPNode (EcAio, int pid, void* data, EcErr err);
 
-__LIBEX int ecaio_appendENode (EcAio, EcAioContext ctx, void** eh, EcErr err);
+__ENTC_LIBEX int ecaio_appendENode (EcAio, EcAioContext ctx, void** eh, EcErr err);
 
-__LIBEX int ecaio_triggerENode (EcAio, void* eh, EcErr err);
+__ENTC_LIBEX int ecaio_triggerENode (EcAio, void* eh, EcErr err);
 
 //-----------------------------------------------------------------------------
 
