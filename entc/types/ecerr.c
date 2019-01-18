@@ -164,7 +164,7 @@ int ecerr_lastErrorOS (EcErr self, int lvl)
 
 int ecerr_formatErrorOS (EcErr self, int lvl, unsigned long errCode)
 {
-  return ecerr_set (self, lvl, ENTC_ERR_OS_ERROR, strerror(errCode));
+  return ecerr_set (self, lvl, ENTC_ERR_OS, strerror(errCode));
 }
 
 //-----------------------------------------------------------------------------

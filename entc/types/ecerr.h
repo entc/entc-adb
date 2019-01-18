@@ -21,6 +21,7 @@
 #define ENTC_TYPES_ERR_H 1
 
 #include "sys/entc_export.h"
+#include "sys/entc_err.h"
 
 //=============================================================================
 
@@ -29,20 +30,6 @@
 #define ENTC_LVL_ERROR              5
 #define ENTC_LVL_FATAL              6
 
-#define ENTC_ERR_NONE               0
-#define ENTC_ERR_NONE_CONTINUE      1
-#define ENTC_ERR_OS_ERROR           2
-#define ENTC_ERR_PROCESS_ABORT      3
-#define ENTC_ERR_PARSER             4
-#define ENTC_ERR_WRONG_STATE        5
-#define ENTC_ERR_WRONG_VALUE        6
-#define ENTC_ERR_NOT_FOUND          7
-#define ENTC_ERR_EOF                8
-#define ENTC_ERR_MISSING_PARAM      9
-#define ENTC_ERR_PROCESS_FAILED    10
-#define ENTC_ERR_NO_AUTH           11
-#define ENTC_ERR_NOT_SUPPORTED     12
-#define ENTC_ERR_NO_ROLE           13
 
 //=============================================================================
 

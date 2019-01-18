@@ -27,16 +27,28 @@
 
 //=============================================================================
 
-#define ENTC_ERR_NONE           0x0000
-#define ENTC_ERR_OS             0x0001
-#define ENTC_ERR_LIB            0x0002
-#define ENTC_ERR_3RDPARTY_LIB   0x0004
-#define ENTC_ERR_NO_OBJECT      0x0005
-#define ENTC_ERR_RUNTIME        0x0006
-#define ENTC_ERR_CONTINUE       0x0007
-#define ENTC_ERR_PARSER         0x0008
-#define ENTC_ERR_NOT_FOUND      0x0009
-#define ENTC_ERR_MISSING_PARAM  0x000A
+#define ENTC_ERR_NONE                0
+#define ENTC_ERR_NONE_CONTINUE       1
+
+#define ENTC_ERR_NOT_FOUND           2
+#define ENTC_ERR_NOT_SUPPORTED       3
+#define ENTC_ERR_RUNTIME             4
+#define ENTC_ERR_EOF                 5
+#define ENTC_ERR_OS                  6
+
+#define ENTC_ERR_LIB                 7
+#define ENTC_ERR_3RDPARTY_LIB        8
+
+#define ENTC_ERR_NO_OBJECT           9
+#define ENTC_ERR_NO_ROLE            10
+#define ENTC_ERR_NO_AUTH            11
+
+#define ENTC_ERR_PARSER             12
+#define ENTC_ERR_MISSING_PARAM      13
+#define ENTC_ERR_PROCESS_ABORT      14
+#define ENTC_ERR_PROCESS_FAILED     15
+#define ENTC_ERR_WRONG_STATE        16
+#define ENTC_ERR_WRONG_VALUE        17
 
 //=============================================================================
 
