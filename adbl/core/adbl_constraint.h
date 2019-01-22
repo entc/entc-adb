@@ -20,9 +20,8 @@
 #ifndef ADBL_CONSTRAINT_H
 #define ADBL_CONSTRAINT_H 1
 
-#include <system/macros.h>
-
 #include "adbl_structs.h"
+#include <sys/entc_export.h>
 
 #define QUOMADBL_CONSTRAINT_AND 0
 #define QUOMADBL_CONSTRAINT_OR 1
@@ -30,28 +29,28 @@
 
 #define QUOMADBL_CONSTRAINT_EQUAL 0
 
-__CPP_EXTERN______________________________________________________________________________START  
+//-----------------------------------------------------------------------------  
     
-__LIB_EXPORT AdblConstraint* adbl_constraint_new (ubyte_t type);
+__ENTC_LIBEX AdblConstraint* adbl_constraint_new (ubyte_t type);
 
-__LIB_EXPORT void adbl_constraint_delete (AdblConstraint**);
+__ENTC_LIBEX void adbl_constraint_delete (AdblConstraint**);
   
-__LIB_EXPORT void adbl_constraint_clear (AdblConstraint*);
+__ENTC_LIBEX void adbl_constraint_clear (AdblConstraint*);
   
-__LIB_EXPORT void adbl_constraint_addChar (AdblConstraint*, const EcString column, ubyte_t type, const EcString value);
+__ENTC_LIBEX void adbl_constraint_addChar (AdblConstraint*, const EcString column, ubyte_t type, const EcString value);
   
-__LIB_EXPORT void adbl_constraint_addLong (AdblConstraint*, const EcString column, ubyte_t type, uint_t value);
+__ENTC_LIBEX void adbl_constraint_addLong (AdblConstraint*, const EcString column, ubyte_t type, uint_t value);
   
-__LIB_EXPORT void adbl_constraint_addConstraint (AdblConstraint*, AdblConstraint*);
+__ENTC_LIBEX void adbl_constraint_addConstraint (AdblConstraint*, AdblConstraint*);
   
-__LIB_EXPORT void adbl_constraint_attrs (AdblConstraint*, AdblAttributes*);
+__ENTC_LIBEX void adbl_constraint_attrs (AdblConstraint*, AdblAttributes*);
 
-__LIB_EXPORT int adbl_constraint_empty (AdblConstraint*);
+__ENTC_LIBEX int adbl_constraint_empty (AdblConstraint*);
   
   // security methods 
-__LIB_EXPORT void adbl_constraint_sec (AdblConstraint*, AdblSecurity*);
+__ENTC_LIBEX void adbl_constraint_sec (AdblConstraint*, AdblSecurity*);
 
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif
 

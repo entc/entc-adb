@@ -20,7 +20,7 @@
 #if defined _WIN64 || defined _WIN32
 
 #include "ecfile.h"
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 #include "system/macros.h"
 
 #include <stdio.h>

@@ -18,9 +18,9 @@
  */
 
 #include "adbl_delete.h"
-#include "types/eclist.h"
-
 #include "adbl_constraint.h"
+
+#include <stc/entc_list.h>
 
 //----------------------------------------------------------------------------------------
 

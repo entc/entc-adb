@@ -19,15 +19,16 @@
 
 #include "adbl_query.h"
 
-#include "types/eclist.h"
-
 #include "adbl_structs.h"
 #include "adbl_security.h"
 #include "adbl_constraint.h"
 
+// entc includes
+#include <stc/entc_list.h>
+
 //-----------------------------------------------------------------------------
 
-static int __STDCALL adbl_query_columns_onDestroy (void* ptr)
+static void __STDCALL adbl_query_columns_onDestroy (void* ptr)
 {
   AdblQueryColumn* qc = ptr;
   /* clear column */
@@ -37,8 +38,6 @@ static int __STDCALL adbl_query_columns_onDestroy (void* ptr)
   ecstr_delete( &(qc->value) );
   
   ENTC_DEL( &qc, AdblQueryColumn );
-
-  return 0;
 }
 
 //------------------------------------------------------------------------
@@ -47,7 +46,7 @@ AdblQuery* adbl_query_new (void)
 {
   AdblQuery* self = ENTC_NEW(AdblQuery);
   
-  self->columns = eclist_create (adbl_query_columns_onDestroy);
+  self->columns = entc_list_new (adbl_query_columns_onDestroy);
   
   self->table = ecstr_init();
   
@@ -67,7 +66,7 @@ void adbl_query_delete (AdblQuery** ptr)
   
   adbl_query_clear( self );
   
-  eclist_destroy (&(self->columns));
+  entc_list_del (&(self->columns));
   
   ENTC_DEL( ptr, AdblQuery );
 }
@@ -78,7 +77,7 @@ void adbl_query_clear (AdblQuery* self)
 {
   ecstr_delete( &(self->table) );
 
-  eclist_clear (self->columns);
+  entc_list_clr (self->columns);
 }
 
 //------------------------------------------------------------------------
@@ -108,7 +107,7 @@ void adbl_query_addColumn (AdblQuery* self, const EcString column, int order_pos
   qc->value = 0;
   qc->orderno = order_pos;
   /* add to list */
-  eclist_push_back (self->columns, qc);
+  entc_list_push_back (self->columns, qc);
 }
 
 //------------------------------------------------------------------------
@@ -124,7 +123,7 @@ void adbl_query_addColumnAsSubquery (AdblQuery* self, const EcString column, con
   qc->value = ecstr_copy(value);
   qc->orderno = order_pos;
   /* add to list */
-  eclist_push_back (self->columns, qc);  
+  entc_list_push_back (self->columns, qc);  
 }
 
 //------------------------------------------------------------------------

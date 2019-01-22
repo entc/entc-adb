@@ -22,6 +22,7 @@
 
 #include "types/ecudc.h"
 #include "types/ecmap.h"
+#include <stc/entc_list.h>
 
 struct AdblSession_s;
 
@@ -52,7 +53,7 @@ typedef struct
   
   ubyte_t type;
   
-  EcList list;
+  EntcList list;
   
 } AdblConstraint;
 
@@ -94,7 +95,7 @@ typedef struct
   
   EcString table;
   
-  EcList columns;
+  EntcList columns;
   
   uint_t limit;
   
@@ -181,11 +182,11 @@ typedef struct
   
   EcString name;
   
-  EcList columns;
+  EntcList columns;
   
-  EcList primary_keys;
+  EntcList primary_keys;
   
-  EcList foreign_keys;
+  EntcList foreign_keys;
   
 } AdblTable;
 

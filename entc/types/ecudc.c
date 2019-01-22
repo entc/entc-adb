@@ -44,7 +44,7 @@ typedef struct {
 
 typedef struct {
   
-  EcList list;
+  EntcList list;
   
 } EcUdcList;
 
@@ -210,7 +210,7 @@ EcUdc ecudc_node_next (EcUdcNode* self, void** pcursor)
   if (*pcursor == NULL)
   {
     // initialize
-    *pcursor = ecmap_cursor_create (self->map, LIST_DIR_NEXT);
+    *pcursor = ecmap_cursor_create (self->map, ENTC_DIRECTION_FORW);
   }
   
   {
@@ -249,7 +249,7 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** pcursor)
   if (*pcursor == NULL)
   {
     // initialize
-    *pcursor = ecmap_cursor_create (self->map, LIST_DIR_NEXT);
+    *pcursor = ecmap_cursor_create (self->map, ENTC_DIRECTION_FORW);
   }
   
   {
@@ -283,13 +283,11 @@ EcUdc ecudc_map_e (EcUdcNode* self, void** pcursor)
 
 //----------------------------------------------------------------------------------------
 
-static int __STDCALL ecudc_list_onDestroy (void* ptr)
+static void __STDCALL ecudc_list_onDestroy (void* ptr)
 {
   EcUdc h = ptr;
   
   ecudc_destroy (EC_ALLOC, &h);
-  
-  return 0;
 }
 
 //----------------------------------------------------------------------------------------
@@ -298,7 +296,7 @@ void* ecudc_list_new (EcAlloc alloc)
 {
   EcUdcList* self = ECMM_NEW (EcUdcList);
 
-  self->list = eclist_create (ecudc_list_onDestroy);
+  self->list = entc_list_new (ecudc_list_onDestroy);
   
   return self;
 }
@@ -316,7 +314,7 @@ void* ecudc_list_clone (EcAlloc alloc, EcUdcList* orig)
 {
   EcUdcList* self = ECMM_NEW (EcUdcList);
   
-  self->list = eclist_clone (orig->list, ecudc_list_clone_onClone);
+  self->list = entc_list_clone (orig->list, ecudc_list_clone_onClone);
   
   return self;
 }
@@ -325,7 +323,7 @@ void* ecudc_list_clone (EcAlloc alloc, EcUdcList* orig)
 
 void ecudc_list_clear (EcAlloc alloc, EcUdcList* self)
 {
-  eclist_clear (self->list);
+  entc_list_clr (self->list);
 }
 
 //----------------------------------------------------------------------------------------
@@ -336,7 +334,7 @@ void ecudc_list_destroy (EcAlloc alloc, void** pself)
   // if protected dont delete
   ecudc_list_clear (alloc, self);
   
-  eclist_destroy (&(self->list));
+  entc_list_del (&(self->list));
   
   ECMM_DEL (pself, EcUdcList);    
 }
@@ -347,7 +345,7 @@ void ecudc_list_add (EcUdcList* self, EcUdc* pnode)
 {
   EcUdc node = *pnode;
   
-  eclist_push_back (self->list, node);
+  entc_list_push_back (self->list, node);
   
   *pnode = NULL;
 }
@@ -363,16 +361,16 @@ EcUdc ecudc_list_next (EcUdcList* self, void** cursor)
   
   if (*cursor == NULL)
   {
-    *cursor = eclist_cursor_create (self->list, LIST_DIR_NEXT);
+    *cursor = entc_list_cursor_new (self->list, ENTC_DIRECTION_FORW);
   }
   
-  if (eclist_cursor_next (*cursor))
+  if (entc_list_cursor_next (*cursor))
   {
-    return eclist_data(((EcListCursor*)(*cursor))->node);
+    return entc_list_node_data(((EntcListCursor*)(*cursor))->node);
   }
   else
   {
-    eclist_cursor_destroy ((EcListCursor**)cursor);
+    entc_list_cursor_del ((EntcListCursor**)cursor);
     
     return NULL;
   }
@@ -389,16 +387,16 @@ EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
   
   if (*cursor == NULL)
   {
-    *cursor = eclist_cursor_create (self->list, LIST_DIR_NEXT);
+    *cursor = entc_list_cursor_new (self->list, ENTC_DIRECTION_FORW);
   }
   
-  if (eclist_cursor_next (*cursor))
+  if (entc_list_cursor_next (*cursor))
   {
-    return eclist_cursor_extract (self->list, *cursor);
+    return entc_list_cursor_extract (self->list, *cursor);
   }
   else
   {
-    eclist_cursor_destroy ((EcListCursor**)cursor);
+    entc_list_cursor_del ((EntcListCursor**)cursor);
     
     return NULL;
   }
@@ -408,7 +406,7 @@ EcUdc ecudc_list_e (EcUdcList* self, void** cursor)
 
 uint32_t ecudc_list_size (EcUdcList* self)
 {
-  return eclist_size (self->list);
+  return entc_list_size (self->list);
 }
 
 //----------------------------------------------------------------------------------------

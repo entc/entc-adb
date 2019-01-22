@@ -93,9 +93,9 @@ typedef struct {
   
   EcString title;
   
-  EcList tokens;
+  EntcList tokens;
   
-  EcListNode token;
+  EntcListNode token;
   
   EcString urlpath;
   

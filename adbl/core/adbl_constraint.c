@@ -18,7 +18,6 @@
  */
 
 #include "adbl_constraint.h"
-#include "types/eclist.h"
 
 #include "adbl_structs.h"
 #include "adbl_security.h"
@@ -26,17 +25,18 @@
 
 #include <stdio.h>
 
+// entc includes
+#include <stc/entc_list.h>
+
 //-----------------------------------------------------------------------------
 
-static int __STDCALL adbl_constraint_list_onDestroy (void* ptr)
+static void __STDCALL adbl_constraint_list_onDestroy (void* ptr)
 {
   AdblConstraintElement* element = ptr;
   
   ecudc_destroy (EC_ALLOC, &(element->data));
   
   ENTC_DEL(&element, AdblConstraintElement);
-
-  return 0;
 }
 
 /*------------------------------------------------------------------------*/
@@ -46,7 +46,7 @@ AdblConstraint* adbl_constraint_new (ubyte_t type)
   AdblConstraint* self = ENTC_NEW(AdblConstraint);
   
   self->type = type;
-  self->list = eclist_create (adbl_constraint_list_onDestroy);
+  self->list = entc_list_new (adbl_constraint_list_onDestroy);
   
   return self;
 }
@@ -59,7 +59,7 @@ void adbl_constraint_delete (AdblConstraint** ptr)
   
   adbl_constraint_clear(self);
   
-  eclist_destroy (&(self->list));
+  entc_list_del (&(self->list));
   
   ENTC_DEL( ptr, AdblConstraint );
 }
@@ -68,14 +68,14 @@ void adbl_constraint_delete (AdblConstraint** ptr)
 
 int adbl_constraint_empty (AdblConstraint* self)
 {
-  return eclist_begin (self->list) == NULL;
+  return entc_list_empty (self->list);
 }
 
 /*------------------------------------------------------------------------*/
 
 void adbl_constraint_clear (AdblConstraint* self)
 {
-  eclist_clear (self->list);
+  entc_list_clr (self->list);
 }
 
 /*------------------------------------------------------------------------*/
@@ -84,7 +84,7 @@ void adbl_constraint_addChar (AdblConstraint* self, const EcString column, ubyte
 {
   AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
   
-  eclist_push_back (self->list, element);
+  entc_list_push_back (self->list, element);
   
   element->type = type;
   
@@ -101,7 +101,7 @@ void adbl_constraint_addLong (AdblConstraint* self, const EcString column, ubyte
 {
 	AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
 
-	eclist_push_back (self->list, element);
+	entc_list_push_back (self->list, element);
 
 	element->type = type;
   
@@ -118,7 +118,7 @@ void adbl_constraint_addConstraint (AdblConstraint* self, AdblConstraint* value)
 {
   AdblConstraintElement* element = ENTC_NEW(AdblConstraintElement);
   
-  eclist_push_back (self->list, element);
+  entc_list_push_back (self->list, element);
   
   element->type = 0;
   
@@ -132,13 +132,13 @@ void adbl_constraint_addConstraint (AdblConstraint* self, AdblConstraint* value)
 
 void adbl_constraint_attrs (AdblConstraint* self, AdblAttributes* attrs)
 {
-  EcListCursor cursor;
+  EntcListCursor cursor;
   
-  eclist_cursor_init (self->list, &cursor, LIST_DIR_NEXT);
+  entc_list_cursor_init (self->list, &cursor, ENTC_DIRECTION_FORW);
   
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
-    AdblConstraintElement* element = eclist_data (cursor.node);
+    AdblConstraintElement* element = entc_list_node_data (cursor.node);
     
     EcString val = ecudc_getString (element->data);
     
@@ -153,10 +153,10 @@ void adbl_constraint_attrs (AdblConstraint* self, AdblAttributes* attrs)
 void adbl_constraint_sec (AdblConstraint* self, AdblSecurity* security)
 {
   /*
-  EcListNode node;
+  EntcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    //AdblConstraintElement* element = eclist_data(node);
+    //AdblConstraintElement* element = entc_list_node_data(node);
     
    
     if( adbl_security_checkValue( ecudc_name(element->data) ) )

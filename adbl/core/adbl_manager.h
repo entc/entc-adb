@@ -22,26 +22,26 @@
 
 #include "adbl.h"
 
-#include <system/macros.h>
+
 #include <types/ecstring.h>
 
 struct AdblManager_s; typedef struct AdblManager_s* AdblManager;
 
-__CPP_EXTERN______________________________________________________________________________START  
+//-----------------------------------------------------------------------------  
 
-__LIB_EXPORT AdblManager adbl_new ();
+__ENTC_LIBEX AdblManager adbl_new ();
   
-__LIB_EXPORT void adbl_scanJson (AdblManager, const EcString configpath, const EcString execpath);
+__ENTC_LIBEX void adbl_scanJson (AdblManager, const EcString configpath, const EcString execpath);
 
-__LIB_EXPORT void adbl_delete (AdblManager*);
+__ENTC_LIBEX void adbl_delete (AdblManager*);
   
-__LIB_EXPORT void adbl_setCredentialsFile (AdblManager, const EcString name, const EcString module, const EcString file);
+__ENTC_LIBEX void adbl_setCredentialsFile (AdblManager, const EcString name, const EcString module, const EcString file);
   
-__LIB_EXPORT AdblSession adbl_openSession (AdblManager, const EcString dbsource);
+__ENTC_LIBEX AdblSession adbl_openSession (AdblManager, const EcString dbsource);
 
-__LIB_EXPORT void adbl_closeSession (AdblSession*);
+__ENTC_LIBEX void adbl_closeSession (AdblSession*);
   
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif
 

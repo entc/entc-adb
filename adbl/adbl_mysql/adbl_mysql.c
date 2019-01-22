@@ -1,10 +1,10 @@
 #include <system/ecfile.h>
 #include <types/ecstream.h>
-#include <types/eclist.h>
 #include <tools/eclog.h>
 
 // entc includes
 #include <sys/entc_mutex.h>
+#include <stc/entc_list.h>
 
 #include <mysql.h>
 #include "adbl.h"
@@ -397,25 +397,25 @@ void adbl_constructListWithTable_Column (EcStream statement, AdblQueryColumn* qc
 
 //------------------------------------------------------------------------------------------------------
 
-void adbl_constructListWithTable (EcStream statement, EcList columns, const char* table, int ansi, EcMap orders, AdblMysqlCursor* cursor)
+void adbl_constructListWithTable (EcStream statement, EntcList columns, const char* table, int ansi, EcMap orders, AdblMysqlCursor* cursor)
 {
-  EcListCursor c; eclist_cursor_init (columns, &c, LIST_DIR_NEXT);
+  EntcListCursor c; entc_list_cursor_init (columns, &c, ENTC_DIRECTION_FORW);
   
-  if (eclist_cursor_next (&c))
+  if (entc_list_cursor_next (&c))
   {
     int index = 0;
     
     // first column
-    adbl_constructListWithTable_Column( statement, eclist_data(c.node), table, ansi, orders, cursor, index);
+    adbl_constructListWithTable_Column( statement, entc_list_node_data(c.node), table, ansi, orders, cursor, index);
     
     index++;
     
     // next columns
-    for(; eclist_cursor_next (&c); index++)
+    for(; entc_list_cursor_next (&c); index++)
     {
       ecstream_append_str (statement, ", " );
 
-      adbl_constructListWithTable_Column( statement, eclist_data(c.node), table, ansi, orders, cursor, index);
+      adbl_constructListWithTable_Column( statement, entc_list_node_data(c.node), table, ansi, orders, cursor, index);
     }
   }
   else
@@ -457,21 +457,21 @@ void adbl_constructConstraintElement (EcStream statement, AdblConstraintElement*
 
 void adbl_constructContraintNode (EcStream statement, AdblConstraint* constraint, int ansi, AdblMysqlBindVars* bv)
 {
-  EcListCursor c;
-  eclist_cursor_init (constraint->list, &c, LIST_DIR_NEXT);
+  EntcListCursor c;
+  entc_list_cursor_init (constraint->list, &c, ENTC_DIRECTION_FORW);
   
-  if (eclist_cursor_next (&c))
+  if (entc_list_cursor_next (&c))
   {
-    adbl_constructConstraintElement( statement, eclist_data(c.node), ansi, bv);
+    adbl_constructConstraintElement( statement, entc_list_node_data(c.node), ansi, bv);
     
-    while (eclist_cursor_next (&c))
+    while (entc_list_cursor_next (&c))
     {
       if( constraint->type == QUOMADBL_CONSTRAINT_AND )
       {
         ecstream_append_str (statement, " AND " );
       }
         
-      adbl_constructConstraintElement( statement, eclist_data(c.node), ansi, bv);
+      adbl_constructConstraintElement( statement, entc_list_node_data(c.node), ansi, bv);
     }
   }
 }
@@ -480,7 +480,7 @@ void adbl_constructContraintNode (EcStream statement, AdblConstraint* constraint
 
 void adbl_constructConstraint (EcStream statement, AdblConstraint* constraint, int ansi, AdblMysqlBindVars* bv)
 {
-  if (eclist_hasContent (constraint->list))
+  if (entc_list_hasContent (constraint->list))
   {
     ecstream_append_str (statement, " WHERE " );
     
@@ -549,7 +549,7 @@ int adblmodule_createStatement (AdblMysqlConnection self, EcStream statement, Ad
   
   // apply orders
   {
-    EcMapCursor cursor; ecmap_cursor_init (orders, &cursor, LIST_DIR_NEXT);
+    EcMapCursor cursor; ecmap_cursor_init (orders, &cursor, ENTC_DIRECTION_FORW);
     
     while (ecmap_cursor_next (&cursor))
     {
@@ -639,7 +639,7 @@ void* adblmodule_dbquery_create (AdblMysqlConnection self, AdblQuery* query, MYS
 {
   int res;
   EcStream statement = ecstream_create ();
-  AdblMysqlCursor* cursor = adblmodule_dbcursor_create (stmt, eclist_size (query->columns));
+  AdblMysqlCursor* cursor = adblmodule_dbcursor_create (stmt, entc_list_size (query->columns));
   
   adblmodule_createStatement (self, statement, query, bv, cursor);
   
@@ -723,7 +723,7 @@ void* adblmodule_dbquery (void* ptr, AdblQuery* query)
     
   if (query->constraint)
   {
-    bindCnt = eclist_size(query->constraint->list);
+    bindCnt = entc_list_size(query->constraint->list);
   }
   
   bv = bindvars_create (bindCnt);
@@ -912,7 +912,7 @@ uint_t adblmodule_dbtable_size (void* ptr, const char* table)
 
 int adbl_constructAttributesUpdate (EcStream statement, AdblAttributes* attrs, int ansi, AdblMysqlBindVars* bv)
 {
-  EcMapCursor cursor; ecmap_cursor_init (attrs->columns, &cursor, LIST_DIR_NEXT);
+  EcMapCursor cursor; ecmap_cursor_init (attrs->columns, &cursor, ENTC_DIRECTION_FORW);
   
   // iterate through all columns
   while (ecmap_cursor_next (&cursor))
@@ -988,7 +988,7 @@ int adblmodule_dbupdate (void* ptr, AdblUpdate* update, int insert)
     ecstream_append_str (statement, " SET " );    
   }
   
-  bindCnt = ecmap_size (update->attrs->columns) + eclist_size (update->constraint->list);
+  bindCnt = ecmap_size (update->attrs->columns) + entc_list_size (update->constraint->list);
   
   bv = bindvars_create (bindCnt);
 
@@ -1046,7 +1046,7 @@ void adbl_constructAttributesInsert (EcStream statement, AdblMysqlBindVars* bv, 
   EcStream cols;
   EcStream vals;
   
-  EcMapCursor cursor; ecmap_cursor_init (attrs->columns, &cursor, LIST_DIR_NEXT);
+  EcMapCursor cursor; ecmap_cursor_init (attrs->columns, &cursor, ENTC_DIRECTION_FORW);
   
   if( !attrs )
   {
@@ -1221,7 +1221,7 @@ int adblmodule_dbdelete (void* ptr, AdblDelete* del)
     ecstream_append_str (statement, " " );    
   }
   
-  bindCnt = eclist_size(del->constraint->list);
+  bindCnt = entc_list_size(del->constraint->list);
   
   bv = bindvars_create (bindCnt);
 
@@ -1669,7 +1669,7 @@ uint_t adblmodule_dbsequence_next (void* ptr)
 
 //------------------------------------------------------------------------------------------------------
 
-EcList adblmodule_dbschema (void* ptr)
+EntcList adblmodule_dbschema (void* ptr)
 {
   return NULL;
 }

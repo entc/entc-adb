@@ -51,7 +51,7 @@ struct EcServer_s
 
   EcEventQueue equeue;
 
-  EcList queue;
+  EntcList queue;
 
   EntcMutex mutex;
 
@@ -86,7 +86,7 @@ int _STDCALL ecserver_accept_run (void* params)
   
     // needs to add object to the queue
     eclist_append_ex (EC_ALLOC, self->server->queue, object);
-    pending = eclist_size (self->server->queue);
+    pending = entc_list_size (self->server->queue);
   
     entc_mutex_unlock(self->server->mutex);
 
@@ -106,7 +106,7 @@ int _STDCALL ecserver_worker_run (void* params)
   if (self->server->callbacks.worker_thread)
   {
     void* object = NULL;
-    EcListNode node;
+    EntcListNode node;
     int res;
 
     //eclogger_msg (LL_TRACE, "ENTC", "ecserver", "wait on queue");
@@ -134,7 +134,7 @@ int _STDCALL ecserver_worker_run (void* params)
 
     //eclogger_msg (LL_TRACE, "ENTC", "ecserver", "found object in queue");
 
-    object = eclist_data(node);
+    object = entc_list_node_data(node);
 
     eclist_erase (EC_ALLOC, self->server->queue, node);
 
@@ -166,7 +166,7 @@ EcServer ecserver_create (uint_t poolSize, EcServerCallbacks* callbacks, EcEvent
   self->mainabort = ec;
   self->poolSize = poolSize;
   self->equeue = ece_list_create (ec, NULL);
-  self->queue = eclist_create_ex (EC_ALLOC);
+  self->queue = entc_list_new_ex (EC_ALLOC);
   self->mutex = entc_mutex_new();
   self->worker_lock = ece_list_handle (self->equeue, NULL);
 
@@ -183,7 +183,7 @@ void ecserver_destroy (EcServer* ptr)
 {
   EcServer self = *ptr;
   uint_t i;
-  EcListNode node;
+  EntcListNode node;
   
   if( self->threads != NULL )
   {
@@ -205,7 +205,7 @@ void ecserver_destroy (EcServer* ptr)
   
   for (node = eclist_first(self->queue); node != eclist_end(self->queue); node = eclist_next(node))
   {
-    void* object = eclist_data(node);
+    void* object = entc_list_node_data(node);
 
     if (isAssigned (self->callbacks.clear_fct))
     {

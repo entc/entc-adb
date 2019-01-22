@@ -21,35 +21,29 @@
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL adbl_table_columns_onDestroy (void* ptr)
+static void __STDCALL adbl_table_columns_onDestroy (void* ptr)
 {
   EcString column = ptr;
   
   ecstr_delete (&column);
-
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL adbl_table_prikeys_onDestroy (void* ptr)
+static void __STDCALL adbl_table_prikeys_onDestroy (void* ptr)
 {
   EcString prikey = ptr;
 
   ecstr_delete (&prikey);
-
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL adbl_table_forkeys_onDestroy (void* ptr)
+static void __STDCALL adbl_table_forkeys_onDestroy (void* ptr)
 {
   AdblForeignKeyConstraint* fkconstraint = ptr;
   
   ENTC_DEL (&fkconstraint, AdblForeignKeyConstraint);
-
-  return 0;
 }
 
 //----------------------------------------------------------------------------------------
@@ -59,9 +53,9 @@ AdblTable* adbl_table_new (const EcString tablename)
   AdblTable* self = ENTC_NEW (AdblTable);
   
   self->name = ecstr_copy (tablename);
-  self->columns = eclist_create (adbl_table_columns_onDestroy);
-  self->primary_keys = eclist_create (adbl_table_prikeys_onDestroy);
-  self->foreign_keys = eclist_create (adbl_table_forkeys_onDestroy);
+  self->columns = entc_list_new (adbl_table_columns_onDestroy);
+  self->primary_keys = entc_list_new (adbl_table_prikeys_onDestroy);
+  self->foreign_keys = entc_list_new (adbl_table_forkeys_onDestroy);
   
   return self;
 }
@@ -74,11 +68,11 @@ void adbl_table_del (AdblTable** pself)
   
   ecstr_delete (&(self->name));
   
-  eclist_destroy (&(self->columns));
+  entc_list_del (&(self->columns));
   
-  eclist_destroy (&(self->primary_keys));
+  entc_list_del (&(self->primary_keys));
   
-  eclist_destroy (&(self->foreign_keys));
+  entc_list_del (&(self->foreign_keys));
 
   ENTC_DEL (pself, AdblTable);
 }

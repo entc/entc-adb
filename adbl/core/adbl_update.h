@@ -20,28 +20,28 @@
 #ifndef ADBL_UPDATE_H
 #define ADBL_UPDATE_H 1
 
-#include <system/macros.h>
+
 
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+//-----------------------------------------------------------------------------
   
-__LIB_EXPORT AdblUpdate* adbl_update_new (void);
+__ENTC_LIBEX AdblUpdate* adbl_update_new (void);
   
-__LIB_EXPORT void adbl_update_delete (AdblUpdate**);
+__ENTC_LIBEX void adbl_update_delete (AdblUpdate**);
   
-__LIB_EXPORT void adbl_update_clear (AdblUpdate*);
+__ENTC_LIBEX void adbl_update_clear (AdblUpdate*);
   
-__LIB_EXPORT void adbl_update_setTable (AdblUpdate*, const EcString table);
+__ENTC_LIBEX void adbl_update_setTable (AdblUpdate*, const EcString table);
   
-__LIB_EXPORT void adbl_update_setAttributes (AdblUpdate*, AdblAttributes*);
+__ENTC_LIBEX void adbl_update_setAttributes (AdblUpdate*, AdblAttributes*);
   
-__LIB_EXPORT void adbl_update_setConstraint (AdblUpdate*, AdblConstraint*);
+__ENTC_LIBEX void adbl_update_setConstraint (AdblUpdate*, AdblConstraint*);
   
   // security methods 
-__LIB_EXPORT void adbl_update_sec (AdblUpdate*, AdblSecurity*);
+__ENTC_LIBEX void adbl_update_sec (AdblUpdate*, AdblSecurity*);
   
-__CPP_EXTERN______________________________________________________________________________END
+//-----------------------------------------------------------------------------
 
 #endif
 

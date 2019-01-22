@@ -22,7 +22,7 @@
 #include "sys/entc_mutex.h"
 #include "sys/entc_thread.h"
 
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 #include "system/ecrefcnt.h"
 #include "system/ectime.h"
 
@@ -85,7 +85,7 @@ static int _STDCALL ecasync_hasTimedOut (void* obj, void* ptr)
 struct EcAsync_s
 {
   
-  EcList threads;
+  EntcList threads;
   
 };
 
@@ -242,7 +242,7 @@ EcAsync ecasync_create (int threads)
 {
   EcAsync self = ENTC_NEW (struct EcAsync_s);
   
-  self->threads = eclist_create ();
+  self->threads = entc_list_new ();
 
   ecasync_create_threads (self, threads);
   
@@ -253,7 +253,7 @@ EcAsync ecasync_create (int threads)
 
 void ecasync_clear (EcAsync self)
 {
-  EcListCursor cursor;
+  EntcListCursor cursor;
   
   eclist_cursor (self->threads, &cursor);
   
@@ -269,7 +269,7 @@ void ecasync_clear (EcAsync self)
     ecasync_thread_destroy ((EcAsyncThread**)&(cursor.value));
   }
   
-  eclist_clear (self->threads);
+  entc_list_clr (self->threads);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -288,7 +288,7 @@ void ecasync_destroy (EcAsync* pself)
 
 void ecasync_addSingle (EcAsync self, EcAsyncContext* pcontext)
 {
-  EcListCursor cursor;
+  EntcListCursor cursor;
   int min;
   EcAsyncThread* cthread;
   EcAsyncThread* mthread;
@@ -420,7 +420,7 @@ EcAsyncContext ecasync_smartcontext_clone (EcAsyncContext rhs)
 
 void ecasync_addToAll (EcAsync self, EcAsyncContext* pcontext)
 {
-  EcListCursor cursor; eclist_cursor(self->threads, &cursor);
+  EntcListCursor cursor; eclist_cursor(self->threads, &cursor);
 
   if (eclist_cnext (&cursor))
   {

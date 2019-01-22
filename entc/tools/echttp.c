@@ -987,7 +987,7 @@ void echttp_header_clear (EcHttpHeader* header)
   
   if (isAssigned (header->tokens))
   {
-    eclist_destroy(&(header->tokens));
+    entc_list_del(&(header->tokens));
   }
   
   ecstr_delete(&(header->urlpath));
@@ -1135,13 +1135,13 @@ void echttp_header_title (EcHttpHeader* header)
   ecstr_delete (&url_unescaped);  
   
   {
-    EcListCursor cursor;
+    EntcListCursor cursor;
     
-    eclist_cursor_init (header->tokens, &cursor, LIST_DIR_NEXT);
+    entc_list_cursor_init (header->tokens, &cursor, ENTC_DIRECTION_FORW);
     
-    while (eclist_cursor_next (&cursor))
+    while (entc_list_cursor_next (&cursor))
     {
-      EcString token = eclist_data (cursor.node);
+      EcString token = entc_list_node_data (cursor.node);
       
       if (cursor.position > 0)
       {
@@ -1381,38 +1381,38 @@ void echttp_parse_cookies_next (EcHttpHeader* header, const EcString cookie)
 
 void echttp_parse_cookies (EcHttpHeader* header, const EcString s)
 {
-  EcList list = ectokenizer_parse (s, ';');
+  EntcList list = ectokenizer_parse (s, ';');
   
-  EcListCursor cursor;
+  EntcListCursor cursor;
   
-  eclist_cursor_init (list, &cursor, LIST_DIR_NEXT);
+  entc_list_cursor_init (list, &cursor, ENTC_DIRECTION_FORW);
   
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
-    const EcString token = eclist_data(cursor.node);
+    const EcString token = entc_list_node_data(cursor.node);
     
     echttp_parse_cookies_next (header, token);
   }
   
-  eclist_destroy (&list);
+  entc_list_del (&list);
 }
 
 //---------------------------------------------------------------------------------------
 
 void echttp_parse_lang (EcHttpHeader* header, const EcString s)
 {
-  EcList list = ectokenizer_parse (s, ';');
+  EntcList list = ectokenizer_parse (s, ';');
   
-  EcListCursor cursor;
+  EntcListCursor cursor;
   
-  eclist_cursor_init (list, &cursor, LIST_DIR_NEXT);
+  entc_list_cursor_init (list, &cursor, ENTC_DIRECTION_FORW);
   
-  while (eclist_cursor_next (&cursor))
+  while (entc_list_cursor_next (&cursor))
   {
 
   }
   
-  eclist_destroy (&list);
+  entc_list_del (&list);
 }
 
 //---------------------------------------------------------------------------------------
@@ -1805,17 +1805,17 @@ EcUdc echttp_getParams (EcHttpHeader* header)
   {
     EcUdc ret = ecudc_create (EC_ALLOC, ENTC_UDC_NODE, NULL);
     
-    EcListCursor cursor;
-    EcList tokens = ectokenizer_parse (header->request_params, '&');
+    EntcListCursor cursor;
+    EntcList tokens = ectokenizer_parse (header->request_params, '&');
     
-    eclist_cursor_init (tokens, &cursor, LIST_DIR_NEXT);
+    entc_list_cursor_init (tokens, &cursor, ENTC_DIRECTION_FORW);
     
-    while (eclist_cursor_next (&cursor))
+    while (entc_list_cursor_next (&cursor))
     {
       EcString key = ecstr_init ();
       EcString val = ecstr_init ();
       
-      if (ecstr_split (eclist_data(cursor.node), &key, &val, '='))
+      if (ecstr_split (entc_list_node_data(cursor.node), &key, &val, '='))
       {
         EcString value;
 
@@ -1830,7 +1830,7 @@ EcUdc echttp_getParams (EcHttpHeader* header)
       ecstr_delete (&val);
     }
     
-    eclist_destroy(&tokens);
+    entc_list_del(&tokens);
     
     return ret;
   }

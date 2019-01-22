@@ -21,10 +21,10 @@
 #define ENTC_TYPES_VECTOR_H 1
 
 #include "types/ecalloc.h"
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 
 struct EcVector_s; typedef struct EcVector_s* EcVector;
-typedef struct EcListNode_s* EcVectorNode;
+typedef struct EntcListNode_s* EcVectorNode;
 
 __ENTC_LIBEX
   

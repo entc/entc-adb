@@ -233,7 +233,7 @@ const EcString ecxmlstream_getNamespace (EcXMLStream self, const EcString namesp
 
 void ecxmlstream_mapNamespaces (EcXMLStream self, EcMap nsmap)
 {
-  EcMapCursor* cursor = ecmap_cursor_create (self->namespaces, LIST_DIR_NEXT);
+  EcMapCursor* cursor = ecmap_cursor_create (self->namespaces, ENTC_DIRECTION_FORW);
   
   while (ecmap_cursor_next (cursor))
   {

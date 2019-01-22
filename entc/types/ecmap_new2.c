@@ -976,7 +976,7 @@ int ecmap_validate (EcMap self)
 
 void ecmap_cursor_init (EcMap self, EcMapCursor* cursor, int direction)
 {
-   if (direction == LIST_DIR_NEXT)
+   if (direction == ENTC_DIRECTION_FORW)
    {
       cursor->node = ecmap_node_toTheLast (self->root, ENTC_ECMAP_LEFT);
    }
@@ -1074,7 +1074,7 @@ EcMapNode ecmap_cursor_extract (EcMap self, EcMapCursor* cursor)
       {
          x = ecmap_extract (self, x);
 
-         if (cursor->direction == LIST_DIR_NEXT)
+         if (cursor->direction == ENTC_DIRECTION_FORW)
          {
             cursor->node = ecmap_node_toTheLast (self->root, ENTC_ECMAP_LEFT);
          }

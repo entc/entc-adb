@@ -21,7 +21,7 @@
 
 #if defined __BSD_OS || defined __LINUX_OS
 
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 #include "tools/eclog.h"
 
 #if defined __APPLE__

@@ -35,7 +35,7 @@ struct EcTemplatePart_s
    
    EcString eval;
    
-   EcList parts;
+   EntcList parts;
    
    EcTemplatePart parent;
 
@@ -140,7 +140,7 @@ void ectemplate_part_del (EcTemplatePart* p_self)
   
   if (self->parts)
   {
-    eclist_destroy (&(self->parts));
+    entc_list_del (&(self->parts));
   }
   
   ENTC_DEL (p_self, struct EcTemplatePart_s);
@@ -148,10 +148,9 @@ void ectemplate_part_del (EcTemplatePart* p_self)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ectemplate_create_parts_onDestroy (void* ptr)
+static void __STDCALL ectemplate_create_parts_onDestroy (void* ptr)
 {
   EcTemplatePart h = ptr; ectemplate_part_del (&h);  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -174,10 +173,10 @@ void ectemplate_part_add (EcTemplatePart self, EcTemplatePart part)
 {
   if (self->parts == NULL)
   {
-    self->parts = eclist_create (ectemplate_create_parts_onDestroy);
+    self->parts = entc_list_new (ectemplate_create_parts_onDestroy);
   }
 
-  eclist_push_back (self->parts, part);
+  entc_list_push_back (self->parts, part);
 }  
 
 //-----------------------------------------------------------------------------
@@ -309,11 +308,11 @@ int ectemplate_part_apply (EcTemplatePart self, EcUdc data, void* ptr, fct_ectem
 {
   if (self->parts)
   {
-    EcListCursor cursor; eclist_cursor_init (self->parts, &cursor, LIST_DIR_NEXT);
+    EntcListCursor cursor; entc_list_cursor_init (self->parts, &cursor, ENTC_DIRECTION_FORW);
     
-    while (eclist_cursor_next (&cursor))
+    while (entc_list_cursor_next (&cursor))
     {
-      EcTemplatePart part = eclist_data (cursor.node);
+      EcTemplatePart part = entc_list_node_data (cursor.node);
       
       switch (part->type)
       {
@@ -863,11 +862,11 @@ int ectemplate_compile_str (EcTemplate self, const char* content, EcErr err)
 //-----------------------------------------------------------------------------
 
 /*
-int ectemplate_complete (EcList parts, EcUdc node, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err);
+int ectemplate_complete (EntcList parts, EcUdc node, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err);
 
 //-----------------------------------------------------------------------------
 
-int ectemplate_node (EcList parts, EcUdc node, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
+int ectemplate_node (EntcList parts, EcUdc node, void* ptr, fct_ectemplate_onText onText, fct_ectemplate_onFile onFile, EcErr err)
 {
   // check different types
   switch (ecudc_type(node))

@@ -135,7 +135,7 @@ struct AdblManager_s
 struct AdblSessionPool_s
 {
   
-  EcList pool;
+  EntcList pool;
   
   int minPoolSize;
   
@@ -147,7 +147,7 @@ struct AdblSessionPool_s
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL adbl_sessionpool_onDestroy (void* ptr)
+static void __STDCALL adbl_sessionpool_onDestroy (void* ptr)
 {
   AdblSession session = ptr;
   
@@ -165,8 +165,6 @@ static int __STDCALL adbl_sessionpool_onDestroy (void* ptr)
   }
     
   ENTC_DEL (&session, struct AdblSession_s);
-  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -176,7 +174,7 @@ AdblSessionPool adbl_sessionpool_create (int minPoolSize, AdblCredentials* pc)
   AdblSessionPool self = ENTC_NEW (struct AdblSessionPool_s);
   
   self->minPoolSize = minPoolSize;
-  self->pool = eclist_create (adbl_sessionpool_onDestroy);
+  self->pool = entc_list_new (adbl_sessionpool_onDestroy);
   
   self->pc = pc;
   
@@ -191,7 +189,7 @@ void adbl_sessionpool_destroy (AdblSessionPool* pself)
 {
   AdblSessionPool self = *pself;
   
-  eclist_destroy (&(self->pool));
+  entc_list_del (&(self->pool));
   
   entc_mutex_del(&(self->mutex));
   
@@ -209,11 +207,11 @@ AdblSession adbl_sessionpool_get (AdblSessionPool self)
 
   // iterrate through the pool to find the next free session
   {
-    EcListCursor cursor; eclist_cursor_init (self->pool, &cursor, LIST_DIR_NEXT);
+    EntcListCursor cursor; entc_list_cursor_init (self->pool, &cursor, ENTC_DIRECTION_FORW);
     
-    while (eclist_cursor_next (&cursor))
+    while (entc_list_cursor_next (&cursor))
     {
-      session = eclist_data (cursor.node);
+      session = entc_list_node_data (cursor.node);
       
       if (session->isFree)
       {
@@ -265,7 +263,7 @@ AdblSession adbl_sessionpool_get (AdblSessionPool self)
         }
         else
         {
-          eclist_push_back (self->pool, session);
+          entc_list_push_back (self->pool, session);
         }
       }
     }
@@ -538,13 +536,11 @@ void adbl_scanPlugin (AdblManager self, const EcString filename)
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL adbl_validate_config_engines_onDestroy (void* ptr)
+static void __STDCALL adbl_validate_config_engines_onDestroy (void* ptr)
 {
   EcString filename = ptr;
 
   ecstr_delete (&filename);
-  
-  return 0;
 }
 
 //----------------------------------------------------------------------------------------
@@ -568,7 +564,7 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
   
   if (ecstr_valid(self->path))
   {
-    EcList engines = eclist_create (adbl_validate_config_engines_onDestroy);
+    EntcList engines = entc_list_new (adbl_validate_config_engines_onDestroy);
     
     //eclog_fmt (LL_TRACE, MODULE, "scan", "scan path '%s' for adbl modules", self->path);
     
@@ -579,19 +575,19 @@ void adbl_validate_config (AdblManager self, const EcString configpath, const Ec
     }
     
     {
-      EcListCursor cursor;
-      eclist_cursor_init (engines, &cursor, LIST_DIR_NEXT);
+      EntcListCursor cursor;
+      entc_list_cursor_init (engines, &cursor, ENTC_DIRECTION_FORW);
       
-      while (eclist_cursor_next (&cursor))
+      while (entc_list_cursor_next (&cursor))
       {
-        EcString filename = eclist_data (cursor.node);
+        EcString filename = entc_list_node_data (cursor.node);
         // scan the library
         adbl_scanPlugin (self, filename);
       }
     }
     
     // clean up
-    eclist_destroy (&engines);
+    entc_list_del (&engines);
   }
   else
   {
@@ -1291,7 +1287,7 @@ void adbl_dbrollback (AdblSession session)
 
 /*------------------------------------------------------------------------*/
 
-EcList adbl_dbschema (AdblSession session)
+EntcList adbl_dbschema (AdblSession session)
 {
   ADBLModuleProperties* pp;
   

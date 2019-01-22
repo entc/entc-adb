@@ -2,18 +2,16 @@
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ectokenizer_token_onDestroy (void* ptr)
+static void __STDCALL ectokenizer_token_onDestroy (void* ptr)
 {
   ENTC_FREE(ptr);
-  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
 
-EcList ectokenizer_parse (const EcString source, char delimeter)
+EntcList ectokenizer_parse (const EcString source, char delimeter)
 {
-  EcList tokens = eclist_create (ectokenizer_token_onDestroy);
+  EntcList tokens = entc_list_new (ectokenizer_token_onDestroy);
   
   const char* posR = source;
   const char* posL = source;
@@ -37,7 +35,7 @@ EcList ectokenizer_parse (const EcString source, char delimeter)
         // set termination
         buffer[diff] = 0;
         // add to list
-        eclist_push_back (tokens, buffer);
+        entc_list_push_back (tokens, buffer);
       }
       posL = posR + 1;
     }
@@ -56,7 +54,7 @@ EcList ectokenizer_parse (const EcString source, char delimeter)
       buffer[diff] = 0;
       
       // add to list
-      eclist_push_back (tokens, buffer);
+      entc_list_push_back (tokens, buffer);
     }
   }
   
@@ -65,9 +63,9 @@ EcList ectokenizer_parse (const EcString source, char delimeter)
 
 //-----------------------------------------------------------------------------
 
-EcList ectokenizer_token (const EcString source, const EcString token)
+EntcList ectokenizer_token (const EcString source, const EcString token)
 {
-  EcList tokens = eclist_create (ectokenizer_token_onDestroy);
+  EntcList tokens = entc_list_new (ectokenizer_token_onDestroy);
 
   // use a state machine to parse the string with a string
   int state = 0;
@@ -103,7 +101,7 @@ EcList ectokenizer_token (const EcString source, const EcString token)
             EcString h = ecstr_part (tbl, tbe - tbl);
 
             // add to tokens
-            eclist_push_back (tokens, h);
+            entc_list_push_back (tokens, h);
             
             tbl = pos + 1;
             state = 0;
@@ -126,7 +124,7 @@ EcList ectokenizer_token (const EcString source, const EcString token)
             EcString h = ecstr_part (tbl, tbe - tbl);
 
             // add to tokens
-            eclist_push_back (tokens, h);
+            entc_list_push_back (tokens, h);
             
             tbl = pos + 1;
             state = 0;
@@ -153,7 +151,7 @@ EcList ectokenizer_token (const EcString source, const EcString token)
   EcString h = ecstr_part (tbl, pos - tbl);
   
   // add to tokens
-  eclist_push_back (tokens, h);
+  entc_list_push_back (tokens, h);
   
   return tokens;
 }

@@ -31,7 +31,7 @@ struct EcChain_s
   
   uint_t nextempty;
   
-  EcList stack;
+  EntcList stack;
   
   uint_t stacklen;
   
@@ -54,7 +54,7 @@ EcChain ecchain_create (EcAlloc alloc)
 {
   EcChain self = ENTC_NEW(struct EcChain_s);
   
-  self->stack = eclist_create (ecchain_onDestroy);
+  self->stack = entc_list_new (ecchain_onDestroy);
   self->length = 200;
   self->buffer = ENTC_MALLOC(sizeof(void*) * self->length);
   
@@ -70,7 +70,7 @@ void ecchain_clear(EcChain self)
   memset(self->buffer, 0x00, sizeof(void*) * self->length);
   self->nextempty = 0;
   
-  eclist_clear(self->stack);
+  entc_list_clr(self->stack);
   self->stacklen = 0;
 }
 
@@ -82,7 +82,7 @@ void ecchain_destroy (EcAlloc alloc, EcChain* pself)
   
   ecchain_clear (self);
   
-  eclist_destroy (&(self->stack));
+  entc_list_del (&(self->stack));
   
   ENTC_FREE(self->buffer);
   
@@ -156,7 +156,7 @@ void ecchain_del(EcChain self, uint_t index)
   
   pindex = ENTC_NEW(uint_t);  
   *pindex = index;
-  eclist_push_back (self->stack, pindex);
+  entc_list_push_back (self->stack, pindex);
   self->stacklen++;
   
   pp = self->buffer + index;
@@ -245,7 +245,7 @@ uint_t ecchain_next(const EcChain self, uint_t index)
 /*
 void printInfo(const EcChain self)
 {
-  printf("[%p] length %u, free (%u, %u)\n", self, self->length, eclist_size(self->stack), self->nextempty);
+  printf("[%p] length %u, free (%u, %u)\n", self, self->length, entc_list_size(self->stack), self->nextempty);
 }
 
 //----------------------------------------------------------------------------------------
@@ -253,18 +253,18 @@ void printInfo(const EcChain self)
 void ecchain_dumpStack(const EcChain self)
 {
   uint_t i = 0;
-  EcListNode node;
+  EntcListNode node;
 
-  printf("start dump of list [%p] length %u %u\n", self, self->stacklen, eclist_size(self->stack));
+  printf("start dump of list [%p] length %u %u\n", self, self->stacklen, entc_list_size(self->stack));
   
-  if (self->stacklen != eclist_size(self->stack))
+  if (self->stacklen != entc_list_size(self->stack))
   {
     printf("stack length mismatch\n");
   }
  
   for (node = eclist_first(self->stack); node != eclist_end(self->stack); node = eclist_next(node), i++)
   {
-    uint_t* pindex = eclist_data(node);
+    uint_t* pindex = entc_list_node_data(node);
     
     printf("[%u %p]: %u | ", i, pindex, *pindex);
   }

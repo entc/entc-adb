@@ -18,9 +18,9 @@
  */
 
 #include "adbl_insert.h"
-#include "types/eclist.h"
-
 #include "adbl_attributes.h"
+
+#include <stc/entc_list.h>
 
 //------------------------------------------------------------------------
 

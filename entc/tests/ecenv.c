@@ -1,6 +1,6 @@
 #include "ecenv.h"
 
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 #include "tools/eclog.h"
 
 // c libs includes
@@ -21,9 +21,9 @@ struct TestEnvContext_s
   
   const char* name;
   
-  EcList cmpTextes;
+  EntcList cmpTextes;
   
-  EcList errors;
+  EntcList errors;
   
 }; typedef struct TestEnvContext_s* TestEnvContext;
 
@@ -33,34 +33,31 @@ void testctx_destroy (TestEnvContext* pself)
 {
   TestEnvContext self = *pself;
   
-  eclist_destroy (&(self->cmpTextes));
-  eclist_destroy (&(self->errors));
+  entc_list_del (&(self->cmpTextes));
+  entc_list_del (&(self->errors));
   
   ENTC_DEL (pself, struct TestEnvContext_s);
 }
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL testenv_cmpTextes_onDestroy (void* ptr)
+static void __STDCALL testenv_cmpTextes_onDestroy (void* ptr)
 {
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL testenv_errors_onDestroy (void* ptr)
+static void __STDCALL testenv_errors_onDestroy (void* ptr)
 {
   EcString h = ptr;
   ecstr_delete(&h);
-  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
 
 void testctx_push_string (TestEnvContext self, const char* text)
 {
-  eclist_push_back (self->cmpTextes, (void*)text);
+  entc_list_push_back (self->cmpTextes, (void*)text);
 }
 
 //-----------------------------------------------------------------------------
@@ -68,7 +65,7 @@ void testctx_push_string (TestEnvContext self, const char* text)
 int testctx_pop_tocomp (TestEnvContext self, const char* text)
 {
   int ret;
-  char* orig = eclist_pop_front (self->cmpTextes);
+  char* orig = entc_list_pop_front (self->cmpTextes);
   
   if (orig)
   {
@@ -98,7 +95,7 @@ void testctx_assert (TestEnvContext self, int cres, const char* comment)
   if (!cres)
   {
     // post some error
-    eclist_push_back (self->errors, (void*)ecstr_copy(comment));
+    entc_list_push_back (self->errors, (void*)ecstr_copy(comment));
   }
 }
 
@@ -109,7 +106,7 @@ int testctx_err (TestEnvContext self, EcErr err)
   if (err->code)
   {
     // post some error
-    eclist_push_back (self->errors, (void*)ecstr_copy(err->text));
+    entc_list_push_back (self->errors, (void*)ecstr_copy(err->text));
   }
 
   return err->code;
@@ -203,17 +200,17 @@ void testenv_run (TestEnv self)
       }
     }
     
-    errors = eclist_size (ctx->errors);
+    errors = entc_list_size (ctx->errors);
     
     if (errors > 0)
     {
-      EcListCursor cursor;
+      EntcListCursor cursor;
       
-      eclist_cursor_init (ctx->errors, &cursor, LIST_DIR_NEXT);
+      entc_list_cursor_init (ctx->errors, &cursor, ENTC_DIRECTION_FORW);
       
-      while (eclist_cursor_next (&cursor))
+      while (entc_list_cursor_next (&cursor))
       {
-        eclog_fmt (LL_ERROR, "TEST", "error", eclist_data (cursor.node));
+        eclog_fmt (LL_ERROR, "TEST", "error", entc_list_node_data (cursor.node));
       }
     }
     else
@@ -243,8 +240,8 @@ void testenv_reg (TestEnv self, const char* name, fct_testenv_init init, fct_tes
   
   ctx->name = name;
   
-  ctx->cmpTextes = eclist_create (testenv_cmpTextes_onDestroy);
-  ctx->errors = eclist_create (testenv_errors_onDestroy);
+  ctx->cmpTextes = entc_list_new (testenv_cmpTextes_onDestroy);
+  ctx->errors = entc_list_new (testenv_errors_onDestroy);
   
   self->ctx[self->max] = ctx;
   self->max++;

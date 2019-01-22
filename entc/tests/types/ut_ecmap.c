@@ -58,7 +58,7 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 
   // forward
   {
-    EcMapCursor* cursor = ecmap_cursor_create (map01, LIST_DIR_NEXT);
+    EcMapCursor* cursor = ecmap_cursor_create (map01, ENTC_DIRECTION_FORW);
     
     while (ecmap_cursor_next (cursor))
     {
@@ -73,7 +73,7 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 
   // backwards
   {
-    EcMapCursor* cursor = ecmap_cursor_create (map01, LIST_DIR_PREV);
+    EcMapCursor* cursor = ecmap_cursor_create (map01, ENTC_DIRECTION_PREV);
     
     while (ecmap_cursor_prev (cursor))
     {
@@ -88,7 +88,7 @@ static int __STDCALL test_ecmap_test1 (void* ptr, TestEnvContext ctx, EcErr err)
 
   // combine
   {
-    EcMapCursor* cursor = ecmap_cursor_create (map01, LIST_DIR_NEXT);
+    EcMapCursor* cursor = ecmap_cursor_create (map01, ENTC_DIRECTION_FORW);
     
     ecmap_cursor_next (cursor);    // 0
     ecmap_cursor_next (cursor);    // 1
@@ -129,7 +129,7 @@ static int __STDCALL test_ecmap_test2 (void* ptr, TestEnvContext ctx, EcErr err)
   {
     EcMapCursor cursor;
     
-    ecmap_cursor_init (map01, &cursor, LIST_DIR_NEXT);
+    ecmap_cursor_init (map01, &cursor, ENTC_DIRECTION_FORW);
     
     ecmap_cursor_erase (map01, &cursor);
 
@@ -195,7 +195,7 @@ static int __STDCALL test_ecmap_test3 (void* ptr, TestEnvContext ctx, EcErr err)
   
   // forward
   {
-    EcMapCursor* cursor = ecmap_cursor_create (map02, LIST_DIR_NEXT);
+    EcMapCursor* cursor = ecmap_cursor_create (map02, ENTC_DIRECTION_FORW);
     
     while (ecmap_cursor_next (cursor))
     {

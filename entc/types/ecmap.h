@@ -23,7 +23,7 @@
 //=============================================================================
 
 #include "ecerr.h"
-#include "eclist.h"
+#include "stc/entc_list.h"
 
 //-----------------------------------------------------------------------------
 
@@ -87,16 +87,11 @@ typedef struct
   
   int direction;
 
-  EcListCursor cursor;
+  EntcListCursor cursor;
   
   int position;
 
 } EcMapCursor;
-
-//-----------------------------------------------------------------------------
-
-#define LIST_DIR_NEXT 1
-#define LIST_DIR_PREV 0
 
 //-----------------------------------------------------------------------------
 

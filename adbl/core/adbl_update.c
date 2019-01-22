@@ -18,11 +18,11 @@
  */
 
 #include "adbl_update.h"
-#include "types/eclist.h"
-
 #include "adbl_attributes.h"
 #include "adbl_constraint.h"
 #include "adbl_security.h"
+
+#include <stc/entc_list.h>
 
 //------------------------------------------------------------------------
 

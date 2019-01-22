@@ -23,7 +23,7 @@
 
 struct EcVector_s
 {
-  EcList list;
+  EntcList list;
   
   uint_t indexcounter;
   
@@ -42,7 +42,7 @@ EcVector ecvector_create (EcAlloc alloc)
 {
   EcVector self = ENTC_NEW(struct EcVector_s);
   
-  self->list = eclist_create_ex (alloc);
+  self->list = entc_list_new_ex (alloc);
   
   self->indexcounter = 0;
   
@@ -97,10 +97,10 @@ uint_t ecvector_add(EcVector self, void* data)
 EcVectorNode ecvector_find(EcVector self, uint_t lindex)
 {
   /* TODO: Implement a real index here */
-  EcListNode node;
+  EntcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)eclist_data(node);
+    struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)entc_list_node_data(node);
     if(vecnode->index == lindex)
       return node;
   }
@@ -112,10 +112,10 @@ EcVectorNode ecvector_find(EcVector self, uint_t lindex)
 void* ecvector_get(EcVector self, uint_t lindex)
 {
   /* TODO: Implement a real index here */
-  EcListNode node;
+  EntcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)eclist_data(node);
+    struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)entc_list_node_data(node);
     if(vecnode->index == lindex)
       return vecnode->data;
   }
@@ -126,10 +126,10 @@ void* ecvector_get(EcVector self, uint_t lindex)
 
 EcVectorNode ecvector_at(const EcVector self, uint_t lindex)
 {
-  EcListNode node;
+  EntcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    struct EcVectorDataNode* vecnode = eclist_data(node);
+    struct EcVectorDataNode* vecnode = entc_list_node_data(node);
         
     if(vecnode->index == lindex)
     {
@@ -144,7 +144,7 @@ EcVectorNode ecvector_at(const EcVector self, uint_t lindex)
 
 EcVectorNode ecvector_erase (EcVector self, EcVectorNode node)
 {
-  struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)eclist_data(node);
+  struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)entc_list_node_data(node);
 
   ENTC_DEL(&vecnode, struct EcVectorDataNode);
   
@@ -176,21 +176,21 @@ EcVectorNode ecvector_end(const EcVector self)
 
 EcVectorNode ecvector_next(const EcVectorNode node)
 {
-  return eclist_next((EcListNode)node);
+  return eclist_next((EntcListNode)node);
 }
 
 /*------------------------------------------------------------------------*/
 
 EcVectorNode ecvector_back(const EcVectorNode node)
 {
-  return eclist_back((EcListNode)node);  
+  return eclist_back((EntcListNode)node);  
 }
 
 /*------------------------------------------------------------------------*/
 
 void* ecvector_data(const EcVectorNode node)
 {
-  struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)eclist_data((EcListNode)node);
+  struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)entc_list_node_data((EntcListNode)node);
   
   return vecnode->data;
 }
@@ -199,7 +199,7 @@ void* ecvector_data(const EcVectorNode node)
 
 uint_t ecvector_index(const EcVectorNode node)
 {
-  struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)eclist_data((EcListNode)node);
+  struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)entc_list_node_data((EntcListNode)node);
 
   return vecnode->index;
 }
@@ -209,14 +209,14 @@ uint_t ecvector_index(const EcVectorNode node)
 void ecvector_clear(EcVector self)
 {
   /* iterate through all list members */
-  EcListNode node;
+  EntcListNode node;
   for(node = eclist_first(self->list); node != eclist_end(self->list); node = eclist_next(node))
   {
-    struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)eclist_data(node);
+    struct EcVectorDataNode* vecnode = (struct EcVectorDataNode*)entc_list_node_data(node);
     
     free(vecnode);
   }
-  eclist_clear(self->list);
+  entc_list_clr(self->list);
   
   self->indexcounter = 0;
 }
@@ -225,7 +225,7 @@ void ecvector_clear(EcVector self)
 
 uint_t ecvector_size(EcVector self)
 {
-  EcListNode node;
+  EntcListNode node;
 
   uint_t size = 0;
   

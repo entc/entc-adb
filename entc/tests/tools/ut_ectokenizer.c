@@ -10,34 +10,34 @@ static int __STDCALL test_tokenizer_test1 (void* ptr, TestEnvContext tctx, EcErr
   {
     const EcString s1 = "213das\nhgsadj\n\t\ndshsahd\n7634ahdg\n\nn\n";
 
-    EcList tokens = ectokenizer_token (s1, "\n");
+    EntcList tokens = ectokenizer_token (s1, "\n");
     
-    EcListCursor cursor;
+    EntcListCursor cursor;
     
-    for (eclist_cursor_init (tokens, &cursor, LIST_DIR_NEXT); eclist_cursor_next (&cursor);)
+    for (entc_list_cursor_init (tokens, &cursor, ENTC_DIRECTION_FORW); entc_list_cursor_next (&cursor);)
     {
-      const EcString h = eclist_data(cursor.node);
+      const EcString h = entc_list_node_data(cursor.node);
       
       printf ("[%i] : [%s]\n", cursor.position, h);
     }
 
-    eclist_destroy(&tokens);
+    entc_list_del(&tokens);
   }
   {
     const EcString s1 = "213#das#nhgsadj#n##nndshsahd#n7634ahdg#n#nn#n";
 
-    EcList tokens = ectokenizer_token (s1, "#n");
+    EntcList tokens = ectokenizer_token (s1, "#n");
     
-    EcListCursor cursor;
+    EntcListCursor cursor;
     
-    for (eclist_cursor_init (tokens, &cursor, LIST_DIR_NEXT); eclist_cursor_next (&cursor);)
+    for (entc_list_cursor_init (tokens, &cursor, ENTC_DIRECTION_FORW); entc_list_cursor_next (&cursor);)
     {
-      const EcString h = eclist_data(cursor.node);
+      const EcString h = entc_list_node_data(cursor.node);
       
       printf ("[%i] : [%s]\n", cursor.position, h);
     }
 
-    eclist_destroy(&tokens);
+    entc_list_del(&tokens);
   }
   
   return 0;

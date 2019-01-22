@@ -81,7 +81,6 @@ SET (ENTC_TYPES_HEADERS
 
   types/ecerr.h
   types/ecalloc.h
-  types/eclist.h
   types/ecmap.h
   types/ecstring.h
   types/ecbuffer.h
@@ -97,7 +96,6 @@ SET (ENTC_TYPES_SOURCES
   types/ecerr.c
   types/ecalloc.c
   types/ecarray.c
-  types/eclist.c
   types/ecmap.c
   #types/ecmap_new2.c
   types/ecstring.c

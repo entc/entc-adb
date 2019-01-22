@@ -1,7 +1,7 @@
 #ifndef QUOMADBL_SQLITE3_H
 #define QUOMADBL_SQLITE3_H 1
 
-#include <system/macros.h>
+
 
 #include <types/ecstring.h>
 
@@ -11,9 +11,9 @@
 extern "C" {
 #endif
   
-__LIB_EXPORT const AdblModuleInfo* adblPlugin(void);
+__ENTC_LIBEX const AdblModuleInfo* adblPlugin(void);
   
-__LIB_EXPORT struct QDBLExeMatrix* getQDBLExeMatrix(void);
+__ENTC_LIBEX struct QDBLExeMatrix* getQDBLExeMatrix(void);
   
 #ifdef __cplusplus
 }
