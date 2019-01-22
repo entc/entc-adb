@@ -1203,7 +1203,7 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
       else if (cont == ENTC_AIO_CODE_ABORTALL)
       {
         // abort
-        return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "user abborted");
+        return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS, "user abborted");
       }
       else if (cont == ENTC_AIO_CODE_ONCE)
       {
