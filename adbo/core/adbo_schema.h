@@ -20,20 +20,15 @@
 #ifndef ADBO_SCHEMA_H
 #define ADBO_SCHEMA_H 1
 
-#include <system/macros.h>
-
+#include <sys/entc_export.h>
 #include "adbo_types.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX AdboSchema adbo_schema_new (AdboContext, const EcString dbsource);
 
-__LIB_EXPORT AdboSchema adbo_schema_new (AdboContext, const EcString dbsource);
+__ENTC_LIBEX void adbo_schema_del (AdboSchema*);
 
-__LIB_EXPORT void adbo_schema_del (AdboSchema*);
+__ENTC_LIBEX AdboObject adbo_schema_get (AdboSchema, AdboContext, AdboContainer parent, const EcString tablename, const EcString origin, AdboValue value);
 
-__LIB_EXPORT AdboObject adbo_schema_get (AdboSchema, AdboContext, AdboContainer parent, const EcString tablename, const EcString origin, AdboValue value);
-
-__LIB_EXPORT void adbo_schema_ref (AdboSchema, AdboContext, AdboContainer parent, const EcString tablename, EcList objects, const EcString origin);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void adbo_schema_ref (AdboSchema, AdboContext, AdboContainer parent, const EcString tablename, EcList objects, const EcString origin);
 
 #endif

@@ -596,7 +596,7 @@ void entc_list_cursor_del (EntcListCursor** pcursor)
 
 void entc_list_cursor_init (EntcList self, EntcListCursor* cursor, int direction)
 {
-  if (direction)
+  if (ENTC_DIRECTION_FORW == direction)
   {
     cursor->node = self->fpos;
   }

@@ -20,34 +20,29 @@
 #ifndef ADBL_QUERY_H
 #define ADBL_QUERY_H 1
 
-#include <system/macros.h>
-
+#include <sys/entc_export.h>
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START  
-   
-__LIB_EXPORT AdblQuery* adbl_query_new (void);
+__ENTC_LIBEX AdblQuery* adbl_query_new (void);
   
-__LIB_EXPORT void adbl_query_delete (AdblQuery**);
+__ENTC_LIBEX void adbl_query_delete (AdblQuery**);
   
-__LIB_EXPORT void adbl_query_clear (AdblQuery*);
+__ENTC_LIBEX void adbl_query_clear (AdblQuery*);
   
-__LIB_EXPORT void adbl_query_setTable (AdblQuery*, const EcString table);
+__ENTC_LIBEX void adbl_query_setTable (AdblQuery*, const EcString table);
   
-__LIB_EXPORT void adbl_query_setConstraint (AdblQuery*, AdblConstraint*);
+__ENTC_LIBEX void adbl_query_setConstraint (AdblQuery*, AdblConstraint*);
   
-__LIB_EXPORT void adbl_query_addColumn (AdblQuery*, const EcString column, int order_pos);
+__ENTC_LIBEX void adbl_query_addColumn (AdblQuery*, const EcString column, int order_pos);
   
-__LIB_EXPORT void adbl_query_addColumnAsSubquery (AdblQuery*, const EcString column, const EcString table, const EcString ref, const EcString value, int order_pos);
+__ENTC_LIBEX void adbl_query_addColumnAsSubquery (AdblQuery*, const EcString column, const EcString table, const EcString ref, const EcString value, int order_pos);
   
-__LIB_EXPORT void adbl_query_setLimit (AdblQuery*, uint_t);
+__ENTC_LIBEX void adbl_query_setLimit (AdblQuery*, uint_t);
 
-__LIB_EXPORT void adbl_query_setOffset (AdblQuery*, uint_t);
+__ENTC_LIBEX void adbl_query_setOffset (AdblQuery*, uint_t);
   
   // security methods
-__LIB_EXPORT void adbl_query_sec (AdblQuery*, AdblSecurity*);
+__ENTC_LIBEX void adbl_query_sec (AdblQuery*, AdblSecurity*);
     
-__CPP_EXTERN______________________________________________________________________________END
-
 #endif
 

@@ -44,7 +44,7 @@ FIND_LIBRARY( ENTC_LIBRARY NAMES entc
 MARK_AS_ADVANCED(ENTC_LIBRARY)
 
 FIND_PATH(ENTC_INCLUDE_DIR
-  NAMES system/macros.h
+  NAMES sys/entc_export.h
   PATHS
   # linux
   "/opt/entc_1_4/include/entc/"

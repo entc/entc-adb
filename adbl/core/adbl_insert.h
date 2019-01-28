@@ -20,27 +20,21 @@
 #ifndef ADBL_INSERT_H
 #define ADBL_INSERT_H 1
 
-#include <system/macros.h>
-
 #include "adbl_security.h"
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START
-    
-__LIB_EXPORT AdblInsert* adbl_insert_new (void);
+__ENTC_LIBEX AdblInsert* adbl_insert_new (void);
 
-__LIB_EXPORT void adbl_insert_delete (AdblInsert**);
+__ENTC_LIBEX void adbl_insert_delete (AdblInsert**);
   
-__LIB_EXPORT void adbl_insert_clear (AdblInsert*);
+__ENTC_LIBEX void adbl_insert_clear (AdblInsert*);
   
-__LIB_EXPORT void adbl_insert_setTable (AdblInsert*, const EcString table);
+__ENTC_LIBEX void adbl_insert_setTable (AdblInsert*, const EcString table);
   
-__LIB_EXPORT void adbl_insert_setAttributes (AdblInsert*, AdblAttributes*);
+__ENTC_LIBEX void adbl_insert_setAttributes (AdblInsert*, AdblAttributes*);
   
   // security methods 
-__LIB_EXPORT void adbl_insert_sec (AdblInsert*, AdblSecurity*);
+__ENTC_LIBEX void adbl_insert_sec (AdblInsert*, AdblSecurity*);
   
-__CPP_EXTERN______________________________________________________________________________END
-
 #endif
 

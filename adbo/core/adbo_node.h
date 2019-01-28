@@ -20,16 +20,11 @@
 #ifndef ADBO_NODE_H
 #define ADBO_NODE_H 1
 
-#include <system/macros.h>
-
+#include <sys/entc_export.h>
 #include "adbo_types.h"
 
 struct AdboNode_s; typedef struct AdboNode_s* AdboNode;
 
-__CPP_EXTERN______________________________________________________________________________START
-
-__LIB_EXPORT int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc data);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX int adbo_node_cursor (AdboContext context, EcCursor cursor, EcUdc node, EcUdc data);
 
 #endif

@@ -20,29 +20,23 @@
 #ifndef ADBL_DELETE_H
 #define ADBL_DELETE_H 1
 
-#include <system/macros.h>
-
 #include "adbl_security.h"
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START
-
-__LIB_EXPORT AdblDelete* adbl_delete_new();
+__ENTC_LIBEX AdblDelete* adbl_delete_new();
   
-__LIB_EXPORT void adbl_delete_delete (AdblDelete**);
+__ENTC_LIBEX void adbl_delete_delete (AdblDelete**);
   
-__LIB_EXPORT void adbl_delete_clear (AdblDelete*);
+__ENTC_LIBEX void adbl_delete_clear (AdblDelete*);
   
-__LIB_EXPORT void adbl_delete_setTable (AdblDelete*, const EcString table);
+__ENTC_LIBEX void adbl_delete_setTable (AdblDelete*, const EcString table);
   
-__LIB_EXPORT void adbl_delete_setConstraint (AdblDelete*, AdblConstraint*);
+__ENTC_LIBEX void adbl_delete_setConstraint (AdblDelete*, AdblConstraint*);
   
-__LIB_EXPORT void adbl_delete_setForce (AdblDelete*, int);
+__ENTC_LIBEX void adbl_delete_setForce (AdblDelete*, int);
   
   /* security methods */
-__LIB_EXPORT void adbl_delete_sec (AdblDelete*, AdblSecurity*);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void adbl_delete_sec (AdblDelete*, AdblSecurity*);
 
 #endif
 

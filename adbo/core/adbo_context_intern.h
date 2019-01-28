@@ -20,7 +20,7 @@
 #ifndef ADBO_CONTEXT_INTERN_H
 #define ADBO_CONTEXT_INTERN_H 1
 
-#include <system/macros.h>
+#include <sys/entc_export.h>
 #include <adbl_manager.h>
 
 #include "adbo_types.h"

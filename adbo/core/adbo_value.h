@@ -20,47 +20,42 @@
 #ifndef ADBO_VALUE_H
 #define ADBO_VALUE_H 1
 
-#include <system/macros.h>
-
+#include <sys/entc_export.h>
 #include "adbo_types.h"
-
-__CPP_EXTERN______________________________________________________________________________START
 
 /*
 // constructor
-__LIB_EXPORT AdboValue adbo_value_new (const EcString dbcolumn, const EcString data, const EcString link);
+__ENTC_LIBEX AdboValue adbo_value_new (const EcString dbcolumn, const EcString data, const EcString link);
 
-__LIB_EXPORT AdboValue adbo_value_newFromXml (EcXMLStream);
+__ENTC_LIBEX AdboValue adbo_value_newFromXml (EcXMLStream);
 
-__LIB_EXPORT void adbo_value_del (AdboValue*);
+__ENTC_LIBEX void adbo_value_del (AdboValue*);
 
-__LIB_EXPORT AdboValue adbo_value_clone (const AdboValue);
+__ENTC_LIBEX AdboValue adbo_value_clone (const AdboValue);
 
-__LIB_EXPORT void adbo_value_set (AdboValue, const EcString, int state);
+__ENTC_LIBEX void adbo_value_set (AdboValue, const EcString, int state);
 
-__LIB_EXPORT AdboObject adbo_value_cobject (AdboValue, AdboContainer);
+__ENTC_LIBEX AdboObject adbo_value_cobject (AdboValue, AdboContainer);
 
-__LIB_EXPORT AdboValue adbo_value_cseek (AdboValue, AdboContainer);
+__ENTC_LIBEX AdboValue adbo_value_cseek (AdboValue, AdboContainer);
 
-__LIB_EXPORT const EcString adbo_value_cget (AdboValue, AdboContainer);
+__ENTC_LIBEX const EcString adbo_value_cget (AdboValue, AdboContainer);
 
-__LIB_EXPORT const EcString adbo_value_get (AdboValue, AdboObject);
+__ENTC_LIBEX const EcString adbo_value_get (AdboValue, AdboObject);
 
-__LIB_EXPORT AdboValue adbo_value_seek (AdboValue, AdboObject);
+__ENTC_LIBEX AdboValue adbo_value_seek (AdboValue, AdboObject);
 
-__LIB_EXPORT const EcString adbo_value_getDBColumn (AdboValue);
+__ENTC_LIBEX const EcString adbo_value_getDBColumn (AdboValue);
 
-__LIB_EXPORT const EcString adbo_value_getData (AdboValue);
+__ENTC_LIBEX const EcString adbo_value_getData (AdboValue);
 
-__LIB_EXPORT int adbo_value_getState (AdboValue);
+__ENTC_LIBEX int adbo_value_getState (AdboValue);
 
-__LIB_EXPORT int adbo_value_hasLocalLink (AdboValue);
+__ENTC_LIBEX int adbo_value_hasLocalLink (AdboValue);
 
-__LIB_EXPORT void adbo_value_commit (AdboValue);
+__ENTC_LIBEX void adbo_value_commit (AdboValue);
 
-__LIB_EXPORT void adbo_value_rollback (AdboValue);
+__ENTC_LIBEX void adbo_value_rollback (AdboValue);
  */
-
-__CPP_EXTERN______________________________________________________________________________END
 
 #endif

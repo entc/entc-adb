@@ -20,18 +20,12 @@
 #ifndef ADBL_TABLE_H
 #define ADBL_TABLE_H 1
 
-#include <system/macros.h>
-
-
+#include <sys/entc_export.h>
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START  
+__ENTC_LIBEX AdblTable* adbl_table_new (const EcString tablename);
 
-__LIB_EXPORT AdblTable* adbl_table_new (const EcString tablename);
-
-__LIB_EXPORT void adbl_table_del (AdblTable**);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void adbl_table_del (AdblTable**);
 
 #endif
 

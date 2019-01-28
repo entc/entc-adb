@@ -20,79 +20,74 @@
 #ifndef ADBO_OBJECT_H
 #define ADBO_OBJECT_H 1
 
-#include <system/macros.h>
-#include <system/types.h>
+#include <sys/entc_export.h>
 #include <types/eclist.h>
 #include <types/ecudc.h>
 
 #include "adbo_types.h"
 #include "adbo_value.h"
 
-__CPP_EXTERN______________________________________________________________________________START
-
 // constructor (creates a new empty object from xml config)
-__LIB_EXPORT AdboObject adbo_object_new1 (AdboContainer parent, AdboContext, uint_t type, EcXMLStream, const EcString);
+__ENTC_LIBEX AdboObject adbo_object_new1 (AdboContainer parent, AdboContext, uint_t type, EcXMLStream, const EcString);
 
 // constructor (creates a new empty object from database structure)
-//__LIB_EXPORT AdboObject adbo_object_new2 (AdboContainer parent, AdboContext, uint_t type, AdblTable* table_info, const EcString origin, AdboValue value);
+//__ENTC_LIBEX AdboObject adbo_object_new2 (AdboContainer parent, AdboContext, uint_t type, AdblTable* table_info, const EcString origin, AdboValue value);
 
 // destructor (deletes recursively object and data)
-__LIB_EXPORT void adbo_object_del (AdboObject*);
+__ENTC_LIBEX void adbo_object_del (AdboObject*);
 
 // clone (clones the object recursively, but no data)
-__LIB_EXPORT AdboObject adbo_object_clone (const AdboObject, AdboContainer parent);
+__ENTC_LIBEX AdboObject adbo_object_clone (const AdboObject, AdboContainer parent);
 
 // request (fill structure recursively with new data from database backend, overrides existing data)
 // depth defines the recursive depth, default should be 1, -1 is infinite
 // dpos is always 0 rom beginning
-__LIB_EXPORT int adbo_object_request (AdboObject, AdboContext, EcUdc, int depth, int dpos);
+__ENTC_LIBEX int adbo_object_request (AdboObject, AdboContext, EcUdc, int depth, int dpos);
 
 // update (write data back recursively to database backend, only works with filled object)
-__LIB_EXPORT int adbo_object_update (AdboObject, AdboContext, int withTransaction);
+__ENTC_LIBEX int adbo_object_update (AdboObject, AdboContext, int withTransaction);
 
 // delete (removes this node from database)
-__LIB_EXPORT int adbo_object_delete (AdboObject, AdboContext, int withTransaction);
+__ENTC_LIBEX int adbo_object_delete (AdboObject, AdboContext, int withTransaction);
 
 // misc
 
-__LIB_EXPORT void adbo_objects_fromXml (AdboContainer, AdboContext, EcXMLStream, const EcString tag);
+__ENTC_LIBEX void adbo_objects_fromXml (AdboContainer, AdboContext, EcXMLStream, const EcString tag);
 
-__LIB_EXPORT AdboValue adbo_getValue (AdboObject);
+__ENTC_LIBEX AdboValue adbo_getValue (AdboObject);
 
-__LIB_EXPORT void adbo_setValue (AdboObject, AdboValue);
+__ENTC_LIBEX void adbo_setValue (AdboObject, AdboValue);
 
-__LIB_EXPORT void adbo_strToStream (AdboObject, EcStream);
+__ENTC_LIBEX void adbo_strToStream (AdboObject, EcStream);
 
-__LIB_EXPORT void adbo_object_transaction (AdboObject, int state);
+__ENTC_LIBEX void adbo_object_transaction (AdboObject, int state);
 
-//__LIB_EXPORT void adbo_object_addToQuery (AdboObject, AdblQuery*);
+//__ENTC_LIBEX void adbo_object_addToQuery (AdboObject, AdblQuery*);
 
-//__LIB_EXPORT void adbo_object_setFromQuery (AdboObject, AdblCursor*, EcLogger);
+//__ENTC_LIBEX void adbo_object_setFromQuery (AdboObject, AdblCursor*, EcLogger);
 
-//__LIB_EXPORT void adbo_object_addToAttr (AdboObject, AdboContainer, AdblAttributes*);
+//__ENTC_LIBEX void adbo_object_addToAttr (AdboObject, AdboContainer, AdblAttributes*);
 
 // accessors
 
-__LIB_EXPORT AdboObject adbo_at (AdboObject, const EcString link);
+__ENTC_LIBEX AdboObject adbo_at (AdboObject, const EcString link);
 
-__LIB_EXPORT EcString adbo_str (AdboObject);
+__ENTC_LIBEX EcString adbo_str (AdboObject);
 
-__LIB_EXPORT int adbo_set (AdboObject, const EcString);
+__ENTC_LIBEX int adbo_set (AdboObject, const EcString);
 
-__LIB_EXPORT int adbo_add (AdboObject);
+__ENTC_LIBEX int adbo_add (AdboObject);
 
-__LIB_EXPORT AdboObject adbo_get (AdboObject, const EcString);
+__ENTC_LIBEX AdboObject adbo_get (AdboObject, const EcString);
 
-__LIB_EXPORT EcUdc adbo_udc (AdboObject);
+__ENTC_LIBEX EcUdc adbo_udc (AdboObject);
 
 // debug
 
-__LIB_EXPORT void adbo_dump (AdboObject);
+__ENTC_LIBEX void adbo_dump (AdboObject);
 
-__LIB_EXPORT void adbo_dump_next (AdboObject, AdboContainer, int depth, int le, EcBuffer b2);
+__ENTC_LIBEX void adbo_dump_next (AdboObject, AdboContainer, int depth, int le, EcBuffer b2);
 
-__LIB_EXPORT const EcString adbo_dump_state (uint_t state);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX const EcString adbo_dump_state (uint_t state);
 
 #endif

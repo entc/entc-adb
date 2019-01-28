@@ -26,7 +26,7 @@
 #include <adbl.h>
 #include <adbl_structs.h>
 
-#include <system/macros.h>
+#include <sys/entc_export.h>
 #include "adbo_types.h"
 #include "adbo_data.h"
 
@@ -487,7 +487,7 @@ typedef struct
 
 //----------------------------------------------------------------------------------------
 
-int _STDCALL adbo_cursor_fill (void* ptr, EcTable* table)
+int __STDCALL adbo_cursor_fill (void* ptr, EcTable* table)
 {
   int row = 0;
   int col;
@@ -577,7 +577,7 @@ AdboCursorData* adbo_cursordata_create (AdblSession* dbsession, AdblQuery** dbqu
 
 //----------------------------------------------------------------------------------------
 
-int _STDCALL adbo_cursor_destroy (void* ptr, EcTable table)
+int __STDCALL adbo_cursor_destroy (void* ptr, EcTable table)
 {
   AdboCursorData* self = ptr;
   

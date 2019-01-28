@@ -20,8 +20,7 @@
 #ifndef ADBO_DATA_H
 #define ADBO_DATA_H 1
 
-#include "system/macros.h"
-#include "system/types.h"
+#include <sys/entc_export.h>
 
 #include "types/ecudc.h"
 #include "types/ecstring.h"
@@ -53,18 +52,14 @@
 #define ECDATA_OPTIONS_MAP   ".om"
 #define ECDATA_OPTIONS_LIST  ".ol"
 
-__CPP_EXTERN______________________________________________________________________________START
-
 // node methods
 
-__LIB_EXPORT EcUdc ecnode_create (const EcString name);
+__ENTC_LIBEX EcUdc ecnode_create (const EcString name);
 
-__LIB_EXPORT void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, const time_t* mdate);
+__ENTC_LIBEX void ecnode_set_attributes (EcUdc node, uint64_t size, const time_t* cdate, const time_t* mdate);
 
-__LIB_EXPORT EcUdc ecnode_create_item (EcUdc node, const EcString name);
+__ENTC_LIBEX EcUdc ecnode_create_item (EcUdc node, const EcString name);
 
-__LIB_EXPORT EcUdc ecnode_create_node (EcUdc node, const EcString name);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX EcUdc ecnode_create_node (EcUdc node, const EcString name);
 
 #endif

@@ -24,70 +24,65 @@
 #define ADBO_CONTAINER_ITEM         2
 #define ADBO_CONTAINER_SUBSTITUTE   3
 
-#include <system/macros.h>
-
+#include <sys/entc_export.h>
 #include "adbo_types.h"
 
 typedef void (*container_callback_fct)(void* ptr1, void* ptr2, void* data1, void* data2);
 
 typedef void (*iterator_callback_fct)(void* ptr, void* data);
 
-__CPP_EXTERN______________________________________________________________________________START
-
 // constructor
-__LIB_EXPORT AdboContainer adbo_container_new (uint_t type, AdboContainer parent);
+__ENTC_LIBEX AdboContainer adbo_container_new (uint_t type, AdboContainer parent);
 
 // destructor
-__LIB_EXPORT void adbo_container_del (AdboContainer*);
+__ENTC_LIBEX void adbo_container_del (AdboContainer*);
 
 // copy constructor
-__LIB_EXPORT AdboContainer adbo_container_clone (const AdboContainer oself, AdboContainer parent, container_callback_fct, void* ptr1, void* ptr2);
+__ENTC_LIBEX AdboContainer adbo_container_clone (const AdboContainer oself, AdboContainer parent, container_callback_fct, void* ptr1, void* ptr2);
 
 // set all values from db
-//__LIB_EXPORT void adbo_container_set (AdboContainer, AdblCursor*, EcLogger);
+//__ENTC_LIBEX void adbo_container_set (AdboContainer, AdblCursor*, EcLogger);
 
 // construct query from container
-//__LIB_EXPORT void adbo_container_query (AdboContainer, AdblQuery*);
+//__ENTC_LIBEX void adbo_container_query (AdboContainer, AdblQuery*);
 
 // construct attributes from container
-//__LIB_EXPORT void adbo_container_attrs (AdboContainer, AdblAttributes* attrs);
+//__ENTC_LIBEX void adbo_container_attrs (AdboContainer, AdblAttributes* attrs);
 
 // run the request on the container
-__LIB_EXPORT int adbo_container_request (AdboContainer, AdboContext context, EcUdc conditions, int depth, int dpos);
+__ENTC_LIBEX int adbo_container_request (AdboContainer, AdboContext context, EcUdc conditions, int depth, int dpos);
 
 // run the update on the container
-__LIB_EXPORT int adbo_container_update (AdboContainer, AdboContext context);
+__ENTC_LIBEX int adbo_container_update (AdboContainer, AdboContext context);
 
 // run the delete on the container
-__LIB_EXPORT int adbo_container_delete (AdboContainer, AdboContext context);
+__ENTC_LIBEX int adbo_container_delete (AdboContainer, AdboContext context);
 
 // set transaction state
-__LIB_EXPORT void adbo_container_transaction (AdboContainer, int state);
+__ENTC_LIBEX void adbo_container_transaction (AdboContainer, int state);
 
 // convert content into string stream
-__LIB_EXPORT void adbo_container_str (AdboContainer, EcStream stream);
+__ENTC_LIBEX void adbo_container_str (AdboContainer, EcStream stream);
 
 // get the object only from forward links
-__LIB_EXPORT AdboObject adbo_container_get (AdboContainer, const EcString link);
+__ENTC_LIBEX AdboObject adbo_container_get (AdboContainer, const EcString link);
 
 // get the object related to the link
-__LIB_EXPORT AdboObject adbo_container_at (AdboContainer, const EcString link);
+__ENTC_LIBEX AdboObject adbo_container_at (AdboContainer, const EcString link);
 
 // add / assign object to container
-__LIB_EXPORT void adbo_container_add (AdboContainer, AdboObject);
+__ENTC_LIBEX void adbo_container_add (AdboContainer, AdboObject);
 
 // iterate through all elements
-__LIB_EXPORT void adbo_container_iterate (AdboContainer, iterator_callback_fct, void*);
+__ENTC_LIBEX void adbo_container_iterate (AdboContainer, iterator_callback_fct, void*);
 
 // return parent
-__LIB_EXPORT AdboContainer adbo_container_parent (AdboContainer);
+__ENTC_LIBEX AdboContainer adbo_container_parent (AdboContainer);
 
 // fill udc with content
-__LIB_EXPORT EcUdc adbo_container_udc (AdboContainer);
+__ENTC_LIBEX EcUdc adbo_container_udc (AdboContainer);
 
 // dump all elements
-__LIB_EXPORT void adbo_container_dump (AdboContainer, int tab, EcBuffer);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void adbo_container_dump (AdboContainer, int tab, EcBuffer);
 
 #endif

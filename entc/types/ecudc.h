@@ -115,8 +115,6 @@ typedef struct
 #define ENTC_UDC_FILE        0x2000
 #define ENTC_UDC_FOLDER      0x2001
 
-__ENTC_LIBEX
-
 __ENTC_LIBEX EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name);
 
 __ENTC_LIBEX void ecudc_destroy (EcAlloc alloc, EcUdc*);
@@ -236,8 +234,6 @@ __ENTC_LIBEX EcUdc ecudc_errcode (EcAlloc, uint_t errcode);
 __ENTC_LIBEX EcUdc ecudc_readFromFile (const EcString);
 
 __ENTC_LIBEX int ecudc_writeToFile (const EcString, const EcUdc);
-
-__ENTC_LIBEX
 
 #endif
 

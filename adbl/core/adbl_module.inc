@@ -1,4 +1,4 @@
-#include <system/macros.h>
+#include <sys/entc_export.h>
 #include "adbl_structs.h"
 #include "adbl.h"
 
@@ -24,12 +24,10 @@ EcList       adblmodule_dbschema ( void* ptr );
 AdblTable*   adblmodule_dbtable ( void* ptr, const EcString );
 
 
-__CPP_EXTERN______________________________________________________________________________START
-
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbinfo=_dbinfo@0")
 #endif
-const AdblModuleInfo* _STDCALL dbinfo (void)
+const AdblModuleInfo* __STDCALL dbinfo (void)
 {
   return &ModuleInfo;
 }
@@ -39,7 +37,7 @@ const AdblModuleInfo* _STDCALL dbinfo (void)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbconnect=_dbconnect@4")
 #endif
-void* _STDCALL dbconnect (AdblConnectionProperties* properties)
+void* __STDCALL dbconnect (AdblConnectionProperties* properties)
 {
   return adblmodule_dbconnect (properties);
 }
@@ -49,7 +47,7 @@ void* _STDCALL dbconnect (AdblConnectionProperties* properties)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbdisconnect=_dbdisconnect@4")
 #endif
-void _STDCALL dbdisconnect (void* ptr)
+void __STDCALL dbdisconnect (void* ptr)
 {
   adblmodule_dbdisconnect (ptr);
 }
@@ -59,7 +57,7 @@ void _STDCALL dbdisconnect (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbquery=_dbquery@8")
 #endif
-void* _STDCALL dbquery (void* ptr, AdblQuery* query)
+void* __STDCALL dbquery (void* ptr, AdblQuery* query)
 {
   return adblmodule_dbquery (ptr, query);
 }
@@ -69,7 +67,7 @@ void* _STDCALL dbquery (void* ptr, AdblQuery* query)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbprocedure=_dbprocedure@8")
 #endif
-int _STDCALL dbprocedure (void* ptr, AdblProcedure* procedure)
+int __STDCALL dbprocedure (void* ptr, AdblProcedure* procedure)
 {
   return adblmodule_dbprocedure (ptr, procedure);
 }
@@ -79,7 +77,7 @@ int _STDCALL dbprocedure (void* ptr, AdblProcedure* procedure)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbtable_size=_dbtable_size@8")
 #endif
-uint_t _STDCALL dbtable_size (void* ptr, const EcString name)
+uint_t __STDCALL dbtable_size (void* ptr, const EcString name)
 {
   return adblmodule_dbtable_size (ptr, name);
 }
@@ -89,7 +87,7 @@ uint_t _STDCALL dbtable_size (void* ptr, const EcString name)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbupdate=_dbupdate@12")
 #endif
-int _STDCALL dbupdate (void* ptr, AdblUpdate* update, int insert)
+int __STDCALL dbupdate (void* ptr, AdblUpdate* update, int insert)
 {
   return adblmodule_dbupdate (ptr, update, insert);
 }
@@ -99,7 +97,7 @@ int _STDCALL dbupdate (void* ptr, AdblUpdate* update, int insert)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbinsert=_dbinsert@8")
 #endif
-int _STDCALL dbinsert (void* ptr, AdblInsert* insert)
+int __STDCALL dbinsert (void* ptr, AdblInsert* insert)
 {
   return adblmodule_dbinsert (ptr, insert);
 }
@@ -109,7 +107,7 @@ int _STDCALL dbinsert (void* ptr, AdblInsert* insert)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbdelete=_dbdelete@8")
 #endif
-int _STDCALL dbdelete (void* ptr, AdblDelete* delete)
+int __STDCALL dbdelete (void* ptr, AdblDelete* delete)
 {
   return adblmodule_dbdelete (ptr, delete);
 }
@@ -119,7 +117,7 @@ int _STDCALL dbdelete (void* ptr, AdblDelete* delete)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbbegin=_dbbegin@4")
 #endif
-void _STDCALL dbbegin (void* ptr)
+void __STDCALL dbbegin (void* ptr)
 {
   adblmodule_dbbegin (ptr);
 }
@@ -129,7 +127,7 @@ void _STDCALL dbbegin (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbcommit=_dbcommit@4")
 #endif
-void _STDCALL dbcommit (void* ptr)
+void __STDCALL dbcommit (void* ptr)
 {
   adblmodule_dbcommit (ptr);
 }
@@ -139,7 +137,7 @@ void _STDCALL dbcommit (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbrollback=_dbrollback@4")
 #endif
-void _STDCALL dbrollback (void* ptr)
+void __STDCALL dbrollback (void* ptr)
 {
   adblmodule_dbrollback (ptr);
 }
@@ -149,7 +147,7 @@ void _STDCALL dbrollback (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbcursor_next=_dbcursor_next@4")
 #endif
-int _STDCALL dbcursor_next (void* ptr)
+int __STDCALL dbcursor_next (void* ptr)
 {
   return adblmodule_dbcursor_next (ptr);
 }
@@ -159,7 +157,7 @@ int _STDCALL dbcursor_next (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbcursor_data=_dbcursor_data@8")
 #endif
-const char* _STDCALL dbcursor_data (void* ptr, uint_t column)
+const char* __STDCALL dbcursor_data (void* ptr, uint_t column)
 {
   return adblmodule_dbcursor_data (ptr, column);
 }
@@ -169,7 +167,7 @@ const char* _STDCALL dbcursor_data (void* ptr, uint_t column)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbcursor_nextdata=_dbcursor_nextdata@4")
 #endif
-const char* _STDCALL dbcursor_nextdata (void* ptr)
+const char* __STDCALL dbcursor_nextdata (void* ptr)
 {
   return adblmodule_dbcursor_nextdata (ptr);
 }
@@ -179,7 +177,7 @@ const char* _STDCALL dbcursor_nextdata (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbcursor_release=_dbcursor_release@4")
 #endif
-void _STDCALL dbcursor_release (void* ptr)
+void __STDCALL dbcursor_release (void* ptr)
 {
   adblmodule_dbcursor_release (ptr);
 }
@@ -189,7 +187,7 @@ void _STDCALL dbcursor_release (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbsequence_get=_dbsequence_get@8")
 #endif
-void* _STDCALL dbsequence_get (void* ptr, const EcString name)
+void* __STDCALL dbsequence_get (void* ptr, const EcString name)
 {
   return adblmodule_dbsequence_get (ptr, name);
 }
@@ -199,7 +197,7 @@ void* _STDCALL dbsequence_get (void* ptr, const EcString name)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbsequence_release=_dbsequence_release@4")
 #endif
-void _STDCALL dbsequence_release (void* ptr)
+void __STDCALL dbsequence_release (void* ptr)
 {
   adblmodule_dbsequence_release (ptr);
 }
@@ -209,7 +207,7 @@ void _STDCALL dbsequence_release (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbsequence_next=_dbsequence_next@4")
 #endif
-uint_t _STDCALL dbsequence_next (void* ptr)
+uint_t __STDCALL dbsequence_next (void* ptr)
 {
   return adblmodule_dbsequence_next (ptr);
 }
@@ -219,7 +217,7 @@ uint_t _STDCALL dbsequence_next (void* ptr)
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbdbschema=_dbschema@4")
 #endif
-EcList _STDCALL dbschema ( void* ptr )
+EcList __STDCALL dbschema ( void* ptr )
 {
   return adblmodule_dbschema (ptr);
 }
@@ -229,9 +227,7 @@ EcList _STDCALL dbschema ( void* ptr )
 #if defined _WIN64 || defined _WIN32
 #pragma comment(linker, "/EXPORT:dbtable=_dbtable@8")
 #endif
-AdblTable* _STDCALL dbtable ( void* ptr, const EcString tablename )
+AdblTable* __STDCALL dbtable ( void* ptr, const EcString tablename )
 {
   return adblmodule_dbtable (ptr, tablename);
 }
-
-__CPP_EXTERN______________________________________________________________________________END

@@ -20,16 +20,11 @@
 #ifndef ADBO_CONTEXT_H
 #define ADBO_CONTEXT_H 1
 
-#include <system/macros.h>
-
+#include <sys/entc_export.h>
 #include "adbo_types.h"
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX AdboContext adbo_context_createJson (const EcString configpath, const EcString execpath);
 
-__LIB_EXPORT AdboContext adbo_context_createJson (const EcString configpath, const EcString execpath);
-
-__LIB_EXPORT void adbo_context_destroy (AdboContext*);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void adbo_context_destroy (AdboContext*);
 
 #endif

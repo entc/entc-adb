@@ -20,18 +20,13 @@
 #ifndef ADBL_PROCEDURE_H
 #define ADBL_PROCEDURE_H 1
 
-#include <system/macros.h>
-
+#include <sys/entc_export.h>
 #include "adbl_structs.h"
 
-__CPP_EXTERN______________________________________________________________________________START  
+__ENTC_LIBEX AdblProcedure* adbl_procedure_create (const EcString procedureName);
 
-__LIB_EXPORT AdblProcedure* adbl_procedure_create (const EcString procedureName);
+__ENTC_LIBEX void adbl_procedure_destroy (AdblTable**);
 
-__LIB_EXPORT void adbl_procedure_destroy (AdblTable**);
-
-__LIB_EXPORT void adbl_procedure_addValue (AdblProcedure*, EcUdc* val);
-
-__CPP_EXTERN______________________________________________________________________________END
+__ENTC_LIBEX void adbl_procedure_addValue (AdblProcedure*, EcUdc* val);
 
 #endif

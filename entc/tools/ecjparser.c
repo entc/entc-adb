@@ -3,7 +3,7 @@
 
 // entc include
 #include "types/ecstream.h"
-#include "types/eclist.h"
+#include "stc/entc_list.h"
 #include "tools/eclog.h"
 
 //-----------------------------------------------------------------------------
@@ -112,7 +112,7 @@ struct EcJsonParser_s
   
   void* ptr;
   
-  EcList stack;
+  EntcList stack;
   
   EcJsonParserItem* keyElement;
   EcJsonParserItem* valElement;
@@ -124,13 +124,11 @@ struct EcJsonParser_s
 
 //-----------------------------------------------------------------------------
 
-static int __STDCALL ecjsonparser_create_stack_onDestroy (void* ptr)
+static void __STDCALL ecjsonparser_create_stack_onDestroy (void* ptr)
 {
   EcJsonParserItem* item = ptr;
   
   ecjsonparser_item_destroy (&item);
-  
-  return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -159,7 +157,7 @@ EcJsonParser ecjsonparser_create (fct_ecjparser_onItem onItem, fct_ecjparser_onO
   self->keyElement = NULL; // not yet created
   self->valElement = ecjsonparser_item_create (ENTC_JPARSER_UNDEFINED, JPARSER_STATE_NONE, self, ecjsonparser_element_push_onObjDestroy);
   
-  self->stack = eclist_create (ecjsonparser_create_stack_onDestroy);
+  self->stack = entc_list_new (ecjsonparser_create_stack_onDestroy);
   
   // prepare the hex notation 0x0000
   self->unicode_data [0] = '0';
@@ -179,7 +177,7 @@ void ecjsonparser_destroy (EcJsonParser* pself)
 {
   EcJsonParser self = *pself;
   
-  eclist_destroy (&(self->stack));
+  entc_list_del (&(self->stack));
   
   ecjsonparser_item_destroy (&(self->valElement));
   
@@ -197,7 +195,7 @@ void ecjsonparser_push (EcJsonParser self, int type, int state)
     item->obj = self->onCreate (self->ptr, type);
   }
   
-  eclist_push_back (self->stack, item);
+  entc_list_push_back (self->stack, item);
   
   self->keyElement = item;
 }
@@ -208,7 +206,7 @@ void ecjsonparser_pop (EcJsonParser self)
 {
   // transfer all element values to the content element
   {
-    EcJsonParserItem* element = eclist_pop_back (self->stack);
+    EcJsonParserItem* element = entc_list_pop_back (self->stack);
     
     ecjsonparser_item_setObject (self->valElement, &(element->obj), element->type);
     
@@ -217,12 +215,12 @@ void ecjsonparser_pop (EcJsonParser self)
   
   // fetch last element
   {
-    EcListCursor cursor;
-    eclist_cursor_init (self->stack, &cursor, LIST_DIR_PREV);
+    EntcListCursor cursor;
+    entc_list_cursor_init (self->stack, &cursor, ENTC_DIRECTION_PREV);
     
-    if (eclist_cursor_next (&cursor))
+    if (entc_list_cursor_prev (&cursor))
     {
-      self->keyElement = eclist_data(cursor.node);
+      self->keyElement = entc_list_node_data(cursor.node);
     }
     else
     {

@@ -20,13 +20,9 @@
 #ifndef ADBL_SECURITY_H
 #define ADBL_SECURITY_H 1
 
-#include <system/macros.h>
 #include <types/ecstring.h>
+#include <sys/entc_export.h>
 
-__CPP_EXTERN______________________________________________________________________________START
+__ENTC_LIBEX int adbl_security_checkValue (const EcString);
   
-__LIB_EXPORT int adbl_security_checkValue (const EcString);
-  
-__CPP_EXTERN______________________________________________________________________________END
-
 #endif
