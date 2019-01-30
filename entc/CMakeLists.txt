@@ -156,6 +156,7 @@ SET (ENTC_STC_HEADERS
   stc/entc_list.h
   stc/entc_map.h
   stc/entc_udc.h
+  stc/entc_stream.h
 )
 
 SET (ENTC_STC_SOURCES
@@ -164,6 +165,7 @@ SET (ENTC_STC_SOURCES
   stc/entc_list.c
   stc/entc_map.c
   stc/entc_udc.c
+  stc/entc_stream.c
 )
 
 
@@ -184,6 +186,21 @@ SET (ENTC_SYS_SOURCES
   sys/entc_thread.c
 )
 
+
+SET (ENTC_FMT_HEADERS
+
+  fmt/entc_json.h
+  fmt/entc_parser_json.h
+  fmt/entc_tokenizer.h
+)
+
+SET (ENTC_FMT_SOURCES
+
+  fmt/entc_json.c
+  fmt/entc_parser_json.c
+  fmt/entc_tokenizer.c
+)
+
 #------------------------------------------------------------------------------
 
 source_group("System" FILES ${ENTC_SYSTEM_SOURCES} ${ENTC_SYSTEM_HEADERS})
@@ -194,12 +211,13 @@ source_group("Tests" FILES ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS})
 
 source_group("STC" FILES ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS})
 source_group("SYS" FILES ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
+source_group("FMT" FILES ${ENTC_FMT_SOURCES} ${ENTC_FMT_HEADERS})
 
 #------------------------------------------------------------------------------
 
 INCLUDE_DIRECTORIES("." ${CRYPT_INCLUDES} ${PTHREAD_INCLUDES} ${DL_INCLUDES})
 
-ADD_LIBRARY( entc SHARED ${ENTC_SYSTEM_SOURCES} ${ENTC_SYSTEM_HEADERS} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS} ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS} ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS} ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS})
+ADD_LIBRARY( entc SHARED ${ENTC_SYSTEM_SOURCES} ${ENTC_SYSTEM_HEADERS} ${ENTC_TYPES_HEADERS} ${ENTC_AIO_SOURCES} ${ENTC_AIO_HEADERS} ${ENTC_TYPES_SOURCES} ${ENTC_TOOLS_SOURCES} ${ENTC_TOOLS_HEADERS} ${ENTC_TESTS_SOURCES} ${ENTC_TESTS_HEADERS} ${ENTC_STC_SOURCES} ${ENTC_STC_HEADERS} ${ENTC_SYS_SOURCES} ${ENTC_SYS_HEADERS} ${ENTC_FMT_SOURCES} ${ENTC_FMT_HEADERS})
 
 TARGET_LINK_LIBRARIES( entc ${SYSTEM_LIBRARIES} ${CRYPT_LIBRARIES} ${PTHREAD_LIBRARIES} ${DL_LIBRARIES})
 
@@ -216,6 +234,7 @@ install (FILES ${ENTC_TOOLS_HEADERS} DESTINATION include/entc/tools)
 install (FILES ${ENTC_TESTS_HEADERS} DESTINATION include/entc/tests)
 install (FILES ${ENTC_STC_HEADERS} DESTINATION include/entc/stc)
 install (FILES ${ENTC_SYS_HEADERS} DESTINATION include/entc/sys)
+install (FILES ${ENTC_FMT_HEADERS} DESTINATION include/entc/fmt)
 
 INSTALL_FILES (/${CMAKE_ROOT}/Modules/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/FindEntc_1_4.cmake)
 
