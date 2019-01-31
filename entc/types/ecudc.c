@@ -485,8 +485,17 @@ EcUdc ecudc_create (EcAlloc alloc, uint_t type, const EcString name)
       break;
     case ENTC_UDC_NUMBER: self->extension = ECMM_NEW (int64_t);
       break;
-    case ENTC_UDC_DOUBLE: self->extension = ECMM_NEW (double);
+    case ENTC_UDC_DOUBLE:
+    {
+      self->extension = ECMM_NEW (double);
+      
+      {
+        double* h = self->extension;
+        *h = 0.0;
+      }
+      
       break;
+    }
     case ENTC_UDC_TIME: self->extension = ECMM_NEW (time_t);
       break;
     case ENTC_UDC_CURSOR: self->extension = eccursor_create(); 
