@@ -188,23 +188,23 @@ EcString ecstr_float (double value, uint_t n)
   EcString s;
   if( n > 0 )
   {
-	  EcBuffer buffer01 = ecbuf_create (7);
-	  EcBuffer buffer02 = ecbuf_create (31);
+    char* buf01 = ENTC_MALLOC(8);
+    char* buf02 = ENTC_MALLOC(31);
     
-    ecbuf_format (buffer01, 6, "%%.%uf", n);
-    /* transform to integer */
-    ecbuf_format (buffer02, 30, ecbuf_const_str (buffer01), value );
-    /* copy */
-    s = ecbuf_str (&buffer02);
-	  ecbuf_destroy (&buffer01);
+    snprintf (buf01, 7, "%%.%uf", n);
+    snprintf (buf02, 30, buf01, value);
+
+    s = buf02;
+
+    ENTC_FREE(buf01);
   }
   else
   {
-	  EcBuffer buffer02 = ecbuf_create (31);
-    /* transform to integer */
-    ecbuf_format (buffer02, 30, "%f", value);
-    /* copy */
-	  s = ecbuf_str (&buffer02);
+    char* buf02 = ENTC_MALLOC(31);
+
+    snprintf (buf02, 30, "%f", value);
+
+	  s = buf02;
   }
   return s;
 }
