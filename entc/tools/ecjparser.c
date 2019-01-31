@@ -414,16 +414,23 @@ void ecjsonparser_item_next (EcJsonParser self, int type, const char* key, int i
         char* endptr = NULL;
         const char* val = ecstream_get (self->valElement->stream);
         
-        double dat = strtod (val, &endptr);
-        if (endptr == NULL)
+        if (*val == '\0')
         {
-          // was not able to transform
           
         }
         else
         {
-        // void* ptr, void* obj, int type, const char* key, void* val
-          self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_FLOAT, (void*)&dat, key, index);
+          double dat = strtod (val, &endptr);
+          if (endptr == NULL)
+          {
+            // was not able to transform
+            
+          }
+          else
+          {
+            // void* ptr, void* obj, int type, const char* key, void* val
+            self->onItem (self->ptr, self->keyElement->obj, ENTC_JPARSER_OBJECT_FLOAT, (void*)&dat, key, index);
+          }
         }
       }
       
