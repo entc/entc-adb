@@ -537,6 +537,11 @@ int ecjsonparser_parse (EcJsonParser self, const char* buffer, int64_t len, EcEr
   const char* c = buffer;
   int64_t i;
   
+  if (buffer == NULL)
+  {
+    return ENTC_ERR_NONE;
+  }
+  
   int state = self->valElement->state;
   
   for (i = 0; (i < len) && *c; i++, c++)
