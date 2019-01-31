@@ -873,7 +873,19 @@ void jsonwriter_fill (EcStream stream, const EcUdc node)
           ecstream_append_c (stream, ',');
         }
         ecstream_append_c (stream, '"');
-        jsonwriter_escape (stream, ecudc_name (item));
+        
+        {
+          const EcString name = ecudc_name (item);
+          if (name)
+          {
+            jsonwriter_escape (stream, name);
+          }
+          else
+          {
+            eclog_fmt (LL_WARN, "JSON", "reader", "name of object is empty");
+          }
+        }
+        
         ecstream_append_str (stream, "\":");
         jsonwriter_fill (stream, item);
       }
