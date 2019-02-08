@@ -682,23 +682,26 @@ void jsonwriter_escape (EcStream stream, const EcString source)
           else if ((*c & 0xE0) == 0xC0) 
           //  (0xC2 <= c[0] && c[0] <= 0xDF) && (0x80 <= c[1] && c[1] <= 0xBF))
           {
-            char buffer[8];
-            // convert UTF8 into 4 hex digits 
+            char* buf = ENTC_MALLOC(10);
+            
+            // convert UTF8 into 4 hex digits
             wchar_t wc;
             
             wc = (c[0] & 0x1F) << 6;
             wc |= (c[1] & 0x3F);
 
 #if defined _WIN64 || defined _WIN32
-			sprintf_s (buffer, 8, "\\u%.4x", wc);
+            sprintf_s (buf, 8, "\\u%.4x", wc);
 #else
-			// TODO: there might be a better way to do it
-            sprintf (buffer, "\\u%.4x", wc);
+            // TODO: there might be a better way to do it
+            sprintf (buf, "\\u%.4x", wc);
 #endif
 
-            ecstream_append_buf (stream, buffer, 6);
+            ecstream_append_buf (stream, buf, 6);
             
             c += 1;
+            
+            ENTC_FREE(buf);
           }
           else if ((*c & 0xF0) == 0xE0) 
           /* (c[0] == 0xE0 && (0xA0 <= c[1] && c[1] <= 0xBF) && (0x80 <= c[2] && c[2] <= 0xBF)) ||
@@ -713,7 +716,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
                     (0x80 <= c[2] && c[2] <= 0xBF))) 
           */
           {
-            char buffer[8];
+            char* buf = ENTC_MALLOC(10);
             wchar_t wc;
             
             wc = (c[0] & 0xF) << 12;
@@ -723,12 +726,14 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             c += 2;
 
 #if defined _WIN64 || defined _WIN32
-			sprintf_s (buffer, 8, "\\u%.4x", wc);
+            sprintf_s (buf, 8, "\\u%.4x", wc);
 #else
-			// TODO: there might be a better way to do it
-            sprintf (buffer, "\\u%.4x", wc);
+            // TODO: there might be a better way to do it
+            sprintf (buf, "\\u%.4x", wc);
 #endif
-            ecstream_append_buf (stream, buffer, 6); 
+            ecstream_append_buf (stream, buf, 6);
+
+            ENTC_FREE(buf);
           }
           else if ( (*c & 0xF8) == 0xF0 )
           /*( (// planes 1-3
@@ -751,7 +756,7 @@ void jsonwriter_escape (EcStream stream, const EcString source)
                 )
           ) */
           {
-            char buffer[8];
+            char* buf = ENTC_MALLOC(10);
             wchar_t wc;
 
             wc = (c[0] & 0x7) << 18;
@@ -762,17 +767,19 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             c += 3;
             
 #if defined _WIN64 || defined _WIN32
-			sprintf_s (buffer, 8, "\\u%.4x", wc);
+            sprintf_s (buf, 8, "\\u%.4x", wc);
 #else
-			// TODO: there might be a better way to do it
-            sprintf (buffer, "\\u%.4x", wc);
+            // TODO: there might be a better way to do it
+            sprintf (buf, "\\u%.4x", wc);
 #endif
 
-            ecstream_append_buf (stream, buffer, 6); 
-          }
+            ecstream_append_buf (stream, buf, 6);
+            
+            ENTC_FREE(buf);
+         }
           else if ( (*c & 0xFC) == 0xF8 )
           {
-            char buffer[8];
+            char* buf = ENTC_MALLOC(10);
             wchar_t wc;
 
             wc = (c[0] & 0x3) << 24;
@@ -784,17 +791,19 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             c += 4;
 
  #if defined _WIN64 || defined _WIN32
-			sprintf_s (buffer, 8, "\\u%.4x", wc);
+            sprintf_s (buf, 8, "\\u%.4x", wc);
 #else
-			// TODO: there might be a better way to do it
-            sprintf (buffer, "\\u%.4x", wc);
+            // TODO: there might be a better way to do it
+            sprintf (buf, "\\u%.4x", wc);
 #endif
 
-            ecstream_append_buf (stream, buffer, 6); 
-          }
+            ecstream_append_buf (stream, buf, 6);
+            
+            ENTC_FREE(buf);
+         }
           else if ( (*c & 0xFE) == 0xFC )
           {
-            char buffer[8];
+            char* buf = ENTC_MALLOC(10);
             wchar_t wc;
 
             wc = (c[0] & 0x1) << 30;
@@ -807,14 +816,16 @@ void jsonwriter_escape (EcStream stream, const EcString source)
             c += 5;
 
 #if defined _WIN64 || defined _WIN32
-			sprintf_s (buffer, 8, "\\u%.4x", wc);
+            sprintf_s (buf, 8, "\\u%.4x", wc);
 #else
-			// TODO: there might be a better way to do it
-            sprintf (buffer, "\\u%.4x", wc);
+            // TODO: there might be a better way to do it
+            sprintf (buf, "\\u%.4x", wc);
 #endif
 
-            ecstream_append_buf (stream, buffer, 6); 
-          }
+            ecstream_append_buf (stream, buf, 6);
+            
+            ENTC_FREE(buf);
+         }
           else
           {
             // not supported character
