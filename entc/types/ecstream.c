@@ -9,6 +9,7 @@
 #include <string.h>
 #include <memory.h>
 #include <limits.h>
+#include <inttypes.h>
 
 //-----------------------------------------------------------------------------
 
@@ -270,7 +271,7 @@ void ecstream_append_u64 (EcStream self, uint64_t val)
 
 #else
 
-  self->pos += snprintf(self->pos, 24, "%llu", val);
+  self->pos += snprintf(self->pos, 24, "%" PRIu64, val);
 
 #endif
 }
@@ -304,7 +305,7 @@ void ecstream_append_i64 (EcStream self, int64_t val)
 
 #else
  
-  self->pos += snprintf(self->pos, 24, "%lli", val);
+  self->pos += snprintf(self->pos, 24, "%" PRId64, val);
 
 #endif
 }
