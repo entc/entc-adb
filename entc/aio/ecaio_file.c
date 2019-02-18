@@ -201,9 +201,9 @@ int ecaio_filewriter_write (EcAioFileWriter self, EcAioContext ctx)
       
       printf ("filewriter error -> %s\r\n", err->text);
       
-	  ecerr_destroy (&err);
-	  
-	  return ENTC_AIO_CODE_DONE;
+      ecerr_destroy (&err);
+      
+      return ENTC_AIO_CODE_DONE;
     }
     
   }
@@ -328,6 +328,19 @@ void ecaio_filewriter_setBufferBT (EcAioFileWriter self, EcBuffer* pbuf)
 
 #include <errno.h>
 #include <unistd.h>
+#include "sys/entc_mutex.h"
+
+EntcMutex g_mutex = NULL;
+
+//-----------------------------------------------------------------------------
+
+static void ecaio_filewriter_init_mutex ()
+{
+  if (g_mutex == NULL)
+  {
+    g_mutex = entc_mutex_new ();
+  }
+}
 
 //-----------------------------------------------------------------------------
 
@@ -514,6 +527,8 @@ EcAioFileWriter ecaio_filewriter_create (void* handle)
   self->offset = 0;
   self->written = 0;
   
+  ecaio_filewriter_init_mutex ();
+  
   return self;
 }
 
@@ -524,6 +539,8 @@ int ecaio_filewriter_assign (EcAioFileWriter* pself)
   EcAioFileWriter self = *pself;
   int del = 0;
   
+  entc_mutex_lock (g_mutex);
+  
   while (del < self->buf->size)
   {
     // important not to send to many bytes at once
@@ -531,6 +548,7 @@ int ecaio_filewriter_assign (EcAioFileWriter* pself)
     
     // send the bytes to the FD
     int res = write (self->handle, (char*)self->buf->buffer + del, maxBytes);
+    
     if (res < 0)
     {
       if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
@@ -553,6 +571,8 @@ int ecaio_filewriter_assign (EcAioFileWriter* pself)
     }
   }
   
+  entc_mutex_unlock (g_mutex);
+
   if (self->buf)
   {
     ecbuf_destroy(&(self->buf));

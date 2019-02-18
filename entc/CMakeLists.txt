@@ -177,6 +177,7 @@ SET (ENTC_SYS_HEADERS
   sys/entc_err.h
   sys/entc_mutex.h
   sys/entc_thread.h
+  sys/entc_queue.h
 )
 
 SET (ENTC_SYS_SOURCES
@@ -184,6 +185,7 @@ SET (ENTC_SYS_SOURCES
   sys/entc_err.c
   sys/entc_mutex.c
   sys/entc_thread.c
+  sys/entc_queue.c
 )
 
 #------------------------------------------------------------------------------

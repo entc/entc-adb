@@ -8,6 +8,11 @@ enable_testing()
 
 set(CTEST_PROJECT_NAME "entc tests")
 
+#----------- sys ----------------------------------------------
+
+ADD_EXECUTABLE( ut_entc_queue sys/ut_entc_queue.c )
+TARGET_LINK_LIBRARIES(ut_entc_queue entc)
+
 #----------- system ----------------------------------------------
 
 ADD_EXECUTABLE( ut_ecfile system/ut_ecfile.c )
