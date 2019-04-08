@@ -10,15 +10,15 @@ if (NOT MYSQL_FOUND)
 
     find_path (MYSQL_INCLUDES
       NAMES mysql.h
-      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/include" "/opt/local/include/mysql57"
+      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/include" "/opt/local/include/mariadb/mysql/"
       PATH_SUFFIXES mariadb
     )
 
     ##____________________________________________________________________________
     ## Check for the library
 
-    find_library (MYSQL_LIBRARIES mariadb
-      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib" "/opt/local/lib/mysql57/mysql"
+    find_library (MYSQL_LIBRARIES mysqlclient
+      HINTS ${CMAKE_INSTALL_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR}"/3rdParty/mysql/lib" "/opt/local/lib/mariadb/mysql/"
     )
 
     ##____________________________________________________________________________

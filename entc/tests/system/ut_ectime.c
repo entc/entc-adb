@@ -23,6 +23,12 @@ static int __STDCALL test_time1 (void* ptr, TestEnvContext ctx, EcErr err)
   
   printf ("LCL Time: %i-%02i-%02i %02i:%02i:%02i.%03i\n", d1.year, d1.month, d1.day, d1.hour, d1.minute, d1.sec, d1.msec);
   
+  ectime_utc_date (&d1);
+
+  ectime_date_utc_to_localtime (&d1);
+
+  printf ("UTC -> LCL Time: %i-%02i-%02i %02i:%02i:%02i.%03i\n", d1.year, d1.month, d1.day, d1.hour, d1.minute, d1.sec, d1.msec);
+
   buf = ecbuf_create (40);
   
   ectime_toGmtString (buf, &d1);

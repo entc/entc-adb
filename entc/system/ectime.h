@@ -71,7 +71,13 @@ __ENTC_LIBEX void ectime_local_date (EcDate*);
 
 __ENTC_LIBEX void ectime_date_from_time (EcDate*, const EcTime*);
 
+__ENTC_LIBEX void ectime_date_utc_to_localtime (EcDate*);
+
 //=============================================================================
+
+__ENTC_LIBEX EcString ectime_current_utc_datetime ();
+
+//-----------------------------------------------------------------------------
 
 __ENTC_LIBEX void ectime_fmt (EcBuffer buf, const EcDate*, const EcString format);
 

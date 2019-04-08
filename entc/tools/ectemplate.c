@@ -217,16 +217,22 @@ int ectemplate_part_eval_str (EcTemplatePart self, EcUdc data, EcUdc item, void*
       }
       case FORMAT_TYPE_DATE:
       {
-        // convert text into dateformat
+        EcString h;
+        EcBuffer b;
+        
         EcDate date;
         
+        // convert text into dateformat
         ectime_fromString (&date, text);
+
+        // convert into local time
+        ectime_date_utc_to_localtime (&date);
         
-        EcBuffer b = ecbuf_create (100);
+        b = ecbuf_create (100);
         
         ectime_fmt (b, &date, self->eval);
 
-        EcString h = ecbuf_str (&b);
+        h = ecbuf_str (&b);
         
         if (onText)
         {

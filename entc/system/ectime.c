@@ -175,6 +175,45 @@ void ectime_local_date (EcDate* ecdate)
 
 //-----------------------------------------------------------------------------------
 
+void ectime_date_utc_to_localtime (EcDate* ecdate)
+{
+#if defined _WIN64 || defined _WIN32
+
+#else
+
+  struct tm timeinfo;
+  struct tm* l01;
+  time_t t_of_day;
+  uint_t msec;
+  
+  ectime_convert_ecdate_to_timeinfo (&timeinfo, ecdate);
+  
+  // turn on automated DST, depends on the timezone
+  timeinfo.tm_isdst = -1;
+  
+  // the function takes a local time and calculate extra values
+  // in our case it is UTC, so we will get the (localtime) UTC value
+  // because the function also applies timezone conversion
+  t_of_day = mktime (&timeinfo);
+  
+  // correct (localtime) UTC to (current) UTC :-)
+  t_of_day = t_of_day + timeinfo.tm_gmtoff;
+  
+  // now get the localtime from our UTC
+  l01 = localtime (&t_of_day);
+  
+  // save the msec
+  msec = ecdate->msec;
+  
+  ectime_convert_timeinfo_to_ecdate (ecdate, l01);
+
+  ecdate->msec = msec;
+  
+#endif
+}
+
+//-----------------------------------------------------------------------------------
+
 void ectime_fmt (EcBuffer buf, const EcDate* ecdate, const EcString format)
 {
   struct tm timeinfo;
@@ -205,7 +244,11 @@ void ectime_toISO8601 (EcBuffer buf, const EcDate* ecdate)
 
 void ectime_toString (EcBuffer buf, const EcDate* ecdate)
 {
-  ectime_fmt (buf, ecdate, "%Y-%m-%d %H:%M:%S");
+  // resize to fit the date
+  ecbuf_resize (buf, 21);
+  
+  // format
+  ecbuf_format (buf, 20, "%i-%02i-%02i %02i:%02i:%02i", ecdate->year, ecdate->month, ecdate->day, ecdate->hour, ecdate->minute, ecdate->sec);
 }
 
 //-----------------------------------------------------------------------------------
@@ -303,6 +346,21 @@ void ectime_fromString (EcDate* ed, const char* stime)
   {
     eclog_fmt (LL_ERROR, "ENTC", "parse iso8601", "can't parse time string '%s', %i", stime, res);
   }  
+}
+
+//-----------------------------------------------------------------------------------
+
+EcString ectime_current_utc_datetime ()
+{
+  EcBuffer buf = ecbuf_create (21);
+  
+  // fetch current utc date
+  EcDate d1;
+  ectime_utc_date (&d1);
+  
+  ectime_toString (buf, &d1);
+  
+  return ecbuf_str (&buf);
 }
 
 //-----------------------------------------------------------------------------------
