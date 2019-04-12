@@ -31,6 +31,10 @@ static int __STDCALL test_time1 (void* ptr, TestEnvContext ctx, EcErr err)
 
   buf = ecbuf_create (40);
   
+  // use the rest with local date
+  
+  ectime_local_date (&d1);
+  
   ectime_toGmtString (buf, &d1);
   
   printf ("GMT %s\n", buf->buffer);
