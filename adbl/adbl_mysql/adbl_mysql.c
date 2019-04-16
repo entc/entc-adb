@@ -1264,7 +1264,7 @@ void adblmodule_dbbegin (void* ptr)
   }
   else
   {
-    eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "START TRANSACTION");
+    //eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "START TRANSACTION");
   }
 }
 
@@ -1282,7 +1282,7 @@ void adblmodule_dbcommit (void* ptr)
   }
   else
   {
-    eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "COMMIT");
+    //eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "COMMIT");
   }
 }
 
@@ -1300,7 +1300,7 @@ void adblmodule_dbrollback (void* ptr)
   }
   else
   {
-    eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "ROLLBACK");
+    //eclog_msg (LL_DEBUG, C_MODDESC, "transaction", "ROLLBACK");
   }
 }
 

@@ -826,7 +826,7 @@ void adbo_node_appendColumn (AdblAttributes* attrs, EcUdc columnItem, EcUdc data
   dataItem = ecudc_node(dataItems, columnName);
   if (isNotAssigned (dataItem))
   {
-    eclog_fmt (LL_TRACE, "ADBO", "attr", "node has not item '%s'", columnName);
+    //eclog_fmt (LL_TRACE, "ADBO", "attr", "node has not item '%s'", columnName);
     return;
   }
   
