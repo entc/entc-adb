@@ -33,7 +33,7 @@ SET(ENTC_VERSION "1.4.0")
 MESSAGE( STATUS "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/lib/")
 
 # Look for the header file.
-FIND_LIBRARY( ENTC_LIBRARY NAMES entc
+FIND_LIBRARY( ENTC_LIBRARY_01 NAMES entc
   HINTS
   "/opt/entc_1_4/lib/"
   "/usr/lib/"
@@ -41,6 +41,15 @@ FIND_LIBRARY( ENTC_LIBRARY NAMES entc
   "/opt/local/lib/"
   "$ENV{PROGRAMFILES}/quom/entc/${ENTC_VERSION}/lib/"
 )
+
+# Correct Symlinks
+if(IS_SYMLINK ${ENTC_LIBRARY_01})
+  get_filename_component(TMP ${ENTC_LIBRARY_01} REALPATH)
+  list (APPEND ENTC_LIBRARY ${TMP})
+else()
+  list (APPEND ENTC_LIBRARY ${ENTC_LIBRARY_01})
+endif()
+
 MARK_AS_ADVANCED(ENTC_LIBRARY)
 
 FIND_PATH(ENTC_INCLUDE_DIR
