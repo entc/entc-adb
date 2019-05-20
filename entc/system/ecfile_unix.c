@@ -364,6 +364,30 @@ int ecfs_move (const EcString source, const EcString dest)
     return TRUE;
   }
   
+  int err_no = errno;
+  
+  // the source and target files are not on the same filesystem
+  if (err_no == EXDEV)
+  {
+    EcErr err = ecerr_create ();
+    
+    int res = ecfs_cpfile (source, dest, err);
+    if (res)
+    {
+      eclog_fmt (LL_ERROR, "ENTC", "move", "%s: can't move '%s' to '%s'", err->text, source, dest);
+
+      ecerr_destroy(&err);
+      
+      return FALSE;
+    }
+    
+    ecerr_destroy(&err);
+
+    ecfs_rmfile (source);
+    
+    return TRUE;
+  }
+  
   eclog_err_os (LL_ERROR, "ENTC", "move", "can't move '%s' to '%s'", source, dest);
   return FALSE;
 }

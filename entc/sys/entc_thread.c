@@ -76,7 +76,7 @@ EntcThread entc_thread_new (void)
 
 //-----------------------------------------------------------------------------------
 
-void entc_thread_del(EntcThread* pself)
+void entc_thread_del (EntcThread* pself)
 {
   EntcThread self = *pself;
   
@@ -98,7 +98,7 @@ void entc_thread_cancel (EntcThread self)
 
 //-----------------------------------------------------------------------------------
 
-void entc_thread_start(EntcThread self, entc_thread_worker_fct fct, void* ptr)
+void entc_thread_start (EntcThread self, entc_thread_worker_fct fct, void* ptr)
 {
   // define some special attributes
   pthread_attr_t attr;
@@ -147,7 +147,7 @@ struct EntcThread_s
 
 //-----------------------------------------------------------------------------------
 
-DWORD WINAPI entc_thread_run(LPVOID ptr)
+DWORD WINAPI entc_thread_run (LPVOID ptr)
 {
   EntcThread self = ptr;
   
@@ -172,7 +172,7 @@ EntcThread entc_thread_new (void)
 
 //-----------------------------------------------------------------------------------
 
-void entc_thread_del(EntcThread* pself)
+void entc_thread_del (EntcThread* pself)
 {
   EntcThread self = *pself;
   
@@ -183,7 +183,7 @@ void entc_thread_del(EntcThread* pself)
 
 //-----------------------------------------------------------------------------------
 
-void entc_thread_start(EntcThread self, entc_thread_callback_fct fct, void* ptr)
+void entc_thread_start (EntcThread self, entc_thread_callback_fct fct, void* ptr)
 {
   if (self->th == NULL)
   {
@@ -195,7 +195,7 @@ void entc_thread_start(EntcThread self, entc_thread_callback_fct fct, void* ptr)
 
 //-----------------------------------------------------------------------------------
 
-void entc_thread_join(EntcThread self)
+void entc_thread_join (EntcThread self)
 {  
   if (self->th != NULL)
   {
@@ -209,7 +209,7 @@ void entc_thread_join(EntcThread self)
 
 //-----------------------------------------------------------------------------------
 
-void entc_thread_cancel(EntcThread self)
+void entc_thread_cancel (EntcThread self)
 {
   if (self->th != NULL)
   {
@@ -232,8 +232,6 @@ void entc_thread_sleep (unsigned long milliseconds)
 {
   Sleep (milliseconds);
 }
-
-
 
 #endif
 

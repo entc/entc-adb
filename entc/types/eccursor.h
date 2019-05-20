@@ -32,8 +32,6 @@ typedef int  (__STDCALL *eccursor_fill_fct)(void* ptr, EcTable*);
 typedef int  (__STDCALL *eccursor_destroy_fct)(void* ptr, EcTable);
 
 
-__ENTC_LIBEX
-  
 __ENTC_LIBEX EcCursor eccursor_create (void);
   
 __ENTC_LIBEX void eccursor_destroy (EcCursor*);
@@ -51,7 +49,5 @@ __ENTC_LIBEX void* eccursor_header (EcCursor, int column);
 // callback 
 
 __ENTC_LIBEX void eccursor_callbacks (EcCursor, void* ptr, eccursor_fill_fct, eccursor_destroy_fct);
-
-
 
 #endif
