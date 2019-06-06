@@ -262,6 +262,9 @@ void* adblmodule_dbconnect (AdblConnectionProperties* cp)
   
   mysql_options (self->conn, MYSQL_INIT_COMMAND, "SET autocommit=0");
 
+  // important, otherwise UTF8 is not handled correctly
+  mysql_options (self->conn, MYSQL_INIT_COMMAND, "SET NAMES UTF8");
+
   // connect
   if(!mysql_real_connect (self->conn, cp->host, cp->username, cp->password, cp->schema, cp->port, 0, CLIENT_MULTI_RESULTS))
   {
