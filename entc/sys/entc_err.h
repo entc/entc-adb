@@ -50,6 +50,8 @@
 #define ENTC_ERR_WRONG_STATE        16
 #define ENTC_ERR_WRONG_VALUE        17
 
+#define ENTC_ERR_NO_CONTENT         20
+
 //=============================================================================
 
 struct EntcErr_s; typedef struct EntcErr_s* EntcErr;

@@ -130,6 +130,17 @@ void entc_thread_sleep (unsigned long milliseconds)
   usleep (milliseconds * 1000);
 }
 
+//-----------------------------------------------------------------------------
+
+long entc_thread_id (void)
+{
+  pthread_t self = pthread_self ();
+  
+  return self;
+}
+
+//-----------------------------------------------------------------------------
+
 #elif defined _WIN64 || defined _WIN32
 
 #include <windows.h>

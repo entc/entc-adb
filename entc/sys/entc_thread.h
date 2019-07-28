@@ -45,6 +45,8 @@ __ENTC_LIBEX   void              entc_thread_join       (EntcThread);
 
 __ENTC_LIBEX   void              entc_thread_cancel     (EntcThread);
 
+__ENTC_LIBEX   long              entc_thread_id         (void);
+
 //-----------------------------------------------------------------------------
 
 __ENTC_LIBEX   void              entc_thread_sleep      (unsigned long milliseconds);
