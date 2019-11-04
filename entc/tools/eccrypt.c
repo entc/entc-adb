@@ -335,7 +335,7 @@ unsigned char* eccrypt_keybuffer (EcBuffer buf)
 struct EcEncryptAES_s
 {
   
-  EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX* ctx;
   
   EcBuffer buf;
   
@@ -365,7 +365,7 @@ EcEncryptAES ecencrypt_aes_create (uint_t cypher_type, uint_t padding_type, cons
 {
   EcEncryptAES self = ENTC_NEW(struct EcEncryptAES_s);
   
-  EVP_CIPHER_CTX_init (&(self->ctx));
+  self->ctx = EVP_CIPHER_CTX_new();
   
   self->blocksize = 0;
   self->lenTotal = 0;
@@ -392,7 +392,7 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
 {
   EcEncryptAES self = *pself;
   
-  EVP_CIPHER_CTX_cleanup (&(self->ctx));
+  EVP_CIPHER_CTX_free (self->ctx);
   
   if (self->buf)
   {
@@ -500,26 +500,26 @@ int ecencrypt_aes_initialize (EcEncryptAES self, EcBuffer source, EcErr err)
     return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_WRONG_STATE, "decoding of secret failed");    
   }
     
-  res = EVP_EncryptInit_ex (&(self->ctx), cypher, NULL, eccrypt_keybuffer (self->keys->key), eccrypt_keybuffer (self->keys->iv));
+  res = EVP_EncryptInit_ex (self->ctx, cypher, NULL, eccrypt_keybuffer (self->keys->key), eccrypt_keybuffer (self->keys->iv));
   
   if (res == 0)
   {
-    eccrypt_aes_handleError (&(self->ctx), err);
+    eccrypt_aes_handleError (self->ctx, err);
     
     return err->code;
   }
   
   // check for the blocksize
-  self->blocksize = EVP_CIPHER_CTX_block_size(&(self->ctx));
+  self->blocksize = EVP_CIPHER_CTX_block_size(self->ctx);
   
   if (self->padding_type)
   {
     // disable automatic padding 
-    EVP_CIPHER_CTX_set_padding (&(self->ctx), 0);
+    EVP_CIPHER_CTX_set_padding (self->ctx, 0);
   }
   else
   {
-    EVP_CIPHER_CTX_set_padding (&(self->ctx), 1);
+    EVP_CIPHER_CTX_set_padding (self->ctx, 1);
   }
   
   return ENTC_ERR_NONE;
@@ -550,9 +550,9 @@ EcBuffer ecencrypt_aes_update (EcEncryptAES self, EcBuffer source, EcErr err)
   
   int lenLast;
   
-  if (EVP_EncryptUpdate(&(self->ctx), self->buf->buffer + self->bufoffset, &lenLast, source->buffer, source->size) == 0)
+  if (EVP_EncryptUpdate(self->ctx, self->buf->buffer + self->bufoffset, &lenLast, source->buffer, source->size) == 0)
   {
-    eccrypt_aes_handleError (&(self->ctx), err);
+    eccrypt_aes_handleError (self->ctx, err);
     return NULL;
   }
   
@@ -611,13 +611,13 @@ EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
       
       ecencrypt_aes_reserveBuffer (self, padlen);
 
-      encrRes = EVP_EncryptUpdate(&(self->ctx), self->buf->buffer, &lenLast, padding->buffer, padding->size);
+      encrRes = EVP_EncryptUpdate(self->ctx, self->buf->buffer, &lenLast, padding->buffer, padding->size);
       
       ecbuf_destroy (&padding);
         
       if (encrRes == 0)
       {
-        eccrypt_aes_handleError (&(self->ctx), err);
+        eccrypt_aes_handleError (self->ctx, err);
         return NULL;
       }
       
@@ -630,9 +630,9 @@ EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
   
   int lenLast;
 
-  if (EVP_EncryptFinal_ex(&(self->ctx), self->buf->buffer + self->bufoffset, &lenLast) == 0)
+  if (EVP_EncryptFinal_ex(self->ctx, self->buf->buffer + self->bufoffset, &lenLast) == 0)
   {
-    eccrypt_aes_handleError (&(self->ctx), err);
+    eccrypt_aes_handleError (self->ctx, err);
     return NULL;
   }
 
@@ -648,7 +648,7 @@ EcBuffer ecencrypt_aes_finalize (EcEncryptAES self, EcErr err)
 
 struct EcDecryptAES_s
 {
-  EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX* ctx;
   
   EcBuffer buf;
   
@@ -674,7 +674,7 @@ EcDecryptAES ecdecrypt_aes_create (const EcString secret, uint_t cypher_type, ui
 {
   EcDecryptAES self = ENTC_NEW(struct EcDecryptAES_s);
   
-  EVP_CIPHER_CTX_init (&(self->ctx));
+  self->ctx = EVP_CIPHER_CTX_new ();
 
   self->blocksize = 0;
   self->lenTotal = 0;
@@ -696,7 +696,7 @@ void ecdecrypt_aes_destroy (EcDecryptAES* pself)
 {
   EcDecryptAES self = *pself;
   
-  EVP_CIPHER_CTX_cleanup (&(self->ctx));
+  EVP_CIPHER_CTX_free (self->ctx);
   
   if (self->buf)
   {
@@ -811,16 +811,16 @@ int ecdecrypt_aes_initialize (EcDecryptAES self, EcBuffer source, uint_t* bufoff
     return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_WRONG_STATE, "decoding of secret failed");    
   }
       
-  res = EVP_DecryptInit_ex (&(self->ctx), cypher, NULL, eccrypt_keybuffer (self->keys->key), eccrypt_keybuffer (self->keys->iv));
+  res = EVP_DecryptInit_ex (self->ctx, cypher, NULL, eccrypt_keybuffer (self->keys->key), eccrypt_keybuffer (self->keys->iv));
   if (res == 0)
   {
-    eccrypt_aes_handleError (&(self->ctx), err);
+    eccrypt_aes_handleError (self->ctx, err);
     
     return err->code;
   }
   
   // check for the blocksize
-  self->blocksize = EVP_CIPHER_CTX_block_size(&(self->ctx));
+  self->blocksize = EVP_CIPHER_CTX_block_size(self->ctx);
   
   return ENTC_ERR_NONE;
 }
@@ -852,9 +852,9 @@ EcBuffer ecdecrypt_aes_update (EcDecryptAES self, EcBuffer source, EcErr err)
   
   int lenLast = 0;
   
-  if (EVP_DecryptUpdate (&(self->ctx), self->buf->buffer, &lenLast, source->buffer + bufoffset, source->size - bufoffset) == 0)
+  if (EVP_DecryptUpdate (self->ctx, self->buf->buffer, &lenLast, source->buffer + bufoffset, source->size - bufoffset) == 0)
   {
-    eccrypt_aes_handleError (&(self->ctx), err);
+    eccrypt_aes_handleError (self->ctx, err);
     return NULL;
   }
   
@@ -880,9 +880,9 @@ EcBuffer ecdecrypt_aes_finalize (EcDecryptAES self, EcErr err)
   
   int lenLast = 0;
   
-  if (EVP_DecryptFinal_ex(&(self->ctx), self->buf->buffer, &lenLast) == 0)
+  if (EVP_DecryptFinal_ex(self->ctx, self->buf->buffer, &lenLast) == 0)
   {
-    eccrypt_aes_handleError (&(self->ctx), err);
+    eccrypt_aes_handleError (self->ctx, err);
     return NULL;
   }
   
