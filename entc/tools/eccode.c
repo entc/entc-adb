@@ -418,7 +418,7 @@ void eccode_base64_encode_destroy (EcBase64Encode* pself)
 {
   EcBase64Encode self = *pself;
   
-  EVP_ENCODE_CTX_free(self->ctx);
+  EVP_ENCODE_CTX_free (self->ctx);
   
   ENTC_DEL (pself, struct EcBase64Encode_s);
 }

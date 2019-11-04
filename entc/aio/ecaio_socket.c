@@ -1054,32 +1054,35 @@ void ecaio_socketwriter_destroy (EcAioSocketWriter* pself)
 
 int ecaio_socketwriter_send (EcAioSocketWriter self, EcErr err)
 {
-  Q6HANDLE sock = (Q6HANDLE)ecrefsocket_socket (self->refSocket);
-  
-  int del = 0;
-  while (del < self->buf->size)
+  if (self->buf)
   {
-    //eclogger_fmt (LL_TRACE, "Q6_SOCK", "swriter", "assign [%p] %u", self->refSocket, sock);
+    Q6HANDLE sock = (Q6HANDLE)ecrefsocket_socket (self->refSocket);
     
-    int res = send (sock, (char*)self->buf->buffer + del, self->buf->size - del, 0);
-    if (res < 0)
+    int del = 0;
+    while (del < self->buf->size)
     {
-      if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
+      //eclogger_fmt (LL_TRACE, "Q6_SOCK", "swriter", "assign [%p] %u", self->refSocket, sock);
+      
+      int res = send (sock, (char*)self->buf->buffer + del, self->buf->size - del, 0);
+      if (res < 0)
       {
-        return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+        if( (errno != EWOULDBLOCK) && (errno != EINPROGRESS) && (errno != EAGAIN))
+        {
+          return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+        }
+        else
+        {
+          continue;
+        }
+      }
+      else if (res == 0)
+      {
+        break;
       }
       else
       {
-        continue;
+        del += res;
       }
-    }
-    else if (res == 0)
-    {
-      break;
-    }
-    else
-    {
-      del += res;
     }
   }
   

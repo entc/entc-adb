@@ -30,11 +30,12 @@
 
 struct EcAioSendFile_s; typedef struct EcAioSendFile_s* EcAioSendFile;
 
-typedef int (__STDCALL *fct_ecaio_sfile_onInit) (void* ptr, EcRefCountedSocket, uint64_t fileSize, const EcString file, const EcString name, EcErr);
+typedef int   (__STDCALL *fct_ecaio_sfile_onInit) (void* ptr, EcRefCountedSocket, uint64_t fileSize, const EcString file, const EcString name, EcErr);
+typedef void  (__STDCALL *fct_ecaio_sfile_onDone) (void* ptr, const EcString file, const EcString name);
 
 //-----------------------------------------------------------------------------
 
-__ENTC_LIBEX EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket, void*, fct_ecaio_sfile_onInit);
+__ENTC_LIBEX EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket, void*, fct_ecaio_sfile_onInit, fct_ecaio_sfile_onDone);
 
 __ENTC_LIBEX void ecaio_sendfile_destroy (EcAioSendFile*);
 

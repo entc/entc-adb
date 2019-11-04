@@ -424,7 +424,6 @@ void ecencrypt_aes_destroy (EcEncryptAES* pself)
 int ecencrypt_aes_initialize (EcEncryptAES self, EcBuffer source, EcErr err)
 {
   int res;  
-  uint_t offset = 0;
   
   // get the cypher
   const EVP_CIPHER* cypher = eccrypt_aes_getCipher (self->cypher_type);
