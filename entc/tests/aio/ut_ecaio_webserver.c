@@ -93,6 +93,13 @@ static int __STDCALL text_ecaio_sendfile_onInit (void* ptr, EcRefCountedSocket r
 
 //---------------------------------------------------------------------------
 
+static void __STDCALL text_ecaio_sendfile_onDone (void* ptr, const EcString file, const EcString name)
+{
+
+}
+
+//---------------------------------------------------------------------------
+
 static int __STDCALL text_ecaio_reader_onRead (void* ptr, void* handle, const char* buffer, unsigned long size)
 {
   TestParserCtx* ctx = ptr;
@@ -109,7 +116,7 @@ static int __STDCALL text_ecaio_reader_onRead (void* ptr, void* handle, const ch
     eclog_fmt (LL_TRACE, "TEST", "reading", "got request");
     
     // last line seen, send content
-    sf = ecaio_sendfile_create ("index.html", NULL, ctx->refsock, NULL, text_ecaio_sendfile_onInit);
+    sf = ecaio_sendfile_create ("index.html", NULL, ctx->refsock, NULL, text_ecaio_sendfile_onInit, text_ecaio_sendfile_onDone);
     
     // transfer ownership to aio
     ecaio_sendfile_assign (&sf, ctx->aio, NULL);

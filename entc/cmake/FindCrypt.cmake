@@ -50,7 +50,7 @@ if (NOT CRYPT_FOUND)
 
 	  find_library (CRYPT_LIBRARIES
 		NAMES crypto crypt
-		HINTS ${CMAKE_INSTALL_PREFIX}
+		HINTS /opt/local/ ${CMAKE_INSTALL_PREFIX} 
 		PATH_SUFFIXES lib
 		)
 

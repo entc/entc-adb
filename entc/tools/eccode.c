@@ -397,7 +397,7 @@ EcBuffer eccode_base64_decode (EcBuffer source)
 struct EcBase64Encode_s
 {
   
-  EVP_ENCODE_CTX ctx;
+  EVP_ENCODE_CTX* ctx;
   
 };
 
@@ -407,7 +407,7 @@ EcBase64Encode eccode_base64_encode_create (void)
 {
   EcBase64Encode self = ENTC_NEW(struct EcBase64Encode_s);
   
-  EVP_EncodeInit (&(self->ctx));
+  self->ctx = EVP_ENCODE_CTX_new();
   
   return self;
 }
@@ -416,6 +416,10 @@ EcBase64Encode eccode_base64_encode_create (void)
 
 void eccode_base64_encode_destroy (EcBase64Encode* pself)
 {
+  EcBase64Encode self = *pself;
+  
+  EVP_ENCODE_CTX_free (self->ctx);
+  
   ENTC_DEL (pself, struct EcBase64Encode_s);
 }
 
@@ -425,7 +429,7 @@ uint_t eccode_base64_encode_update (EcBase64Encode self, EcBuffer dest, EcBuffer
 {
   int len;
   
-  EVP_EncodeUpdate (&(self->ctx), dest->buffer, &len, source->buffer, source->size);
+  EVP_EncodeUpdate (self->ctx, dest->buffer, &len, source->buffer, source->size);
   
   return len;
 }
@@ -436,7 +440,7 @@ uint_t eccode_base64_encode_finalize (EcBase64Encode self, EcBuffer dest, EcErr 
 {
   int len;
   
-  EVP_EncodeFinal (&(self->ctx), dest->buffer, &len);
+  EVP_EncodeFinal (self->ctx, dest->buffer, &len);
   
   return len;
 }

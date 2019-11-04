@@ -24,6 +24,7 @@ struct EcAioSendFile_s
   EcBase64Encode base64;    // output format encoding
  
   fct_ecaio_sfile_onInit onInit;
+  fct_ecaio_sfile_onDone onDone;
   void* ptr;
   
   EcFileHandle fh;
@@ -34,7 +35,7 @@ struct EcAioSendFile_s
 
 //-----------------------------------------------------------------------------
 
-EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket refSocket, void* ptr, fct_ecaio_sfile_onInit onInit)
+EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, EcRefCountedSocket refSocket, void* ptr, fct_ecaio_sfile_onInit onInit, fct_ecaio_sfile_onDone onDone)
 {
   EcAioSendFile self = ENTC_NEW (struct EcAioSendFile_s);
   
@@ -42,6 +43,7 @@ EcAioSendFile ecaio_sendfile_create (const EcString file, const EcString name, E
   self->name = ecstr_copy (name);
   
   self->onInit = onInit;
+  self->onDone = onDone;
   self->ptr = ptr;
   
   self->refSocket = ecrefsocket_clone (refSocket);
@@ -58,6 +60,11 @@ void ecaio_sendfile_destroy (EcAioSendFile* pself)
 {
   EcAioSendFile self = *pself;
 
+  if (self->onDone)
+  {
+    self->onDone (self->ptr, self->file, self->name);
+  }
+  
   if (self->aes)
   {
     ecdecrypt_aes_destroy (&(self->aes));
