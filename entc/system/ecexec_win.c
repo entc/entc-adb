@@ -23,7 +23,6 @@
 
 #include <windows.h>
 
-#include "system/macros.h"
 #include "tools/eclog.h"
 #include "types/ecstream.h"
 

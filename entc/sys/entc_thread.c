@@ -145,6 +145,10 @@ long entc_thread_id (void)
 
 #include <windows.h>
 
+#include "sys/entc_types.h"
+#include "sys/entc_err.h"
+#include "tools/eclog.h"
+
 //-----------------------------------------------------------------------------
 
 struct EntcThread_s
@@ -194,7 +198,7 @@ void entc_thread_del (EntcThread* pself)
 
 //-----------------------------------------------------------------------------------
 
-void entc_thread_start (EntcThread self, entc_thread_callback_fct fct, void* ptr)
+void entc_thread_start (EntcThread self, entc_thread_worker_fct fct, void* ptr)
 {
   if (self->th == NULL)
   {
@@ -226,11 +230,11 @@ void entc_thread_cancel (EntcThread self)
   {
     if (TerminateThread(self->th, 0) == 0)
     {
-      EcErr err = ecerr_create ();
+	  EntcErr err = ecerr_create ();
       
-      ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
+	  entc_err_lastOSError (err);
       
-      eclog_fmt (LL_ERROR, "ENTC", "thread", "can't cancel thread: %s", err->text);
+      eclog_fmt (LL_ERROR, "ENTC", "thread", "can't cancel thread: %s", entc_err_text(err));
       
       ecerr_destroy (&err);
     }

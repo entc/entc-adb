@@ -177,11 +177,11 @@ int ecaio_waitForNextEvent (EcAio self, unsigned long timeout, EcErr err)
         }
         case 735: // ERROR_ABANDONED_WAIT_0
         {
-          return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "wait abborted");
+          return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS, "wait abborted");
         }
         case ERROR_OPERATION_ABORTED: // ABORT
         {
-          return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "wait abborted");
+          return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS, "wait abborted");
         }
         default:
         {

@@ -112,7 +112,7 @@ int entc_err_set_fmt (EntcErr self, unsigned long code, const char* error_messag
   va_start(ptr, error_message);
   
 #if defined _WIN64 || defined _WIN32
-  vsnprintf_s (buffer, 1001, 1000, text, ptr);
+  vsnprintf_s (buffer, 1001, 1000, error_message, ptr);
 #else
   vsnprintf (buffer, 1000, error_message, ptr);
 #endif
@@ -141,6 +141,8 @@ int entc_err_formatErrorOS (EntcErr self, unsigned long errCode)
     // release buffer
     LocalFree (buffer);
   }
+
+  return ENTC_ERR_OS;
 #else
   return entc_err_set (self, ENTC_ERR_OS, strerror(errCode));
 #endif
