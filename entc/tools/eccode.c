@@ -409,6 +409,8 @@ EcBase64Encode eccode_base64_encode_create (void)
   
   self->ctx = EVP_ENCODE_CTX_new();
   
+  EVP_EncodeInit (self->ctx);
+  
   return self;
 }
 

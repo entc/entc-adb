@@ -226,7 +226,9 @@ int ecaio_context_process (EcAioContext self, unsigned long val1, unsigned long 
 
 #if defined __APPLE__
 
-#include <stdatomic.h>
+
+//#include <stdatomic.h>
+
 
 #endif
 

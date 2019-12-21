@@ -643,7 +643,7 @@ int ecaio_socketaccept_assign (EcAioSocketAccept* pself, EcAio aio, EcErr err)
 //*****************************************************************************
 
 #if defined __APPLE__
-#include <stdatomic.h>
+//#include <stdatomic.h>
 #endif
 
 #define Q6HANDLE long

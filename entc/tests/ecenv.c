@@ -25,7 +25,7 @@ struct TestEnvContext_s
   
   EcList errors;
   
-}; typedef struct TestEnvContext_s* TestEnvContext;
+};
 
 //-----------------------------------------------------------------------------
 
