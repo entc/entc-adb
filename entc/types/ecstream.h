@@ -25,6 +25,7 @@
 #include "sys/entc_export.h"
 #include "types/ecstring.h"
 #include "types/ecbuffer.h"
+#include <time.h>
 
 //=============================================================================
 
