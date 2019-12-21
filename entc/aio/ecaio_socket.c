@@ -71,7 +71,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcEr
   
   if (!init_wsa ())
   {
-    return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_OS_ERROR, "can't initialize Windows WSA");
+    return ecerr_set (err, ENTC_LVL_FATAL, ENTC_ERR_OS, "can't initialize Windows WSA");
   }
   
   ZeroMemory(&hints, sizeof(hints));
@@ -94,7 +94,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcEr
   if (sock == INVALID_SOCKET)
   {
     freeaddrinfo(addr);
-    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't create socket");
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS, "can't create socket");
   }
   
   {
@@ -103,7 +103,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcEr
     
     if (getsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char*)&optVal, &optLen) != 0)
     {
-      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't apply options");
+      return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS, "can't apply options");
     }
   }
   
@@ -111,7 +111,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcEr
   {
     freeaddrinfo(addr);
     closesocket(sock);
-    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't bind");
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS, "can't bind");
   }
   
   freeaddrinfo(addr);
@@ -119,7 +119,7 @@ int ecacceptsocket_listen (EcAcceptSocket self, const char* host, int port, EcEr
   if (listen(sock, SOMAXCONN) == SOCKET_ERROR)
   {
     closesocket(sock);
-    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS_ERROR, "can't listen");
+    return ecerr_set (err, ENTC_LVL_ERROR, ENTC_ERR_OS, "can't listen");
   }
   
   eclog_fmt (LL_TRACE, "ENTC_AIO", "socket", "listen on [%s:%i]", host, port);
@@ -560,7 +560,7 @@ int ecaio_socketaccept_accept (EcAioSocketAccept self, EcAioContext ctx)
   self->asock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (self->asock == INVALID_SOCKET)
   {
-    return ENTC_ERR_OS_ERROR;
+    return ENTC_ERR_OS;
     //return TError (_ERRCODE_NET__SOCKET_ERROR, "error code: " + IntToStr (::WSAGetLastError()));
   }
   

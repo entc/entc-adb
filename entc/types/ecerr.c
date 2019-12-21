@@ -131,14 +131,14 @@ int ecerr_formatErrorOS (EcErr self, int lvl, unsigned long errCode)
     {
       if (res > 0)
       {
-        ecerr_set (self, lvl, ENTC_ERR_OS_ERROR, buffer);
+        ecerr_set (self, lvl, ENTC_ERR_OS, buffer);
       }
       // release buffer
       LocalFree (buffer);
     }
   }
   
-  return ENTC_ERR_OS_ERROR;
+  return ENTC_ERR_OS;
 }
 
 //-----------------------------------------------------------------------------
@@ -147,7 +147,7 @@ int ecerr_lastErrorOS (EcErr self, int lvl)
 {
   if (self == NULL)
   {
-    return ENTC_ERR_OS_ERROR;
+    return ENTC_ERR_OS;
   }
   
   return ecerr_formatErrorOS (self, lvl, GetLastError ());

@@ -21,7 +21,6 @@
 
 #include "ecfile.h"
 #include "types/eclist.h"
-#include "system/macros.h"
 
 #include <stdio.h>
 #include <share.h>

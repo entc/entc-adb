@@ -673,7 +673,7 @@ EcDecryptAES ecdecrypt_aes_create (const EcString secret, uint_t cypher_type, ui
 {
   EcDecryptAES self = ENTC_NEW(struct EcDecryptAES_s);
   
-  self->ctx = EVP_CIPHER_CTX_new();
+  self->ctx = EVP_CIPHER_CTX_new ();
 
   self->blocksize = 0;
   self->lenTotal = 0;

@@ -209,6 +209,13 @@ EcBuffer eccode_base64_decode (EcBuffer source)
   return ret;  
 }
 
+//-----------------------------------------------------------------------------
+
+uint_t eccode_base64_encode_size(uint_t size)
+{
+	return ((size + 2) / 3 * 4) + 1 + 64;
+}
+
 //=============================================================================
 
 struct EcBase64Encode_s

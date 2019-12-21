@@ -302,6 +302,7 @@ int ecaio_sendfile_assign (EcAioSendFile* pself, EcAio aio, EcErr err)
     return ecerr_lastErrorOS (err, ENTC_LVL_ERROR);
   }
   
+  // get filesize
   fileSize = ecfh_size (self->fh);
   
   {
