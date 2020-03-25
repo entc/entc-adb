@@ -208,9 +208,16 @@ void ecjsonparser_pop (EcJsonParser self)
   {
     EcJsonParserItem* element = entc_list_pop_back (self->stack);
     
-    ecjsonparser_item_setObject (self->valElement, &(element->obj), element->type);
-    
-    ecjsonparser_create_stack_onDestroy (element);
+    if (element)
+    {
+      ecjsonparser_item_setObject (self->valElement, &(element->obj), element->type);
+      
+      ecjsonparser_create_stack_onDestroy (element);
+    }
+    else
+    {
+      return;
+    }
   }
   
   // fetch last element
