@@ -414,7 +414,16 @@ EcBase64Encode eccode_base64_encode_create (void)
 {
   EcBase64Encode self = ENTC_NEW(struct EcBase64Encode_s);
   
-  self->ctx = EVP_ENCODE_CTX_new();
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+  self->ctx = ENTC_NEW (EVP_ENCODE_CTX);
+    
+#else
+    
+  // it only allocates the memory
+  self->ctx = EVP_ENCODE_CTX_new ();
+
+#endif
   
   EVP_EncodeInit (self->ctx);
   
@@ -427,7 +436,15 @@ void eccode_base64_encode_destroy (EcBase64Encode* pself)
 {
   EcBase64Encode self = *pself;
   
-  EVP_ENCODE_CTX_free (self->ctx);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+    ENTC_DEL (&(self->ctx), EVP_ENCODE_CTX);
+    
+#else
+    
+    EVP_ENCODE_CTX_free (self->ctx);
+
+#endif
   
   ENTC_DEL (pself, struct EcBase64Encode_s);
 }
